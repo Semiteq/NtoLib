@@ -37,6 +37,8 @@
             this.BackColor = System.Drawing.Color.Transparent;
             this.DoubleBuffered = false;
             this.Name = "ValveControl";
+            this.Click += new System.EventHandler(this.OnClick);
+            this.DoubleClick += new System.EventHandler(this.OnDoubleClick);
             this.ResumeLayout(false);
 
         }

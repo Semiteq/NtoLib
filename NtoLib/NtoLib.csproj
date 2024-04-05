@@ -81,6 +81,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Valves\ValveControl.resx">
+      <DependentUpon>ValveControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Valves\ValveFB.bmp" />
     <EmbeddedResource Include="Valves\ValveFB.xml" />
   </ItemGroup>

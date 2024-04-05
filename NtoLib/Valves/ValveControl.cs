@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace NtoLib.Valves
@@ -58,6 +59,7 @@ namespace NtoLib.Valves
 
 
         private State _state;
+        private bool _commandImpulseInProgress;
 
 
 
@@ -88,7 +90,47 @@ namespace NtoLib.Valves
             renderer.Paint(e.Graphics, paintData, _state);
         }
 
+        private void OnClick(object sender, EventArgs e)
+        {
+            MouseEventArgs me = (MouseEventArgs)e;
+            if(me.Button != MouseButtons.Right)
+                return;
 
+            //Открытиие формы с настройками
+        }
+
+        private void OnDoubleClick(object sender, EventArgs e)
+        {
+            MouseEventArgs me = (MouseEventArgs)e;
+            if(me.Button != MouseButtons.Left || _commandImpulseInProgress)
+                return;
+
+
+            int commandId;
+            if(_state.Closed)
+                commandId = ValveFB.OpenCMD;
+            else if(_state.Opened)
+                commandId = ValveFB.CloseCMD;
+            else
+                return;
+
+            SetPinValue(commandId, true);
+
+            Task.Run(() => SendCommandImpulse(commandId, 500));
+        }
+
+
+
+        private async Task SendCommandImpulse(int outputId, int msDuration)
+        {
+            SetPinValue(outputId, true);
+            _commandImpulseInProgress = true;
+
+            await Task.Delay(msDuration);
+
+            SetPinValue(outputId, false);
+            _commandImpulseInProgress = false;
+        }
 
         private void UpdateState()
         {
