@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+  <Map>
+    <Items>
+      <Pin ID="1"       Name="ConnectionOk"    Type="Логический" />
+      <Pin ID="2"       Name="Opened"          Type="Логический" />
+      <Pin ID="3"       Name="Closed"          Type="Логический" />
+      <Pin ID="4"       Name="Error"           Type="Логический" />
+      <Pin ID="5"       Name="OldError"        Type="Логический" />
+      <Pin ID="6"       Name="BlockOpening"    Type="Логический" />
+      <Pin ID="7"       Name="BlockClosing"    Type="Логический" />
+      <Pin ID="8"       Name="AutoMode"        Type="Логический" />
+      <Pin ID="9"       Name="Collision"       Type="Логический" />
+
+      <Pout ID="101"    Name="OpenCMD"         Type="Логический" />
+      <Pout ID="102"    Name="CloseCMD"        Type="Логический" />
+      <Pout ID="103"    Name="OpenSlowlyCMD"   Type="Логический" />
+    </Items>
+  </Map>
+  <VisualMap>
+    <Items>
+      <Pout ID="1001"   Name="ConnectionOk"    Type="Логический" />
+      <Pout ID="1002"   Name="Opened"          Type="Логический" />
+      <Pout ID="1003"   Name="Closed"          Type="Логический" />
+      <Pout ID="1004"   Name="Error"           Type="Логический" />
+      <Pout ID="1005"   Name="OldError"        Type="Логический" />
+      <Pout ID="1006"   Name="BlockOpening"    Type="Логический" />
+      <Pout ID="1007"   Name="BlockClosing"    Type="Логический" />
+      <Pout ID="1008"   Name="AutoMode"        Type="Логический" />
+      <Pout ID="1009"   Name="Collision"       Type="Логический" />
+
+      <Pin ID="1101"    Name="OpenCMD"         Type="Логический"    DefaultValue="false"/>
+      <Pin ID="1102"    Name="CloseCMD"        Type="Логический"    DefaultValue="false"/>
+      <Pin ID="1103"    Name="OpenSlowlyCMD"   Type="Логический"    DefaultValue="false"/>
+    </Items>
+  </VisualMap>
+</FBConfig>
