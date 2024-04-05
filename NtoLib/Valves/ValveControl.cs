@@ -1,4 +1,6 @@
 ﻿using FB.VisualFB;
+using InSAT.Library.Gui;
+using InSAT.Library.Interop.Win32;
 using NtoLib.Valves.Render;
 using System;
 using System.ComponentModel;
@@ -58,8 +60,10 @@ namespace NtoLib.Valves
         public Shape Shape { get; set; }
 
 
-        private State _state;
+        internal State State;
         private bool _commandImpulseInProgress;
+
+        private SettingsForm _settingsForm;
 
 
 
@@ -87,7 +91,9 @@ namespace NtoLib.Valves
 
 
             BaseRenderer renderer = new CommonValveRenderer();
-            renderer.Paint(e.Graphics, paintData, _state);
+            renderer.Paint(e.Graphics, paintData, State);
+
+            base.OnPaint(e);
         }
 
         private void OnClick(object sender, EventArgs e)
@@ -96,7 +102,8 @@ namespace NtoLib.Valves
             if(me.Button != MouseButtons.Right)
                 return;
 
-            //Открытиие формы с настройками
+            if(_settingsForm == null)
+                OpenSettings();
         }
 
         private void OnDoubleClick(object sender, EventArgs e)
@@ -107,9 +114,9 @@ namespace NtoLib.Valves
 
 
             int commandId;
-            if(_state.Closed)
+            if(State.Closed)
                 commandId = ValveFB.OpenCMD;
-            else if(_state.Opened)
+            else if(State.Opened)
                 commandId = ValveFB.CloseCMD;
             else
                 return;
@@ -132,17 +139,39 @@ namespace NtoLib.Valves
             _commandImpulseInProgress = false;
         }
 
+        private void OpenSettings()
+        {
+            _settingsForm = new SettingsForm(this);
+            _settingsForm.FormClosed += OnSettingsFormClosed;
+            _settingsForm.Show(Win32Window.FromInt32(User32.GetParent(Handle)));
+        }
+
+        private void CloseSettings()
+        {
+            if(_settingsForm != null)
+                _settingsForm.Close();
+        }
+
+        private void OnSettingsFormClosed(object sender, FormClosedEventArgs e)
+        {
+            SettingsForm form = (SettingsForm)sender;
+            form.FormClosed -= OnSettingsFormClosed;
+            _settingsForm = null;
+        }
+
         private void UpdateState()
         {
-            _state.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOk);
-            _state.Opened = GetPinValue<bool>(ValveFB.Opened);
-            _state.Closed = GetPinValue<bool>(ValveFB.Closed);
-            _state.Error = GetPinValue<bool>(ValveFB.Error);
-            _state.OldError = GetPinValue<bool>(ValveFB.OldError);
-            _state.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpening);
-            _state.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosing);
-            _state.AutoMode = GetPinValue<bool>(ValveFB.AutoMode);
-            _state.Collision = GetPinValue<bool>(ValveFB.Collision);
+            State.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOk);
+            State.Opened = GetPinValue<bool>(ValveFB.Opened);
+            State.Closed = GetPinValue<bool>(ValveFB.Closed);
+            State.Error = GetPinValue<bool>(ValveFB.Error);
+            State.OldError = GetPinValue<bool>(ValveFB.OldError);
+            State.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpening);
+            State.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosing);
+            State.AutoMode = GetPinValue<bool>(ValveFB.AutoMode);
+            State.Collision = GetPinValue<bool>(ValveFB.Collision);
+
+            _settingsForm?.Invalidate();
         }
 
         private T GetPinValue<T>(int id)
@@ -153,6 +182,11 @@ namespace NtoLib.Valves
         private void SetPinValue<T>(int id, T value)
         {
             FBConnector.SetPinValue(id + 1000, value);
+        }
+
+        private void OnVisibleChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

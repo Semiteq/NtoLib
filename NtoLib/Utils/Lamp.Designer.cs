@@ -1,6 +1,6 @@
-﻿namespace NtoLib.Valves
+﻿namespace NtoLib.Utils
 {
-    partial class ValveControl
+    partial class Lamp
     {
         /// <summary> 
         /// Обязательная переменная конструктора.
@@ -30,16 +30,14 @@
         {
             this.SuspendLayout();
             // 
-            // ValveControl
+            // Lamp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
-            this.DoubleBuffered = false;
-            this.Name = "ValveControl";
-            this.VisibleChanged += new System.EventHandler(this.OnVisibleChanged);
-            this.Click += new System.EventHandler(this.OnClick);
-            this.DoubleClick += new System.EventHandler(this.OnDoubleClick);
+            this.Cursor = System.Windows.Forms.Cursors.Default;
+            this.Name = "Lamp";
+            this.Size = new System.Drawing.Size(20, 20);
             this.ResumeLayout(false);
 
         }
