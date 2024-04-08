@@ -26,7 +26,7 @@ namespace NtoLib.Valves.Render
         private void DrawSmoothValveCirlce(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
         {
             RectangleF circleRect = GetCircleRect(valveRect);
-            using(Brush brush = new SolidBrush(GetCircleColor(status)))
+            using(Brush brush = new SolidBrush(GetCircleColor(status, paintData.IsLight)))
                 graphics.FillEllipse(brush, circleRect);
 
             using(Pen pen = new Pen(GetLineColor(status)))
@@ -66,12 +66,35 @@ namespace NtoLib.Valves.Render
             return points;
         }
 
-        private Color GetCircleColor(Status status)
+        private Color GetCircleColor(Status status, bool isLight)
         {
-            if(status.State == State.Opened || status.State == State.SmothlyOpened)
-                return OpenColor;
+            Color color;
+
+            if(status.State == State.NoData)
+            {
+                color = NDColor;
+            }
+            else if(status.State == State.Opened || status.State == State.SmothlyOpened)
+            {
+                color = OpenColor;
+            }
+            else if(status.State == State.Closed)
+            {
+                color = ClosedColor;
+            }
             else
-                return ClosedColor;
+            {
+                if(isLight)
+                {
+                    color = OpenColor;
+                }
+                else
+                {
+                    color = ClosedColor;
+                }
+            }
+
+            return color;
         }
     }
 }
