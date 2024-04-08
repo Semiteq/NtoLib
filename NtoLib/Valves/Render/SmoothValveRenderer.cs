@@ -5,6 +5,11 @@ namespace NtoLib.Valves.Render
 {
     internal class SmoothValveRenderer : CommonValveRenderer
     {
+        /// <summary>Диаметр кружочка относительно высоты клапана</summary>
+        private const float _circleRealitiveDiameter = 0.33f;
+
+
+
         public SmoothValveRenderer(ValveControl valveControl) : base(valveControl)
         {
 
@@ -23,6 +28,9 @@ namespace NtoLib.Valves.Render
 
 
 
+        /// <summary>
+        /// Отрисовывает кружочек (и его ножку) клапана плавной откачки
+        /// </summary>
         private void DrawSmoothValveCirlce(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
         {
             RectangleF circleRect = GetCircleRect(valveRect);
@@ -38,25 +46,32 @@ namespace NtoLib.Valves.Render
             }
         }
 
+        /// <summary>
+        /// Возвращает границы, в которых должен быть отрисован кружочек клапана плавной откачки
+        /// </summary>
         private RectangleF GetCircleRect(RectangleF valveRect)
         {
             RectangleF circleRect = new RectangleF();
 
-            circleRect.Width = valveRect.Height / 4f;
+            float circleDiameter = valveRect.Height * _circleRealitiveDiameter;
+            circleRect.Width = circleDiameter;
             circleRect.Height = circleRect.Width;
 
-            circleRect.X = valveRect.X + valveRect.Width / 2f - circleRect.Width / 2f;
+            circleRect.X = valveRect.X + valveRect.Width / 2f - circleDiameter / 2f;
             circleRect.Y = valveRect.Y;
 
             return circleRect;
         }
 
+        /// <summary>
+        /// Вощвращает точки для отрисочки по ним кружочка клапана плавной откачки
+        /// </summary>
         private PointF[] GetCircleLegPoints(RectangleF valveRect)
         {
             float x0 = valveRect.X + valveRect.Width / 2f;
             float y0 = valveRect.Y + valveRect.Height / 2f;
             float x1 = x0;
-            float y1 = y0 - valveRect.Height / 4f;
+            float y1 = valveRect.Y + valveRect.Height * _circleRealitiveDiameter;
 
             PointF[] points = new PointF[] {
                 new PointF(x0, y0),
@@ -66,32 +81,24 @@ namespace NtoLib.Valves.Render
             return points;
         }
 
+        /// <summary>
+        /// Возвращает цвет кружочка клапана плавной откачки в зависимости от состояния
+        /// </summary>
         private Color GetCircleColor(Status status, bool isLight)
         {
             Color color;
 
             if(status.State == State.NoData)
             {
-                color = NDColor;
-            }
-            else if(status.State == State.Opened || status.State == State.SmothlyOpened)
-            {
-                color = OpenColor;
+                color = RenderParams.ColorNoData;
             }
             else if(status.State == State.Closed)
             {
-                color = ClosedColor;
+                color = RenderParams.ColorClosed;
             }
             else
             {
-                if(isLight)
-                {
-                    color = OpenColor;
-                }
-                else
-                {
-                    color = ClosedColor;
-                }
+                color = RenderParams.ColorOpened;
             }
 
             return color;

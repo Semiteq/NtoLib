@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RenderParams.cs" />
     <Compile Include="Utils\Blinker.cs" />
     <Compile Include="Utils\Lamp.cs">
       <SubType>UserControl</SubType>

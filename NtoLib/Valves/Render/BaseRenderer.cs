@@ -6,14 +6,6 @@ namespace NtoLib.Valves.Render
     {
         protected ValveControl ValveControl { get; private set; }
 
-        protected readonly Color LineColor = Color.Black;
-        protected readonly Color BlockedColor = Color.Orange;
-        protected readonly Color OpenColor = Color.LimeGreen;
-        protected readonly Color ClosedColor = Color.White;
-        protected readonly Color NDColor = Color.Gainsboro;
-        protected readonly Color ErrorColor = Color.Red;
-
-
 
 
         public BaseRenderer(ValveControl valveControl)
@@ -70,30 +62,30 @@ namespace NtoLib.Valves.Render
 
             if(status.State == State.NoData)
             {
-                colors[0] = NDColor;
-                colors[1] = NDColor;
+                colors[0] = RenderParams.ColorNoData;
+                colors[1] = RenderParams.ColorNoData;
             }
             else if(status.State == State.Opened)
             {
-                colors[0] = OpenColor;
-                colors[1] = OpenColor;
+                colors[0] = RenderParams.ColorOpened;
+                colors[1] = RenderParams.ColorOpened;
             }
             else if(status.State == State.Closed || status.State == State.SmothlyOpened)
             {
-                colors[0] = ClosedColor;
-                colors[1] = ClosedColor;
+                colors[0] = RenderParams.ColorClosed;
+                colors[1] = RenderParams.ColorClosed;
             }
             else
             {
                 if(isLight)
                 {
-                    colors[0] = OpenColor;
-                    colors[1] = ClosedColor;
+                    colors[0] = RenderParams.ColorOpened;
+                    colors[1] = RenderParams.ColorClosed;
                 }
                 else
                 {
-                    colors[0] = ClosedColor;
-                    colors[1] = OpenColor;
+                    colors[0] = RenderParams.ColorClosed;
+                    colors[1] = RenderParams.ColorOpened;
                 }
             }
 

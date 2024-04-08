@@ -45,7 +45,7 @@ namespace NtoLib.Valves.Render
             if(status.Error)
             {
                 PointF[] errorPoints = GetErrorRectPoints(valveRect, paintData.ErrorLineWidth, paintData.ErrorOffset);
-                using(Pen errorPen = new Pen(ErrorColor))
+                using(Pen errorPen = new Pen(RenderParams.ColorError))
                     graphics.DrawLines(errorPen, errorPoints);
             }
         }
@@ -90,9 +90,9 @@ namespace NtoLib.Valves.Render
         {
             State state = status.State;
             if((state == State.Opened && status.BlockClosing) || (state == State.Closed && status.BlockOpening))
-                return BlockedColor;
+                return RenderParams.ColorBlock;
             else
-                return LineColor;
+                return RenderParams.ColorLines;
         }
     }
 }
