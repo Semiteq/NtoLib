@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using NtoLib.Utils;
+using System.Drawing;
 
 namespace NtoLib.Valves.Render
 {
@@ -33,6 +34,29 @@ namespace NtoLib.Valves.Render
             points[4] = new PointF(x0, y0);
             points[5] = new PointF(x0, y1);
             return points;
+        }
+
+        protected RectangleF GetElementRect(PaintData data, float widthToHeightRatio)
+        {
+            RectangleF clampedBounds = data.Bounds;
+            clampedBounds.Width -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
+            clampedBounds.Height -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
+
+            if(data.Shape == Shape.Right)
+            {
+                if(data.Orientation == Orientation.Vertical)
+                    widthToHeightRatio = 1 / widthToHeightRatio;
+
+                float ratio = clampedBounds.Width / clampedBounds.Height;
+                if(ratio > widthToHeightRatio)
+                    clampedBounds.Width = clampedBounds.Height * widthToHeightRatio;
+                else if(ratio < widthToHeightRatio)
+                    clampedBounds.Height = clampedBounds.Width / widthToHeightRatio;
+            }
+
+            clampedBounds.X = (data.Bounds.Width - clampedBounds.Width) / 2f;
+            clampedBounds.Y = (data.Bounds.Height - clampedBounds.Height) / 2f;
+            return clampedBounds;
         }
 
         protected PointF[] GetDebugBoundPoints(RectangleF Bounds)

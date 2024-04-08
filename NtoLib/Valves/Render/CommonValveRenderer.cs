@@ -5,13 +5,13 @@ namespace NtoLib.Valves.Render
 {
     internal class CommonValveRenderer : BaseRenderer
     {
-        private const float _widthToHeightRatio = 1.732f;
+        private const float _widthToHeightRatio = 3f / 2f;
 
 
 
         public override void Paint(Graphics graphics, PaintData data, State state)
         {
-            RectangleF valveRect = GetValveRect(data, _widthToHeightRatio);
+            RectangleF valveRect = GetElementRect(data, _widthToHeightRatio);
             PointF[] valvePoints = GetValvePoints(valveRect, data.Orientation, data.LineWidth);
 
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -36,38 +36,15 @@ namespace NtoLib.Valves.Render
             using(SolidBrush valveBrush = new SolidBrush(valveColor))
                 graphics.FillClosedCurve(valveBrush, valvePoints, FillMode.Alternate, 0);
 
-            if(state.Error)
+            if(state.Error && data.Blinker.IsLight)
             {
                 PointF[] errorPoints = GetErrorRectPoints(valveRect, data.ErrorLineWidth, data.ErrorOffset);
-                using(Pen errorPen = new Pen(ErrorColor, data.ErrorLineWidth))
+                using(Pen errorPen = new Pen(ErrorColor))
                     graphics.DrawLines(errorPen, errorPoints);
             }
         }
 
 
-
-        private RectangleF GetValveRect(PaintData data, float widthToHeightRatio)
-        {
-            RectangleF clampedBounds = data.Bounds;
-            clampedBounds.Width -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
-            clampedBounds.Height -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
-
-            if(data.Shape == Shape.Right)
-            {
-                if(data.Orientation == Orientation.Vertical)
-                    widthToHeightRatio = 1 / widthToHeightRatio;
-
-                float ratio = clampedBounds.Width / clampedBounds.Height;
-                if(ratio > widthToHeightRatio)
-                    clampedBounds.Width = clampedBounds.Height * widthToHeightRatio;
-                else if(ratio < widthToHeightRatio)
-                    clampedBounds.Height = clampedBounds.Width / widthToHeightRatio;
-            }
-
-            clampedBounds.X = (data.Bounds.Width - clampedBounds.Width) / 2f;
-            clampedBounds.Y = (data.Bounds.Height - clampedBounds.Height) / 2f;
-            return clampedBounds;
-        }
 
         private PointF[] GetValvePoints(RectangleF valveRect, Orientation orientation, float lineWidth)
         {

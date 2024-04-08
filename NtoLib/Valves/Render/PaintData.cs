@@ -1,5 +1,5 @@
-﻿using System.Drawing;
-using System.Windows.Forms;
+﻿using NtoLib.Utils;
+using System.Drawing;
 
 namespace NtoLib.Valves.Render
 {
@@ -11,6 +11,7 @@ namespace NtoLib.Valves.Render
         public float ErrorOffset;
         public Orientation Orientation;
         public Shape Shape;
+        public Blinker Blinker;
 
     }
 }

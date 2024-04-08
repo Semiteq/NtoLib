@@ -1,6 +1,7 @@
 ﻿using FB.VisualFB;
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
+using NtoLib.Utils;
 using NtoLib.Valves.Render;
 using System;
 using System.ComponentModel;
@@ -50,6 +51,23 @@ namespace NtoLib.Valves
             }
         }
 
+        private float _errorOffset = 5f;
+        [DisplayName("Отступ от ошибки")]
+        public float ErrorOffset
+        {
+            get
+            {
+                return _errorOffset;
+            }
+            set
+            {
+                if(value < 0)
+                    _errorOffset = 0;
+                else
+                    _errorOffset = value;
+            }
+        }
+
         [DisplayName("Ориентация")]
         public Orientation Orientation { get; set; }
 
@@ -64,6 +82,7 @@ namespace NtoLib.Valves
         private bool _commandImpulseInProgress;
 
         private SettingsForm _settingsForm;
+        private Blinker _blinker;
 
 
 
@@ -71,12 +90,18 @@ namespace NtoLib.Valves
         {
             InitializeComponent();
             BackColor = Color.Transparent;
+
+            _blinker = new Blinker(250);
+
+            _blinker.OnLightChanged += InvalidateIfNeeded;
         }
 
 
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            e.Graphics.Clear(BackColor);
+
             if(!FBConnector.DesignMode)
                 UpdateState();
 
@@ -84,16 +109,15 @@ namespace NtoLib.Valves
                 Bounds = Bounds,
                 LineWidth = PenWidth,
                 ErrorLineWidth = ErrorPenWidth,
-                ErrorOffset = 10f,
+                ErrorOffset = ErrorOffset,
                 Orientation = Orientation,
-                Shape = Shape
+                Shape = Shape,
+                Blinker = _blinker
             };
 
 
             BaseRenderer renderer = new CommonValveRenderer();
             renderer.Paint(e.Graphics, paintData, State);
-
-            base.OnPaint(e);
         }
 
         private void OnClick(object sender, EventArgs e)
@@ -126,6 +150,12 @@ namespace NtoLib.Valves
             Task.Run(() => SendCommandImpulse(commandId, 500));
         }
 
+        private void OnVisibleChanged(object sender, EventArgs e)
+        {
+            if(!Visible)
+                CloseSettings();
+        }
+
 
 
         private async Task SendCommandImpulse(int outputId, int msDuration)
@@ -137,6 +167,12 @@ namespace NtoLib.Valves
 
             SetPinValue(outputId, false);
             _commandImpulseInProgress = false;
+        }
+
+        private void InvalidateIfNeeded()
+        {
+            if(State.Error)
+                Invalidate();
         }
 
         private void OpenSettings()
@@ -182,11 +218,6 @@ namespace NtoLib.Valves
         private void SetPinValue<T>(int id, T value)
         {
             FBConnector.SetPinValue(id + 1000, value);
-        }
-
-        private void OnVisibleChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }
