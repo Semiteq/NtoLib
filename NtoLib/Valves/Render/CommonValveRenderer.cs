@@ -12,17 +12,23 @@ namespace NtoLib.Valves.Render
 
 
 
-        public override void Paint(Graphics graphics, PaintData paintData)
+        public override void Draw(Graphics graphics, PaintData paintData)
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
             RectangleF valveRect = GetElementRect(paintData);
+            DrawValve(graphics, valveRect, paintData, ValveControl.Status);
+        }
+
+
+
+        /// <summary>
+        /// Отрисовывает клапан, состоящий из двух треугольников в заданной области
+        /// </summary>
+        protected void DrawValve(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
+        {
+            Color[] colors = GetValveColors(status, paintData.IsLight);
             PointF[][] valvePoints = GetValvePoints(valveRect, paintData.Orientation, paintData.LineWidth);
-
-
-            Status status = ValveControl.Status;
-
-            Color[] colors = DefineValveColors(status, paintData.IsLight);
             for(int i = 0; i < valvePoints.Length; i++)
             {
                 using(SolidBrush brush = new SolidBrush(colors[i]))
@@ -30,7 +36,7 @@ namespace NtoLib.Valves.Render
 
             }
 
-            using(Pen pen = new Pen(DefineLineColor(ValveControl.Status)))
+            using(Pen pen = new Pen(GetLineColor(ValveControl.Status)))
             {
                 graphics.DrawClosedCurve(pen, valvePoints[0], 0, FillMode.Alternate);
                 graphics.DrawClosedCurve(pen, valvePoints[1], 0, FillMode.Alternate);
@@ -44,12 +50,10 @@ namespace NtoLib.Valves.Render
             }
         }
 
-
-
         /// <summary>
-        /// Возвращает массивы точек для двух треугольников соответственно
+        /// Возвращает массивы точек для двух треугольников клапана соответственно
         /// </summary>
-        private PointF[][] GetValvePoints(RectangleF valveRect, Orientation orientation, float lineWidth)
+        protected PointF[][] GetValvePoints(RectangleF valveRect, Orientation orientation, float lineWidth)
         {
             float x0 = valveRect.X + lineWidth * 0.5f;
             float y0 = valveRect.Y + lineWidth * 0.5f;
@@ -80,51 +84,12 @@ namespace NtoLib.Valves.Render
         }
 
         /// <summary>
-        /// Возвращает цвета первого и второго треугольника соответственно
+        /// Возвращает цвет обводки клапана в зависимости от его статуса
         /// </summary>
-        private Color[] DefineValveColors(Status status, bool isLight)
-        {
-            Color[] colors = new Color[2];
-
-            if(status.State == State.NoData)
-            {
-                colors[0] = NDColor;
-                colors[1] = NDColor;
-            }
-            else if(status.State == State.Open)
-            {
-                colors[0] = OpenColor;
-                colors[1] = OpenColor;
-            }
-            else if(status.State == State.Closed)
-            {
-                colors[0] = ClosedColor;
-                colors[1] = ClosedColor;
-            }
-            else
-            {
-                if(isLight)
-                {
-                    colors[0] = OpenColor;
-                    colors[1] = ClosedColor;
-                }
-                else
-                {
-                    colors[0] = ClosedColor;
-                    colors[1] = OpenColor;
-                }
-            }
-
-            return colors;
-        }
-
-        /// <summary>
-        /// Возвращает цвет обводки клапана
-        /// </summary>
-        private Color DefineLineColor(Status status)
+        protected Color GetLineColor(Status status)
         {
             State state = status.State;
-            if((state == State.Open && status.BlockClosing) || (state == State.Closed && status.BlockOpening))
+            if((state == State.Opened && status.BlockClosing) || (state == State.Closed && status.BlockOpening))
                 return BlockedColor;
             else
                 return LineColor;

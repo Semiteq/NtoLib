@@ -17,18 +17,21 @@ namespace NtoLib.Valves
     {
         public const int ConnectionOk = 1;
         public const int Opened = 2;
-        public const int Closed = 3;
-        public const int Error = 4;
-        public const int BlockOpening = 5;
-        public const int BlockClosing = 6;
-        public const int AutoMode = 7;
-        public const int Collision = 8;
-        public const int Opening = 9;
-        public const int Closing = 10;
+        public const int SmoothlyOpened = 3;
+        public const int Closed = 4;
+        public const int Error = 5;
+        public const int BlockOpening = 6;
+        public const int BlockClosing = 7;
+        public const int AutoMode = 8;
+        public const int Collision = 9;
+        public const int Opening = 10;
+        public const int Closing = 11;
+
+        public const int IsSmoothValve = 25;
 
         public const int OpenCMD = 101;
         public const int CloseCMD = 102;
-        public const int OpenSlowlyCMD = 103;
+        public const int OpenSmoothlyCMD = 103;
 
 
 
@@ -36,6 +39,7 @@ namespace NtoLib.Valves
         {
             UpdateVisualPout(ConnectionOk);
             UpdateVisualPout(Opened);
+            UpdateVisualPout(SmoothlyOpened);
             UpdateVisualPout(Closed);
             UpdateVisualPout(Error);
             UpdateVisualPout(BlockOpening);
@@ -44,10 +48,11 @@ namespace NtoLib.Valves
             UpdateVisualPout(Collision);
             UpdateVisualPout(Opening);
             UpdateVisualPout(Closing);
+            UpdateVisualPout(IsSmoothValve);
 
             UpdatePout(OpenCMD);
             UpdatePout(CloseCMD);
-            UpdatePout(OpenSlowlyCMD);
+            UpdatePout(OpenSmoothlyCMD);
         }
 
 

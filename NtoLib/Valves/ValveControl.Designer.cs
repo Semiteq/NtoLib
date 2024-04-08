@@ -34,9 +34,10 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Transparent;
+            this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.DoubleBuffered = false;
             this.Name = "ValveControl";
+            this.Size = new System.Drawing.Size(60, 40);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             this.Click += new System.EventHandler(this.HandleSingleClick);
             this.DoubleClick += new System.EventHandler(this.HandleDoubleClick);

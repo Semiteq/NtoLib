@@ -3,7 +3,8 @@
     internal enum State
     {
         NoData,
-        Open,
+        Opened,
+        SmothlyOpened,
         Closed,
         Opening,
         Closing,

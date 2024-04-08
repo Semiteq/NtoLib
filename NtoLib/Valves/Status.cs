@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Valves.Render
+﻿namespace NtoLib.Valves
 {
     internal struct Status
     {

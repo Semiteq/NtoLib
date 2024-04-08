@@ -23,10 +23,26 @@ namespace NtoLib.Valves.Render
 
 
 
-        public abstract void Paint(Graphics graphics, PaintData data);
+        public abstract void Draw(Graphics graphics, PaintData data);
 
 
 
+        /// <summary>
+        /// Возвращает границы, в которых должен быть отрисован клапан/шибер
+        /// </summary>
+        protected RectangleF GetElementRect(PaintData data)
+        {
+            RectangleF clampedBounds = data.Bounds;
+            clampedBounds.Width -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
+            clampedBounds.Height -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
+            clampedBounds.X = (data.Bounds.Width - clampedBounds.Width) / 2f;
+            clampedBounds.Y = (data.Bounds.Height - clampedBounds.Height) / 2f;
+            return clampedBounds;
+        }
+
+        /// <summary>
+        /// Возвращает точки для отрисовки по ним рамки ошибки
+        /// </summary>
         protected PointF[] GetErrorRectPoints(RectangleF valveRect, float errorLineWidth, float errorOffset)
         {
             float offset = 0.5f * errorLineWidth + errorOffset;
@@ -45,26 +61,43 @@ namespace NtoLib.Valves.Render
             return points;
         }
 
-        protected RectangleF GetElementRect(PaintData data)
+        /// <summary>
+        /// Возвращает цвета первого и второго треугольника в зависимости от статуса
+        /// </summary>
+        protected Color[] GetValveColors(Status status, bool isLight)
         {
-            RectangleF clampedBounds = data.Bounds;
-            clampedBounds.Width -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
-            clampedBounds.Height -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
-            clampedBounds.X = (data.Bounds.Width - clampedBounds.Width) / 2f;
-            clampedBounds.Y = (data.Bounds.Height - clampedBounds.Height) / 2f;
-            return clampedBounds;
-        }
+            Color[] colors = new Color[2];
 
-        protected PointF[] GetDebugBoundPoints(RectangleF Bounds)
-        {
-            PointF[] points = new PointF[6];
-            points[0] = new PointF(Bounds.Left, Bounds.Top);
-            points[1] = new PointF(Bounds.Left, Bounds.Bottom);
-            points[2] = new PointF(Bounds.Right, Bounds.Bottom);
-            points[3] = new PointF(Bounds.Right, Bounds.Top);
-            points[4] = new PointF(Bounds.Left, Bounds.Top);
-            points[5] = new PointF(Bounds.Left, Bounds.Bottom);
-            return points;
+            if(status.State == State.NoData)
+            {
+                colors[0] = NDColor;
+                colors[1] = NDColor;
+            }
+            else if(status.State == State.Opened)
+            {
+                colors[0] = OpenColor;
+                colors[1] = OpenColor;
+            }
+            else if(status.State == State.Closed || status.State == State.SmothlyOpened)
+            {
+                colors[0] = ClosedColor;
+                colors[1] = ClosedColor;
+            }
+            else
+            {
+                if(isLight)
+                {
+                    colors[0] = OpenColor;
+                    colors[1] = ClosedColor;
+                }
+                else
+                {
+                    colors[0] = ClosedColor;
+                    colors[1] = OpenColor;
+                }
+            }
+
+            return colors;
         }
     }
 }

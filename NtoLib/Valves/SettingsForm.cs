@@ -30,7 +30,7 @@ namespace NtoLib.Valves
         {
             Status status = _valveControl.Status;
 
-            lampOpened.Active = status.State == State.Open;
+            lampOpened.Active = status.State == State.Opened;
             lampClosed.Active = status.State == State.Closed;
             lampBlockOpening.Active = status.BlockOpening;
             lampBlockClosing.Active = status.BlockClosing;

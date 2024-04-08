@@ -5,7 +5,6 @@ using NtoLib.Utils;
 using NtoLib.Valves.Render;
 using System;
 using System.ComponentModel;
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -89,8 +88,6 @@ namespace NtoLib.Valves
         {
             InitializeComponent();
 
-            BackColor = Color.WhiteSmoke;
-
             _blinker = new Blinker(500);
             _blinker.OnLightChanged += InvalidateIfNeeded;
 
@@ -115,7 +112,7 @@ namespace NtoLib.Valves
                 IsLight = _blinker.IsLight
             };
 
-            _renderer.Paint(e.Graphics, paintData);
+            _renderer.Draw(e.Graphics, paintData);
         }
 
 
@@ -139,7 +136,7 @@ namespace NtoLib.Valves
             int commandId;
             if(Status.State == State.Closed)
                 commandId = ValveFB.OpenCMD;
-            else if(Status.State == State.Open)
+            else if(Status.State == State.Opened)
                 commandId = ValveFB.CloseCMD;
             else
                 return;
@@ -196,19 +193,22 @@ namespace NtoLib.Valves
             bool open = GetPinValue<bool>(ValveFB.Opened);
             bool closed = GetPinValue<bool>(ValveFB.Closed);
             bool opening = GetPinValue<bool>(ValveFB.Opening);
+            bool smoothlyOpened = GetPinValue<bool>(ValveFB.SmoothlyOpened);
             bool closing = GetPinValue<bool>(ValveFB.Closing);
             bool collision = GetPinValue<bool>(ValveFB.Collision);
 
             if(!connectionOk)
                 Status.State = State.NoData;
-            if(collision)
+            else if(collision)
                 Status.State = State.Collision;
             else if(opening)
                 Status.State = State.Opening;
+            else if(smoothlyOpened)
+                Status.State = State.SmothlyOpened;
             else if(closing)
                 Status.State = State.Closing;
             else if(open)
-                Status.State = State.Open;
+                Status.State = State.Opened;
             else if(closed)
                 Status.State = State.Closed;
             //else
@@ -219,6 +219,11 @@ namespace NtoLib.Valves
             Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpening);
             Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosing);
 
+            bool isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValve);
+            if(isSmoothValve && _renderer.GetType() == typeof(CommonValveRenderer))
+                _renderer = new SmoothValveRenderer(this);
+            else if(!isSmoothValve && _renderer.GetType() == typeof(SmoothValveRenderer))
+                _renderer = new CommonValveRenderer(this);
 
             _settingsForm?.Invalidate();
         }
