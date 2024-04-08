@@ -19,11 +19,12 @@ namespace NtoLib.Valves
         public const int Opened = 2;
         public const int Closed = 3;
         public const int Error = 4;
-        public const int OldError = 5;
-        public const int BlockOpening = 6;
-        public const int BlockClosing = 7;
-        public const int AutoMode = 8;
-        public const int Collision = 9;
+        public const int BlockOpening = 5;
+        public const int BlockClosing = 6;
+        public const int AutoMode = 7;
+        public const int Collision = 8;
+        public const int Opening = 9;
+        public const int Closing = 10;
 
         public const int OpenCMD = 101;
         public const int CloseCMD = 102;
@@ -41,6 +42,8 @@ namespace NtoLib.Valves
             UpdateVisualPout(BlockClosing);
             UpdateVisualPout(AutoMode);
             UpdateVisualPout(Collision);
+            UpdateVisualPout(Opening);
+            UpdateVisualPout(Closing);
 
             UpdatePout(OpenCMD);
             UpdatePout(CloseCMD);

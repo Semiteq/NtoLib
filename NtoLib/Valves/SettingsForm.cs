@@ -28,12 +28,12 @@ namespace NtoLib.Valves
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            State state = _valveControl.State;
+            Status status = _valveControl.Status;
 
-            lampOpened.Active = state.Opened;
-            lampClosed.Active = state.Closed;
-            lampBlockOpening.Active = state.BlockOpening;
-            lampBlockClosing.Active = state.BlockClosing;
+            lampOpened.Active = status.State == State.Open;
+            lampClosed.Active = status.State == State.Closed;
+            lampBlockOpening.Active = status.BlockOpening;
+            lampBlockClosing.Active = status.BlockClosing;
 
             base.OnPaint(e);
         }

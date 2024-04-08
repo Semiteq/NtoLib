@@ -1,10 +1,11 @@
-﻿using NtoLib.Utils;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace NtoLib.Valves.Render
 {
     internal abstract class BaseRenderer
     {
+        protected ValveControl ValveControl { get; private set; }
+
         protected readonly Color LineColor = Color.Black;
         protected readonly Color BlockedColor = Color.Orange;
         protected readonly Color OpenColor = Color.LimeGreen;
@@ -14,7 +15,15 @@ namespace NtoLib.Valves.Render
 
 
 
-        public abstract void Paint(Graphics graphics, PaintData data, State state);
+
+        public BaseRenderer(ValveControl valveControl)
+        {
+            ValveControl = valveControl;
+        }
+
+
+
+        public abstract void Paint(Graphics graphics, PaintData data);
 
 
 
@@ -36,7 +45,7 @@ namespace NtoLib.Valves.Render
             return points;
         }
 
-        protected RectangleF GetElementRect(PaintData data, float widthToHeightRatio)
+        protected RectangleF GetElementRect(PaintData data)
         {
             RectangleF clampedBounds = data.Bounds;
             clampedBounds.Width -= 2f * (data.ErrorLineWidth + data.ErrorOffset);

@@ -10,7 +10,6 @@ namespace NtoLib.Valves.Render
         public float ErrorLineWidth;
         public float ErrorOffset;
         public Orientation Orientation;
-        public Blinker Blinker;
-
+        public bool IsLight;
     }
 }

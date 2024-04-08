@@ -75,8 +75,10 @@ namespace NtoLib.Valves
         public bool IsSlideGate { get; set; }
 
 
-        internal State State;
+        internal Status Status;
         private bool _commandImpulseInProgress;
+
+        private BaseRenderer _renderer;
 
         private SettingsForm _settingsForm;
         private Blinker _blinker;
@@ -91,6 +93,8 @@ namespace NtoLib.Valves
 
             _blinker = new Blinker(500);
             _blinker.OnLightChanged += InvalidateIfNeeded;
+
+            _renderer = new CommonValveRenderer(this);
         }
 
 
@@ -100,7 +104,7 @@ namespace NtoLib.Valves
             e.Graphics.Clear(BackColor);
 
             if(!FBConnector.DesignMode)
-                UpdateState();
+                UpdateStatus();
 
             PaintData paintData = new PaintData {
                 Bounds = Bounds,
@@ -108,47 +112,44 @@ namespace NtoLib.Valves
                 ErrorLineWidth = ErrorPenWidth,
                 ErrorOffset = ErrorOffset,
                 Orientation = Orientation,
-                Blinker = _blinker
+                IsLight = _blinker.IsLight
             };
 
-
-            BaseRenderer renderer = new CommonValveRenderer();
-            renderer.Paint(e.Graphics, paintData, State);
+            _renderer.Paint(e.Graphics, paintData);
         }
 
 
-        private void OnClick(object sender, EventArgs e)
+
+        private void HandleSingleClick(object sender, EventArgs e)
         {
             MouseEventArgs me = (MouseEventArgs)e;
             if(me.Button != MouseButtons.Right)
                 return;
 
             if(_settingsForm == null)
-                OpenSettings();
+                OpenSettingsForm();
         }
 
-        private void OnDoubleClick(object sender, EventArgs e)
+        private void HandleDoubleClick(object sender, EventArgs e)
         {
             MouseEventArgs me = (MouseEventArgs)e;
             if(me.Button != MouseButtons.Left || _commandImpulseInProgress)
                 return;
 
-
             int commandId;
-            if(State.Closed)
+            if(Status.State == State.Closed)
                 commandId = ValveFB.OpenCMD;
-            else if(State.Opened)
+            else if(Status.State == State.Open)
                 commandId = ValveFB.CloseCMD;
             else
                 return;
 
-            SetPinValue(commandId, true);
-
-            Task.Run(() => SendCommandImpulse(commandId, 500));
+            Task.Run(() => SendCommandImpulseAsync(commandId, 500));
         }
 
 
-        private void OnVisibleChanged(object sender, EventArgs e)
+
+        private void HandleVisibleChanged(object sender, EventArgs e)
         {
             if(!Visible)
                 _settingsForm?.Close();
@@ -156,7 +157,7 @@ namespace NtoLib.Valves
 
 
 
-        private async Task SendCommandImpulse(int outputId, int msDuration)
+        private async Task SendCommandImpulseAsync(int outputId, int msDuration)
         {
             SetPinValue(outputId, true);
             _commandImpulseInProgress = true;
@@ -169,35 +170,55 @@ namespace NtoLib.Valves
 
         private void InvalidateIfNeeded()
         {
-            if(State.Error)
+            if(Status.State == State.Opening || Status.State == State.Closing || Status.State == State.Collision)
                 Invalidate();
         }
 
-        private void OpenSettings()
+
+        private void OpenSettingsForm()
         {
             _settingsForm = new SettingsForm(this);
-            _settingsForm.FormClosed += OnSettingsFormClosed;
+            _settingsForm.FormClosed += RemoveSettingsFormReference;
             _settingsForm.Show(Win32Window.FromInt32(User32.GetParent(Handle)));
         }
 
-        private void OnSettingsFormClosed(object sender, FormClosedEventArgs e)
+        private void RemoveSettingsFormReference(object sender, FormClosedEventArgs e)
         {
             SettingsForm form = (SettingsForm)sender;
-            form.FormClosed -= OnSettingsFormClosed;
+            form.FormClosed -= RemoveSettingsFormReference;
             _settingsForm = null;
         }
 
-        private void UpdateState()
+
+        private void UpdateStatus()
         {
-            State.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOk);
-            State.Opened = GetPinValue<bool>(ValveFB.Opened);
-            State.Closed = GetPinValue<bool>(ValveFB.Closed);
-            State.Error = GetPinValue<bool>(ValveFB.Error);
-            State.OldError = GetPinValue<bool>(ValveFB.OldError);
-            State.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpening);
-            State.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosing);
-            State.AutoMode = GetPinValue<bool>(ValveFB.AutoMode);
-            State.Collision = GetPinValue<bool>(ValveFB.Collision);
+            bool connectionOk = GetPinValue<bool>(ValveFB.ConnectionOk);
+            bool open = GetPinValue<bool>(ValveFB.Opened);
+            bool closed = GetPinValue<bool>(ValveFB.Closed);
+            bool opening = GetPinValue<bool>(ValveFB.Opening);
+            bool closing = GetPinValue<bool>(ValveFB.Closing);
+            bool collision = GetPinValue<bool>(ValveFB.Collision);
+
+            if(!connectionOk)
+                Status.State = State.NoData;
+            if(collision)
+                Status.State = State.Collision;
+            else if(opening)
+                Status.State = State.Opening;
+            else if(closing)
+                Status.State = State.Closing;
+            else if(open)
+                Status.State = State.Open;
+            else if(closed)
+                Status.State = State.Closed;
+            //else
+            //    throw new Exception("Undefined state");
+
+
+            Status.Error = GetPinValue<bool>(ValveFB.Error);
+            Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpening);
+            Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosing);
+
 
             _settingsForm?.Invalidate();
         }

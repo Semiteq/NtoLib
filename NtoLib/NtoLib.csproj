@@ -76,7 +76,7 @@
     <Compile Include="Valves\Orientation.cs" />
     <Compile Include="Valves\Render\BaseRenderer.cs" />
     <Compile Include="Valves\Render\PaintData.cs" />
-    <Compile Include="Valves\Render\State.cs" />
+    <Compile Include="Valves\Render\Status.cs" />
     <Compile Include="Valves\Render\CommonValveRenderer.cs" />
     <Compile Include="Valves\SettingsForm.cs">
       <SubType>Form</SubType>
@@ -84,6 +84,7 @@
     <Compile Include="Valves\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Valves\State.cs" />
     <Compile Include="Valves\ValveFB.cs" />
     <Compile Include="Valves\ValveControl.cs">
       <SubType>UserControl</SubType>
