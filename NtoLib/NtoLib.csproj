@@ -84,7 +84,6 @@
     <Compile Include="Valves\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Valves\Shape.cs" />
     <Compile Include="Valves\ValveFB.cs" />
     <Compile Include="Valves\ValveControl.cs">
       <SubType>UserControl</SubType>

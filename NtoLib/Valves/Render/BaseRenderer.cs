@@ -41,19 +41,6 @@ namespace NtoLib.Valves.Render
             RectangleF clampedBounds = data.Bounds;
             clampedBounds.Width -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
             clampedBounds.Height -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
-
-            if(data.Shape == Shape.Right)
-            {
-                if(data.Orientation == Orientation.Vertical)
-                    widthToHeightRatio = 1 / widthToHeightRatio;
-
-                float ratio = clampedBounds.Width / clampedBounds.Height;
-                if(ratio > widthToHeightRatio)
-                    clampedBounds.Width = clampedBounds.Height * widthToHeightRatio;
-                else if(ratio < widthToHeightRatio)
-                    clampedBounds.Height = clampedBounds.Width / widthToHeightRatio;
-            }
-
             clampedBounds.X = (data.Bounds.Width - clampedBounds.Width) / 2f;
             clampedBounds.Y = (data.Bounds.Height - clampedBounds.Height) / 2f;
             return clampedBounds;

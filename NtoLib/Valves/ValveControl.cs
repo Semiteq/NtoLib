@@ -74,9 +74,6 @@ namespace NtoLib.Valves
         [DisplayName("Шибер")]
         public bool IsSlideGate { get; set; }
 
-        [DisplayName("Форма")]
-        public Shape Shape { get; set; }
-
 
         internal State State;
         private bool _commandImpulseInProgress;
@@ -89,10 +86,10 @@ namespace NtoLib.Valves
         public ValveControl()
         {
             InitializeComponent();
-            BackColor = Color.Transparent;
 
-            _blinker = new Blinker(250);
+            BackColor = Color.WhiteSmoke;
 
+            _blinker = new Blinker(500);
             _blinker.OnLightChanged += InvalidateIfNeeded;
         }
 
@@ -111,7 +108,6 @@ namespace NtoLib.Valves
                 ErrorLineWidth = ErrorPenWidth,
                 ErrorOffset = ErrorOffset,
                 Orientation = Orientation,
-                Shape = Shape,
                 Blinker = _blinker
             };
 
@@ -119,6 +115,7 @@ namespace NtoLib.Valves
             BaseRenderer renderer = new CommonValveRenderer();
             renderer.Paint(e.Graphics, paintData, State);
         }
+
 
         private void OnClick(object sender, EventArgs e)
         {
@@ -150,10 +147,11 @@ namespace NtoLib.Valves
             Task.Run(() => SendCommandImpulse(commandId, 500));
         }
 
+
         private void OnVisibleChanged(object sender, EventArgs e)
         {
             if(!Visible)
-                CloseSettings();
+                _settingsForm?.Close();
         }
 
 
@@ -180,12 +178,6 @@ namespace NtoLib.Valves
             _settingsForm = new SettingsForm(this);
             _settingsForm.FormClosed += OnSettingsFormClosed;
             _settingsForm.Show(Win32Window.FromInt32(User32.GetParent(Handle)));
-        }
-
-        private void CloseSettings()
-        {
-            if(_settingsForm != null)
-                _settingsForm.Close();
         }
 
         private void OnSettingsFormClosed(object sender, FormClosedEventArgs e)
