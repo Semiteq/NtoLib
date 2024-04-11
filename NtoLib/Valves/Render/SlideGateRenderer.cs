@@ -8,8 +8,8 @@ namespace NtoLib.Valves.Render
         /// <summary>Толщина паза задвижки относительно ширины шибера</summary>
         private const float _relativeGrooveWidth = 0.12f;
 
-        /// <summary>Толщина задвижки относительно ширины паза</summary>
-        private const float _relativeGateWidth = 0.5f;
+        /// <summary>Толщина задвижки относительно внутренней ширины паза</summary>
+        private const float _relativeGateWidth = 0.75f;
 
 
 
@@ -66,7 +66,7 @@ namespace NtoLib.Valves.Render
 
         private void DrawGate(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
         {
-            RectangleF gateRect = GetGateRect(valveRect, status, paintData.IsLight);
+            RectangleF gateRect = GetGateRect(valveRect, paintData.LineWidth, status, paintData.IsLight);
 
             using(Brush brush = new SolidBrush(RenderParams.ColorLines))
                 graphics.FillRectangle(brush, gateRect);
@@ -106,15 +106,16 @@ namespace NtoLib.Valves.Render
             return points;
         }
 
-        private RectangleF GetGateRect(RectangleF grooveRect, Status status, bool isLight)
+        private RectangleF GetGateRect(RectangleF grooveRect, float grooveLineWidth, Status status, bool isLight)
         {
             RectangleF gateRect = new RectangleF();
-            float gateWidth = grooveRect.Width * _relativeGateWidth;
+            float gateWidth = (grooveRect.Width - 2f * grooveLineWidth) * _relativeGateWidth;
+            float gap = (grooveRect.Width - 2f * grooveLineWidth - gateWidth) / 2f;
 
             gateRect.X = grooveRect.X + (grooveRect.Width - gateWidth) / 2f;
             gateRect.Width = gateWidth;
 
-            float gateHeight = grooveRect.Height * 0.45f;
+            float gateHeight = (grooveRect.Height - 2f * grooveLineWidth - 3f * gap) / 2f;
             gateRect.Height = gateHeight;
 
             float offset = (grooveRect.Height - gateHeight * 2f) / 3f;
