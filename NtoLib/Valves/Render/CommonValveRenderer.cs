@@ -5,10 +5,7 @@ namespace NtoLib.Valves.Render
 {
     internal class CommonValveRenderer : BaseRenderer
     {
-        public CommonValveRenderer(ValveControl valveControl) : base(valveControl)
-        {
-
-        }
+        public CommonValveRenderer(ValveControl valveControl) : base(valveControl) { }
 
 
 
@@ -16,8 +13,12 @@ namespace NtoLib.Valves.Render
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
+            Status status = Control.Status;
             RectangleF valveRect = GetElementRect(paintData);
-            DrawValve(graphics, valveRect, paintData, ValveControl.Status);
+            DrawValve(graphics, valveRect, paintData, status);
+
+            if(status.Error)
+                DrawErrorRectangle(graphics, valveRect, paintData);
         }
 
 
@@ -36,17 +37,10 @@ namespace NtoLib.Valves.Render
 
             }
 
-            using(Pen pen = new Pen(GetLineColor(ValveControl.Status)))
+            using(Pen pen = new Pen(GetLineColor(Control.Status), paintData.LineWidth))
             {
                 graphics.DrawClosedCurve(pen, valvePoints[0], 0, FillMode.Alternate);
                 graphics.DrawClosedCurve(pen, valvePoints[1], 0, FillMode.Alternate);
-            }
-
-            if(status.Error)
-            {
-                PointF[] errorPoints = GetErrorRectPoints(valveRect, paintData.ErrorLineWidth, paintData.ErrorOffset);
-                using(Pen errorPen = new Pen(RenderParams.ColorError))
-                    graphics.DrawLines(errorPen, errorPoints);
             }
         }
 
@@ -81,18 +75,6 @@ namespace NtoLib.Valves.Render
             }
 
             return points;
-        }
-
-        /// <summary>
-        /// Возвращает цвет обводки клапана в зависимости от его статуса
-        /// </summary>
-        protected Color GetLineColor(Status status)
-        {
-            State state = status.State;
-            if((state == State.Opened && status.BlockClosing) || (state == State.Closed && status.BlockOpening))
-                return RenderParams.ColorBlock;
-            else
-                return RenderParams.ColorLines;
         }
     }
 }

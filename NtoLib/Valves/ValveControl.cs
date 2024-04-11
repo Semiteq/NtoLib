@@ -70,9 +70,38 @@ namespace NtoLib.Valves
         [DisplayName("Ориентация")]
         public Orientation Orientation { get; set; }
 
+        private bool _isSlideGate;
         [DisplayName("Шибер")]
-        public bool IsSlideGate { get; set; }
+        public bool IsSlideGate
+        {
+            get
+            {
+                return _isSlideGate;
+            }
+            set
+            {
+                _isSlideGate = value;
 
+                if(_isSlideGate)
+                {
+                    if(_renderer.GetType() != typeof(SlideGateRenderer))
+                        _renderer = new SlideGateRenderer(this);
+                }
+                else
+                {
+                    if(_isSmoothValve)
+                    {
+                        if(_renderer.GetType() != typeof(SmoothValveRenderer))
+                            _renderer = new SmoothValveRenderer(this);
+                    }
+                    else
+                    {
+                        if(_renderer.GetType() != typeof(CommonValveRenderer))
+                            _renderer = new CommonValveRenderer(this);
+                    }
+                }
+            }
+        }
 
         internal Status Status;
         private bool _commandImpulseInProgress;
@@ -81,6 +110,8 @@ namespace NtoLib.Valves
 
         private SettingsForm _settingsForm;
         private Blinker _blinker;
+
+        private bool _isSmoothValve = false;
 
 
 
@@ -219,11 +250,15 @@ namespace NtoLib.Valves
             Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpening);
             Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosing);
 
-            bool isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValve);
-            if(isSmoothValve && _renderer.GetType() == typeof(CommonValveRenderer))
-                _renderer = new SmoothValveRenderer(this);
-            else if(!isSmoothValve && _renderer.GetType() == typeof(SmoothValveRenderer))
-                _renderer = new CommonValveRenderer(this);
+            _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValve);
+
+            if(!IsSlideGate)
+            {
+                if(_isSmoothValve && _renderer.GetType() != typeof(SmoothValveRenderer))
+                    _renderer = new SmoothValveRenderer(this);
+                else if(!_isSmoothValve && _renderer.GetType() != typeof(CommonValveRenderer))
+                    _renderer = new CommonValveRenderer(this);
+            }
 
             _settingsForm?.Invalidate();
         }
