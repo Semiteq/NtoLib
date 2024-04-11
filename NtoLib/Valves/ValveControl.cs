@@ -91,6 +91,12 @@ namespace NtoLib.Valves
             _renderer.Draw(e.Graphics, Bounds, Orientation, _blinker.IsLight);
         }
 
+        protected override void ToDesign()
+        {
+            _settingsForm?.Close();
+            base.ToDesign();
+        }
+
 
 
         private void HandleSingleClick(object sender, EventArgs e)
