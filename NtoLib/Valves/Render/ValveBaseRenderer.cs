@@ -1,8 +1,10 @@
-﻿using System.Drawing;
+﻿using NtoLib.Render;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace NtoLib.Valves.Render
 {
-    internal abstract class BaseRenderer
+    internal abstract class ValveBaseRenderer
     {
         /// <summary>Толщина всех линий, кроме линии ошибки</summary>
         public float LineWidth { get; protected set; }
@@ -19,7 +21,7 @@ namespace NtoLib.Valves.Render
 
 
 
-        public BaseRenderer(ValveControl valveControl)
+        public ValveBaseRenderer(ValveControl valveControl)
         {
             Control = valveControl;
         }
@@ -36,25 +38,36 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Отрисовывает рамку ошибки
         /// </summary>
-        protected void DrawErrorRectangle(Graphics graphics, RectangleF valveRect, PaintData paintData)
+        protected void DrawErrorRectangle(Graphics graphics, Bounds graphicsBound)
         {
-            PointF[] errorPoints = GetErrorRectPoints(valveRect, ErrorLineWidth, ErrorOffset);
-            using(Pen errorPen = new Pen(RenderParams.ColorError))
-                graphics.DrawLines(errorPen, errorPoints);
+            PointF[] errorPoints = graphicsBound.GetPoints(- ErrorLineWidth / 2f);
+            using(Pen errorPen = new Pen(RenderParams.ColorError, ErrorLineWidth))
+                graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);
         }
 
         /// <summary>
         /// Возвращает границы, в которых должен быть отрисован клапан/шибер
         /// </summary>
-        protected RectangleF GetElementRect(PaintData data)
+        protected Bounds GetValveBounds(PaintData data)
         {
-            RectangleF clampedBounds = data.Bounds;
-            clampedBounds.Width -= 2f * (ErrorLineWidth + ErrorOffset);
-            clampedBounds.Height -= 2f * (ErrorLineWidth + ErrorOffset);
-            clampedBounds.X = (data.Bounds.Width - clampedBounds.Width) / 2f;
-            clampedBounds.Y = (data.Bounds.Height - clampedBounds.Height) / 2f;
-            return clampedBounds;
+            Bounds bounds = data.Bounds;
+            float offset = 2f * (ErrorLineWidth + ErrorOffset);
+            bounds.Width -= offset;
+            bounds.Height -= offset;
+            return bounds;
         }
+
+        ///// <summary>
+        ///// Возвращает точки для отрисовки по ним рамки ошибки
+        ///// </summary>
+        //private Bounds GetErrorBounds(Bounds valveBounds)
+        //{
+        //    Bounds errorBounds = valveBounds;
+        //    float offset = 2f * (ErrorLineWidth + ErrorOffset);
+        //    errorBounds.Width += offset;
+        //    errorBounds.Height += offset;
+        //    return errorBounds;
+        //}
 
         /// <summary>
         /// Возвращает цвета первого и второго треугольника в зависимости от статуса
@@ -105,27 +118,6 @@ namespace NtoLib.Valves.Render
                 return RenderParams.ColorBlocked;
             else
                 return RenderParams.ColorLines;
-        }
-
-        /// <summary>
-        /// Возвращает точки для отрисовки по ним рамки ошибки
-        /// </summary>
-        private PointF[] GetErrorRectPoints(RectangleF valveRect, float errorLineWidth, float errorOffset)
-        {
-            float offset = 0.5f * errorLineWidth + errorOffset;
-            float x0 = valveRect.X - offset;
-            float y0 = valveRect.Y - offset;
-            float x1 = valveRect.X + valveRect.Width + offset;
-            float y1 = valveRect.Y + valveRect.Height + offset;
-
-            PointF[] points = new PointF[6];
-            points[0] = new PointF(x0, y0);
-            points[1] = new PointF(x0, y1);
-            points[2] = new PointF(x1, y1);
-            points[3] = new PointF(x1, y0);
-            points[4] = new PointF(x0, y0);
-            points[5] = new PointF(x0, y1);
-            return points;
         }
     }
 }

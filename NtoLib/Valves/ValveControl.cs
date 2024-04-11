@@ -1,10 +1,12 @@
 ﻿using FB.VisualFB;
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
+using NtoLib.Render;
 using NtoLib.Utils;
 using NtoLib.Valves.Render;
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -55,7 +57,7 @@ namespace NtoLib.Valves
         internal Status Status;
         private bool _commandImpulseInProgress;
 
-        private BaseRenderer _renderer;
+        private ValveBaseRenderer _renderer;
 
         private SettingsForm _settingsForm;
         private Blinker _blinker;
@@ -83,8 +85,16 @@ namespace NtoLib.Valves
             if(!FBConnector.DesignMode)
                 UpdateStatus();
 
+            RectangleF localBoundsRect = Bounds;
+            localBoundsRect.X = -0.5f;
+            localBoundsRect.Y = -0.5f;
+
+            PointF pivot = new PointF(0.5f, 0.5f);
+
+            Bounds bounds = NtoLib.Render.Bounds.FromRectangle(localBoundsRect, pivot);
+
             PaintData paintData = new PaintData {
-                Bounds = Bounds,
+                Bounds = bounds,
                 Orientation = Orientation,
                 IsLight = _blinker.IsLight
             };

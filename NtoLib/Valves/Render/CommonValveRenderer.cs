@@ -1,9 +1,10 @@
-﻿using System.Drawing;
+﻿using NtoLib.Render;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 
 namespace NtoLib.Valves.Render
 {
-    internal class CommonValveRenderer : BaseRenderer
+    internal class CommonValveRenderer : ValveBaseRenderer
     {
         public CommonValveRenderer(ValveControl valveControl) : base(valveControl) 
         {
@@ -19,12 +20,22 @@ namespace NtoLib.Valves.Render
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
+            if(paintData.Orientation == Orientation.Vertical)
+            {
+                Matrix transform = graphics.Transform;
+                transform.RotateAt(90f, paintData.Bounds.Center);
+                graphics.Transform = transform;
+                transform.Dispose();
+
+                (paintData.Bounds.Width, paintData.Bounds.Height) = (paintData.Bounds.Height, paintData.Bounds.Width);
+            }
+
             Status status = Control.Status;
-            RectangleF valveRect = GetElementRect(paintData);
-            DrawValve(graphics, valveRect, paintData, status);
+            Bounds valveBounds = GetValveBounds(paintData);
+            DrawValve(graphics, valveBounds, paintData, status);
 
             if(status.Error)
-                DrawErrorRectangle(graphics, valveRect, paintData);
+                DrawErrorRectangle(graphics, paintData.Bounds);
         }
 
 
@@ -32,10 +43,10 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Отрисовывает клапан, состоящий из двух треугольников в заданной области
         /// </summary>
-        protected void DrawValve(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
+        protected void DrawValve(Graphics graphics, Bounds valveBounds, PaintData paintData, Status status)
         {
             Color[] colors = GetValveColors(status, paintData.IsLight);
-            PointF[][] valvePoints = GetValvePoints(valveRect, paintData.Orientation, LineWidth);
+            PointF[][] valvePoints = GetValvePoints(valveBounds);
             for(int i = 0; i < valvePoints.Length; i++)
             {
                 using(SolidBrush brush = new SolidBrush(colors[i]))
@@ -53,32 +64,22 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Возвращает массивы точек для двух треугольников клапана соответственно
         /// </summary>
-        protected PointF[][] GetValvePoints(RectangleF valveRect, Orientation orientation, float lineWidth)
+        protected PointF[][] GetValvePoints(Bounds valveBounds)
         {
-            float x0 = valveRect.X + lineWidth * 0.5f;
-            float y0 = valveRect.Y + lineWidth * 0.5f;
-            float x1 = valveRect.X + valveRect.Width - lineWidth * 0.577f;
-            float y1 = valveRect.Y + valveRect.Height - lineWidth * 0.577f;
-            float xC = (x0 + x1) / 2f;
-            float yC = (y0 + y1) / 2f;
+            valveBounds.Width -= LineWidth;
+            valveBounds.Height -= LineWidth * 1.154f;
 
             PointF[][] points = new PointF[2][];
             points[0] = new[] {
-                    new PointF(x0, y0),
-                    new PointF(xC, yC),
-                    new PointF(x0, y1)
+                    valveBounds.LeftTop,
+                    valveBounds.Center,
+                    valveBounds.LeftBottom
             };
             points[1] = new[] {
-                    new PointF(x1, y1),
-                    new PointF(xC, yC),
-                    new PointF(x1, y0)
+                    valveBounds.RightTop,
+                    valveBounds.Center,
+                    valveBounds.RightBottom
             };
-
-            if(orientation == Orientation.Vertical)
-            {
-                points[0][2] = new PointF(x1, y0);
-                points[1][2] = new PointF(x0, y1);
-            }
 
             return points;
         }

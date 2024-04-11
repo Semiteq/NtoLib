@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RenderParams.cs" />
+    <Compile Include="Render\Bounds.cs" />
     <Compile Include="Utils\Blinker.cs" />
     <Compile Include="Utils\Lamp.cs">
       <SubType>UserControl</SubType>
@@ -75,7 +76,7 @@
       <DependentUpon>Lamp.cs</DependentUpon>
     </Compile>
     <Compile Include="Valves\Orientation.cs" />
-    <Compile Include="Valves\Render\BaseRenderer.cs" />
+    <Compile Include="Valves\Render\ValveBaseRenderer.cs" />
     <Compile Include="Valves\Render\PaintData.cs" />
     <Compile Include="Valves\Render\SlideGateRenderer.cs" />
     <Compile Include="Valves\Render\SmoothValveRenderer.cs" />

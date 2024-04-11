@@ -1,9 +1,10 @@
-﻿using System.Drawing;
+﻿using NtoLib.Render;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 
 namespace NtoLib.Valves.Render
 {
-    internal class SlideGateRenderer : BaseRenderer
+    internal class SlideGateRenderer : ValveBaseRenderer
     {
         /// <summary>Толщина паза задвижки относительно ширины шибера</summary>
         private const float _relativeGrooveWidth = 0.12f;
@@ -15,7 +16,7 @@ namespace NtoLib.Valves.Render
 
         public SlideGateRenderer(ValveControl valveControl) : base(valveControl)
         {
-            LineWidth = 4f;
+            LineWidth = 2f;
 
             ErrorLineWidth = 2f;
             ErrorOffset = 5f;
@@ -27,13 +28,23 @@ namespace NtoLib.Valves.Render
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
+            if(paintData.Orientation == Orientation.Vertical)
+            {
+                Matrix transform = graphics.Transform;
+                transform.RotateAt(90f, paintData.Bounds.Center);
+                graphics.Transform = transform;
+                transform.Dispose();
+
+                (paintData.Bounds.Width, paintData.Bounds.Height) = (paintData.Bounds.Height, paintData.Bounds.Width);
+            }
+
             Status status = Control.Status;
-            RectangleF valveRect = GetElementRect(paintData);
-            DrawValve(graphics, valveRect, status, paintData.IsLight);
-            DrawGroove(graphics, valveRect, status, paintData.IsLight);
+            Bounds valveBounds = GetValveBounds(paintData);
+            DrawValve(graphics, valveBounds, status, paintData.IsLight);
+            DrawGrooveAndGate(graphics, valveBounds, status, paintData.IsLight);
 
             if(status.Error)
-                DrawErrorRectangle(graphics, valveRect, paintData);
+                DrawErrorRectangle(graphics, paintData.Bounds);
         }
 
 
@@ -42,10 +53,10 @@ namespace NtoLib.Valves.Render
         /// Отрисовывает клапан, состоящий из двух треугольников в заданной области, 
         /// при этом оставляет между треугольниками зазор для задвижки шибера
         /// </summary>
-        private void DrawValve(Graphics graphics, RectangleF valveRect, Status status, bool isLight)
+        private void DrawValve(Graphics graphics, Bounds valveBounds, Status status, bool isLight)
         {
             Color[] colors = GetValveColors(status, isLight);
-            PointF[][] valvePoints = GetValvePoints(valveRect);
+            PointF[][] valvePoints = GetValvePoints(valveBounds);
             for(int i = 0; i < valvePoints.Length; i++)
             {
                 using(SolidBrush brush = new SolidBrush(colors[i]))
@@ -63,26 +74,18 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Отрисовывает паз для задвижки в виде прямоугольной рамки
         /// </summary>
-        private void DrawGroove(Graphics graphics, RectangleF valveRect, Status status, bool isLight)
+        private void DrawGrooveAndGate(Graphics graphics, Bounds valveBounds, Status status, bool isLight)
         {
-            RectangleF grooveRect = GetGrooveRect(valveRect);
-            PointF[] groovePoints = GetGroovePoints(grooveRect);
+            Bounds grooveBounds = GetGrooveBounds(valveBounds);
+            PointF[] groovePoints = grooveBounds.GetPoints(-LineWidth / 2f);
 
             using(Pen pen = new Pen(RenderParams.ColorLines, LineWidth))
                 graphics.DrawClosedCurve(pen, groovePoints, 0, FillMode.Alternate);
 
-            DrawGate(graphics, grooveRect, status, isLight);
-        }
-
-        /// <summary>
-        /// Отрисовывает задвижку шибера в виде прямоугольника
-        /// </summary>
-        private void DrawGate(Graphics graphics, RectangleF grooveRect, Status status, bool isLigth)
-        {
-            RectangleF gateRect = GetGateRect(grooveRect, status, isLigth);
+            Bounds gateBounds = GetGateBounds(grooveBounds, status, isLight);
 
             using(Brush brush = new SolidBrush(RenderParams.ColorLines))
-                graphics.FillRectangle(brush, gateRect);
+                graphics.FillRectangle(brush, gateBounds.ToRectangleF());
         }
 
 
@@ -90,28 +93,25 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Возвращает массивы точек для двух треугольников шибера соответственно
         /// </summary>
-        private PointF[][] GetValvePoints(RectangleF valveRect)
+        private PointF[][] GetValvePoints(Bounds valveBounds)
         {
-            float x0 = valveRect.X + LineWidth * 0.5f;
-            float y0 = valveRect.Y + LineWidth * 0.5f;
-            float x1 = valveRect.X + valveRect.Width - LineWidth * 0.577f;
-            float y1 = valveRect.Y + valveRect.Height - LineWidth * 0.577f;
+            valveBounds.Width -= LineWidth;
+            valveBounds.Height -= LineWidth * 1.154f;
 
-            float grooveWidth = valveRect.Width * _relativeGrooveWidth;
-            float xCl = (x0 + x1) / 2f - grooveWidth / 2f;
-            float xCr = xCl + grooveWidth;
-            float yC = (y0 + y1) / 2f;
+            float offsetFromCenter = valveBounds.Width * _relativeGrooveWidth / 2f;
+            PointF leftTriangleCenter = new PointF(valveBounds.CenterX - offsetFromCenter, valveBounds.CenterY);
+            PointF rightTriangleCenter = new PointF(valveBounds.CenterX + offsetFromCenter, valveBounds.CenterY);
 
             PointF[][] points = new PointF[2][];
             points[0] = new[] {
-                    new PointF(x0, y0),
-                    new PointF(xCl, yC),
-                    new PointF(x0, y1)
+                    valveBounds.LeftTop,
+                    leftTriangleCenter,
+                    valveBounds.LeftBottom
             };
             points[1] = new[] {
-                    new PointF(x1, y1),
-                    new PointF(xCr, yC),
-                    new PointF(x1, y0)
+                    valveBounds.RightTop,
+                    rightTriangleCenter,
+                    valveBounds.RightBottom
             };
 
             return points;
@@ -120,82 +120,39 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Возвращает границы паза для задвижки шибера
         /// </summary>
-        private RectangleF GetGrooveRect(RectangleF valveRect)
+        private Bounds GetGrooveBounds(Bounds valveBounds)
         {
-            RectangleF grooveRect = new RectangleF();
-            float grooveWidth = valveRect.Width * _relativeGrooveWidth;
+            Bounds grooveBounds = valveBounds;
 
-            grooveRect.X = valveRect.X + valveRect.Width / 2f - grooveWidth / 2f;
-            grooveRect.Y = valveRect.Y;
-            grooveRect.Width = grooveWidth;
-            grooveRect.Height = valveRect.Height * (2f / 3f);
+            grooveBounds.Y -= valveBounds.Height / 6f;
+            grooveBounds.Height = valveBounds.Height * 2f / 3f;
+            grooveBounds.Width = valveBounds.Width * _relativeGrooveWidth;
 
-            return grooveRect;
-        }
-
-        /// <summary>
-        /// Возвращает массив точек, по которым должен быть отрисован паз
-        /// </summary>
-        private PointF[] GetGroovePoints(RectangleF grooveRect)
-        {
-            float offset = LineWidth / 2f;
-
-            float x0 = grooveRect.X + offset;
-            float y0 = grooveRect.Y + offset;
-            float x1 = grooveRect.X + grooveRect.Width - offset;
-            float y1 = grooveRect.Y + grooveRect.Height - offset;
-
-            PointF[] points = new PointF[] {
-                new PointF(x0, y0),
-                new PointF(x1, y0),
-                new PointF(x1, y1),
-                new PointF(x0, y1)
-            };
-
-            return points;
+            return grooveBounds;
         }
 
         /// <summary>
         /// Возвращает границы задвижки шибера
         /// </summary>
-        private RectangleF GetGateRect(RectangleF grooveRect, Status status, bool isLight)
+        private Bounds GetGateBounds(Bounds grooveBounds, Status status, bool isLight)
         {
-            RectangleF gateRect = new RectangleF();
-            float gateWidth = (grooveRect.Width - 2f * LineWidth) * _relativeGateWidth;
-            float gap = (grooveRect.Width - 2f * LineWidth - gateWidth) / 2f;
+            Bounds gateBounds = grooveBounds;
 
-            gateRect.X = grooveRect.X + (grooveRect.Width - gateWidth) / 2f;
-            gateRect.Width = gateWidth;
+            gateBounds.Width = (grooveBounds.Width - 2f * LineWidth) * _relativeGateWidth;
 
-            float gateHeight = (grooveRect.Height - 2f * LineWidth - 3f * gap) / 2f;
-            gateRect.Height = gateHeight;
+            float gap = (grooveBounds.Width - 2f * LineWidth - gateBounds.Width) / 2f;
+            gateBounds.Height = (grooveBounds.Height - 2f * LineWidth - 3f * gap) / 2f;
 
-            float offset = (grooveRect.Height - gateHeight * 2f) / 3f;
-            if(status.State == State.Opened)
+            if(status.State == State.Opened || (status.State == State.Opening && isLight) || (status.State == State.Closing && !isLight))
             {
-                gateRect.Y = grooveRect.Y + offset;
+                gateBounds.Y -= grooveBounds.Height / 4f - LineWidth / 2f;
             }
-            else if(status.State == State.Closed)
+            else if(status.State == State.Closed || (status.State == State.Opening && !isLight) || (status.State == State.Closing && isLight))
             {
-                gateRect.Y = grooveRect.Y + offset * 2f + gateHeight;
-            }
-            else if(status.State == State.Opening || status.State == State.Closing)
-            {
-                if(isLight)
-                {
-                    gateRect.Y = grooveRect.Y + offset;
-                }
-                else
-                {
-                    gateRect.Y = grooveRect.Y + offset * 2f + gateHeight;
-                }
-            }
-            else
-            {
-                gateRect.Y = grooveRect.Y + offset * 1.5f + gateHeight * 0.5f;
+                gateBounds.Y += grooveBounds.Height / 4f - LineWidth / 2f;
             }
 
-            return gateRect;
+            return gateBounds;
         }
     }
 }

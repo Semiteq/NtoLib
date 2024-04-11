@@ -1,11 +1,10 @@
-﻿using NtoLib.Utils;
-using System.Drawing;
+﻿using NtoLib.Render;
 
 namespace NtoLib.Valves.Render
 {
     internal struct PaintData
     {
-        public RectangleF Bounds;
+        public Bounds Bounds;
         public Orientation Orientation;
         public bool IsLight;
     }
