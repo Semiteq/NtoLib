@@ -5,7 +5,13 @@ namespace NtoLib.Valves.Render
 {
     internal class CommonValveRenderer : BaseRenderer
     {
-        public CommonValveRenderer(ValveControl valveControl) : base(valveControl) { }
+        public CommonValveRenderer(ValveControl valveControl) : base(valveControl) 
+        {
+            LineWidth = 2f;
+
+            ErrorLineWidth = 2f;
+            ErrorOffset = 5f;
+        }
 
 
 
@@ -29,7 +35,7 @@ namespace NtoLib.Valves.Render
         protected void DrawValve(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
         {
             Color[] colors = GetValveColors(status, paintData.IsLight);
-            PointF[][] valvePoints = GetValvePoints(valveRect, paintData.Orientation, paintData.LineWidth);
+            PointF[][] valvePoints = GetValvePoints(valveRect, paintData.Orientation, LineWidth);
             for(int i = 0; i < valvePoints.Length; i++)
             {
                 using(SolidBrush brush = new SolidBrush(colors[i]))
@@ -37,7 +43,7 @@ namespace NtoLib.Valves.Render
 
             }
 
-            using(Pen pen = new Pen(GetLineColor(Control.Status), paintData.LineWidth))
+            using(Pen pen = new Pen(GetLineColor(Control.Status), LineWidth))
             {
                 graphics.DrawClosedCurve(pen, valvePoints[0], 0, FillMode.Alternate);
                 graphics.DrawClosedCurve(pen, valvePoints[1], 0, FillMode.Alternate);

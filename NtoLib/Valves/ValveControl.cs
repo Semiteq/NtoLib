@@ -16,57 +16,6 @@ namespace NtoLib.Valves
     [DisplayName("Имя какое-то")]
     public partial class ValveControl : VisualControlBase
     {
-        private float _penWidth = 2f;
-        [DisplayName("Толщина линии")]
-        public float PenWidth
-        {
-            get
-            {
-                return _penWidth;
-            }
-            set
-            {
-                if(value < 1)
-                    _penWidth = 1;
-                else
-                    _penWidth = value;
-            }
-        }
-
-        private float _errorPenWidth = 2f;
-        [DisplayName("Толщина линии ошибки")]
-        public float ErrorPenWidth
-        {
-            get
-            {
-                return _errorPenWidth;
-            }
-            set
-            {
-                if(value < 1)
-                    _errorPenWidth = 1;
-                else
-                    _errorPenWidth = value;
-            }
-        }
-
-        private float _errorOffset = 5f;
-        [DisplayName("Отступ от ошибки")]
-        public float ErrorOffset
-        {
-            get
-            {
-                return _errorOffset;
-            }
-            set
-            {
-                if(value < 0)
-                    _errorOffset = 0;
-                else
-                    _errorOffset = value;
-            }
-        }
-
         [DisplayName("Ориентация")]
         public Orientation Orientation { get; set; }
 
@@ -136,9 +85,6 @@ namespace NtoLib.Valves
 
             PaintData paintData = new PaintData {
                 Bounds = Bounds,
-                LineWidth = PenWidth,
-                ErrorLineWidth = ErrorPenWidth,
-                ErrorOffset = ErrorOffset,
                 Orientation = Orientation,
                 IsLight = _blinker.IsLight
             };

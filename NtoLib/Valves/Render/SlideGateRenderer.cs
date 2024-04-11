@@ -15,7 +15,10 @@ namespace NtoLib.Valves.Render
 
         public SlideGateRenderer(ValveControl valveControl) : base(valveControl)
         {
+            LineWidth = 4f;
 
+            ErrorLineWidth = 2f;
+            ErrorOffset = 5f;
         }
 
 
@@ -26,8 +29,8 @@ namespace NtoLib.Valves.Render
 
             Status status = Control.Status;
             RectangleF valveRect = GetElementRect(paintData);
-            DrawValve(graphics, valveRect, paintData, status);
-            DrawGroove(graphics, valveRect, paintData, status);
+            DrawValve(graphics, valveRect, status, paintData.IsLight);
+            DrawGroove(graphics, valveRect, status, paintData.IsLight);
 
             if(status.Error)
                 DrawErrorRectangle(graphics, valveRect, paintData);
@@ -35,10 +38,10 @@ namespace NtoLib.Valves.Render
 
 
 
-        private void DrawValve(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
+        private void DrawValve(Graphics graphics, RectangleF valveRect, Status status, bool isLight)
         {
-            Color[] colors = GetValveColors(status, paintData.IsLight);
-            PointF[][] valvePoints = GetValvePoints(valveRect, paintData.LineWidth);
+            Color[] colors = GetValveColors(status, isLight);
+            PointF[][] valvePoints = GetValvePoints(valveRect);
             for(int i = 0; i < valvePoints.Length; i++)
             {
                 using(SolidBrush brush = new SolidBrush(colors[i]))
@@ -46,27 +49,27 @@ namespace NtoLib.Valves.Render
 
             }
 
-            using(Pen pen = new Pen(GetLineColor(Control.Status), paintData.LineWidth))
+            using(Pen pen = new Pen(GetLineColor(Control.Status), LineWidth))
             {
                 graphics.DrawClosedCurve(pen, valvePoints[0], 0, FillMode.Alternate);
                 graphics.DrawClosedCurve(pen, valvePoints[1], 0, FillMode.Alternate);
             }
         }
 
-        private void DrawGroove(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
+        private void DrawGroove(Graphics graphics, RectangleF valveRect, Status status, bool isLight)
         {
             RectangleF grooveRect = GetGrooveRect(valveRect);
-            PointF[] groovePoints = GetGroovePoints(grooveRect, paintData);
+            PointF[] groovePoints = GetGroovePoints(grooveRect);
 
-            using(Pen pen = new Pen(RenderParams.ColorLines, paintData.LineWidth))
+            using(Pen pen = new Pen(RenderParams.ColorLines, LineWidth))
                 graphics.DrawClosedCurve(pen, groovePoints, 0, FillMode.Alternate);
 
-            DrawGate(graphics, grooveRect, paintData, status);
+            DrawGate(graphics, grooveRect, status, isLight);
         }
 
-        private void DrawGate(Graphics graphics, RectangleF valveRect, PaintData paintData, Status status)
+        private void DrawGate(Graphics graphics, RectangleF valveRect, Status status, bool isLigth)
         {
-            RectangleF gateRect = GetGateRect(valveRect, paintData.LineWidth, status, paintData.IsLight);
+            RectangleF gateRect = GetGateRect(valveRect, status, isLigth);
 
             using(Brush brush = new SolidBrush(RenderParams.ColorLines))
                 graphics.FillRectangle(brush, gateRect);
@@ -87,9 +90,9 @@ namespace NtoLib.Valves.Render
             return grooveRect;
         }
 
-        private PointF[] GetGroovePoints(RectangleF grooveRect, PaintData paintData)
+        private PointF[] GetGroovePoints(RectangleF grooveRect)
         {
-            float offset = paintData.LineWidth / 2f;
+            float offset = LineWidth / 2f;
 
             float x0 = grooveRect.X + offset;
             float y0 = grooveRect.Y + offset;
@@ -106,16 +109,16 @@ namespace NtoLib.Valves.Render
             return points;
         }
 
-        private RectangleF GetGateRect(RectangleF grooveRect, float grooveLineWidth, Status status, bool isLight)
+        private RectangleF GetGateRect(RectangleF grooveRect, Status status, bool isLight)
         {
             RectangleF gateRect = new RectangleF();
-            float gateWidth = (grooveRect.Width - 2f * grooveLineWidth) * _relativeGateWidth;
-            float gap = (grooveRect.Width - 2f * grooveLineWidth - gateWidth) / 2f;
+            float gateWidth = (grooveRect.Width - 2f * LineWidth) * _relativeGateWidth;
+            float gap = (grooveRect.Width - 2f * LineWidth - gateWidth) / 2f;
 
             gateRect.X = grooveRect.X + (grooveRect.Width - gateWidth) / 2f;
             gateRect.Width = gateWidth;
 
-            float gateHeight = (grooveRect.Height - 2f * grooveLineWidth - 3f * gap) / 2f;
+            float gateHeight = (grooveRect.Height - 2f * LineWidth - 3f * gap) / 2f;
             gateRect.Height = gateHeight;
 
             float offset = (grooveRect.Height - gateHeight * 2f) / 3f;
@@ -146,12 +149,12 @@ namespace NtoLib.Valves.Render
             return gateRect;
         }
 
-        private PointF[][] GetValvePoints(RectangleF valveRect, float lineWidth)
+        private PointF[][] GetValvePoints(RectangleF valveRect)
         {
-            float x0 = valveRect.X + lineWidth * 0.5f;
-            float y0 = valveRect.Y + lineWidth * 0.5f;
-            float x1 = valveRect.X + valveRect.Width - lineWidth * 0.577f;
-            float y1 = valveRect.Y + valveRect.Height - lineWidth * 0.577f;
+            float x0 = valveRect.X + LineWidth * 0.5f;
+            float y0 = valveRect.Y + LineWidth * 0.5f;
+            float x1 = valveRect.X + valveRect.Width - LineWidth * 0.577f;
+            float y1 = valveRect.Y + valveRect.Height - LineWidth * 0.577f;
 
             float grooveWidth = valveRect.Width * _relativeGrooveWidth;
             float xCl = (x0 + x1) / 2f - grooveWidth / 2f;

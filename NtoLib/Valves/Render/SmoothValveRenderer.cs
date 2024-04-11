@@ -38,7 +38,7 @@ namespace NtoLib.Valves.Render
             using(Brush brush = new SolidBrush(GetCircleColor(status, paintData.IsLight)))
                 graphics.FillEllipse(brush, circleRect);
 
-            using(Pen pen = new Pen(GetLineColor(status), paintData.LineWidth))
+            using(Pen pen = new Pen(GetLineColor(status), LineWidth))
             {
                 graphics.DrawEllipse(pen, circleRect);
 

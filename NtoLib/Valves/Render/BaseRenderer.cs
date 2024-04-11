@@ -4,6 +4,13 @@ namespace NtoLib.Valves.Render
 {
     internal abstract class BaseRenderer
     {
+        public float LineWidth { get; protected set; }
+        public float ErrorLineWidth { get; protected set; }
+
+        public float ErrorOffset { get; protected set; }
+
+
+
         /// <summary>Экземпляр ValveControl, к которому привязан данный Renderer</summary>
         protected ValveControl Control { get; private set; }
 
@@ -28,7 +35,7 @@ namespace NtoLib.Valves.Render
         /// </summary>
         protected void DrawErrorRectangle(Graphics graphics, RectangleF valveRect, PaintData paintData)
         {
-            PointF[] errorPoints = GetErrorRectPoints(valveRect, paintData.ErrorLineWidth, paintData.ErrorOffset);
+            PointF[] errorPoints = GetErrorRectPoints(valveRect, ErrorLineWidth, ErrorOffset);
             using(Pen errorPen = new Pen(RenderParams.ColorError))
                 graphics.DrawLines(errorPen, errorPoints);
         }
@@ -39,8 +46,8 @@ namespace NtoLib.Valves.Render
         protected RectangleF GetElementRect(PaintData data)
         {
             RectangleF clampedBounds = data.Bounds;
-            clampedBounds.Width -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
-            clampedBounds.Height -= 2f * (data.ErrorLineWidth + data.ErrorOffset);
+            clampedBounds.Width -= 2f * (ErrorLineWidth + ErrorOffset);
+            clampedBounds.Height -= 2f * (ErrorLineWidth + ErrorOffset);
             clampedBounds.X = (data.Bounds.Width - clampedBounds.Width) / 2f;
             clampedBounds.Y = (data.Bounds.Height - clampedBounds.Height) / 2f;
             return clampedBounds;
@@ -92,7 +99,7 @@ namespace NtoLib.Valves.Render
         {
             State state = status.State;
             if((state == State.Opened && status.BlockClosing) || (state == State.Closed && status.BlockOpening))
-                return RenderParams.ColorBlock;
+                return RenderParams.ColorBlocked;
             else
                 return RenderParams.ColorLines;
         }
