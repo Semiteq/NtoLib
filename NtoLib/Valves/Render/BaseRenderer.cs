@@ -4,9 +4,12 @@ namespace NtoLib.Valves.Render
 {
     internal abstract class BaseRenderer
     {
+        /// <summary>Толщина всех линий, кроме линии ошибки</summary>
         public float LineWidth { get; protected set; }
+        /// <summary>Толщина линии ошибки</summary>
         public float ErrorLineWidth { get; protected set; }
 
+        /// <summary>Отступ от границ клапана до рамки ошибки</summary>
         public float ErrorOffset { get; protected set; }
 
 

@@ -38,6 +38,10 @@ namespace NtoLib.Valves.Render
 
 
 
+        /// <summary>
+        /// Отрисовывает клапан, состоящий из двух треугольников в заданной области, 
+        /// при этом оставляет между треугольниками зазор для задвижки шибера
+        /// </summary>
         private void DrawValve(Graphics graphics, RectangleF valveRect, Status status, bool isLight)
         {
             Color[] colors = GetValveColors(status, isLight);
@@ -56,6 +60,9 @@ namespace NtoLib.Valves.Render
             }
         }
 
+        /// <summary>
+        /// Отрисовывает паз для задвижки в виде прямоугольной рамки
+        /// </summary>
         private void DrawGroove(Graphics graphics, RectangleF valveRect, Status status, bool isLight)
         {
             RectangleF grooveRect = GetGrooveRect(valveRect);
@@ -67,9 +74,12 @@ namespace NtoLib.Valves.Render
             DrawGate(graphics, grooveRect, status, isLight);
         }
 
-        private void DrawGate(Graphics graphics, RectangleF valveRect, Status status, bool isLigth)
+        /// <summary>
+        /// Отрисовывает задвижку шибера в виде прямоугольника
+        /// </summary>
+        private void DrawGate(Graphics graphics, RectangleF grooveRect, Status status, bool isLigth)
         {
-            RectangleF gateRect = GetGateRect(valveRect, status, isLigth);
+            RectangleF gateRect = GetGateRect(grooveRect, status, isLigth);
 
             using(Brush brush = new SolidBrush(RenderParams.ColorLines))
                 graphics.FillRectangle(brush, gateRect);
@@ -77,6 +87,39 @@ namespace NtoLib.Valves.Render
 
 
 
+        /// <summary>
+        /// Возвращает массивы точек для двух треугольников шибера соответственно
+        /// </summary>
+        private PointF[][] GetValvePoints(RectangleF valveRect)
+        {
+            float x0 = valveRect.X + LineWidth * 0.5f;
+            float y0 = valveRect.Y + LineWidth * 0.5f;
+            float x1 = valveRect.X + valveRect.Width - LineWidth * 0.577f;
+            float y1 = valveRect.Y + valveRect.Height - LineWidth * 0.577f;
+
+            float grooveWidth = valveRect.Width * _relativeGrooveWidth;
+            float xCl = (x0 + x1) / 2f - grooveWidth / 2f;
+            float xCr = xCl + grooveWidth;
+            float yC = (y0 + y1) / 2f;
+
+            PointF[][] points = new PointF[2][];
+            points[0] = new[] {
+                    new PointF(x0, y0),
+                    new PointF(xCl, yC),
+                    new PointF(x0, y1)
+            };
+            points[1] = new[] {
+                    new PointF(x1, y1),
+                    new PointF(xCr, yC),
+                    new PointF(x1, y0)
+            };
+
+            return points;
+        }
+
+        /// <summary>
+        /// Возвращает границы паза для задвижки шибера
+        /// </summary>
         private RectangleF GetGrooveRect(RectangleF valveRect)
         {
             RectangleF grooveRect = new RectangleF();
@@ -90,6 +133,9 @@ namespace NtoLib.Valves.Render
             return grooveRect;
         }
 
+        /// <summary>
+        /// Возвращает массив точек, по которым должен быть отрисован паз
+        /// </summary>
         private PointF[] GetGroovePoints(RectangleF grooveRect)
         {
             float offset = LineWidth / 2f;
@@ -109,6 +155,9 @@ namespace NtoLib.Valves.Render
             return points;
         }
 
+        /// <summary>
+        /// Возвращает границы задвижки шибера
+        /// </summary>
         private RectangleF GetGateRect(RectangleF grooveRect, Status status, bool isLight)
         {
             RectangleF gateRect = new RectangleF();
@@ -147,33 +196,6 @@ namespace NtoLib.Valves.Render
             }
 
             return gateRect;
-        }
-
-        private PointF[][] GetValvePoints(RectangleF valveRect)
-        {
-            float x0 = valveRect.X + LineWidth * 0.5f;
-            float y0 = valveRect.Y + LineWidth * 0.5f;
-            float x1 = valveRect.X + valveRect.Width - LineWidth * 0.577f;
-            float y1 = valveRect.Y + valveRect.Height - LineWidth * 0.577f;
-
-            float grooveWidth = valveRect.Width * _relativeGrooveWidth;
-            float xCl = (x0 + x1) / 2f - grooveWidth / 2f;
-            float xCr = xCl + grooveWidth;
-            float yC = (y0 + y1) / 2f;
-
-            PointF[][] points = new PointF[2][];
-            points[0] = new[] {
-                    new PointF(x0, y0),
-                    new PointF(xCl, yC),
-                    new PointF(x0, y1)
-            };
-            points[1] = new[] {
-                    new PointF(x1, y1),
-                    new PointF(xCr, yC),
-                    new PointF(x1, y0)
-            };
-
-            return points;
         }
     }
 }
