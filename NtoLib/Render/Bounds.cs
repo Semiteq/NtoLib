@@ -4,38 +4,64 @@ namespace NtoLib.Render
 {
     public struct Bounds
     {
+        /// <summary>Координата X пивота</summary>
         public float X;
+        /// <summary>Координата Y пивота</summary>
         public float Y;
 
+        /// <summary>Ширина</summary>
         public float Width;
+        /// <summary>Высота</summary>
         public float Height;
 
+        /// <summary>Пивот - относительное положение "центра масс" объекта. 
+        /// X и Y задаются в форме от 0 до 1 и означают положение "центра масс"
+        /// относительно ширины и высоты
+        /// </summary>
         public PointF Pivot;
 
 
 
+        /// <summary>Координата X левого края</summary>
         public float Left => X - Width * Pivot.X;
+        /// <summary>Координата X пправого края</summary>
         public float Right => X + Width * (1 - Pivot.X);
+        /// <summary>Координата X середины</summary>
         public float CenterX => X - Width * Pivot.X + Width / 2f;
 
+        /// <summary>Координата Y верхей границы</summary>
         public float Top => Y - Height * Pivot.Y;
+        /// <summary>Координата Y нижней границы</summary>
         public float Bottom => Y + Height * (1 - Pivot.Y);
+        /// <summary>Координата Y середины</summary>
         public float CenterY => Y - Height * Pivot.Y + Height / 2f;
 
+        /// <summary>Левый верхний угол</summary>
         public PointF LeftTop => new PointF(Left, Top);
+        /// <summary>Левый нижний угол</summary>
         public PointF LeftBottom => new PointF(Left, Bottom);
+        /// <summary>Правый верхний угол</summary>
         public PointF RightTop => new PointF(Right, Top);
+        /// <summary>Правый нижний угол</summary>
         public PointF RightBottom => new PointF(Right, Bottom);
 
+        /// <summary>Середина левой границы</summary>
         public PointF LeftCenter => new PointF(Left, CenterY);
+        /// <summary>Середина верхней границы</summary>
         public PointF CenterTop => new PointF(CenterX, Top);
+        /// <summary>Середина правой границы</summary>
         public PointF RightCenter => new PointF(Right, CenterY);
+        /// <summary>Середина нижней границы</summary>
         public PointF CenterBottom => new PointF(CenterX, Bottom);
 
+        /// <summary>Середина</summary>
         public PointF Center => new PointF(CenterX, CenterY);
 
 
 
+        /// <summary>
+        /// Создаём экземпляр Bounds на основе RectangleF
+        /// </summary>
         public static Bounds FromRectangle(RectangleF rectangle, PointF pivot)
         {
             Bounds bounds = new Bounds();
@@ -84,6 +110,10 @@ namespace NtoLib.Render
         }
 
 
+        /// <summary>
+        /// Возвращает RectangleF на основе данного экземпляра Bounds
+        /// </summary>
+        /// <returns></returns>
         public RectangleF ToRectangleF()
         {
             RectangleF rectangle = new RectangleF();
