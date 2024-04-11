@@ -96,15 +96,15 @@ namespace NtoLib.Render.Valves
 
             if(status.State == State.NoData)
             {
-                color = RenderParams.ColorNoData;
+                color = Colors.NoData;
             }
             else if(status.State == State.Closed)
             {
-                color = RenderParams.ColorClosed;
+                color = Colors.Closed;
             }
             else
             {
-                color = RenderParams.ColorOpened;
+                color = Colors.Opened;
             }
 
             return color;

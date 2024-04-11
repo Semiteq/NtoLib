@@ -81,12 +81,12 @@ namespace NtoLib.Render.Valves
             Bounds grooveBounds = GetGrooveBounds(valveBounds);
             PointF[] groovePoints = grooveBounds.GetPoints(-LineWidth / 2f);
 
-            using(Pen pen = new Pen(RenderParams.ColorLines, LineWidth))
+            using(Pen pen = new Pen(Colors.Lines, LineWidth))
                 graphics.DrawClosedCurve(pen, groovePoints, 0, FillMode.Alternate);
 
             Bounds gateBounds = GetGateBounds(grooveBounds, status, isLight);
 
-            using(Brush brush = new SolidBrush(RenderParams.ColorLines))
+            using(Brush brush = new SolidBrush(Colors.Lines))
                 graphics.FillRectangle(brush, gateBounds.ToRectangleF());
         }
 

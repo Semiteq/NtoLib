@@ -55,7 +55,7 @@ namespace NtoLib.Render.Valves
         protected void DrawErrorRectangle(Graphics graphics, Bounds graphicsBound)
         {
             PointF[] errorPoints = graphicsBound.GetPoints(-ErrorLineWidth / 2f);
-            using(Pen errorPen = new Pen(RenderParams.ColorError, ErrorLineWidth))
+            using(Pen errorPen = new Pen(Colors.Error, ErrorLineWidth))
                 graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);
         }
 
@@ -82,30 +82,30 @@ namespace NtoLib.Render.Valves
 
             if(status.State == State.NoData)
             {
-                colors[0] = RenderParams.ColorNoData;
-                colors[1] = RenderParams.ColorNoData;
+                colors[0] = Colors.NoData;
+                colors[1] = Colors.NoData;
             }
             else if(status.State == State.Opened)
             {
-                colors[0] = RenderParams.ColorOpened;
-                colors[1] = RenderParams.ColorOpened;
+                colors[0] = Colors.Opened;
+                colors[1] = Colors.Opened;
             }
             else if(status.State == State.Closed || status.State == State.SmothlyOpened)
             {
-                colors[0] = RenderParams.ColorClosed;
-                colors[1] = RenderParams.ColorClosed;
+                colors[0] = Colors.Closed;
+                colors[1] = Colors.Closed;
             }
             else
             {
                 if(isLight)
                 {
-                    colors[0] = RenderParams.ColorOpened;
-                    colors[1] = RenderParams.ColorClosed;
+                    colors[0] = Colors.Opened;
+                    colors[1] = Colors.Closed;
                 }
                 else
                 {
-                    colors[0] = RenderParams.ColorClosed;
-                    colors[1] = RenderParams.ColorOpened;
+                    colors[0] = Colors.Closed;
+                    colors[1] = Colors.Opened;
                 }
             }
 
@@ -119,9 +119,9 @@ namespace NtoLib.Render.Valves
         {
             State state = status.State;
             if((state == State.Opened && status.BlockClosing) || (state == State.Closed && status.BlockOpening))
-                return RenderParams.ColorBlocked;
+                return Colors.Blocked;
             else
-                return RenderParams.ColorLines;
+                return Colors.Lines;
         }
     }
 }

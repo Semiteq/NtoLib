@@ -2,13 +2,13 @@
 
 namespace NtoLib
 {
-    public static class RenderParams
+    public static class Colors
     {
-        public static readonly Color ColorLines = Color.Black;
-        public static readonly Color ColorBlocked = Color.Orange;
-        public static readonly Color ColorOpened = Color.LimeGreen;
-        public static readonly Color ColorClosed = Color.White;
-        public static readonly Color ColorNoData = Color.Gainsboro;
-        public static readonly Color ColorError = Color.Red;
+        public static readonly Color Lines = Color.Black;
+        public static readonly Color Blocked = Color.Orange;
+        public static readonly Color Opened = Color.LimeGreen;
+        public static readonly Color Closed = Color.White;
+        public static readonly Color NoData = Color.Gainsboro;
+        public static readonly Color Error = Color.Red;
     }
 }

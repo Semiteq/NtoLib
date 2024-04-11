@@ -37,33 +37,44 @@ namespace NtoLib.Valves
 
         protected override void UpdateData()
         {
-            UpdateVisualPout(ConnectionOk);
-            UpdateVisualPout(Opened);
-            UpdateVisualPout(SmoothlyOpened);
-            UpdateVisualPout(Closed);
-            UpdateVisualPout(Error);
-            UpdateVisualPout(BlockOpening);
-            UpdateVisualPout(BlockClosing);
-            UpdateVisualPout(AutoMode);
-            UpdateVisualPout(Collision);
-            UpdateVisualPout(Opening);
-            UpdateVisualPout(Closing);
-            UpdateVisualPout(IsSmoothValve);
+            RetransmitPin(ConnectionOk);
+            RetransmitPin(Opened);
+            RetransmitPin(SmoothlyOpened);
+            RetransmitPin(Closed);
+            RetransmitPin(Error);
+            RetransmitPin(BlockOpening);
+            RetransmitPin(BlockClosing);
+            RetransmitPin(AutoMode);
+            RetransmitPin(Collision);
+            RetransmitPin(Opening);
+            RetransmitPin(Closing);
+            RetransmitPin(IsSmoothValve);
 
-            UpdatePout(OpenCMD);
-            UpdatePout(CloseCMD);
-            UpdatePout(OpenSmoothlyCMD);
+            RetransmitVisualPin(OpenCMD);
+            RetransmitVisualPin(CloseCMD);
+            RetransmitVisualPin(OpenSmoothlyCMD);
         }
 
 
 
-        private void UpdateVisualPout(int id)
+        /// <summary>
+        /// Пересылает информацию с внешнего входа на соответствующий выход для UI
+        /// и VisualPin
+        /// </summary>
+        /// <param name="id"></param>
+        private void RetransmitPin(int id)
         {
             object value = GetPinValue(id);
+
+            SetPinValue(id + 200, value);
             VisualPins.SetPinValue(id + 1000, value);
         }
 
-        private void UpdatePout(int id)
+        /// <summary>
+        /// Пересылает информацию с входа с контрола на внешние выходы
+        /// </summary>
+        /// <param name="id"></param>
+        private void RetransmitVisualPin(int id)
         {
             object value = VisualPins.GetPinValue(id + 1000);
             SetPinValue(id, value);
