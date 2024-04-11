@@ -77,7 +77,6 @@
     </Compile>
     <Compile Include="Valves\Orientation.cs" />
     <Compile Include="Valves\Render\ValveBaseRenderer.cs" />
-    <Compile Include="Valves\Render\PaintData.cs" />
     <Compile Include="Valves\Render\SlideGateRenderer.cs" />
     <Compile Include="Valves\Render\SmoothValveRenderer.cs" />
     <Compile Include="Valves\Status.cs" />

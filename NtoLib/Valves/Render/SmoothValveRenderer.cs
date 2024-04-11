@@ -15,27 +15,29 @@ namespace NtoLib.Valves.Render
 
 
 
-        public override void Draw(Graphics graphics, PaintData paintData)
+        public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-            if(paintData.Orientation == Orientation.Vertical)
+            Bounds graphicsBounds = BoundsFromRect(boundsRect);
+
+            if(orientation == Orientation.Vertical)
             {
                 Matrix transform = graphics.Transform;
-                transform.RotateAt(90f, paintData.Bounds.Center);
+                transform.RotateAt(90f, graphicsBounds.Center);
                 graphics.Transform = transform;
                 transform.Dispose();
 
-                (paintData.Bounds.Width, paintData.Bounds.Height) = (paintData.Bounds.Height, paintData.Bounds.Width);
+                (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
             }
 
             Status status = Control.Status;
-            Bounds valveBounds = GetValveBounds(paintData);
-            DrawValve(graphics, valveBounds, paintData, status);
-            DrawSmoothValveCirlce(graphics, valveBounds, paintData, status);
+            Bounds valveBounds = GetValveBounds(graphicsBounds);
+            DrawValve(graphics, valveBounds, status, isLight);
+            DrawSmoothValveCirlce(graphics, valveBounds, status);
 
             if(status.Error)
-                DrawErrorRectangle(graphics, paintData.Bounds);
+                DrawErrorRectangle(graphics, graphicsBounds);
         }
 
 
@@ -43,7 +45,7 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Отрисовывает кружочек (и ножку) клапана плавной откачки
         /// </summary>
-        private void DrawSmoothValveCirlce(Graphics graphics, Bounds valveBounds, PaintData paintData, Status status)
+        private void DrawSmoothValveCirlce(Graphics graphics, Bounds valveBounds, Status status)
         {
             Bounds circleBounds = GetCircleBounds(valveBounds);
             RectangleF circleRect = circleBounds.ToRectangleF();

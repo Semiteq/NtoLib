@@ -1,12 +1,10 @@
 ﻿using FB.VisualFB;
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
-using NtoLib.Render;
 using NtoLib.Utils;
 using NtoLib.Valves.Render;
 using System;
 using System.ComponentModel;
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -85,21 +83,7 @@ namespace NtoLib.Valves
             if(!FBConnector.DesignMode)
                 UpdateStatus();
 
-            RectangleF localBoundsRect = Bounds;
-            localBoundsRect.X = -0.5f;
-            localBoundsRect.Y = -0.5f;
-
-            PointF pivot = new PointF(0.5f, 0.5f);
-
-            Bounds bounds = NtoLib.Render.Bounds.FromRectangle(localBoundsRect, pivot);
-
-            PaintData paintData = new PaintData {
-                Bounds = bounds,
-                Orientation = Orientation,
-                IsLight = _blinker.IsLight
-            };
-
-            _renderer.Draw(e.Graphics, paintData);
+            _renderer.Draw(e.Graphics, Bounds, Orientation, _blinker.IsLight);
         }
 
 
@@ -198,8 +182,6 @@ namespace NtoLib.Valves
                 Status.State = State.Opened;
             else if(closed)
                 Status.State = State.Closed;
-            //else
-            //    throw new Exception("Undefined state");
 
 
             Status.Error = GetPinValue<bool>(ValveFB.Error);

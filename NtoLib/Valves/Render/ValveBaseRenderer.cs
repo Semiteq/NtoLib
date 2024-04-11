@@ -8,12 +8,11 @@ namespace NtoLib.Valves.Render
     {
         /// <summary>Толщина всех линий, кроме линии ошибки</summary>
         public float LineWidth { get; protected set; }
+
         /// <summary>Толщина линии ошибки</summary>
         public float ErrorLineWidth { get; protected set; }
-
         /// <summary>Отступ от границ клапана до рамки ошибки</summary>
         public float ErrorOffset { get; protected set; }
-
 
 
         /// <summary>Экземпляр ValveControl, к которому привязан данный Renderer</summary>
@@ -31,9 +30,24 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Метод для отрисовки объекта Renderer'ом
         /// </summary>
-        public abstract void Draw(Graphics graphics, PaintData data);
+        public abstract void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight);
 
 
+
+        /// <summary>
+        /// Возвращает границы рисования преобразованные из RectangleF в Bounds
+        /// </summary>
+        /// <param name="boundsRect"></param>
+        /// <returns></returns>
+        protected Bounds BoundsFromRect(RectangleF boundsRect)
+        {
+            boundsRect.X = -0.5f;
+            boundsRect.Y = -0.5f;
+
+            PointF pivot = new PointF(0.5f, 0.5f);
+
+            return Bounds.FromRectangle(boundsRect, pivot);
+        }
 
         /// <summary>
         /// Отрисовывает рамку ошибки
@@ -48,26 +62,16 @@ namespace NtoLib.Valves.Render
         /// <summary>
         /// Возвращает границы, в которых должен быть отрисован клапан/шибер
         /// </summary>
-        protected Bounds GetValveBounds(PaintData data)
+        protected Bounds GetValveBounds(Bounds graphicsBounds)
         {
-            Bounds bounds = data.Bounds;
-            float offset = 2f * (ErrorLineWidth + ErrorOffset);
-            bounds.Width -= offset;
-            bounds.Height -= offset;
-            return bounds;
-        }
+            Bounds valveBounds = graphicsBounds;
 
-        ///// <summary>
-        ///// Возвращает точки для отрисовки по ним рамки ошибки
-        ///// </summary>
-        //private Bounds GetErrorBounds(Bounds valveBounds)
-        //{
-        //    Bounds errorBounds = valveBounds;
-        //    float offset = 2f * (ErrorLineWidth + ErrorOffset);
-        //    errorBounds.Width += offset;
-        //    errorBounds.Height += offset;
-        //    return errorBounds;
-        //}
+            float offset = 2f * (ErrorLineWidth + ErrorOffset);
+            valveBounds.Width -= offset;
+            valveBounds.Height -= offset;
+
+            return valveBounds;
+        }
 
         /// <summary>
         /// Возвращает цвета первого и второго треугольника в зависимости от статуса
