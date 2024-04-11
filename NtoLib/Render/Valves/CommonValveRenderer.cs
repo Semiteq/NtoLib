@@ -1,12 +1,12 @@
-﻿using NtoLib.Render;
+﻿using NtoLib.Valves;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace NtoLib.Valves.Render
+namespace NtoLib.Render.Valves
 {
     internal class CommonValveRenderer : ValveBaseRenderer
     {
-        public CommonValveRenderer(ValveControl valveControl) : base(valveControl) 
+        public CommonValveRenderer(ValveControl valveControl) : base(valveControl)
         {
             LineWidth = 2f;
 

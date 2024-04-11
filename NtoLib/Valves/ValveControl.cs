@@ -2,7 +2,7 @@
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
 using NtoLib.Utils;
-using NtoLib.Valves.Render;
+using NtoLib.Render.Valves;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -66,6 +66,11 @@ namespace NtoLib.Valves
 
         public ValveControl()
         {
+            SetStyle(ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            UpdateStyles();
+
             InitializeComponent();
 
             _blinker = new Blinker(500);
@@ -77,7 +82,7 @@ namespace NtoLib.Valves
 
 
         protected override void OnPaint(PaintEventArgs e)
-        {
+        { 
             e.Graphics.Clear(BackColor);
 
             if(!FBConnector.DesignMode)

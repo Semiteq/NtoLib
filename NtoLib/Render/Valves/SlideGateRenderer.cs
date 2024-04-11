@@ -1,8 +1,8 @@
-﻿using NtoLib.Render;
+﻿using NtoLib.Valves;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace NtoLib.Valves.Render
+namespace NtoLib.Render.Valves
 {
     internal class SlideGateRenderer : ValveBaseRenderer
     {

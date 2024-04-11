@@ -1,8 +1,8 @@
-﻿using NtoLib.Render;
+﻿using NtoLib.Valves;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace NtoLib.Valves.Render
+namespace NtoLib.Render.Valves
 {
     internal abstract class ValveBaseRenderer
     {
@@ -54,7 +54,7 @@ namespace NtoLib.Valves.Render
         /// </summary>
         protected void DrawErrorRectangle(Graphics graphics, Bounds graphicsBound)
         {
-            PointF[] errorPoints = graphicsBound.GetPoints(- ErrorLineWidth / 2f);
+            PointF[] errorPoints = graphicsBound.GetPoints(-ErrorLineWidth / 2f);
             using(Pen errorPen = new Pen(RenderParams.ColorError, ErrorLineWidth))
                 graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);
         }

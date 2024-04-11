@@ -29,6 +29,11 @@ namespace NtoLib.Utils
 
         public Lamp()
         {
+            SetStyle(ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            UpdateStyles();
+
             InitializeComponent();
         }
 

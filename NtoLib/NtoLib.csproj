@@ -76,11 +76,11 @@
       <DependentUpon>Lamp.cs</DependentUpon>
     </Compile>
     <Compile Include="Valves\Orientation.cs" />
-    <Compile Include="Valves\Render\ValveBaseRenderer.cs" />
-    <Compile Include="Valves\Render\SlideGateRenderer.cs" />
-    <Compile Include="Valves\Render\SmoothValveRenderer.cs" />
+    <Compile Include="Render\Valves\ValveBaseRenderer.cs" />
+    <Compile Include="Render\Valves\SlideGateRenderer.cs" />
+    <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
     <Compile Include="Valves\Status.cs" />
-    <Compile Include="Valves\Render\CommonValveRenderer.cs" />
+    <Compile Include="Render\Valves\CommonValveRenderer.cs" />
     <Compile Include="Valves\SettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -113,6 +113,9 @@
     <None Include="NtoLib_reg.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Valves\Render\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

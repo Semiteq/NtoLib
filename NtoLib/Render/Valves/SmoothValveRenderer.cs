@@ -1,13 +1,13 @@
-﻿using NtoLib.Render;
+﻿using NtoLib.Valves;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace NtoLib.Valves.Render
+namespace NtoLib.Render.Valves
 {
     internal class SmoothValveRenderer : CommonValveRenderer
     {
         /// <summary>Диаметр кружочка относительно высоты клапана</summary>
-        private const float _realitiveCircleDiameter = 0.33f;
+        private const float _realitiveCircleDiameter = 0.3f;
 
 
 
