@@ -41,6 +41,8 @@
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             this.Click += new System.EventHandler(this.HandleSingleClick);
             this.DoubleClick += new System.EventHandler(this.HandleDoubleClick);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
             this.ResumeLayout(false);
 
         }

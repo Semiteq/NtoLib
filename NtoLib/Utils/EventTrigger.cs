@@ -11,7 +11,7 @@ namespace NtoLib.Utils
         private int _id;
         private string _message;
 
-        private bool _autoDeactivade;
+        private bool _autoDeactivate;
         private bool _previousValue;
 
 
@@ -23,7 +23,7 @@ namespace NtoLib.Utils
             _id = id;
             _message = message;
 
-            _autoDeactivade = autoDeactivate;
+            _autoDeactivate = autoDeactivate;
         }
 
 
@@ -34,7 +34,7 @@ namespace NtoLib.Utils
             {
                 _owner.SetEventState(_id, true, _message);
 
-                if(_autoDeactivade)
+                if(_autoDeactivate)
                     _owner.SetEventState(_id, false);
             }
             else if(!value && _previousValue)

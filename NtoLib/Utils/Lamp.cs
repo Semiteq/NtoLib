@@ -6,7 +6,11 @@ namespace NtoLib.Utils
 {
     public partial class Lamp : UserControl
     {
+        public Shape Shape { get; set; }
+
         public Color ActiveColor { get; set; }
+
+        public string TextOnLamp { get; set; }
 
         private bool _active;
         public bool Active
@@ -43,7 +47,7 @@ namespace NtoLib.Utils
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            RectangleF localBounds = new RectangleF(0, 0, Bounds.Width - 1, Bounds.Height - 1);
+            Rectangle localBounds = new Rectangle(0, 0, Bounds.Width - 1, Bounds.Height - 1);
             Pen pen = new Pen(Color.Black, 1f);
             Brush brush;
 
@@ -54,8 +58,27 @@ namespace NtoLib.Utils
                 brush = new SolidBrush(ActiveColor);
             else
                 brush = new SolidBrush(Color.Transparent);
-            e.Graphics.FillEllipse(brush, localBounds);
-            e.Graphics.DrawEllipse(pen, localBounds);
+
+            if(Shape == Shape.Circle)
+            {
+                e.Graphics.FillEllipse(brush, localBounds);
+                e.Graphics.DrawEllipse(pen, localBounds);
+            }
+            else if(Shape == Shape.Square)
+            {
+                e.Graphics.FillRectangle(brush, localBounds);
+                e.Graphics.DrawRectangle(pen, localBounds);
+            }
+
+
+            if(TextOnLamp != string.Empty)
+            {
+                StringFormat format = StringFormat.GenericDefault;
+                format.Alignment = StringAlignment.Center;
+                format.LineAlignment = StringAlignment.Center;
+
+                e.Graphics.DrawString(TextOnLamp, Font, Brushes.Black, localBounds, format);
+            }
 
             base.OnPaint(e);
         }

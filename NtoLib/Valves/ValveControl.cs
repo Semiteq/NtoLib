@@ -110,6 +110,22 @@ namespace NtoLib.Valves
                 OpenSettingsForm();
         }
 
+        private void HandleMouseDown(object sender, MouseEventArgs e)
+        {
+            if(e.Button != MouseButtons.Right)
+                return;
+
+            OpenSettingsForm();
+        }
+
+        private void HandleMouseUp(object sender, MouseEventArgs e)
+        {
+            if(e.Button != MouseButtons.Right)
+                return;
+
+            _settingsForm?.Close();
+        }
+
         private void HandleDoubleClick(object sender, EventArgs e)
         {
             MouseEventArgs me = (MouseEventArgs)e;
@@ -117,12 +133,26 @@ namespace NtoLib.Valves
                 return;
 
             int commandId;
-            if(Status.State == State.Closed)
-                commandId = ValveFB.OpenCmdId;
-            else if(Status.State == State.Opened)
-                commandId = ValveFB.CloseCmdId;
+            if(_isSmoothValve)
+            {
+                if(Status.State == State.Closed)
+                    commandId = ValveFB.OpenSmoothlyCmdId;
+                else if(Status.State == State.SmothlyOpened)
+                    commandId = ValveFB.OpenCmdId;
+                else if(Status.State == State.Opened)
+                    commandId = ValveFB.CloseCmdId;
+                else
+                    return;
+            }
             else
-                return;
+            {
+                if(Status.State == State.Closed)
+                    commandId = ValveFB.OpenCmdId;
+                else if(Status.State == State.Opened)
+                    commandId = ValveFB.CloseCmdId;
+                else
+                    return;
+            }
 
             Task.Run(() => SendCommandImpulseAsync(commandId, 500));
         }
