@@ -64,27 +64,28 @@ namespace NtoLib.Valves
             string[] splittedString = FullName.Split('.');
             string name = splittedString[splittedString.Length - 1];
 
+            TimeSpan initialInactivity = TimeSpan.FromSeconds(10);
 
             string message = $"Коллизия концевиков у {name}!";
-            _collisionEvent = new EventTrigger(this, CollistionEventId, message);
+            _collisionEvent = new EventTrigger(this, CollistionEventId, message, initialInactivity);
 
             message = $"{name} не открылся!";
-            _notOpenedEvent = new EventTrigger(this, NotOpenedEventId, message);
+            _notOpenedEvent = new EventTrigger(this, NotOpenedEventId, message, initialInactivity);
 
             message = $"{name} не закрылся!";
-            _notClosedEvent = new EventTrigger(this, NotClosedEventId, message);
+            _notClosedEvent = new EventTrigger(this, NotClosedEventId, message, initialInactivity);
 
             message = $"Соединение с {name} оборвано!";
-            _connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message);
+            _connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message, initialInactivity);
 
             message = $"{name} открылся";
-            _openedEvent = new EventTrigger(this, OpenedEventId, message, true);
+            _openedEvent = new EventTrigger(this, OpenedEventId, message, initialInactivity, true);
 
             message = $"{name} плавно открылся";
-            _openedSmoothlyEvent = new EventTrigger(this, OpenedSmoothlyEventId, message, true);
+            _openedSmoothlyEvent = new EventTrigger(this, OpenedSmoothlyEventId, message, initialInactivity, true);
 
             message = $"{name} закрылся";
-            _closedEvent = new EventTrigger(this, ClosedEventId, message, true);
+            _closedEvent = new EventTrigger(this, ClosedEventId, message, initialInactivity, true);
         }
 
         protected override void UpdateData()
