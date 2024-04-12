@@ -1,3 +1,3 @@
 ﻿%2 %3 %4 %5
 
-netreg.exe имя-библиотеки.dll %1
+netreg.exe NtoLib.dll %1

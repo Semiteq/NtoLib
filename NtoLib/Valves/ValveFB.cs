@@ -85,8 +85,6 @@ namespace NtoLib.Valves
 
             message = $"{name} закрылся";
             _closedEvent = new EventTrigger(this, ClosedEventId, message, true);
-
-            base.ToRuntime();
         }
 
         protected override void UpdateData()
@@ -117,8 +115,6 @@ namespace NtoLib.Valves
             _openedEvent.Update(GetPinValue<bool>(OpenedId));
             _openedSmoothlyEvent.Update(GetPinValue<bool>(SmoothlyOpenedId));
             _closedEvent.Update(GetPinValue<bool>(ClosedId));
-
-            base.UpdateData();
         }
 
 
