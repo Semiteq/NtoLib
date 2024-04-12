@@ -82,10 +82,10 @@
     <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
     <Compile Include="Valves\Status.cs" />
     <Compile Include="Render\Valves\CommonValveRenderer.cs" />
-    <Compile Include="Valves\SettingsForm.cs">
+    <Compile Include="Valves\Settings\SettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Valves\SettingsForm.Designer.cs">
+    <Compile Include="Valves\Settings\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Valves\State.cs" />
@@ -101,7 +101,7 @@
     <EmbeddedResource Include="Utils\Lamp.resx">
       <DependentUpon>Lamp.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Valves\SettingsForm.resx">
+    <EmbeddedResource Include="Valves\Settings\SettingsForm.resx">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Valves\ValveControl.resx">

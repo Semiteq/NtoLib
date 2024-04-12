@@ -1,8 +1,9 @@
 ﻿using FB.VisualFB;
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
-using NtoLib.Utils;
 using NtoLib.Render.Valves;
+using NtoLib.Utils;
+using NtoLib.Valves.Settings;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -12,7 +13,7 @@ using System.Windows.Forms;
 namespace NtoLib.Valves
 {
     [ComVisible(true)]
-    [Guid("09DF2B43-AE07-4A93-9670-FE1ED79E0751")]
+    [Guid("4641CB00-693D-46F2-85EC-5142B0C0EDA4")]
     [DisplayName("Имя какое-то")]
     public partial class ValveControl : VisualControlBase
     {
@@ -82,7 +83,7 @@ namespace NtoLib.Valves
 
 
         protected override void OnPaint(PaintEventArgs e)
-        { 
+        {
             e.Graphics.Clear(BackColor);
 
             if(!FBConnector.DesignMode)
@@ -171,16 +172,18 @@ namespace NtoLib.Valves
 
         private void UpdateStatus()
         {
-            bool connectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
+            Status.NoConnection = !GetPinValue<bool>(ValveFB.ConnectionOkId);
+            Status.AutoMode = GetPinValue<bool>(ValveFB.AutoModeId);
+
             bool open = GetPinValue<bool>(ValveFB.OpenedId);
             bool closed = GetPinValue<bool>(ValveFB.ClosedId);
             bool openingClosing = GetPinValue<bool>(ValveFB.OpeningClosingId);
             bool smoothlyOpened = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
-            bool collision = GetPinValue<bool>(ValveFB.CollisionId);
+            Status.Collision = GetPinValue<bool>(ValveFB.CollisionId);
 
-            if(!connectionOk)
+            if(Status.NoConnection)
                 Status.State = State.NoData;
-            else if(collision)
+            else if(Status.Collision)
                 Status.State = State.Collision;
             else if(openingClosing)
                 Status.State = State.OpeningClosing;
@@ -191,9 +194,8 @@ namespace NtoLib.Valves
             else if(closed)
                 Status.State = State.Closed;
 
-            bool notOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
-            bool notClosed = GetPinValue<bool>(ValveFB.NotClosedId);
-            Status.Error = notOpened || notClosed || collision;
+            Status.NotOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
+            Status.NotClosed = GetPinValue<bool>(ValveFB.NotClosedId);
 
             Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpeningId);
             Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosingId);

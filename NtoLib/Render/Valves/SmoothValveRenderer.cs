@@ -36,7 +36,7 @@ namespace NtoLib.Render.Valves
             DrawValve(graphics, valveBounds, status, isLight);
             DrawSmoothValveCirlce(graphics, valveBounds, status);
 
-            if(status.Error)
+            if(status.AnyError)
                 DrawErrorRectangle(graphics, graphicsBounds);
         }
 

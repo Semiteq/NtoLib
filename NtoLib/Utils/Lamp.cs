@@ -34,6 +34,8 @@ namespace NtoLib.Utils
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             UpdateStyles();
 
+            Margin = new Padding(5);
+
             InitializeComponent();
         }
 

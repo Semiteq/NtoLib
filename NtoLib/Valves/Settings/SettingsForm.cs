@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace NtoLib.Valves
+namespace NtoLib.Valves.Settings
 {
     public partial class SettingsForm : Form
     {
@@ -13,6 +13,10 @@ namespace NtoLib.Valves
             _valveControl = valveCotrol;
 
             InitializeComponent();
+
+            string[] splittedString = valveCotrol.FBConnector.FBName.Split('.');
+            string name = splittedString[splittedString.Length - 1];
+            Text = name;
         }
 
 
@@ -23,8 +27,14 @@ namespace NtoLib.Valves
 
             lampOpened.Active = status.State == State.Opened;
             lampClosed.Active = status.State == State.Closed;
+
             lampBlockOpening.Active = status.BlockOpening;
             lampBlockClosing.Active = status.BlockClosing;
+
+            lampAutoMode.Active = status.AutoMode;
+            lampNotOpened.Active = status.NotOpened;
+            lampNotClosed.Active = status.NotClosed;
+            lampCollision.Active = status.Collision;
 
             base.OnPaint(e);
         }

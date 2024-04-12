@@ -10,7 +10,7 @@ namespace NtoLib.Valves
 {
     [Serializable]
     [ComVisible(true)]
-    [Guid("89DB76A4-6551-40D7-BBD0-64734F158B5B")]
+    [Guid("0B747EAD-4E9B-47CE-99AA-12BF8F5192A4")]
     [CatID(CatIDs.CATID_OTHER)]
     [DisplayName("Шибер или клапан")]
     [VisualControls(typeof(ValveControl))]
@@ -85,6 +85,8 @@ namespace NtoLib.Valves
 
             message = $"{name} закрылся";
             _closedEvent = new EventTrigger(this, ClosedEventId, message, true);
+
+            base.ToRuntime();
         }
 
         protected override void UpdateData()
@@ -115,6 +117,8 @@ namespace NtoLib.Valves
             _openedEvent.Update(GetPinValue<bool>(OpenedId));
             _openedSmoothlyEvent.Update(GetPinValue<bool>(SmoothlyOpenedId));
             _closedEvent.Update(GetPinValue<bool>(ClosedId));
+
+            base.UpdateData();
         }
 
 

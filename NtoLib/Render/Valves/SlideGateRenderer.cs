@@ -45,7 +45,7 @@ namespace NtoLib.Render.Valves
             DrawValve(graphics, valveBounds, status, isLight);
             DrawGrooveAndGate(graphics, valveBounds, status, isLight);
 
-            if(status.Error)
+            if(status.AnyError)
                 DrawErrorRectangle(graphics, graphicsBounds);
         }
 
