@@ -69,6 +69,7 @@
     <Compile Include="RenderParams.cs" />
     <Compile Include="Render\Bounds.cs" />
     <Compile Include="Utils\Blinker.cs" />
+    <Compile Include="Utils\EventTrigger.cs" />
     <Compile Include="Utils\Lamp.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -114,8 +115,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Valves\Render\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

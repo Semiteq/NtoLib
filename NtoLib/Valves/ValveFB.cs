@@ -1,6 +1,7 @@
 ﻿using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
+using NtoLib.Utils;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -15,76 +16,105 @@ namespace NtoLib.Valves
     [VisualControls(typeof(ValveControl))]
     public class ValveFB : VisualFBBase
     {
-        public const int ConnectionOk = 1;
-        public const int Opened = 2;
-        public const int SmoothlyOpened = 3;
-        public const int Closed = 4;
-        public const int Error = 5;
-        public const int BlockOpening = 6;
-        public const int BlockClosing = 7;
-        public const int AutoMode = 8;
-        public const int Collision = 9;
-        public const int Opening = 10;
-        public const int Closing = 11;
-
-        public const int IsSmoothValve = 25;
-
-        public const int OpenCMD = 101;
-        public const int CloseCMD = 102;
-        public const int OpenSmoothlyCMD = 103;
+        public const int IsSmoothValveId = 1;
+        public const int ConnectionOkId = 2;
+        public const int AutoModeId = 3;
+        public const int OpenedId = 4;
+        public const int SmoothlyOpenedId = 5;
+        public const int ClosedId = 6;
+        public const int OpeningClosingId = 7;
+        public const int BlockOpeningId = 8;
+        public const int BlockClosingId = 9;
+        public const int CollisionId = 10;
+        public const int NotOpenedId = 11;
+        public const int NotClosedId = 12;
 
 
-        private const int ErrorEvent = 5001;
-        private const int CollisionEvent = 5002;
-
-        private bool _previousError;
-        private bool _previousCollision;
+        public const int OpenCmdId = 101;
+        public const int CloseCmdId = 102;
+        public const int OpenSmoothlyCmdId = 103;
 
 
+        public const int CollistionEventId = 5000;
+        private EventTrigger _collisionEvent;
+
+        public const int NotOpenedEventId = 5001;
+        private EventTrigger _notOpenedEvent;
+
+        public const int NotClosedEventId = 5002;
+        private EventTrigger _notClosedEvent;
+        
+        public const int ConnectionDisabledEventId = 5003;
+        private EventTrigger _connectionDisabledEvent;
+
+
+        public const int OpenedEventId = 5010;
+        private EventTrigger _openedEvent;
+
+        public const int OpenedSmoothlyEventId = 5011;
+        private EventTrigger _openedSmoothlyEvent;
+
+        public const int ClosedEventId = 5012;
+        private EventTrigger _closedEvent;
+
+
+
+        protected override void ToRuntime()
+        {
+            string[] splittedString = FullName.Split('.');
+            string name = splittedString[splittedString.Length - 1];
+
+
+            string message = $"Коллизия концевиков у {name}!";
+            _collisionEvent = new EventTrigger(this, CollistionEventId, message);
+
+            message = $"{name} не открылся!";
+            _notOpenedEvent = new EventTrigger(this, NotOpenedEventId, message);
+
+            message = $"{name} не закрылся!";
+            _notClosedEvent = new EventTrigger(this, NotClosedEventId, message);
+
+            message = $"Соединение с {name} оборвано!";
+            _connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message);
+
+            message = $"{name} открылся";
+            _openedEvent = new EventTrigger(this, OpenedEventId, message, true);
+
+            message = $"{name} плавно открылся";
+            _openedSmoothlyEvent = new EventTrigger(this, OpenedSmoothlyEventId, message, true);
+
+            message = $"{name} закрылся";
+            _closedEvent = new EventTrigger(this, ClosedEventId, message, true);
+        }
 
         protected override void UpdateData()
         {
-            RetransmitPin(ConnectionOk);
-            RetransmitPin(Opened);
-            RetransmitPin(SmoothlyOpened);
-            RetransmitPin(Closed);
-            RetransmitPin(Error);
-            RetransmitPin(BlockOpening);
-            RetransmitPin(BlockClosing);
-            RetransmitPin(AutoMode);
-            RetransmitPin(Collision);
-            RetransmitPin(Opening);
-            RetransmitPin(Closing);
-            RetransmitPin(IsSmoothValve);
+            RetransmitPin(IsSmoothValveId);
+            RetransmitPin(ConnectionOkId);
+            RetransmitPin(AutoModeId);
+            RetransmitPin(OpenedId);
+            RetransmitPin(SmoothlyOpenedId);
+            RetransmitPin(ClosedId);
+            RetransmitPin(OpeningClosingId);
+            RetransmitPin(BlockOpeningId);
+            RetransmitPin(BlockClosingId);
+            RetransmitPin(CollisionId);
+            RetransmitPin(NotOpenedId);
+            RetransmitPin(NotClosedId);
 
-            RetransmitVisualPin(OpenCMD);
-            RetransmitVisualPin(CloseCMD);
-            RetransmitVisualPin(OpenSmoothlyCMD);
+            RetransmitVisualPin(OpenCmdId);
+            RetransmitVisualPin(CloseCmdId);
+            RetransmitVisualPin(OpenSmoothlyCmdId);
 
 
-            bool error = GetPinValue<bool>(Error);
-            if(error && !_previousError)
-            {
-                string[] splittedString = FullName.Split('.');
-                string Name = splittedString[splittedString.Length - 1];
-                SetEventState(ErrorEvent, true, $"Ошибка у клапана {Name}");
-            }
-            if(!error && _previousError)
-            {
-                string[] splittedString = FullName.Split('.');
-                string Name = splittedString[splittedString.Length - 1];
-                SetEventState(ErrorEvent, false , $"Ошибка у клапана {Name}");
-            }
-            _previousError = error;
+            _collisionEvent.Update(GetPinValue<bool>(CollisionId));
+            _notOpenedEvent.Update(GetPinValue<bool>(NotOpenedId));
+            _notClosedEvent.Update(GetPinValue<bool>(NotClosedId));
+            _connectionDisabledEvent.Update(!GetPinValue<bool>(ConnectionOkId));
 
-            bool collision = GetPinValue<bool>(Collision);
-            if(collision && !_previousCollision)
-            {
-                string[] splittedString = FullName.Split('.');
-                string Name = splittedString[splittedString.Length - 1];
-                SetEventState(CollisionEvent, true, $"Коллизия концевиков у клапана {Name}");
-            }
-            _previousCollision = collision;
+            _openedEvent.Update(GetPinValue<bool>(OpenedId));
+            _openedSmoothlyEvent.Update(GetPinValue<bool>(SmoothlyOpenedId));
+            _closedEvent.Update(GetPinValue<bool>(ClosedId));
         }
 
 

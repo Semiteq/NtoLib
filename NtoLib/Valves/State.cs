@@ -6,8 +6,7 @@
         Opened,
         SmothlyOpened,
         Closed,
-        Opening,
-        Closing,
+        OpeningClosing,
         Collision
     }
 }

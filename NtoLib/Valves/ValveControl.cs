@@ -117,9 +117,9 @@ namespace NtoLib.Valves
 
             int commandId;
             if(Status.State == State.Closed)
-                commandId = ValveFB.OpenCMD;
+                commandId = ValveFB.OpenCmdId;
             else if(Status.State == State.Opened)
-                commandId = ValveFB.CloseCMD;
+                commandId = ValveFB.CloseCmdId;
             else
                 return;
 
@@ -149,7 +149,7 @@ namespace NtoLib.Valves
 
         private void InvalidateIfNeeded()
         {
-            if(Status.State == State.Opening || Status.State == State.Closing || Status.State == State.Collision)
+            if(Status.State == State.OpeningClosing || Status.State == State.Collision)
                 Invalidate();
         }
 
@@ -171,35 +171,34 @@ namespace NtoLib.Valves
 
         private void UpdateStatus()
         {
-            bool connectionOk = GetPinValue<bool>(ValveFB.ConnectionOk);
-            bool open = GetPinValue<bool>(ValveFB.Opened);
-            bool closed = GetPinValue<bool>(ValveFB.Closed);
-            bool opening = GetPinValue<bool>(ValveFB.Opening);
-            bool smoothlyOpened = GetPinValue<bool>(ValveFB.SmoothlyOpened);
-            bool closing = GetPinValue<bool>(ValveFB.Closing);
-            bool collision = GetPinValue<bool>(ValveFB.Collision);
+            bool connectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
+            bool open = GetPinValue<bool>(ValveFB.OpenedId);
+            bool closed = GetPinValue<bool>(ValveFB.ClosedId);
+            bool openingClosing = GetPinValue<bool>(ValveFB.OpeningClosingId);
+            bool smoothlyOpened = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
+            bool collision = GetPinValue<bool>(ValveFB.CollisionId);
 
             if(!connectionOk)
                 Status.State = State.NoData;
             else if(collision)
                 Status.State = State.Collision;
-            else if(opening)
-                Status.State = State.Opening;
+            else if(openingClosing)
+                Status.State = State.OpeningClosing;
             else if(smoothlyOpened)
                 Status.State = State.SmothlyOpened;
-            else if(closing)
-                Status.State = State.Closing;
             else if(open)
                 Status.State = State.Opened;
             else if(closed)
                 Status.State = State.Closed;
 
+            bool notOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
+            bool notClosed = GetPinValue<bool>(ValveFB.NotClosedId);
+            Status.Error = notOpened || notClosed || collision;
 
-            Status.Error = GetPinValue<bool>(ValveFB.Error);
-            Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpening);
-            Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosing);
+            Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpeningId);
+            Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosingId);
 
-            _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValve);
+            _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
 
             if(!IsSlideGate)
             {

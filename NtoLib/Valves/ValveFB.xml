@@ -2,59 +2,57 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="1"       Name="ConnectionOk"    Type="Логический" />
-      <Pin ID="2"       Name="Opened"          Type="Логический" />
-      <Pin ID="3"       Name="SmoothlyOpened"  Type="Логический" />
-      <Pin ID="4"       Name="Closed"          Type="Логический" />
-      <Pin ID="5"       Name="Error"           Type="Логический" />
-      <Pin ID="6"       Name="BlockOpening"    Type="Логический" />
-      <Pin ID="7"       Name="BlockClosing"    Type="Логический" />
-      <Pin ID="8"       Name="AutoMode"        Type="Логический" />
-      <Pin ID="9"       Name="Collision"       Type="Логический" />
-      <Pin ID="10"      Name="Opening"         Type="Логический" />
-      <Pin ID="11"      Name="Closing"         Type="Логический" />
+      <Pin ID="1"       Name="IsSmoothValve"    Type="Логический" />
+      <Pin ID="2"       Name="ConnectionOk"     Type="Логический" />
+      <Pin ID="3"       Name="AutoMode"         Type="Логический" />
+      <Pin ID="4"       Name="Opened"           Type="Логический" />
+      <Pin ID="5"       Name="SmoothlyOpened"   Type="Логический" />
+      <Pin ID="6"       Name="Closed"           Type="Логический" />
+      <Pin ID="7"       Name="OpeningClosing"   Type="Логический" />
+      <Pin ID="8"       Name="BlockOpening"     Type="Логический" />
+      <Pin ID="9"       Name="BlockClosing"     Type="Логический" />
+      <Pin ID="10"      Name="Collision"        Type="Логический" />
+      <Pin ID="11"      Name="NotOpened"        Type="Логический" />
+      <Pin ID="12"      Name="NotClosed"        Type="Логический" />
 
-      <Pin ID="25"      Name="IsSmoothValve"   Type="Логический" />
 
-      <Pout ID="101"    Name="OpenCMD"         Type="Логический" />
-      <Pout ID="102"    Name="CloseCMD"        Type="Логический" />
-      <Pout ID="103"    Name="OpenSmoothlyCMD" Type="Логический" />
+      <Pout ID="101"    Name="OpenCMD"          Type="Логический" />
+      <Pout ID="102"    Name="CloseCMD"         Type="Логический" />
+      <Pout ID="103"    Name="OpenSmoothlyCMD"  Type="Логический" />
 
 
       <Group ID="200" Name="Выходы для UI">
         <Items>
-          <Pout ID="201"      Name="ConnectionOk"    Type="Логический" />
-          <Pout ID="202"      Name="Opened"          Type="Логический" />
-          <Pout ID="203"      Name="SmoothlyOpened"  Type="Логический" />
-          <Pout ID="204"      Name="Closed"          Type="Логический" />
-          <Pout ID="205"      Name="Error"           Type="Логический" />
-          <Pout ID="206"      Name="BlockOpening"    Type="Логический" />
-          <Pout ID="207"      Name="BlockClosing"    Type="Логический" />
-          <Pout ID="208"      Name="AutoMode"        Type="Логический" />
-          <Pout ID="209"      Name="Collision"       Type="Логический" />
-          <Pout ID="210"      Name="Opening"         Type="Логический" />
-          <Pout ID="211"      Name="Closing"         Type="Логический" />
-
-          <Pin ID="225"       Name="IsSmoothValve"   Type="Логический" />
+          <Pin ID="201"      Name="IsSmoothValve"    Type="Логический" />
+          <Pin ID="202"      Name="ConnectionOk"     Type="Логический" />
+          <Pin ID="203"      Name="AutoMode"         Type="Логический" />
+          <Pin ID="204"      Name="Opened"           Type="Логический" />
+          <Pin ID="205"      Name="SmoothlyOpened"   Type="Логический" />
+          <Pin ID="206"      Name="Closed"           Type="Логический" />
+          <Pin ID="207"      Name="OpeningClosing"   Type="Логический" />
+          <Pin ID="208"      Name="BlockOpening"     Type="Логический" />
+          <Pin ID="209"      Name="BlockClosing"     Type="Логический" />
+          <Pin ID="210"      Name="Collision"        Type="Логический" />
+          <Pin ID="211"      Name="NotOpened"        Type="Логический" />
+          <Pin ID="212"      Name="NotClosed"        Type="Логический" />
         </Items>
       </Group>
     </Items>
   </Map>
   <VisualMap>
     <Items>
-      <Pout ID="1001"   Name="ConnectionOk"    Type="Логический" />
-      <Pout ID="1002"   Name="Opened"          Type="Логический" />
-      <Pout ID="1003"   Name="SmoothlyOpened"  Type="Логический" />
-      <Pout ID="1004"   Name="Closed"          Type="Логический" />
-      <Pout ID="1005"   Name="Error"           Type="Логический" />
-      <Pout ID="1006"   Name="BlockOpening"    Type="Логический" />
-      <Pout ID="1007"   Name="BlockClosing"    Type="Логический" />
-      <Pout ID="1008"   Name="AutoMode"        Type="Логический" />
-      <Pout ID="1009"   Name="Collision"       Type="Логический" />
-      <Pout ID="1010"   Name="Opening"         Type="Логический" />
-      <Pout ID="1011"   Name="Closing"         Type="Логический" />
-      
-      <Pout ID="1025"   Name="IsSmoothValve"   Type="Логический" />
+      <Pin ID="1001"    Name="IsSmoothValve"    Type="Логический" />
+      <Pin ID="1002"    Name="ConnectionOk"     Type="Логический" />
+      <Pin ID="1003"    Name="AutoMode"         Type="Логический" />
+      <Pin ID="1004"    Name="Opened"           Type="Логический" />
+      <Pin ID="1005"    Name="SmoothlyOpened"   Type="Логический" />
+      <Pin ID="1006"    Name="Closed"           Type="Логический" />
+      <Pin ID="1007"    Name="OpeningClosing"   Type="Логический" />
+      <Pin ID="1008"    Name="BlockOpening"     Type="Логический" />
+      <Pin ID="1009"    Name="BlockClosing"     Type="Логический" />
+      <Pin ID="1010"    Name="Collision"        Type="Логический" />
+      <Pin ID="1011"    Name="NotOpened"        Type="Логический" />
+      <Pin ID="1012"    Name="NotClosed"        Type="Логический" />
 
       <Pin ID="1101"    Name="OpenCMD"         Type="Логический"    DefaultValue="false"/>
       <Pin ID="1102"    Name="CloseCMD"        Type="Логический"    DefaultValue="false"/>
@@ -62,7 +60,13 @@
     </Items>
   </VisualMap>
   <Events>
-    <Event ID="5001"  Name="Ошибка!"                Category="Warning" />
-    <Event ID="5002"  Name="Коллизия концевиков!"   Category="Warning" />
+    <Event ID="5000"  Name="Коллизия концевиков"    Category="Error" />
+    <Event ID="5001"  Name="Не открылся!"           Category="Error" />
+    <Event ID="5002"  Name="Не закрылся!"           Category="Error" />
+    <Event ID="5003"  Name="Соединение потеряно!"   Category="Error" />
+    
+    <Event ID="5010"  Name="Открылся!"              Category="Information"    Flags="DisableAck" />
+    <Event ID="5011"  Name="Плавно открылся!"       Category="Information"    Flags="DisableAck" />
+    <Event ID="5012"  Name="Закрылся!"              Category="Information"    Flags="DisableAck" />
   </Events>
 </FBConfig>
