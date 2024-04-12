@@ -61,4 +61,8 @@
       <Pin ID="1103"    Name="OpenSmoothlyCMD" Type="Логический"    DefaultValue="false"/>
     </Items>
   </VisualMap>
+  <Events>
+    <Event ID="5001"  Name="Ошибка!"                Category="Warning" />
+    <Event ID="5002"  Name="Коллизия концевиков!"   Category="Warning" />
+  </Events>
 </FBConfig>

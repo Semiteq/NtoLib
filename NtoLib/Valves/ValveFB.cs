@@ -34,6 +34,13 @@ namespace NtoLib.Valves
         public const int OpenSmoothlyCMD = 103;
 
 
+        private const int ErrorEvent = 5001;
+        private const int CollisionEvent = 5002;
+
+        private bool _previousError;
+        private bool _previousCollision;
+
+
 
         protected override void UpdateData()
         {
@@ -53,6 +60,31 @@ namespace NtoLib.Valves
             RetransmitVisualPin(OpenCMD);
             RetransmitVisualPin(CloseCMD);
             RetransmitVisualPin(OpenSmoothlyCMD);
+
+
+            bool error = GetPinValue<bool>(Error);
+            if(error && !_previousError)
+            {
+                string[] splittedString = FullName.Split('.');
+                string Name = splittedString[splittedString.Length - 1];
+                SetEventState(ErrorEvent, true, $"Ошибка у клапана {Name}");
+            }
+            if(!error && _previousError)
+            {
+                string[] splittedString = FullName.Split('.');
+                string Name = splittedString[splittedString.Length - 1];
+                SetEventState(ErrorEvent, false , $"Ошибка у клапана {Name}");
+            }
+            _previousError = error;
+
+            bool collision = GetPinValue<bool>(Collision);
+            if(collision && !_previousCollision)
+            {
+                string[] splittedString = FullName.Split('.');
+                string Name = splittedString[splittedString.Length - 1];
+                SetEventState(CollisionEvent, true, $"Коллизия концевиков у клапана {Name}");
+            }
+            _previousCollision = collision;
         }
 
 
