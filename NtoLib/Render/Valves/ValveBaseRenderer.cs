@@ -113,15 +113,18 @@ namespace NtoLib.Render.Valves
         }
 
         /// <summary>
-        /// Возвращает цвет обводки клапана в зависимости от его статуса
+        /// Возвращет истину, если должна быть показана блокировка
         /// </summary>
-        protected Color GetLineColor(Status status)
+        protected bool IsBlocked(Status status)
         {
-            State state = status.State;
-            if((state == State.Opened && status.BlockClosing) || (state == State.Closed && status.BlockOpening))
-                return Colors.Blocked;
-            else
-                return Colors.Lines;
+            if(status.AutoMode)
+                return true;
+            if(status.State == State.Opened && status.BlockClosing)
+                return true;
+            if(status.State == State.Closed && status.BlockOpening)
+                return true;
+
+            return false;
         }
     }
 }

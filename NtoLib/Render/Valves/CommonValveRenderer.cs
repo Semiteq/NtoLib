@@ -18,6 +18,10 @@ namespace NtoLib.Render.Valves
 
         public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
+            Status status = Control.Status;
+            if(IsBlocked(status))
+                graphics.Clear(Colors.Blocked);
+
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
             Bounds graphicsBounds = BoundsFromRect(boundsRect);
@@ -32,7 +36,6 @@ namespace NtoLib.Render.Valves
                 (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
             }
 
-            Status status = Control.Status;
             Bounds valveBounds = GetValveBounds(graphicsBounds);
             DrawValve(graphics, valveBounds, status, isLight);
 
@@ -56,7 +59,7 @@ namespace NtoLib.Render.Valves
 
             }
 
-            using(Pen pen = new Pen(GetLineColor(Control.Status), LineWidth))
+            using(Pen pen = new Pen(Colors.Lines, LineWidth))
             {
                 graphics.DrawClosedCurve(pen, valvePoints[0], 0, FillMode.Alternate);
                 graphics.DrawClosedCurve(pen, valvePoints[1], 0, FillMode.Alternate);

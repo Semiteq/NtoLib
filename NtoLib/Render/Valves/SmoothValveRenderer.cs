@@ -17,6 +17,10 @@ namespace NtoLib.Render.Valves
 
         public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
+            Status status = Control.Status;
+            if(IsBlocked(status))
+                graphics.Clear(Colors.Blocked);
+
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
             Bounds graphicsBounds = BoundsFromRect(boundsRect);
@@ -31,7 +35,6 @@ namespace NtoLib.Render.Valves
                 (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
             }
 
-            Status status = Control.Status;
             Bounds valveBounds = GetValveBounds(graphicsBounds);
             DrawValve(graphics, valveBounds, status, isLight);
             DrawSmoothValveCirlce(graphics, valveBounds, status);
@@ -52,7 +55,7 @@ namespace NtoLib.Render.Valves
             using(Brush brush = new SolidBrush(GetCircleColor(status)))
                 graphics.FillEllipse(brush, circleRect);
 
-            using(Pen pen = new Pen(GetLineColor(status), LineWidth))
+            using(Pen pen = new Pen(Colors.Lines, LineWidth))
             {
                 graphics.DrawEllipse(pen, circleRect);
 
