@@ -64,6 +64,8 @@ namespace NtoLib.Valves
 
         private bool _isSmoothValve = false;
 
+        private Timer _mouseHoldTimer;
+
 
 
         public ValveControl()
@@ -79,6 +81,10 @@ namespace NtoLib.Valves
             _blinker.OnLightChanged += InvalidateIfNeeded;
 
             _renderer = new CommonValveRenderer(this);
+
+            _mouseHoldTimer = new Timer();
+            _mouseHoldTimer.Interval = SystemInformation.DoubleClickTime;
+            _mouseHoldTimer.Tick += HandleMouseHoldDown;
         }
 
 
@@ -101,22 +107,18 @@ namespace NtoLib.Valves
 
 
 
-        private void HandleSingleClick(object sender, EventArgs e)
-        {
-            MouseEventArgs me = (MouseEventArgs)e;
-            if(me.Button != MouseButtons.Right)
-                return;
-
-            if(_settingsForm == null)
-                OpenSettingsForm();
-        }
-
         private void HandleMouseDown(object sender, MouseEventArgs e)
         {
             if(e.Button != MouseButtons.Right)
                 return;
 
+            _mouseHoldTimer.Start();
+        }
+
+        private void HandleMouseHoldDown(object sender, EventArgs e)
+        {
             OpenSettingsForm();
+            _mouseHoldTimer.Stop();
         }
 
         private void HandleMouseUp(object sender, MouseEventArgs e)
@@ -124,6 +126,7 @@ namespace NtoLib.Valves
             if(e.Button != MouseButtons.Right)
                 return;
 
+            _mouseHoldTimer.Stop();
             _settingsForm?.Close();
         }
 
@@ -161,7 +164,10 @@ namespace NtoLib.Valves
             Task.Run(() => SendCommandImpulseAsync(commandId, 500));
         }
 
-
+        private void StopHoldTimer(object sender, EventArgs e)
+        {
+            _mouseHoldTimer?.Stop();
+        }
 
         private void HandleVisibleChanged(object sender, EventArgs e)
         {

@@ -39,9 +39,9 @@
             this.Name = "ValveControl";
             this.Size = new System.Drawing.Size(60, 40);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
-            this.Click += new System.EventHandler(this.HandleSingleClick);
             this.DoubleClick += new System.EventHandler(this.HandleDoubleClick);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
+            this.MouseLeave += new System.EventHandler(this.StopHoldTimer);
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
             this.ResumeLayout(false);
 
