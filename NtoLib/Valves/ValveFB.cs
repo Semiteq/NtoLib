@@ -66,16 +66,16 @@ namespace NtoLib.Valves
 
             TimeSpan initialInactivity = TimeSpan.FromSeconds(10);
 
-            string message = $"Коллизия концевиков у {name}!";
+            string message = $"Коллизия концевиков у {name}";
             _collisionEvent = new EventTrigger(this, CollistionEventId, message, initialInactivity);
 
-            message = $"{name} не открылся!";
+            message = $"{name} не открылся";
             _notOpenedEvent = new EventTrigger(this, NotOpenedEventId, message, initialInactivity);
 
-            message = $"{name} не закрылся!";
+            message = $"{name} не закрылся";
             _notClosedEvent = new EventTrigger(this, NotClosedEventId, message, initialInactivity);
 
-            message = $"Соединение с {name} оборвано!";
+            message = $"Соединение с {name} оборвано";
             _connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message, initialInactivity);
 
             message = $"{name} открылся";

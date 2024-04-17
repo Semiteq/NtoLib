@@ -61,12 +61,12 @@
   </VisualMap>
   <Events>
     <Event ID="5000"  Name="Коллизия концевиков"    Category="Error" />
-    <Event ID="5001"  Name="Не открылся!"           Category="Error" />
-    <Event ID="5002"  Name="Не закрылся!"           Category="Error" />
-    <Event ID="5003"  Name="Соединение потеряно!"   Category="Error" />
+    <Event ID="5001"  Name="Не открылся"            Category="Error" />
+    <Event ID="5002"  Name="Не закрылся"            Category="Error" />
+    <Event ID="5003"  Name="Соединение потеряно"    Category="Error" />
     
-    <Event ID="5010"  Name="Открылся!"              Category="Information"    Flags="DisableAck" />
-    <Event ID="5011"  Name="Плавно открылся!"       Category="Information"    Flags="DisableAck" />
-    <Event ID="5012"  Name="Закрылся!"              Category="Information"    Flags="DisableAck" />
+    <Event ID="5010"  Name="Открылся"               Category="Information"    Flags="DisableAck" />
+    <Event ID="5011"  Name="Плавно открылся"        Category="Information"    Flags="DisableAck" />
+    <Event ID="5012"  Name="Закрылся"               Category="Information"    Flags="DisableAck" />
   </Events>
 </FBConfig>
