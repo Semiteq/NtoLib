@@ -2,7 +2,6 @@
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
 using NtoLib.Render.Valves;
-using NtoLib.Utils;
 using NtoLib.Valves.Settings;
 using System;
 using System.ComponentModel;
@@ -60,11 +59,13 @@ namespace NtoLib.Valves
         private ValveBaseRenderer _renderer;
 
         private SettingsForm _settingsForm;
-        private Blinker _blinker;
 
         private bool _isSmoothValve = false;
 
         private Timer _mouseHoldTimer;
+
+        private Timer _animationTimer;
+        private bool _animationClocker;
 
 
 
@@ -77,10 +78,11 @@ namespace NtoLib.Valves
 
             InitializeComponent();
 
-            _blinker = new Blinker(500);
-            _blinker.OnLightChanged += InvalidateIfNeeded;
-
             _renderer = new CommonValveRenderer(this);
+
+            _animationTimer = new Timer();
+            _animationTimer.Interval = 500;
+            _animationTimer.Tick += UpdateAnimation;
 
             _mouseHoldTimer = new Timer();
             _mouseHoldTimer.Interval = SystemInformation.DoubleClickTime;
@@ -96,13 +98,19 @@ namespace NtoLib.Valves
             if(!FBConnector.DesignMode)
                 UpdateStatus();
 
-            _renderer.Draw(e.Graphics, Bounds, Orientation, _blinker.IsLight);
+            _renderer.Draw(e.Graphics, Bounds, Orientation, _animationClocker);
         }
 
         protected override void ToDesign()
         {
             _settingsForm?.Close();
             base.ToDesign();
+        }
+
+        private void UpdateAnimation(object sender, EventArgs e)
+        {
+            _animationClocker = !_animationClocker;
+            this.Invalidate();
         }
 
 
@@ -130,6 +138,13 @@ namespace NtoLib.Valves
             _settingsForm?.Close();
         }
 
+        private void StopHoldTimer(object sender, EventArgs e)
+        {
+            _mouseHoldTimer?.Stop();
+        }
+
+
+
         private void HandleDoubleClick(object sender, EventArgs e)
         {
             MouseEventArgs me = (MouseEventArgs)e;
@@ -143,7 +158,7 @@ namespace NtoLib.Valves
             {
                 if(Status.BlockOpening)
                     return;
-                
+
                 if(_isSmoothValve)
                 {
                     if(Status.State == State.Closed)
@@ -182,11 +197,6 @@ namespace NtoLib.Valves
             Task.Run(() => SendCommandImpulseAsync(commandId, 500));
         }
 
-        private void StopHoldTimer(object sender, EventArgs e)
-        {
-            _mouseHoldTimer?.Stop();
-        }
-
         private void HandleVisibleChanged(object sender, EventArgs e)
         {
             if(!Visible)
@@ -205,13 +215,6 @@ namespace NtoLib.Valves
             SetPinValue(outputId, false);
             _commandImpulseInProgress = false;
         }
-
-        private void InvalidateIfNeeded()
-        {
-            if(Status.State == State.OpeningClosing || Status.State == State.Collision)
-                Invalidate();
-        }
-
 
         private void OpenSettingsForm()
         {
@@ -275,6 +278,12 @@ namespace NtoLib.Valves
                 else if(!_isSmoothValve && _renderer.GetType() != typeof(CommonValveRenderer))
                     _renderer = new CommonValveRenderer(this);
             }
+
+            bool animationNeeded = openingClosing || Status.Collision;
+            if(!_animationTimer.Enabled && animationNeeded)
+                _animationTimer.Start();
+            if(_animationTimer.Enabled && !animationNeeded)
+                _animationTimer.Stop();
 
             _settingsForm?.Invalidate();
         }
