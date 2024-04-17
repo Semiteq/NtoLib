@@ -133,33 +133,51 @@ namespace NtoLib.Valves
         private void HandleDoubleClick(object sender, EventArgs e)
         {
             MouseEventArgs me = (MouseEventArgs)e;
-            if(me.Button != MouseButtons.Left || _commandImpulseInProgress)
+            if(_commandImpulseInProgress || Status.AutoMode)
                 return;
 
-            if(Status.AutoMode)
-                return;
 
-            int commandId;
-            if(_isSmoothValve)
+            int commandId = -1;
+
+            if(me.Button == MouseButtons.Left)
             {
-                if(Status.State == State.Closed && !Status.BlockOpening)
-                    commandId = ValveFB.OpenSmoothlyCmdId;
-                else if(Status.State == State.SmothlyOpened && !Status.BlockOpening)
-                    commandId = ValveFB.OpenCmdId;
-                else if(Status.State == State.Opened && !Status.BlockClosing)
-                    commandId = ValveFB.CloseCmdId;
-                else
+                if(Status.BlockOpening)
                     return;
+                
+                if(_isSmoothValve)
+                {
+                    if(Status.State == State.Closed)
+                        commandId = ValveFB.OpenSmoothlyCmdId;
+                    else if(Status.State == State.SmothlyOpened)
+                        commandId = ValveFB.OpenCmdId;
+                }
+                else
+                {
+                    if(Status.State == State.Closed)
+                        commandId = ValveFB.OpenCmdId;
+                }
             }
-            else
+            else if(me.Button == MouseButtons.Right)
             {
-                if(Status.State == State.Closed && !Status.BlockOpening)
-                    commandId = ValveFB.OpenCmdId;
-                else if(Status.State == State.Opened && !Status.BlockClosing)
-                    commandId = ValveFB.CloseCmdId;
-                else
+                if(Status.BlockClosing)
                     return;
+
+                if(_isSmoothValve)
+                {
+                    if(Status.State == State.Opened)
+                        commandId = ValveFB.OpenSmoothlyCmdId;
+                    else if(Status.State == State.SmothlyOpened)
+                        commandId = ValveFB.CloseCmdId;
+                }
+                else
+                {
+                    if(Status.State == State.Opened)
+                        commandId = ValveFB.CloseCmdId;
+                }
             }
+
+            if(commandId < 0)
+                return;
 
             Task.Run(() => SendCommandImpulseAsync(commandId, 500));
         }
