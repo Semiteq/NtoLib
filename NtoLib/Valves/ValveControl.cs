@@ -133,23 +133,26 @@ namespace NtoLib.Valves
             if(me.Button != MouseButtons.Left || _commandImpulseInProgress)
                 return;
 
+            if(Status.AutoMode)
+                return;
+
             int commandId;
             if(_isSmoothValve)
             {
-                if(Status.State == State.Closed)
+                if(Status.State == State.Closed && !Status.BlockOpening)
                     commandId = ValveFB.OpenSmoothlyCmdId;
-                else if(Status.State == State.SmothlyOpened)
+                else if(Status.State == State.SmothlyOpened && !Status.BlockOpening)
                     commandId = ValveFB.OpenCmdId;
-                else if(Status.State == State.Opened)
+                else if(Status.State == State.Opened && !Status.BlockClosing)
                     commandId = ValveFB.CloseCmdId;
                 else
                     return;
             }
             else
             {
-                if(Status.State == State.Closed)
+                if(Status.State == State.Closed && !Status.BlockOpening)
                     commandId = ValveFB.OpenCmdId;
-                else if(Status.State == State.Opened)
+                else if(Status.State == State.Opened && !Status.BlockClosing)
                     commandId = ValveFB.CloseCmdId;
                 else
                     return;
