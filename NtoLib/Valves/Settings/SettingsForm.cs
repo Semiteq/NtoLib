@@ -13,10 +13,6 @@ namespace NtoLib.Valves.Settings
             _valveControl = valveCotrol;
 
             InitializeComponent();
-
-            string[] splittedString = valveCotrol.FBConnector.FBName.Split('.');
-            string name = splittedString[splittedString.Length - 1];
-            Text = name;
         }
 
 

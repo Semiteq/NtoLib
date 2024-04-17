@@ -6,6 +6,7 @@ using NtoLib.Utils;
 using NtoLib.Valves.Settings;
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -188,6 +189,14 @@ namespace NtoLib.Valves
         private void OpenSettingsForm()
         {
             _settingsForm = new SettingsForm(this);
+            Point formLocation = MousePosition;
+            Rectangle area = Screen.GetWorkingArea(formLocation);
+            if(formLocation.X + _settingsForm.Width > area.Right)
+                formLocation.X -= _settingsForm.Width;
+            if(formLocation.Y + _settingsForm.Height > area.Bottom)
+                formLocation.Y -= _settingsForm.Height;
+
+            _settingsForm.Location = formLocation;
             _settingsForm.FormClosed += RemoveSettingsFormReference;
             _settingsForm.Show(Win32Window.FromInt32(User32.GetParent(Handle)));
         }

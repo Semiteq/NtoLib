@@ -287,11 +287,12 @@
             this.Controls.Add(this.lampBlockClosing);
             this.Controls.Add(this.lampBlockOpening);
             this.Controls.Add(this.lampClosed);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SettingsForm";
+            this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Text = "SettingsForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.ResumeLayout(false);
 
         }
