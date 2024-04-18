@@ -2,24 +2,8 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="1"       Name="IsSmoothValve"    Type="Логический" />
-      <Pin ID="2"       Name="ConnectionOk"     Type="Логический" />
-      <Pin ID="3"       Name="AutoMode"         Type="Логический" />
-      <Pin ID="4"       Name="Opened"           Type="Логический" />
-      <Pin ID="5"       Name="SmoothlyOpened"   Type="Логический" />
-      <Pin ID="6"       Name="Closed"           Type="Логический" />
-      <Pin ID="7"       Name="OpeningClosing"   Type="Логический" />
-      <Pin ID="8"       Name="BlockOpening"     Type="Логический" />
-      <Pin ID="9"       Name="BlockClosing"     Type="Логический" />
-      <Pin ID="10"      Name="Collision"        Type="Логический" />
-      <Pin ID="11"      Name="NotOpened"        Type="Логический" />
-      <Pin ID="12"      Name="NotClosed"        Type="Логический" />
-
-
-      <Pout ID="101"    Name="OpenCMD"          Type="Логический" />
-      <Pout ID="102"    Name="CloseCMD"         Type="Логический" />
-      <Pout ID="103"    Name="OpenSmoothlyCMD"  Type="Логический" />
-
+      <Pin ID="1"       Name="StatusWord"       Type="Целый" />
+      <Pout ID="100"    Name="ControlWord"      Type="Целый" />
 
       <Group ID="200" Name="Выходы для UI">
         <Items>

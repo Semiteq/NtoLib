@@ -240,7 +240,7 @@ namespace NtoLib.Valves
         private void UpdateStatus()
         {
             Status.NoConnection = !GetPinValue<bool>(ValveFB.ConnectionOkId);
-            Status.AutoMode = GetPinValue<bool>(ValveFB.AutoModeId);
+            Status.AutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
 
             bool open = GetPinValue<bool>(ValveFB.OpenedId);
             bool closed = GetPinValue<bool>(ValveFB.ClosedId);

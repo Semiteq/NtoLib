@@ -16,9 +16,12 @@ namespace NtoLib.Valves
     [VisualControls(typeof(ValveControl))]
     public class ValveFB : VisualFBBase
     {
+        public const int StatusWordId = 1;
+        public const int ControlWordId = 100;
+
         public const int IsSmoothValveId = 1;
         public const int ConnectionOkId = 2;
-        public const int AutoModeId = 3;
+        public const int UsedByAutoModeId = 3;
         public const int OpenedId = 4;
         public const int SmoothlyOpenedId = 5;
         public const int ClosedId = 6;
@@ -90,22 +93,45 @@ namespace NtoLib.Valves
 
         protected override void UpdateData()
         {
-            RetransmitPin(IsSmoothValveId);
-            RetransmitPin(ConnectionOkId);
-            RetransmitPin(AutoModeId);
-            RetransmitPin(OpenedId);
-            RetransmitPin(SmoothlyOpenedId);
-            RetransmitPin(ClosedId);
-            RetransmitPin(OpeningClosingId);
-            RetransmitPin(BlockOpeningId);
-            RetransmitPin(BlockClosingId);
-            RetransmitPin(CollisionId);
-            RetransmitPin(NotOpenedId);
-            RetransmitPin(NotClosedId);
+            int statusWord = GetPinValue<int>(StatusWordId);
+            bool ConnectionOk = GetBit(statusWord, 0);
+            SetVisualAndUiPin(ConnectionOkId, ConnectionOk);
+            bool NotOpened = GetBit(statusWord, 1);
+            SetVisualAndUiPin(NotOpenedId, NotOpened);
+            bool NotClosed = GetBit(statusWord, 2);
+            SetVisualAndUiPin(NotClosedId, NotClosed);
+            bool Collision = GetBit(statusWord, 3);
+            SetVisualAndUiPin(CollisionId, Collision);
+            bool UsedByAutoMode = GetBit(statusWord, 4);
+            SetVisualAndUiPin(UsedByAutoModeId, UsedByAutoMode);
+            bool Opened = GetBit(statusWord, 5);
+            SetVisualAndUiPin(OpenedId, Opened);
+            bool SmoothlyOpened = GetBit(statusWord, 6);
+            SetVisualAndUiPin(SmoothlyOpenedId, SmoothlyOpened);
+            bool Closed = GetBit(statusWord, 7);
+            SetVisualAndUiPin(ClosedId, Closed);
+            bool OpeningClosing = GetBit(statusWord, 8);
+            SetVisualAndUiPin(OpeningClosingId, OpeningClosing);
 
-            RetransmitVisualPin(OpenCmdId);
-            RetransmitVisualPin(CloseCmdId);
-            RetransmitVisualPin(OpenSmoothlyCmdId);
+            bool blockClosing = GetBit(statusWord, 13);
+            SetVisualAndUiPin(BlockClosingId, blockClosing);
+            bool blockOpening = GetBit(statusWord, 14);
+            SetVisualAndUiPin(BlockOpeningId, blockOpening);
+            bool isSmoothValve = GetBit(statusWord, 15);
+            SetVisualAndUiPin(IsSmoothValveId, isSmoothValve);
+
+
+
+            bool openCommand = GetVisualPin<bool>(OpenCmdId);
+            bool openSmoothlyCommand = GetVisualPin<bool>(OpenSmoothlyCmdId);
+            bool closeCommand = GetVisualPin<bool>(CloseCmdId);
+
+            int controlWord = 0;
+            controlWord = SetBit(controlWord, 0, openCommand);
+            controlWord = SetBit(controlWord, 1, openSmoothlyCommand);
+            controlWord = SetBit(controlWord, 2, closeCommand);
+            SetPinValue(ControlWordId, controlWord);
+
 
 
             _collisionEvent.Update(GetPinValue<bool>(CollisionId));
@@ -141,6 +167,30 @@ namespace NtoLib.Valves
         {
             object value = VisualPins.GetPinValue(id + 1000);
             SetPinValue(id, value);
+        }
+
+
+
+        private void SetVisualAndUiPin(int id, object value)
+        {
+            SetPinValue(id + 200, value);
+            VisualPins.SetPinValue(id + 1000, value);
+        }
+
+        private T GetVisualPin<T>(int id)
+        {
+            return (T)VisualPins.GetPinValue(id + 1000);
+        }
+
+        private int SetBit(int word, int index, bool value)
+        {
+            int valueInt = value ? 1 : 0;
+            return word | (valueInt << index);
+        }
+
+        private bool GetBit(int word, int index)
+        {
+            return (word & (1 << index)) != 0;
         }
     }
 }
