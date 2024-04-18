@@ -19,7 +19,7 @@ namespace NtoLib.Render.Valves
             LineWidth = 2f;
 
             ErrorLineWidth = 2f;
-            ErrorOffset = 5f;
+            ErrorOffset = 2f;
         }
 
 
