@@ -17,8 +17,22 @@ namespace NtoLib.Valves
     [DisplayName("Имя какое-то")]
     public partial class ValveControl : VisualControlBase
     {
+        private Orientation _orientation;
         [DisplayName("Ориентация")]
-        public Orientation Orientation { get; set; }
+        public Orientation Orientation 
+        {
+            get
+            {
+                return _orientation;
+            }
+            set
+            {
+                if(_orientation != value)
+                    (Width, Height) = (Height, Width);
+
+                _orientation = value;
+            }
+        }
 
         private bool _isSlideGate;
         [DisplayName("Шибер")]
@@ -118,7 +132,11 @@ namespace NtoLib.Valves
         private void HandleMouseDown(object sender, MouseEventArgs e)
         {
             if(e.Button != MouseButtons.Right)
+            {
+                _mouseHoldTimer.Stop();
+                _settingsForm?.Close();
                 return;
+            }
 
             _mouseHoldTimer.Start();
         }

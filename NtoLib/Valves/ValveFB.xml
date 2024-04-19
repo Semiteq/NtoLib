@@ -3,7 +3,7 @@
   <Map>
     <Items>
       <Pin ID="1"       Name="StatusWord"       Type="Целый" />
-      <Pout ID="100"    Name="ControlWord"      Type="Целый" />
+      <Pout ID="100"    Name="CommandWord"      Type="Целый" />
 
       <Group ID="200" Name="Выходы для UI">
         <Items>

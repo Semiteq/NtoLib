@@ -123,6 +123,8 @@ namespace NtoLib.Render.Valves
                 return true;
             if(status.State == State.Closed && status.BlockOpening)
                 return true;
+            if(status.State == State.SmothlyOpened && (status.BlockClosing || status.BlockOpening))
+                return true;
 
             return false;
         }

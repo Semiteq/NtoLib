@@ -1,10 +1,12 @@
 ﻿using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
+using InSAT.OPC;
 using NtoLib.Utils;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Timers;
 
 namespace NtoLib.Valves
 {
@@ -12,12 +14,12 @@ namespace NtoLib.Valves
     [ComVisible(true)]
     [Guid("0B747EAD-4E9B-47CE-99AA-12BF8F5192A4")]
     [CatID(CatIDs.CATID_OTHER)]
-    [DisplayName("Шибер или клапан")]
+    [DisplayName("Клапан")]
     [VisualControls(typeof(ValveControl))]
     public class ValveFB : VisualFBBase
     {
         public const int StatusWordId = 1;
-        public const int ControlWordId = 100;
+        public const int CommandWordId = 100;
 
         public const int IsSmoothValveId = 1;
         public const int ConnectionOkId = 2;
@@ -61,9 +63,24 @@ namespace NtoLib.Valves
         private EventTrigger _closedEvent;
 
 
+        [NonSerialized]
+        private Timer _connectionCheckTimer;
+        [NonSerialized]
+        private OpcQuality _previousOpcQuality;
+
+
 
         protected override void ToRuntime()
         {
+            _connectionCheckTimer = new Timer();
+            _connectionCheckTimer.Interval = 100;
+            _connectionCheckTimer.AutoReset = true;
+            _connectionCheckTimer.Elapsed += CheckConnection;
+            _connectionCheckTimer.Start();
+
+            _previousOpcQuality = GetPinQuality(StatusWordId);
+
+
             string[] splittedString = FullName.Split('.');
             string name = splittedString[splittedString.Length - 1];
 
@@ -91,9 +108,17 @@ namespace NtoLib.Valves
             _closedEvent = new EventTrigger(this, ClosedEventId, message, initialInactivity, true);
         }
 
+        protected override void ToDesign()
+        {
+            _connectionCheckTimer?.Dispose();
+        }
+
         protected override void UpdateData()
         {
-            int statusWord = GetPinValue<int>(StatusWordId);
+            int statusWord = 0;
+            if(GetPinQuality(StatusWordId) == OpcQuality.Ok)
+                statusWord = GetPinValue<int>(StatusWordId);
+
             bool ConnectionOk = GetBit(statusWord, 0);
             SetVisualAndUiPin(ConnectionOkId, ConnectionOk);
             bool NotOpened = GetBit(statusWord, 1);
@@ -126,11 +151,11 @@ namespace NtoLib.Valves
             bool openSmoothlyCommand = GetVisualPin<bool>(OpenSmoothlyCmdId);
             bool closeCommand = GetVisualPin<bool>(CloseCmdId);
 
-            int controlWord = 0;
-            controlWord = SetBit(controlWord, 0, openCommand);
-            controlWord = SetBit(controlWord, 1, openSmoothlyCommand);
-            controlWord = SetBit(controlWord, 2, closeCommand);
-            SetPinValue(ControlWordId, controlWord);
+            int commandWord = 0;
+            commandWord = SetBit(commandWord, 0, openCommand);
+            commandWord = SetBit(commandWord, 1, openSmoothlyCommand);
+            commandWord = SetBit(commandWord, 2, closeCommand);
+            SetPinValue(CommandWordId, commandWord);
 
 
 
@@ -145,6 +170,15 @@ namespace NtoLib.Valves
         }
 
 
+
+        private void CheckConnection(object sender, EventArgs e)
+        {
+            OpcQuality quality = GetPinQuality(StatusWordId);
+            if(quality != _previousOpcQuality)
+                UpdateData();
+
+            _previousOpcQuality = quality;
+        }
 
         /// <summary>
         /// Пересылает информацию с внешнего входа на соответствующий выход для UI
