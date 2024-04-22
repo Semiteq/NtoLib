@@ -28,7 +28,7 @@ namespace NtoLib.Render.Valves
             if(orientation == Orientation.Vertical)
             {
                 Matrix transform = graphics.Transform;
-                transform.RotateAt(90f, graphicsBounds.Center);
+                transform.RotateAt(270f, graphicsBounds.Center);
                 graphics.Transform = transform;
                 transform.Dispose();
 

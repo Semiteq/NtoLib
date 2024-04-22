@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SettingsForm));
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -69,7 +68,7 @@
             // 
             // label3
             // 
-            this.label3.Location = new System.Drawing.Point(37, 99);
+            this.label3.Location = new System.Drawing.Point(37, 129);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(150, 20);
             this.label3.TabIndex = 10;
@@ -78,7 +77,7 @@
             // 
             // label4
             // 
-            this.label4.Location = new System.Drawing.Point(37, 129);
+            this.label4.Location = new System.Drawing.Point(37, 99);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(150, 20);
             this.label4.TabIndex = 11;
@@ -288,7 +287,6 @@
             this.Controls.Add(this.lampBlockOpening);
             this.Controls.Add(this.lampClosed);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SettingsForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
