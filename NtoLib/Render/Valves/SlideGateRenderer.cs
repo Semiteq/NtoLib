@@ -26,14 +26,10 @@ namespace NtoLib.Render.Valves
 
         public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
-            Status status = Control.Status;
-            if(IsBlocked(status))
-                graphics.Clear(Colors.Blocked);
 
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
             Bounds graphicsBounds = BoundsFromRect(boundsRect);
-
             if(orientation == Orientation.Vertical)
             {
                 Matrix transform = graphics.Transform;
@@ -44,12 +40,18 @@ namespace NtoLib.Render.Valves
                 (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
             }
 
-            Bounds valveBounds = GetValveBounds(graphicsBounds);
+            Status status = Control.Status;
+            Bounds errorBounds = graphicsBounds;
+            Bounds valveBounds = GetValveBounds(errorBounds);
+
+            if(IsBlocked(status))
+                DrawBlockRectangle(graphics, errorBounds);
+
             DrawValve(graphics, valveBounds, status, isLight);
-            DrawGrooveAndGate(graphics, valveBounds, status, isLight);
+            DrawGrooveAndGate(graphics, errorBounds, status, isLight);
 
             if(status.AnyError)
-                DrawErrorRectangle(graphics, graphicsBounds);
+                DrawErrorRectangle(graphics, errorBounds);
         }
 
 
@@ -79,9 +81,9 @@ namespace NtoLib.Render.Valves
         /// <summary>
         /// Отрисовывает паз для задвижки в виде прямоугольной рамки
         /// </summary>
-        private void DrawGrooveAndGate(Graphics graphics, Bounds valveBounds, Status status, bool isLight)
+        private void DrawGrooveAndGate(Graphics graphics, Bounds errorBounds, Status status, bool isLight)
         {
-            Bounds grooveBounds = GetGrooveBounds(valveBounds);
+            Bounds grooveBounds = GetGrooveBounds(errorBounds);
             PointF[] groovePoints = grooveBounds.GetPoints(-LineWidth / 2f);
 
             using(Pen pen = new Pen(Colors.Lines, LineWidth))
@@ -96,6 +98,21 @@ namespace NtoLib.Render.Valves
 
 
         /// <summary>
+        /// Возвращает границы, в которых должен быть отрисован клапан/шибер
+        /// </summary>
+        private Bounds GetValveBounds(Bounds errorBounds)
+        {
+            Bounds valveBounds = errorBounds;
+
+            float offset = 2f * (ErrorLineWidth + ErrorOffset);
+            valveBounds.Width -= offset;
+            valveBounds.Height -= offset;
+            valveBounds.Height *= 0.8f;
+
+            return valveBounds;
+        }
+
+        /// <summary>
         /// Возвращает массивы точек для двух треугольников шибера соответственно
         /// </summary>
         private PointF[][] GetValvePoints(Bounds valveBounds)
@@ -103,7 +120,7 @@ namespace NtoLib.Render.Valves
             valveBounds.Width -= LineWidth;
             valveBounds.Height -= LineWidth * 1.154f;
 
-            float offsetFromCenter = valveBounds.Width * _relativeGrooveWidth / 2f;
+            float offsetFromCenter = valveBounds.Width * _relativeGrooveWidth / 2f + LineWidth / 2f;
             PointF leftTriangleCenter = new PointF(valveBounds.CenterX - offsetFromCenter, valveBounds.CenterY);
             PointF rightTriangleCenter = new PointF(valveBounds.CenterX + offsetFromCenter, valveBounds.CenterY);
 
@@ -125,13 +142,15 @@ namespace NtoLib.Render.Valves
         /// <summary>
         /// Возвращает границы паза для задвижки шибера
         /// </summary>
-        private Bounds GetGrooveBounds(Bounds valveBounds)
+        private Bounds GetGrooveBounds(Bounds errorBounds)
         {
-            Bounds grooveBounds = valveBounds;
+            Bounds grooveBounds = errorBounds;
 
-            grooveBounds.Y -= valveBounds.Height / 6f;
-            grooveBounds.Height = valveBounds.Height * 2f / 3f;
-            grooveBounds.Width = valveBounds.Width * _relativeGrooveWidth;
+
+            float offset = 2f * (ErrorLineWidth + ErrorOffset);
+            grooveBounds.Height = (errorBounds.Height - offset) * (2f / 3f);
+            grooveBounds.Width = errorBounds.Width * _relativeGrooveWidth;
+            grooveBounds.Y -= grooveBounds.Height / 4f;
 
             return grooveBounds;
         }

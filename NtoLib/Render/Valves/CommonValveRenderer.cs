@@ -18,14 +18,9 @@ namespace NtoLib.Render.Valves
 
         public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
-            Status status = Control.Status;
-            if(IsBlocked(status))
-                graphics.Clear(Colors.Blocked);
-
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
             Bounds graphicsBounds = BoundsFromRect(boundsRect);
-
             if(orientation == Orientation.Vertical)
             {
                 Matrix transform = graphics.Transform;
@@ -36,11 +31,17 @@ namespace NtoLib.Render.Valves
                 (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
             }
 
-            Bounds valveBounds = GetValveBounds(graphicsBounds);
+            Status status = Control.Status;
+            Bounds errorBounds = GetErrorBounds(graphicsBounds);
+            Bounds valveBounds = GetValveBounds(errorBounds);
+
+            if(IsBlocked(status))
+                DrawBlockRectangle(graphics, errorBounds); 
+
             DrawValve(graphics, valveBounds, status, isLight);
 
             if(status.AnyError)
-                DrawErrorRectangle(graphics, graphicsBounds);
+                DrawErrorRectangle(graphics, errorBounds);
         }
 
 
@@ -64,6 +65,31 @@ namespace NtoLib.Render.Valves
                 graphics.DrawClosedCurve(pen, valvePoints[0], 0, FillMode.Alternate);
                 graphics.DrawClosedCurve(pen, valvePoints[1], 0, FillMode.Alternate);
             }
+        }
+
+        /// <summary>
+        /// Возвращет границы, в которых должна быть отрисована рамка ошибки
+        /// или прямоугольник блокировки
+        /// </summary>
+        protected Bounds GetErrorBounds(Bounds graphicsBounds)
+        {
+            Bounds errorBounds = graphicsBounds;
+            errorBounds.Height *= 0.66f;
+            return errorBounds;
+        }
+
+        /// <summary>
+        /// Возвращает границы, в которых должен быть отрисован клапан/шибер
+        /// </summary>
+        protected Bounds GetValveBounds(Bounds errorBounds)
+        {
+            Bounds valveBounds = errorBounds;
+
+            float offset = 2f * (ErrorLineWidth + ErrorOffset);
+            valveBounds.Width -= offset;
+            valveBounds.Height -= offset;
+
+            return valveBounds;
         }
 
         /// <summary>

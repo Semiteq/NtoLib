@@ -17,14 +17,9 @@ namespace NtoLib.Render.Valves
 
         public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
-            Status status = Control.Status;
-            if(IsBlocked(status))
-                graphics.Clear(Colors.Blocked);
-
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
             Bounds graphicsBounds = BoundsFromRect(boundsRect);
-
             if(orientation == Orientation.Vertical)
             {
                 Matrix transform = graphics.Transform;
@@ -35,12 +30,18 @@ namespace NtoLib.Render.Valves
                 (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
             }
 
-            Bounds valveBounds = GetValveBounds(graphicsBounds);
+            Status status = Control.Status;
+            Bounds errorBounds = GetErrorBounds(graphicsBounds);
+            Bounds valveBounds = GetValveBounds(errorBounds);
+
+            if(IsBlocked(status))
+                DrawBlockRectangle(graphics, errorBounds);
+
             DrawValve(graphics, valveBounds, status, isLight);
             DrawSmoothValveCirlce(graphics, valveBounds, status);
 
             if(status.AnyError)
-                DrawErrorRectangle(graphics, graphicsBounds);
+                DrawErrorRectangle(graphics, errorBounds);
         }
 
 

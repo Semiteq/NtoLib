@@ -52,25 +52,21 @@ namespace NtoLib.Render.Valves
         /// <summary>
         /// Отрисовывает рамку ошибки
         /// </summary>
-        protected void DrawErrorRectangle(Graphics graphics, Bounds graphicsBound)
+        protected void DrawErrorRectangle(Graphics graphics, Bounds errorBounds)
         {
-            PointF[] errorPoints = graphicsBound.GetPoints(-ErrorLineWidth / 2f);
+            PointF[] errorPoints = errorBounds.GetPoints(-ErrorLineWidth / 2f);
             using(Pen errorPen = new Pen(Colors.Error, ErrorLineWidth))
                 graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);
         }
 
         /// <summary>
-        /// Возвращает границы, в которых должен быть отрисован клапан/шибер
+        /// Отрисовывает прямоугольник блокировки
         /// </summary>
-        protected Bounds GetValveBounds(Bounds graphicsBounds)
+        protected void DrawBlockRectangle(Graphics graphics, Bounds errorBoudns)
         {
-            Bounds valveBounds = graphicsBounds;
-
-            float offset = 2f * (ErrorLineWidth + ErrorOffset);
-            valveBounds.Width -= offset;
-            valveBounds.Height -= offset;
-
-            return valveBounds;
+            RectangleF blockRect = errorBoudns.ToRectangleF();
+            using(SolidBrush brush = new SolidBrush(Colors.Blocked))
+                graphics.FillRectangle(brush, blockRect);
         }
 
         /// <summary>
