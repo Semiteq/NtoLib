@@ -14,7 +14,7 @@ namespace NtoLib.Valves
 {
     [ComVisible(true)]
     [Guid("4641CB00-693D-46F2-85EC-5142B0C0EDA4")]
-    [DisplayName("Имя какое-то")]
+    [DisplayName("Клапан")]
     public partial class ValveControl : VisualControlBase
     {
         private Orientation _orientation;
@@ -99,7 +99,7 @@ namespace NtoLib.Valves
             _animationTimer.Tick += UpdateAnimation;
 
             _mouseHoldTimer = new Timer();
-            _mouseHoldTimer.Interval = SystemInformation.DoubleClickTime;
+            _mouseHoldTimer.Interval = 200;
             _mouseHoldTimer.Tick += HandleMouseHoldDown;
         }
 
@@ -194,17 +194,7 @@ namespace NtoLib.Valves
                 if(Status.BlockClosing)
                     return;
 
-                if(_isSmoothValve)
-                {
-                    if(Status.State == State.Opened)
-                        commandId = ValveFB.OpenSmoothlyCmdId;
-                    else
-                        commandId = ValveFB.CloseCmdId;
-                }
-                else
-                {
-                    commandId = ValveFB.CloseCmdId;
-                }
+                commandId = ValveFB.CloseCmdId;
             }
 
             if(commandId < 0)
