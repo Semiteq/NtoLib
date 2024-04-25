@@ -6,7 +6,6 @@ using NtoLib.Utils;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Timers;
 
 namespace NtoLib.Valves
 {
@@ -105,26 +104,26 @@ namespace NtoLib.Valves
             if(GetPinQuality(StatusWordId) == OpcQuality.Ok)
                 statusWord = GetPinValue<int>(StatusWordId);
 
-            bool connectionOk = statusWord.GetBit(0);
+            bool connectionOk = statusWord.GetBit(ConnectionOkId);
             SetVisualAndUiPin(ConnectionOkId, connectionOk);
-            bool notOpened = statusWord.GetBit(1);
+            bool notOpened = statusWord.GetBit(NotOpenedId);
             SetVisualAndUiPin(NotOpenedId, notOpened);
-            bool notClosed = statusWord.GetBit(2);
+            bool notClosed = statusWord.GetBit(NotClosedId);
             SetVisualAndUiPin(NotClosedId, notClosed);
-            bool collision = statusWord.GetBit(3);
+            bool collision = statusWord.GetBit(CollisionId);
             SetVisualAndUiPin(CollisionId, collision);
-            SetVisualAndUiPin(UsedByAutoModeId, statusWord.GetBit(4));
-            bool opened = statusWord.GetBit(5);
+            SetVisualAndUiPin(UsedByAutoModeId, statusWord.GetBit(UsedByAutoModeId));
+            bool opened = statusWord.GetBit(OpenedId);
             SetVisualAndUiPin(OpenedId, opened);
-            bool openedSmoothly = statusWord.GetBit(6);
+            bool openedSmoothly = statusWord.GetBit(SmoothlyOpenedId);
             SetVisualAndUiPin(SmoothlyOpenedId, openedSmoothly);
-            bool closed = statusWord.GetBit(7);
+            bool closed = statusWord.GetBit(ClosedId);
             SetVisualAndUiPin(ClosedId, closed);
-            SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(8));
+            SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(OpeningClosingId));
 
-            SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(13));
-            SetVisualAndUiPin(BlockOpeningId, statusWord.GetBit(14));
-            SetVisualAndUiPin(IsSmoothValveId, statusWord.GetBit(15));
+            SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(BlockClosingId));
+            SetVisualAndUiPin(BlockOpeningId, statusWord.GetBit(BlockOpeningId));
+            SetVisualAndUiPin(IsSmoothValveId, statusWord.GetBit(IsSmoothValveId));
 
 
             int commandWord = 0;
