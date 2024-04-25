@@ -16,7 +16,7 @@ namespace NtoLib.Valves
     [CatID(CatIDs.CATID_OTHER)]
     [DisplayName("Клапан")]
     [VisualControls(typeof(ValveControl))]
-    public class ValveFB : VisualFBBase
+    public class ValveFB : VisualFBBaseExtended
     {
         public const int StatusWordId = 1;
         public const int CommandWordId = 5;
@@ -65,23 +65,10 @@ namespace NtoLib.Valves
         private EventTrigger _closedEvent;
 
 
-        [NonSerialized]
-        private Timer _connectionCheckTimer;
-        [NonSerialized]
-        private OpcQuality _previousOpcQuality;
-
-
 
         protected override void ToRuntime()
         {
-            _connectionCheckTimer = new Timer();
-            _connectionCheckTimer.Interval = 100;
-            _connectionCheckTimer.AutoReset = true;
-            _connectionCheckTimer.Elapsed += CheckConnection;
-            _connectionCheckTimer.Start();
-
-            _previousOpcQuality = GetPinQuality(StatusWordId);
-
+            base.ToRuntime();
 
             string[] splittedString = FullName.Split('.');
             string name = splittedString[splittedString.Length - 1];
@@ -110,13 +97,10 @@ namespace NtoLib.Valves
             _closedEvent = new EventTrigger(this, ClosedEventId, message, initialInactivity, true);
         }
 
-        protected override void ToDesign()
-        {
-            _connectionCheckTimer?.Dispose();
-        }
-
         protected override void UpdateData()
         {
+            base.UpdateData();
+
             int statusWord = 0;
             if(GetPinQuality(StatusWordId) == OpcQuality.Ok)
                 statusWord = GetPinValue<int>(StatusWordId);
@@ -163,36 +147,9 @@ namespace NtoLib.Valves
 
 
 
-        private void CheckConnection(object sender, EventArgs e)
+        protected override OpcQuality GetConnectionQuality()
         {
-            OpcQuality quality = GetPinQuality(StatusWordId);
-            if(quality != _previousOpcQuality)
-                UpdateData();
-
-            _previousOpcQuality = quality;
-        }
-
-        /// <summary>
-        /// Пересылает информацию с внешнего входа на соответствующий выход для UI
-        /// и VisualPin
-        /// </summary>
-        /// <param name="id"></param>
-        private void RetransmitPin(int id)
-        {
-            object value = GetPinValue(id);
-
-            SetPinValue(id + 200, value);
-            VisualPins.SetPinValue(id + 1000, value);
-        }
-
-        /// <summary>
-        /// Пересылает информацию с входа с контрола на внешние выходы
-        /// </summary>
-        /// <param name="id"></param>
-        private void RetransmitVisualPin(int id)
-        {
-            object value = VisualPins.GetPinValue(id + 1000);
-            SetPinValue(id, value);
+            return GetPinQuality(StatusWordId);
         }
 
 
@@ -206,17 +163,6 @@ namespace NtoLib.Valves
         private T GetVisualPin<T>(int id)
         {
             return (T)VisualPins.GetPinValue(id + 1000);
-        }
-
-        private int SetBit(int word, int index, bool value)
-        {
-            int valueInt = value ? 1 : 0;
-            return word | (valueInt << index);
-        }
-
-        private bool GetBit(int word, int index)
-        {
-            return (word & (1 << index)) != 0;
         }
     }
 }

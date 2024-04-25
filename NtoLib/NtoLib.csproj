@@ -97,6 +97,7 @@
     <Compile Include="Valves\ValveControl.Designer.cs">
       <DependentUpon>ValveControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="VisualFBBaseExtended.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Utils\Lamp.resx">
