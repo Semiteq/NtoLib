@@ -36,9 +36,9 @@ namespace NtoLib.Valves
         public const int IsSmoothValveId = 15;
 
 
-        public const int OpenCmdId = 101;
-        public const int CloseCmdId = 102;
-        public const int OpenSmoothlyCmdId = 103;
+        public const int OpenCmdId = 100;
+        public const int CloseCmdId = 101;
+        public const int OpenSmoothlyCmdId = 102;
 
 
         public const int CollistionEventId = 5000;

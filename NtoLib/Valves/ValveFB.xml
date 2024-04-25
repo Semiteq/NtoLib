@@ -2,7 +2,7 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="1"       Name="StatusWord"       Type="Целый" DefaultValue="0" />
+      <Pin ID="1"       Name="StatusWord"       Type="Целый"  DefaultValue="0" />
       <Pout ID="5"      Name="CommandWord"      Type="Целый" />
 
       <Group Name="Выходы для UI">
@@ -40,9 +40,9 @@
       <Pout ID="1014"    Name="BlockOpening"      Type="Логический" />
       <Pout ID="1015"    Name="IsSmoothValve"     Type="Логический" />
 
-      <Pin ID="1101"     Name="OpenCMD"           Type="Логический"    DefaultValue="false" />
-      <Pin ID="1102"     Name="CloseCMD"          Type="Логический"    DefaultValue="false" />
-      <Pin ID="1103"     Name="OpenSmoothlyCMD"   Type="Логический"    DefaultValue="false" />
+      <Pin ID="1100"     Name="OpenCMD"           Type="Логический"    DefaultValue="false" />
+      <Pin ID="1101"     Name="CloseCMD"          Type="Логический"    DefaultValue="false" />
+      <Pin ID="1102"     Name="OpenSmoothlyCMD"   Type="Логический"    DefaultValue="false" />
     </Items>
   </VisualMap>
   <Events>
