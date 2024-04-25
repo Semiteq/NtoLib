@@ -4,7 +4,7 @@
     {
         public State State;
 
-        public bool AutoMode;
+        public bool UsedByAutoMode;
         public bool BlockOpening;
         public bool BlockClosing;
         public bool NoConnection;

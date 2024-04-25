@@ -28,8 +28,8 @@ namespace NtoLib.Valves.Settings
             lampBlockClosing.Active = status.BlockClosing;
 
 
-            lampAuto.Active = status.AutoMode;
-            lampManual.Active = !status.AutoMode && !status.NoConnection;
+            lampAuto.Active = status.UsedByAutoMode;
+            lampManual.Active = !status.UsedByAutoMode && !status.NoConnection;
             lampNotOpened.Active = status.NotOpened;
             lampNotClosed.Active = status.NotClosed;
             lampCollision.Active = status.Collision;
