@@ -1,17 +1,17 @@
 ﻿namespace NtoLib.Valves
 {
-    internal struct Status
+    public struct Status
     {
         public State State;
 
-        public bool AutoMode;
+        public bool UsedByAutoMode;
         public bool BlockOpening;
         public bool BlockClosing;
-        public bool NoConnection;
+        public bool ConnectionOk;
         public bool NotOpened;
         public bool NotClosed;
         public bool Collision;
 
-        public bool AnyError => NoConnection || NotOpened || NotClosed || Collision;
+        public bool AnyError => !ConnectionOk || NotOpened || NotClosed || Collision;
     }
 }

@@ -67,8 +67,16 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Colors.cs" />
+    <Compile Include="Pumps\PumpControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pumps\PumpControl.Designer.cs">
+      <DependentUpon>PumpControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pumps\PumpFB.cs" />
     <Compile Include="Render\Bounds.cs" />
     <Compile Include="Utils\EventTrigger.cs" />
+    <Compile Include="Utils\Int32Extension.cs" />
     <Compile Include="Utils\Lamp.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -76,7 +84,7 @@
       <DependentUpon>Lamp.cs</DependentUpon>
     </Compile>
     <Compile Include="Utils\Shape.cs" />
-    <Compile Include="Valves\Orientation.cs" />
+    <Compile Include="Render\Valves\Orientation.cs" />
     <Compile Include="Render\Valves\ValveBaseRenderer.cs" />
     <Compile Include="Render\Valves\SlideGateRenderer.cs" />
     <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
@@ -115,6 +123,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Pumps\PumpFB.bmp" />
+    <EmbeddedResource Include="Pumps\PumpFB.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

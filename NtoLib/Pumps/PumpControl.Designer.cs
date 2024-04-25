@@ -1,6 +1,6 @@
-﻿namespace NtoLib.Valves
+﻿namespace NtoLib.Pumps
 {
-    partial class ValveControl
+    partial class PumpControl
     {
         /// <summary> 
         /// Обязательная переменная конструктора.
@@ -28,24 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
-            // 
-            // ValveControl
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.DoubleBuffered = false;
-            this.Name = "ValveControl";
-            this.Size = new System.Drawing.Size(60, 40);
-            this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
-            this.DoubleClick += new System.EventHandler(this.HandleDoubleClick);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
-            this.MouseLeave += new System.EventHandler(this.StopHoldTimer);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
-            this.ResumeLayout(false);
-
         }
 
         #endregion
