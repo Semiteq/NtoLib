@@ -19,20 +19,22 @@ namespace NtoLib.Valves
     public class ValveFB : VisualFBBase
     {
         public const int StatusWordId = 1;
-        public const int CommandWordId = 100;
+        public const int CommandWordId = 5;
 
-        public const int IsSmoothValveId = 1;
-        public const int ConnectionOkId = 2;
-        public const int UsedByAutoModeId = 3;
-        public const int OpenedId = 4;
-        public const int SmoothlyOpenedId = 5;
-        public const int ClosedId = 6;
-        public const int OpeningClosingId = 7;
-        public const int BlockOpeningId = 8;
-        public const int BlockClosingId = 9;
-        public const int CollisionId = 10;
-        public const int NotOpenedId = 11;
-        public const int NotClosedId = 12;
+
+        public const int ConnectionOkId = 0;
+        public const int NotOpenedId = 1;
+        public const int NotClosedId = 2;
+        public const int CollisionId = 3;
+        public const int UsedByAutoModeId = 4;
+        public const int OpenedId = 5;
+        public const int SmoothlyOpenedId = 6;
+        public const int ClosedId = 7;
+        public const int OpeningClosingId = 8;
+
+        public const int BlockClosingId = 13;
+        public const int BlockOpeningId = 14;
+        public const int IsSmoothValveId = 15;
 
 
         public const int OpenCmdId = 101;
@@ -119,14 +121,21 @@ namespace NtoLib.Valves
             if(GetPinQuality(StatusWordId) == OpcQuality.Ok)
                 statusWord = GetPinValue<int>(StatusWordId);
 
-            SetVisualAndUiPin(ConnectionOkId, statusWord.GetBit(0));
-            SetVisualAndUiPin(NotOpenedId, statusWord.GetBit(1));
-            SetVisualAndUiPin(NotClosedId, statusWord.GetBit(2));
-            SetVisualAndUiPin(CollisionId, statusWord.GetBit(3));
+            bool connectionOk = statusWord.GetBit(0);
+            SetVisualAndUiPin(ConnectionOkId, connectionOk);
+            bool notOpened = statusWord.GetBit(1);
+            SetVisualAndUiPin(NotOpenedId, notOpened);
+            bool notClosed = statusWord.GetBit(2);
+            SetVisualAndUiPin(NotClosedId, notClosed);
+            bool collision = statusWord.GetBit(3);
+            SetVisualAndUiPin(CollisionId, collision);
             SetVisualAndUiPin(UsedByAutoModeId, statusWord.GetBit(4));
-            SetVisualAndUiPin(OpenedId, statusWord.GetBit(5));
-            SetVisualAndUiPin(SmoothlyOpenedId, statusWord.GetBit(6));
-            SetVisualAndUiPin(ClosedId, statusWord.GetBit(7));
+            bool opened = statusWord.GetBit(5);
+            SetVisualAndUiPin(OpenedId, opened);
+            bool openedSmoothly = statusWord.GetBit(6);
+            SetVisualAndUiPin(SmoothlyOpenedId, openedSmoothly);
+            bool closed = statusWord.GetBit(7);
+            SetVisualAndUiPin(ClosedId, closed);
             SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(8));
 
             SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(13));
@@ -142,14 +151,14 @@ namespace NtoLib.Valves
 
 
 
-            _collisionEvent.Update(GetPinValue<bool>(CollisionId));
-            _notOpenedEvent.Update(GetPinValue<bool>(NotOpenedId));
-            _notClosedEvent.Update(GetPinValue<bool>(NotClosedId));
-            _connectionDisabledEvent.Update(!GetPinValue<bool>(ConnectionOkId));
+            _collisionEvent.Update(collision);
+            _notOpenedEvent.Update(notOpened);
+            _notClosedEvent.Update(notClosed);
+            _connectionDisabledEvent.Update(!connectionOk);
 
-            _openedEvent.Update(GetPinValue<bool>(OpenedId));
-            _openedSmoothlyEvent.Update(GetPinValue<bool>(SmoothlyOpenedId));
-            _closedEvent.Update(GetPinValue<bool>(ClosedId));
+            _openedEvent.Update(opened);
+            _openedSmoothlyEvent.Update(openedSmoothly);
+            _closedEvent.Update(closed);
         }
 
 
@@ -190,7 +199,7 @@ namespace NtoLib.Valves
 
         private void SetVisualAndUiPin(int id, object value)
         {
-            SetPinValue(id + 200, value);
+            SetPinValue(id + 100, value);
             VisualPins.SetPinValue(id + 1000, value);
         }
 
