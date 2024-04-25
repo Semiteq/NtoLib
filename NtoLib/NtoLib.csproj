@@ -69,6 +69,7 @@
     <Compile Include="Colors.cs" />
     <Compile Include="Render\Bounds.cs" />
     <Compile Include="Utils\EventTrigger.cs" />
+    <Compile Include="Utils\Int32Extension.cs" />
     <Compile Include="Utils\Lamp.cs">
       <SubType>UserControl</SubType>
     </Compile>
