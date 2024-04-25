@@ -18,23 +18,22 @@ namespace NtoLib.Valves
     [VisualControls(typeof(ValveControl))]
     public class ValveFB : VisualFBBase
     {
-        public const int StatusWordId = 0;
-        public const int CommandWordId = 1;
+        public const int StatusWordId = 1;
+        public const int CommandWordId = 100;
 
+        public const int IsSmoothValveId = 1;
+        public const int ConnectionOkId = 2;
+        public const int UsedByAutoModeId = 3;
+        public const int OpenedId = 4;
+        public const int SmoothlyOpenedId = 5;
+        public const int ClosedId = 6;
+        public const int OpeningClosingId = 7;
+        public const int BlockOpeningId = 8;
+        public const int BlockClosingId = 9;
+        public const int CollisionId = 10;
+        public const int NotOpenedId = 11;
+        public const int NotClosedId = 12;
 
-        public const int ConnectionOkId = 0;
-        public const int NotOpenedId = 1;
-        public const int NotClosedId = 2;
-        public const int CollisionId = 3;
-        public const int UsedByAutoModeId = 4;
-        public const int OpenedId = 5;
-        public const int SmoothlyOpenedId = 6;
-        public const int ClosedId = 7;
-        public const int OpeningClosingId = 8;
-
-        public const int BlockClosingId = 13;
-        public const int BlockOpeningId = 14;
-        public const int IsSmoothValveId = 15;
 
         public const int OpenCmdId = 101;
         public const int CloseCmdId = 102;
@@ -49,7 +48,7 @@ namespace NtoLib.Valves
 
         public const int NotClosedEventId = 5002;
         private EventTrigger _notClosedEvent;
-
+        
         public const int ConnectionDisabledEventId = 5003;
         private EventTrigger _connectionDisabledEvent;
 
@@ -76,10 +75,10 @@ namespace NtoLib.Valves
             _connectionCheckTimer = new Timer();
             _connectionCheckTimer.Interval = 100;
             _connectionCheckTimer.AutoReset = true;
-            _connectionCheckTimer.Elapsed += UpdateIfConnectionChanged;
+            _connectionCheckTimer.Elapsed += CheckConnection;
             _connectionCheckTimer.Start();
 
-            _previousOpcQuality = OpcQuality.Bad;
+            _previousOpcQuality = GetPinQuality(StatusWordId);
 
 
             string[] splittedString = FullName.Split('.');
@@ -116,37 +115,54 @@ namespace NtoLib.Valves
 
         protected override void UpdateData()
         {
-            int statusWord = GetPinValue<int>(StatusWordId);
-            if(GetPinQuality(StatusWordId) != OpcQuality.Ok)
-                statusWord = 0;
+            int statusWord = 0;
+            if(GetPinQuality(StatusWordId) == OpcQuality.Ok)
+                statusWord = GetPinValue<int>(StatusWordId);
 
-            SetVisualAndUiPin(ConnectionOkId, statusWord.GetBit(ConnectionOkId));
-            SetVisualAndUiPin(NotOpenedId, statusWord.GetBit(NotOpenedId));
-            SetVisualAndUiPin(NotClosedId, statusWord.GetBit(NotClosedId));
-            SetVisualAndUiPin(CollisionId, statusWord.GetBit(CollisionId));
-            SetVisualAndUiPin(UsedByAutoModeId, statusWord.GetBit(UsedByAutoModeId));
-            SetVisualAndUiPin(OpenedId, statusWord.GetBit(OpenedId));
-            SetVisualAndUiPin(SmoothlyOpenedId, statusWord.GetBit(SmoothlyOpenedId));
-            SetVisualAndUiPin(ClosedId, statusWord.GetBit(ClosedId));
-            SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(OpeningClosingId));
+            bool ConnectionOk = GetBit(statusWord, 0);
+            SetVisualAndUiPin(ConnectionOkId, ConnectionOk);
+            bool NotOpened = GetBit(statusWord, 1);
+            SetVisualAndUiPin(NotOpenedId, NotOpened);
+            bool NotClosed = GetBit(statusWord, 2);
+            SetVisualAndUiPin(NotClosedId, NotClosed);
+            bool Collision = GetBit(statusWord, 3);
+            SetVisualAndUiPin(CollisionId, Collision);
+            bool UsedByAutoMode = GetBit(statusWord, 4);
+            SetVisualAndUiPin(UsedByAutoModeId, UsedByAutoMode);
+            bool Opened = GetBit(statusWord, 5);
+            SetVisualAndUiPin(OpenedId, Opened);
+            bool SmoothlyOpened = GetBit(statusWord, 6);
+            SetVisualAndUiPin(SmoothlyOpenedId, SmoothlyOpened);
+            bool Closed = GetBit(statusWord, 7);
+            SetVisualAndUiPin(ClosedId, Closed);
+            bool OpeningClosing = GetBit(statusWord, 8);
+            SetVisualAndUiPin(OpeningClosingId, OpeningClosing);
 
-            SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(BlockClosingId));
-            SetVisualAndUiPin(BlockOpeningId, statusWord.GetBit(BlockOpeningId));
-            SetVisualAndUiPin(IsSmoothValveId, statusWord.GetBit(IsSmoothValveId));
+            bool blockClosing = GetBit(statusWord, 13);
+            SetVisualAndUiPin(BlockClosingId, blockClosing);
+            bool blockOpening = GetBit(statusWord, 14);
+            SetVisualAndUiPin(BlockOpeningId, blockOpening);
+            bool isSmoothValve = GetBit(statusWord, 15);
+            SetVisualAndUiPin(IsSmoothValveId, isSmoothValve);
 
+
+
+            bool openCommand = GetVisualPin<bool>(OpenCmdId);
+            bool openSmoothlyCommand = GetVisualPin<bool>(OpenSmoothlyCmdId);
+            bool closeCommand = GetVisualPin<bool>(CloseCmdId);
 
             int commandWord = 0;
-            commandWord.SetBit(0, GetVisualPin<bool>(OpenCmdId));
-            commandWord.SetBit(1, GetVisualPin<bool>(OpenSmoothlyCmdId));
-            commandWord.SetBit(2, GetVisualPin<bool>(CloseCmdId));
+            commandWord = SetBit(commandWord, 0, openCommand);
+            commandWord = SetBit(commandWord, 1, openSmoothlyCommand);
+            commandWord = SetBit(commandWord, 2, closeCommand);
             SetPinValue(CommandWordId, commandWord);
+
 
 
             _collisionEvent.Update(GetPinValue<bool>(CollisionId));
             _notOpenedEvent.Update(GetPinValue<bool>(NotOpenedId));
             _notClosedEvent.Update(GetPinValue<bool>(NotClosedId));
-            bool noConnection = !GetPinValue<bool>(ConnectionOkId);
-            _connectionDisabledEvent.Update(noConnection);
+            _connectionDisabledEvent.Update(!GetPinValue<bool>(ConnectionOkId));
 
             _openedEvent.Update(GetPinValue<bool>(OpenedId));
             _openedSmoothlyEvent.Update(GetPinValue<bool>(SmoothlyOpenedId));
@@ -155,7 +171,7 @@ namespace NtoLib.Valves
 
 
 
-        private void UpdateIfConnectionChanged(object sender, EventArgs e)
+        private void CheckConnection(object sender, EventArgs e)
         {
             OpcQuality quality = GetPinQuality(StatusWordId);
             if(quality != _previousOpcQuality)
@@ -163,6 +179,31 @@ namespace NtoLib.Valves
 
             _previousOpcQuality = quality;
         }
+
+        /// <summary>
+        /// Пересылает информацию с внешнего входа на соответствующий выход для UI
+        /// и VisualPin
+        /// </summary>
+        /// <param name="id"></param>
+        private void RetransmitPin(int id)
+        {
+            object value = GetPinValue(id);
+
+            SetPinValue(id + 200, value);
+            VisualPins.SetPinValue(id + 1000, value);
+        }
+
+        /// <summary>
+        /// Пересылает информацию с входа с контрола на внешние выходы
+        /// </summary>
+        /// <param name="id"></param>
+        private void RetransmitVisualPin(int id)
+        {
+            object value = VisualPins.GetPinValue(id + 1000);
+            SetPinValue(id, value);
+        }
+
+
 
         private void SetVisualAndUiPin(int id, object value)
         {
@@ -173,6 +214,17 @@ namespace NtoLib.Valves
         private T GetVisualPin<T>(int id)
         {
             return (T)VisualPins.GetPinValue(id + 1000);
+        }
+
+        private int SetBit(int word, int index, bool value)
+        {
+            int valueInt = value ? 1 : 0;
+            return word | (valueInt << index);
+        }
+
+        private bool GetBit(int word, int index)
+        {
+            return (word & (1 << index)) != 0;
         }
     }
 }

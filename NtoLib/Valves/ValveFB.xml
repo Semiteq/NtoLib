@@ -2,47 +2,45 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="0"     Name="StatusWord"       Type="Целый"    DefaultValue="0" />
-      <Pout ID="1"    Name="CommandWord"      Type="Целый" />
+      <Pin ID="1"       Name="StatusWord"       Type="Целый" />
+      <Pout ID="100"    Name="CommandWord"      Type="Целый" />
 
-      <Group Name="Выходы для UI">
+      <Group ID="200" Name="Выходы для UI">
         <Items>
-          <Pout ID="200"    Name="ConnectionOk"     Type="Логический" />
-          <Pout ID="201"    Name="NotOpened"        Type="Логический" />
-          <Pout ID="202"    Name="NotClosed"        Type="Логический" />
-          <Pout ID="203"    Name="Collision"        Type="Логический" />
-          <Pout ID="204"    Name="AutoMode"         Type="Логический" />
-          <Pout ID="205"    Name="Opened"           Type="Логический" />
-          <Pout ID="206"    Name="SmoothlyOpened"   Type="Логический" />
-          <Pout ID="207"    Name="Closed"           Type="Логический" />
-          <Pout ID="208"    Name="OpeningClosing"   Type="Логический" />
-          
-          <Pout ID="213"    Name="BlockClosing"     Type="Логический" />
-          <Pout ID="214"    Name="BlockOpening"     Type="Логический" />
-          <Pout ID="215"    Name="IsSmoothValve"    Type="Логический" />
+          <Pout ID="201"      Name="IsSmoothValve"    Type="Логический" />
+          <Pout ID="202"      Name="ConnectionOk"     Type="Логический" />
+          <Pout ID="203"      Name="AutoMode"         Type="Логический" />
+          <Pout ID="204"      Name="Opened"           Type="Логический" />
+          <Pout ID="205"      Name="SmoothlyOpened"   Type="Логический" />
+          <Pout ID="206"      Name="Closed"           Type="Логический" />
+          <Pout ID="207"      Name="OpeningClosing"   Type="Логический" />
+          <Pout ID="208"      Name="BlockOpening"     Type="Логический" />
+          <Pout ID="209"      Name="BlockClosing"     Type="Логический" />
+          <Pout ID="210"      Name="Collision"        Type="Логический" />
+          <Pout ID="211"      Name="NotOpened"        Type="Логический" />
+          <Pout ID="212"      Name="NotClosed"        Type="Логический" />
         </Items>
       </Group>
     </Items>
   </Map>
   <VisualMap>
     <Items>
-      <Pout ID="1000"   Name="ConnectionOk"     Type="Логический" />
-      <Pout ID="1001"   Name="NotOpened"        Type="Логический" />
-      <Pout ID="1002"   Name="NotClosed"        Type="Логический" />
-      <Pout ID="1003"   Name="Collision"        Type="Логический" />
-      <Pout ID="1004"   Name="AutoMode"         Type="Логический" />
-      <Pout ID="1005"   Name="Opened"           Type="Логический" />
-      <Pout ID="1006"   Name="SmoothlyOpened"   Type="Логический" />
-      <Pout ID="1007"   Name="Closed"           Type="Логический" />
-      <Pout ID="1008"   Name="OpeningClosing"   Type="Логический" />
+      <Pout ID="1001"    Name="IsSmoothValve"    Type="Логический" />
+      <Pout ID="1002"    Name="ConnectionOk"     Type="Логический" />
+      <Pout ID="1003"    Name="AutoMode"         Type="Логический" />
+      <Pout ID="1004"    Name="Opened"           Type="Логический" />
+      <Pout ID="1005"    Name="SmoothlyOpened"   Type="Логический" />
+      <Pout ID="1006"    Name="Closed"           Type="Логический" />
+      <Pout ID="1007"    Name="OpeningClosing"   Type="Логический" />
+      <Pout ID="1008"    Name="BlockOpening"     Type="Логический" />
+      <Pout ID="1009"    Name="BlockClosing"     Type="Логический" />
+      <Pout ID="1010"    Name="Collision"        Type="Логический" />
+      <Pout ID="1011"    Name="NotOpened"        Type="Логический" />
+      <Pout ID="1012"    Name="NotClosed"        Type="Логический" />
 
-      <Pout ID="1013"   Name="BlockClosing"     Type="Логический" />
-      <Pout ID="1014"   Name="BlockOpening"     Type="Логический" />
-      <Pout ID="1015"   Name="IsSmoothValve"    Type="Логический" />
-      
-      <Pin ID="1101"    Name="OpenCMD"          Type="Логический"    DefaultValue="false" />
-      <Pin ID="1102"    Name="CloseCMD"         Type="Логический"    DefaultValue="false" />
-      <Pin ID="1103"    Name="OpenSmoothlyCMD"  Type="Логический"    DefaultValue="false" />
+      <Pin ID="1101"    Name="OpenCMD"         Type="Логический"    DefaultValue="false"/>
+      <Pin ID="1102"    Name="CloseCMD"        Type="Логический"    DefaultValue="false"/>
+      <Pin ID="1103"    Name="OpenSmoothlyCMD" Type="Логический"    DefaultValue="false"/>
     </Items>
   </VisualMap>
   <Events>

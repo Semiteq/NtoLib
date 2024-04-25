@@ -1,6 +1,6 @@
 ﻿namespace NtoLib.Valves
 {
-    public enum State
+    internal enum State
     {
         NoData,
         Opened,

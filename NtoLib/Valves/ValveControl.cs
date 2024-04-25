@@ -1,13 +1,13 @@
 ﻿using FB.VisualFB;
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
-using NtoLib.Render;
 using NtoLib.Render.Valves;
 using NtoLib.Valves.Settings;
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace NtoLib.Valves
@@ -17,9 +17,9 @@ namespace NtoLib.Valves
     [DisplayName("Клапан")]
     public partial class ValveControl : VisualControlBase
     {
-        private Render.Orientation _orientation;
+        private Orientation _orientation;
         [DisplayName("Ориентация")]
-        public Render.Orientation Orientation
+        public Orientation Orientation 
         {
             get
             {
@@ -68,15 +68,13 @@ namespace NtoLib.Valves
         }
 
         internal Status Status;
+        private bool _commandImpulseInProgress;
 
         private ValveBaseRenderer _renderer;
 
         private SettingsForm _settingsForm;
 
         private bool _isSmoothValve = false;
-
-        private Timer _impulseTimer;
-        private int _currentCommand;
 
         private Timer _mouseHoldTimer;
 
@@ -95,10 +93,6 @@ namespace NtoLib.Valves
             InitializeComponent();
 
             _renderer = new CommonValveRenderer(this);
-
-            _impulseTimer = new Timer();
-            _impulseTimer.Interval = 500;
-            _impulseTimer.Tick += DisableCommandImpulse;
 
             _animationTimer = new Timer();
             _animationTimer.Interval = 500;
@@ -172,7 +166,7 @@ namespace NtoLib.Valves
         private void HandleDoubleClick(object sender, EventArgs e)
         {
             MouseEventArgs me = (MouseEventArgs)e;
-            if(Status.UsedByAutoMode)
+            if(_commandImpulseInProgress || Status.AutoMode)
                 return;
 
 
@@ -211,7 +205,7 @@ namespace NtoLib.Valves
             if(commandId < 0)
                 return;
 
-            SendCommand(commandId);
+            Task.Run(() => SendCommandImpulseAsync(commandId, 500));
         }
 
         private void HandleVisibleChanged(object sender, EventArgs e)
@@ -220,25 +214,17 @@ namespace NtoLib.Valves
                 _settingsForm?.Close();
         }
 
-        private void DisableCommandImpulse(object sender, EventArgs e)
+
+
+        private async Task SendCommandImpulseAsync(int outputId, int msDuration)
         {
-            _impulseTimer.Stop();
-            SetPinValue(_currentCommand, false);
-        }
+            SetPinValue(outputId, true);
+            _commandImpulseInProgress = true;
 
+            await Task.Delay(msDuration);
 
-
-        private void SendCommand(int commandId)
-        {
-            if(_impulseTimer.Enabled)
-            {
-                DisableCommandImpulse(this, null);
-                _impulseTimer.Stop();
-            }
-
-            _currentCommand = commandId;
-            SetPinValue(_currentCommand, true);
-            _impulseTimer.Start();
+            SetPinValue(outputId, false);
+            _commandImpulseInProgress = false;
         }
 
         private void OpenSettingsForm()
@@ -266,8 +252,8 @@ namespace NtoLib.Valves
 
         private void UpdateStatus()
         {
-            Status.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
-            Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
+            Status.NoConnection = !GetPinValue<bool>(ValveFB.ConnectionOkId);
+            Status.AutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
 
             bool open = GetPinValue<bool>(ValveFB.OpenedId);
             bool closed = GetPinValue<bool>(ValveFB.ClosedId);
@@ -275,7 +261,7 @@ namespace NtoLib.Valves
             bool smoothlyOpened = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
             Status.Collision = GetPinValue<bool>(ValveFB.CollisionId);
 
-            if(!Status.ConnectionOk)
+            if(Status.NoConnection)
                 Status.State = State.NoData;
             else if(Status.Collision)
                 Status.State = State.Collision;
