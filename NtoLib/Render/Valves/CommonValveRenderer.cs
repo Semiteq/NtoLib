@@ -74,7 +74,7 @@ namespace NtoLib.Render.Valves
         protected Bounds GetErrorBounds(Bounds graphicsBounds)
         {
             Bounds errorBounds = graphicsBounds;
-            errorBounds.Height *= 0.66f;
+            errorBounds.Height *= 0.8f;
             return errorBounds;
         }
 
