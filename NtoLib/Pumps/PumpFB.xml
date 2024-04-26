@@ -2,8 +2,8 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="1"     Name="StatusWord"       Type="Целый" />
-      <Pout ID="5"    Name="CommandWord"      Type="Целый" />
+      <Pin ID="1"     Name="StatusWord"       Type="БеззнаковыйЦелый"  DefaultValue="0" />
+      <Pout ID="5"    Name="CommandWord"      Type="БеззнаковыйЦелый" />
 
       <Group Name="Выходы для UI">
         <Items>
