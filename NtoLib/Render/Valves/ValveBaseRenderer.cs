@@ -1,73 +1,21 @@
 ﻿using NtoLib.Valves;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace NtoLib.Render.Valves
 {
-    internal abstract class ValveBaseRenderer
+    internal abstract class ValveBaseRenderer : BaseRenderer
     {
-        /// <summary>Толщина всех линий, кроме линии ошибки</summary>
-        public float LineWidth { get; protected set; }
-
-        /// <summary>Толщина линии ошибки</summary>
-        public float ErrorLineWidth { get; protected set; }
-        /// <summary>Отступ от границ клапана до рамки ошибки</summary>
-        public float ErrorOffset { get; protected set; }
-
-
         /// <summary>Экземпляр ValveControl, к которому привязан данный Renderer</summary>
-        protected ValveControl Control { get; private set; }
+        protected ValveControl _control { get; private set; }
 
 
 
         public ValveBaseRenderer(ValveControl valveControl)
         {
-            Control = valveControl;
+            _control = valveControl;
         }
 
 
-
-        /// <summary>
-        /// Метод для отрисовки объекта Renderer'ом
-        /// </summary>
-        public abstract void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight);
-
-
-
-        /// <summary>
-        /// Возвращает границы рисования преобразованные из RectangleF в Bounds
-        /// </summary>
-        /// <param name="boundsRect"></param>
-        /// <returns></returns>
-        protected Bounds BoundsFromRect(RectangleF boundsRect)
-        {
-            boundsRect.X = -0.5f;
-            boundsRect.Y = -0.5f;
-
-            PointF pivot = new PointF(0.5f, 0.5f);
-
-            return Bounds.FromRectangle(boundsRect, pivot);
-        }
-
-        /// <summary>
-        /// Отрисовывает рамку ошибки
-        /// </summary>
-        protected void DrawErrorRectangle(Graphics graphics, Bounds errorBounds)
-        {
-            PointF[] errorPoints = errorBounds.GetPoints(-ErrorLineWidth / 2f);
-            using(Pen errorPen = new Pen(Colors.Error, ErrorLineWidth))
-                graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);
-        }
-
-        /// <summary>
-        /// Отрисовывает прямоугольник блокировки
-        /// </summary>
-        protected void DrawBlockRectangle(Graphics graphics, Bounds errorBoudns)
-        {
-            RectangleF blockRect = errorBoudns.ToRectangleF();
-            using(SolidBrush brush = new SolidBrush(Colors.Blocked))
-                graphics.FillRectangle(brush, blockRect);
-        }
 
         /// <summary>
         /// Возвращает цвета первого и второго треугольника в зависимости от статуса

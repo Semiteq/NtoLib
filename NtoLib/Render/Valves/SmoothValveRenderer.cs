@@ -1,6 +1,5 @@
 ﻿using NtoLib.Valves;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace NtoLib.Render.Valves
 {
@@ -15,33 +14,17 @@ namespace NtoLib.Render.Valves
 
 
 
-        public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
+        public override Bounds Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Bounds graphicsBounds = base.Draw(graphics, boundsRect, orientation, isLight);
 
-            Bounds graphicsBounds = BoundsFromRect(boundsRect);
-            if(orientation == Orientation.Vertical)
-            {
-                Matrix transform = graphics.Transform;
-                transform.RotateAt(270f, graphicsBounds.Center);
-                graphics.Transform = transform;
-                transform.Dispose();
-
-                (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
-            }
-
-            Status status = Control.Status;
+            Status status = _control.Status;
             Bounds errorBounds = GetErrorBounds(graphicsBounds);
             Bounds valveBounds = GetValveBounds(errorBounds);
 
-            if(IsBlocked(status))
-                DrawBlockRectangle(graphics, errorBounds);
-
-            DrawValve(graphics, valveBounds, status, isLight);
             DrawSmoothValveCirlce(graphics, valveBounds, status);
 
-            if(status.AnyError)
-                DrawErrorRectangle(graphics, errorBounds);
+            return graphicsBounds;
         }
 
 

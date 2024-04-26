@@ -7,7 +7,6 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace NtoLib.Valves
@@ -17,9 +16,9 @@ namespace NtoLib.Valves
     [DisplayName("Клапан")]
     public partial class ValveControl : VisualControlBase
     {
-        private Orientation _orientation;
+        private Render.Orientation _orientation;
         [DisplayName("Ориентация")]
-        public Orientation Orientation 
+        public Render.Orientation Orientation
         {
             get
             {
@@ -27,7 +26,7 @@ namespace NtoLib.Valves
             }
             set
             {
-                if(_orientation != value)
+                if(Math.Abs((int)_orientation - (int)value) % 180 == 90)
                     (Width, Height) = (Height, Width);
 
                 _orientation = value;

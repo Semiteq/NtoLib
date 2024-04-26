@@ -24,23 +24,11 @@ namespace NtoLib.Render.Valves
 
 
 
-        public override void Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
+        public override Bounds Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
         {
+            Bounds graphicsBounds = ConfigurateGraphics(graphics, boundsRect, orientation);
 
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            Bounds graphicsBounds = BoundsFromRect(boundsRect);
-            if(orientation == Orientation.Vertical)
-            {
-                Matrix transform = graphics.Transform;
-                transform.RotateAt(270f, graphicsBounds.Center);
-                graphics.Transform = transform;
-                transform.Dispose();
-
-                (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
-            }
-
-            Status status = Control.Status;
+            Status status = _control.Status;
             Bounds errorBounds = graphicsBounds;
             Bounds valveBounds = GetValveBounds(errorBounds);
 
@@ -52,6 +40,8 @@ namespace NtoLib.Render.Valves
 
             if(status.AnyError)
                 DrawErrorRectangle(graphics, errorBounds);
+
+            return graphicsBounds;
         }
 
 
