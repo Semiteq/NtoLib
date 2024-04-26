@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+  <Map>
+    <Items>
+      <Pin ID="1"     Name="StatusWord"       Type="Целый" />
+      <Pout ID="5"    Name="CommandWord"      Type="Целый" />
+
+      <Group Name="Выходы для UI">
+        <Items>
+          <Pout ID="100"      Name="ConnectionOk"         Type="Логический" />
+          <Pout ID="101"      Name="MainError"            Type="Логический" />
+          <Pout ID="102"      Name="UsedByAutoMode"       Type="Логический" />
+          <Pout ID="103"      Name="WorkOnNominalSpeed"   Type="Логический" />
+          <Pout ID="104"      Name="Stopped"              Type="Логический" />
+          <Pout ID="105"      Name="Accelerating"         Type="Логический" />
+          <Pout ID="106"      Name="Decelerating"         Type="Логический" />
+          <Pout ID="107"      Name="Warning"              Type="Логический" />
+          <Pout ID="108"      Name="Error1"               Type="Логический" />
+          <Pout ID="109"      Name="Error2"               Type="Логический" />
+          <Pout ID="110"      Name="Error3"               Type="Логический" />
+          <Pout ID="111"      Name="Error4"               Type="Логический" />
+          <Pout ID="112"      Name="ForceStop"            Type="Логический" />
+          <Pout ID="113"      Name="BlockStart"           Type="Логический" />
+          <Pout ID="114"      Name="BlockStop"            Type="Логический" />
+          <Pout ID="115"      Name="Use"                  Type="Логический" />
+        </Items>
+      </Group>
+    </Items>
+  </Map>
+  <VisualMap>
+    <Items>
+      <Pout ID="1000"      Name="ConnectionOk"         Type="Логический" />
+      <Pout ID="1001"      Name="MainError"            Type="Логический" />
+      <Pout ID="1002"      Name="UsedByAutoMode"       Type="Логический" />
+      <Pout ID="1003"      Name="WorkOnNominalSpeed"   Type="Логический" />
+      <Pout ID="1004"      Name="Stopped"              Type="Логический" />
+      <Pout ID="1005"      Name="Accelerating"         Type="Логический" />
+      <Pout ID="1006"      Name="Decelerating"         Type="Логический" />
+      <Pout ID="1007"      Name="Warning"              Type="Логический" />
+      <Pout ID="1008"      Name="Error1"               Type="Логический" />
+      <Pout ID="1009"      Name="Error2"               Type="Логический" />
+      <Pout ID="1010"      Name="Error3"               Type="Логический" />
+      <Pout ID="1011"      Name="Error4"               Type="Логический" />
+      <Pout ID="1012"      Name="ForceStop"            Type="Логический" />
+      <Pout ID="1013"      Name="BlockStart"           Type="Логический" />
+      <Pout ID="1014"      Name="BlockStop"            Type="Логический" />
+      <Pout ID="1015"      Name="Use"                  Type="Логический" />
+
+      <Pin ID="1100"       Name="StartCMD"             Type="Логический"    DefaultValue="false"/>
+      <Pin ID="1101"       Name="StopCMD"              Type="Логический"    DefaultValue="false"/>
+    </Items>
+  </VisualMap>
+  <Events>
+    <Event ID="5000"  Name="Соединение потеряно"            Category="Error" />
+
+    <Event ID="5010"  Name="Разгон начат"                   Category="Information"    Flags="DisableAck" />
+    <Event ID="5011"  Name="Торможение начато"              Category="Information"    Flags="DisableAck" />
+    <Event ID="5012"  Name="Вышел на номинальную скорость"  Category="Information"    Flags="DisableAck" />
+    <Event ID="5013"  Name="Остановился"                    Category="Information"    Flags="DisableAck" />
+  </Events>
+</FBConfig>

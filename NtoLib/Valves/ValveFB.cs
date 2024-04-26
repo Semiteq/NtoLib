@@ -150,18 +150,5 @@ namespace NtoLib.Valves
         {
             return GetPinQuality(StatusWordId);
         }
-
-
-
-        private void SetVisualAndUiPin(int id, object value)
-        {
-            SetPinValue(id + 100, value);
-            VisualPins.SetPinValue(id + 1000, value);
-        }
-
-        private T GetVisualPin<T>(int id)
-        {
-            return (T)VisualPins.GetPinValue(id + 1000);
-        }
     }
 }
