@@ -17,6 +17,10 @@ namespace NtoLib.Pumps
     [VisualControls(typeof(PumpControl))]
     public class PumpFB : VisualFBBaseExtended
     {
+        [DisplayName("Показывать лампочку \"Нет соединения\"")]
+        [Description("Переключает отображение лампочки \"Нет соединения\" в окне параметров насоса")]
+        public bool UseNoConnectionLamp { get; set; }
+
         public const int StatusWordId = 1;
         public const int CommandWordId = 5;
 

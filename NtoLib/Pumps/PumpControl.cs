@@ -194,7 +194,8 @@ namespace NtoLib.Pumps
 
         private void OpenSettingsForm()
         {
-            _settingsForm = new PumpSettingForm(this);
+            PumpFB fb = FBConnector.Fb as PumpFB;
+            _settingsForm = new PumpSettingForm(this, fb.UseNoConnectionLamp);
             Point formLocation = MousePosition;
             Rectangle area = Screen.GetWorkingArea(formLocation);
             if(formLocation.X + _settingsForm.Width > area.Right)

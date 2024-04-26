@@ -8,7 +8,21 @@ namespace NtoLib.Utils
     {
         public Shape Shape { get; set; }
 
-        public Color ActiveColor { get; set; }
+        private Color _activeColor;
+        public Color ActiveColor 
+        {
+            get
+            {
+                return _activeColor;
+            }
+            set
+            {
+                _activeColor = value;
+
+                if(_active)
+                    Invalidate();
+            }
+        }
 
         public string TextOnLamp { get; set; }
 
