@@ -74,6 +74,12 @@
       <DependentUpon>PumpControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Pumps\PumpFB.cs" />
+    <Compile Include="Pumps\Settings\PumpSettingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pumps\Settings\PumpSettingForm.Designer.cs">
+      <DependentUpon>PumpSettingForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Pumps\Status.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
@@ -112,6 +118,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Pumps\PumpControl.resx">
       <DependentUpon>PumpControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pumps\Settings\PumpSettingForm.resx">
+      <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Utils\Lamp.resx">
       <DependentUpon>Lamp.cs</DependentUpon>

@@ -143,7 +143,7 @@
             this.lampAuto.Cursor = System.Windows.Forms.Cursors.Default;
             this.lampAuto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.lampAuto.Location = new System.Drawing.Point(9, 9);
-            this.lampAuto.Margin = new System.Windows.Forms.Padding(5);
+            this.lampAuto.Margin = new System.Windows.Forms.Padding(0);
             this.lampAuto.Name = "lampAuto";
             this.lampAuto.Shape = NtoLib.Utils.Shape.Square;
             this.lampAuto.Size = new System.Drawing.Size(80, 20);

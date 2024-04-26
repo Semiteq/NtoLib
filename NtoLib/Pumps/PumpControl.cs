@@ -1,7 +1,11 @@
 ﻿using FB.VisualFB;
+using InSAT.Library.Gui;
+using InSAT.Library.Interop.Win32;
+using NtoLib.Pumps.Settings;
 using NtoLib.Render.Pumps;
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -32,6 +36,8 @@ namespace NtoLib.Pumps
         internal Status Status;
 
         private PumpRenderer _renderer;
+
+        private PumpSettingForm _settingsForm;
 
         private Timer _impulseTimer;
         private int _currentCommand;
@@ -80,7 +86,7 @@ namespace NtoLib.Pumps
 
         protected override void ToDesign()
         {
-            //_settingsForm?.Close();
+            _settingsForm?.Close();
             base.ToDesign();
         }
 
@@ -97,7 +103,7 @@ namespace NtoLib.Pumps
             if(e.Button != MouseButtons.Right)
             {
                 _mouseHoldTimer.Stop();
-                //_settingsForm?.Close();
+                _settingsForm?.Close();
                 return;
             }
 
@@ -116,7 +122,7 @@ namespace NtoLib.Pumps
                 return;
 
             _mouseHoldTimer.Stop();
-            //_settingsForm?.Close();
+            _settingsForm?.Close();
         }
 
         private void StopHoldTimer(object sender, EventArgs e)
@@ -161,8 +167,8 @@ namespace NtoLib.Pumps
 
         private void HandleVisibleChanged(object sender, EventArgs e)
         {
-            //if(!Visible)
-            //_settingsForm?.Close();
+            if(!Visible)
+                _settingsForm?.Close();
         }
 
         private void DisableCommandImpulse(object sender, EventArgs e)
@@ -188,24 +194,24 @@ namespace NtoLib.Pumps
 
         private void OpenSettingsForm()
         {
-            //_settingsForm = new SettingsForm(this);
-            //Point formLocation = MousePosition;
-            //Rectangle area = Screen.GetWorkingArea(formLocation);
-            //if(formLocation.X + _settingsForm.Width > area.Right)
-            //    formLocation.X -= _settingsForm.Width;
-            //if(formLocation.Y + _settingsForm.Height > area.Bottom)
-            //    formLocation.Y -= _settingsForm.Height;
+            _settingsForm = new PumpSettingForm(this);
+            Point formLocation = MousePosition;
+            Rectangle area = Screen.GetWorkingArea(formLocation);
+            if(formLocation.X + _settingsForm.Width > area.Right)
+                formLocation.X -= _settingsForm.Width;
+            if(formLocation.Y + _settingsForm.Height > area.Bottom)
+                formLocation.Y -= _settingsForm.Height;
 
-            //_settingsForm.Location = formLocation;
-            //_settingsForm.FormClosed += RemoveSettingsFormReference;
-            //_settingsForm.Show(Win32Window.FromInt32(User32.GetParent(Handle)));
+            _settingsForm.Location = formLocation;
+            _settingsForm.FormClosed += RemoveSettingsFormReference;
+            _settingsForm.Show(Win32Window.FromInt32(User32.GetParent(Handle)));
         }
 
         private void RemoveSettingsFormReference(object sender, FormClosedEventArgs e)
         {
-            //SettingsForm form = (SettingsForm)sender;
-            //form.FormClosed -= RemoveSettingsFormReference;
-            //_settingsForm = null;
+            PumpSettingForm form = (PumpSettingForm)sender;
+            form.FormClosed -= RemoveSettingsFormReference;
+            _settingsForm = null;
         }
 
 
@@ -234,7 +240,7 @@ namespace NtoLib.Pumps
             if(_animationTimer.Enabled && !animationNeeded)
                 _animationTimer.Stop();
 
-            //_settingsForm?.Invalidate();
+            _settingsForm?.Invalidate();
         }
 
         private T GetPinValue<T>(int id)
