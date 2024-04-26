@@ -9,6 +9,7 @@ namespace NtoLib
         public static readonly Color Opened = Color.LimeGreen;
         public static readonly Color Closed = Color.White;
         public static readonly Color NoData = Color.Gainsboro;
+        public static readonly Color NoDataDark = Color.DarkGray;
         public static readonly Color Error = Color.Red;
     }
 }

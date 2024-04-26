@@ -98,7 +98,7 @@ namespace NtoLib.Pumps
             SetVisualAndUiPin(ConnectionOkId, connectionOk);
             SetVisualAndUiPin(MainErrorId, statusWord.GetBit(MainErrorId));
             SetVisualAndUiPin(UsedByAutoModeId, statusWord.GetBit(UsedByAutoModeId));
-            bool workOnNominalSpeed = statusWord.GetBit(ConnectionOkId);
+            bool workOnNominalSpeed = statusWord.GetBit(WorkOnNominalSpeedId);
             SetVisualAndUiPin(WorkOnNominalSpeedId, workOnNominalSpeed);
             bool stopped = statusWord.GetBit(StoppedId);
             SetVisualAndUiPin(StoppedId, stopped);

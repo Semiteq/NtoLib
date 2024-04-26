@@ -74,9 +74,11 @@
       <DependentUpon>PumpControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Pumps\PumpFB.cs" />
+    <Compile Include="Pumps\Status.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
     <Compile Include="Render\Orientation.cs" />
+    <Compile Include="Render\Pumps\PumpRenderer.cs" />
     <Compile Include="Utils\EventTrigger.cs" />
     <Compile Include="Utils\Int32Extension.cs" />
     <Compile Include="Utils\Lamp.cs">
