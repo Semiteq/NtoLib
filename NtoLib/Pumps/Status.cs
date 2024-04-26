@@ -10,16 +10,15 @@
         public bool Accelerating;
         public bool Decelerating;
         public bool Warning;
-        public bool Error1;
-        public bool Error2;
-        public bool Error3;
-        public bool Error4;
+        public bool Message1;
+        public bool Message2;
+        public bool Message3;
+        public bool Message4;
         public bool ForceStop;
         public bool BlockStart;
         public bool BlockStop;
         public bool Use;
 
-        public bool AnyError => Use && (!ConnectionOk || MainError || Error1 || Error2 || Error3 || Error4);
         public bool AnimationNeeded => Accelerating || Decelerating;
     }
 }

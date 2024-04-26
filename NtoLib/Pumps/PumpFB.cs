@@ -29,10 +29,10 @@ namespace NtoLib.Pumps
         public const int AcceleratingId = 5;
         public const int DeceseratingId = 6;
         public const int WarningId = 7;
-        public const int Error1Id = 8;
-        public const int Error2Id = 9;
-        public const int Error3Id = 10;
-        public const int Error4Id = 11;
+        public const int Message1Id = 8;
+        public const int Message2Id = 9;
+        public const int Message3Id = 10;
+        public const int Message4Id = 11;
         public const int ForceStopId = 12;
         public const int BlockStartId = 13;
         public const int BlockStopId = 14;
@@ -73,7 +73,7 @@ namespace NtoLib.Pumps
             string message = $"Нет соединения с {name}";
             _connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message, initialInactivity);
 
-            message = $"Начало ускорения {name}";
+            message = $"Начало разгона {name}";
             _accelerationEvent = new EventTrigger(this, AccelerationStartEventId, message, initialInactivity);
 
             message = $"Начало торможения {name}";
@@ -107,10 +107,10 @@ namespace NtoLib.Pumps
             bool decelerating = statusWord.GetBit(DeceseratingId);
             SetVisualAndUiPin(DeceseratingId, decelerating);
             SetVisualAndUiPin(WarningId, statusWord.GetBit(WarningId));
-            SetVisualAndUiPin(Error1Id, statusWord.GetBit(Error1Id));
-            SetVisualAndUiPin(Error2Id, statusWord.GetBit(Error2Id));
-            SetVisualAndUiPin(Error3Id, statusWord.GetBit(Error3Id));
-            SetVisualAndUiPin(Error4Id, statusWord.GetBit(Error4Id));
+            SetVisualAndUiPin(Message1Id, statusWord.GetBit(Message1Id));
+            SetVisualAndUiPin(Message2Id, statusWord.GetBit(Message2Id));
+            SetVisualAndUiPin(Message3Id, statusWord.GetBit(Message3Id));
+            SetVisualAndUiPin(Message4Id, statusWord.GetBit(Message4Id));
             SetVisualAndUiPin(ForceStopId, statusWord.GetBit(ForceStopId));
             SetVisualAndUiPin(BlockStartId, statusWord.GetBit(BlockStartId));
             SetVisualAndUiPin(BlockStopId, statusWord.GetBit(BlockStopId));

@@ -49,9 +49,6 @@ namespace NtoLib.Valves
 
         public const int NotClosedEventId = 5002;
         private EventTrigger _notClosedEvent;
-        
-        public const int ConnectionDisabledEventId = 5003;
-        private EventTrigger _connectionDisabledEvent;
 
 
         public const int OpenedEventId = 5010;
@@ -82,9 +79,6 @@ namespace NtoLib.Valves
 
             message = $"{name} не закрылся";
             _notClosedEvent = new EventTrigger(this, NotClosedEventId, message, initialInactivity);
-
-            message = $"Соединение с {name} оборвано";
-            _connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message, initialInactivity);
 
             message = $"{name} открылся";
             _openedEvent = new EventTrigger(this, OpenedEventId, message, initialInactivity, true);
@@ -137,7 +131,6 @@ namespace NtoLib.Valves
             _collisionEvent.Update(collision);
             _notOpenedEvent.Update(notOpened);
             _notClosedEvent.Update(notClosed);
-            _connectionDisabledEvent.Update(!connectionOk);
 
             _openedEvent.Update(opened);
             _openedSmoothlyEvent.Update(openedSmoothly);

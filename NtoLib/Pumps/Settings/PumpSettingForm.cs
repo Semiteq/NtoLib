@@ -24,12 +24,26 @@ namespace NtoLib.Pumps.Settings
             lampAuto.Active = status.UsedByAutoMode;
             lampManual.Active = !status.UsedByAutoMode && status.ConnectionOk;
 
-            useLamp.Active = status.Use;
+            string state = string.Empty;
+            if(!status.Use)
+                state = "не используется";
+            else if(!status.ConnectionOk)
+                state = "нет связи";
+            else if(status.Accelerating)
+                state = "разгоняется";
+            else if(status.Decelerating)
+                state = "тормозит";
+            else if(status.WorkOnNominalSpeed)
+                state = "разогнан";
+            else if(status.Stopped)
+                state = "остановлен";
+            stateLabel.Text = $"Состояние: {state}";
 
+            forceStopLamp.Active = status.ForceStop;
             blockStartLamp.Active = status.BlockStart;
             lampBlockStop.Active = status.BlockStop;
             lampConnectionNotOk.Active = status.Use && !status.ConnectionOk;
-            lampAnyError.Active = status.Use && (status.MainError || status.Error1 || status.Error2 || status.Error3 || status.Error4);
+            lampAnyError.Active = status.Use && status.MainError;
 
             base.OnPaint(e);
         }

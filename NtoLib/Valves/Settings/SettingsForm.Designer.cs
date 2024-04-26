@@ -90,7 +90,7 @@
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(150, 20);
             this.label5.TabIndex = 16;
-            this.label5.Text = "Нет ответа";
+            this.label5.Text = "Нет связи";
             this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label7

@@ -225,10 +225,10 @@ namespace NtoLib.Pumps
             Status.Accelerating = GetPinValue<bool>(PumpFB.AcceleratingId);
             Status.Decelerating = GetPinValue<bool>(PumpFB.DeceseratingId);
             Status.Warning = GetPinValue<bool>(PumpFB.WarningId);
-            Status.Error1 = GetPinValue<bool>(PumpFB.Error1Id);
-            Status.Error2 = GetPinValue<bool>(PumpFB.Error2Id);
-            Status.Error3 = GetPinValue<bool>(PumpFB.Error3Id);
-            Status.Error4 = GetPinValue<bool>(PumpFB.Error4Id);
+            Status.Message1 = GetPinValue<bool>(PumpFB.Message1Id);
+            Status.Message2 = GetPinValue<bool>(PumpFB.Message2Id);
+            Status.Message3 = GetPinValue<bool>(PumpFB.Message3Id);
+            Status.Message4 = GetPinValue<bool>(PumpFB.Message4Id);
             Status.ForceStop = GetPinValue<bool>(PumpFB.ForceStopId);
             Status.BlockStart = GetPinValue<bool>(PumpFB.BlockStartId);
             Status.BlockStop = GetPinValue<bool>(PumpFB.BlockStopId);

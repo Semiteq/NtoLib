@@ -30,7 +30,7 @@ namespace NtoLib
 
         protected override void ToDesign()
         {
-            _connectionCheckTimer.Dispose();
+            _connectionCheckTimer?.Dispose();
         }
 
         protected abstract OpcQuality GetConnectionQuality();
