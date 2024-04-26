@@ -31,6 +31,7 @@ namespace NtoLib.Valves
         public const int ClosedId = 7;
         public const int OpeningClosingId = 8;
 
+        public const int ForceCloseId = 12;
         public const int BlockClosingId = 13;
         public const int BlockOpeningId = 14;
         public const int IsSmoothValveId = 15;
@@ -115,6 +116,7 @@ namespace NtoLib.Valves
             SetVisualAndUiPin(ClosedId, closed);
             SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(OpeningClosingId));
 
+            SetVisualAndUiPin(ForceCloseId, statusWord.GetBit(ForceCloseId));
             SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(BlockClosingId));
             SetVisualAndUiPin(BlockOpeningId, statusWord.GetBit(BlockOpeningId));
             SetVisualAndUiPin(IsSmoothValveId, statusWord.GetBit(IsSmoothValveId));

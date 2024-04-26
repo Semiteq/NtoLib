@@ -46,6 +46,8 @@
             this.lampBlockClosing = new NtoLib.Utils.Lamp();
             this.lampBlockOpening = new NtoLib.Utils.Lamp();
             this.lampClosed = new NtoLib.Utils.Lamp();
+            this.label6 = new System.Windows.Forms.Label();
+            this.forceCloseLamp = new NtoLib.Utils.Lamp();
             this.SuspendLayout();
             // 
             // label1
@@ -86,7 +88,7 @@
             // 
             // label5
             // 
-            this.label5.Location = new System.Drawing.Point(37, 159);
+            this.label5.Location = new System.Drawing.Point(37, 189);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(150, 20);
             this.label5.TabIndex = 16;
@@ -95,7 +97,7 @@
             // 
             // label7
             // 
-            this.label7.Location = new System.Drawing.Point(37, 189);
+            this.label7.Location = new System.Drawing.Point(37, 219);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(150, 20);
             this.label7.TabIndex = 19;
@@ -104,7 +106,7 @@
             // 
             // label8
             // 
-            this.label8.Location = new System.Drawing.Point(37, 219);
+            this.label8.Location = new System.Drawing.Point(37, 249);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(150, 20);
             this.label8.TabIndex = 20;
@@ -113,7 +115,7 @@
             // 
             // label9
             // 
-            this.label9.Location = new System.Drawing.Point(37, 249);
+            this.label9.Location = new System.Drawing.Point(37, 279);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(150, 20);
             this.label9.TabIndex = 21;
@@ -156,7 +158,7 @@
             this.lampCollision.ActiveColor = System.Drawing.Color.OrangeRed;
             this.lampCollision.BackColor = System.Drawing.Color.Transparent;
             this.lampCollision.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampCollision.Location = new System.Drawing.Point(9, 249);
+            this.lampCollision.Location = new System.Drawing.Point(9, 279);
             this.lampCollision.Margin = new System.Windows.Forms.Padding(5);
             this.lampCollision.Name = "lampCollision";
             this.lampCollision.Shape = NtoLib.Utils.Shape.Circle;
@@ -170,7 +172,7 @@
             this.lampNotClosed.ActiveColor = System.Drawing.Color.OrangeRed;
             this.lampNotClosed.BackColor = System.Drawing.Color.Transparent;
             this.lampNotClosed.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampNotClosed.Location = new System.Drawing.Point(9, 219);
+            this.lampNotClosed.Location = new System.Drawing.Point(9, 249);
             this.lampNotClosed.Margin = new System.Windows.Forms.Padding(5);
             this.lampNotClosed.Name = "lampNotClosed";
             this.lampNotClosed.Shape = NtoLib.Utils.Shape.Circle;
@@ -184,7 +186,7 @@
             this.lampNotOpened.ActiveColor = System.Drawing.Color.OrangeRed;
             this.lampNotOpened.BackColor = System.Drawing.Color.Transparent;
             this.lampNotOpened.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampNotOpened.Location = new System.Drawing.Point(9, 189);
+            this.lampNotOpened.Location = new System.Drawing.Point(9, 219);
             this.lampNotOpened.Margin = new System.Windows.Forms.Padding(5);
             this.lampNotOpened.Name = "lampNotOpened";
             this.lampNotOpened.Shape = NtoLib.Utils.Shape.Circle;
@@ -198,7 +200,7 @@
             this.lampConnectionNotOk.ActiveColor = System.Drawing.Color.OrangeRed;
             this.lampConnectionNotOk.BackColor = System.Drawing.Color.Transparent;
             this.lampConnectionNotOk.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampConnectionNotOk.Location = new System.Drawing.Point(9, 159);
+            this.lampConnectionNotOk.Location = new System.Drawing.Point(9, 189);
             this.lampConnectionNotOk.Margin = new System.Windows.Forms.Padding(5);
             this.lampConnectionNotOk.Name = "lampConnectionNotOk";
             this.lampConnectionNotOk.Shape = NtoLib.Utils.Shape.Circle;
@@ -262,12 +264,37 @@
             this.lampClosed.TabIndex = 2;
             this.lampClosed.TextOnLamp = null;
             // 
+            // label6
+            // 
+            this.label6.Location = new System.Drawing.Point(37, 159);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(150, 20);
+            this.label6.TabIndex = 25;
+            this.label6.Text = "Принудительное закрытие";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // forceCloseLamp
+            // 
+            this.forceCloseLamp.Active = false;
+            this.forceCloseLamp.ActiveColor = System.Drawing.Color.Yellow;
+            this.forceCloseLamp.BackColor = System.Drawing.Color.Transparent;
+            this.forceCloseLamp.Cursor = System.Windows.Forms.Cursors.Default;
+            this.forceCloseLamp.Location = new System.Drawing.Point(9, 159);
+            this.forceCloseLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.forceCloseLamp.Name = "forceCloseLamp";
+            this.forceCloseLamp.Shape = NtoLib.Utils.Shape.Circle;
+            this.forceCloseLamp.Size = new System.Drawing.Size(20, 20);
+            this.forceCloseLamp.TabIndex = 24;
+            this.forceCloseLamp.TextOnLamp = null;
+            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(189, 280);
+            this.ClientSize = new System.Drawing.Size(189, 312);
             this.ControlBox = false;
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.forceCloseLamp);
             this.Controls.Add(this.lampManual);
             this.Controls.Add(this.lampAuto);
             this.Controls.Add(this.label9);
@@ -315,5 +342,7 @@
         private System.Windows.Forms.Label label9;
         private Utils.Lamp lampAuto;
         private Utils.Lamp lampManual;
+        private System.Windows.Forms.Label label6;
+        private Utils.Lamp forceCloseLamp;
     }
 }

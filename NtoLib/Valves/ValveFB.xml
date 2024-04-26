@@ -2,8 +2,8 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="1"       Name="StatusWord"       Type="БеззнаковыйЦелый"  DefaultValue="0" />
-      <Pout ID="5"      Name="CommandWord"      Type="БеззнаковыйЦелый" />
+      <Pin ID="1"     Name="StatusWord"       Type="БеззнаковыйЦелый"  DefaultValue="0" />
+      <Pout ID="5"    Name="CommandWord"      Type="БеззнаковыйЦелый" />
 
       <Group Name="Выходы для UI">
         <Items>
@@ -17,6 +17,7 @@
           <Pout ID="107"    Name="Closed"           Type="Логический" />
           <Pout ID="108"    Name="OpeningClosing"   Type="Логический" />
 
+          <Pout ID="112"    Name="ForceClose"       Type="Логический" />
           <Pout ID="113"    Name="BlockClosing"     Type="Логический" />
           <Pout ID="114"    Name="BlockOpening"     Type="Логический" />
           <Pout ID="115"    Name="IsSmoothValve"    Type="Логический" />
