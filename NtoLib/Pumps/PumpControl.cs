@@ -194,8 +194,7 @@ namespace NtoLib.Pumps
 
         private void OpenSettingsForm()
         {
-            PumpFB fb = FBConnector.Fb as PumpFB;
-            _settingsForm = new PumpSettingForm(this, fb.UseNoConnectionLamp);
+            _settingsForm = new PumpSettingForm(this);
             Point formLocation = MousePosition;
             Rectangle area = Screen.GetWorkingArea(formLocation);
             if(formLocation.X + _settingsForm.Width > area.Right)
@@ -229,11 +228,42 @@ namespace NtoLib.Pumps
             Status.Message1 = GetPinValue<bool>(PumpFB.Message1Id);
             Status.Message2 = GetPinValue<bool>(PumpFB.Message2Id);
             Status.Message3 = GetPinValue<bool>(PumpFB.Message3Id);
-            Status.Message4 = GetPinValue<bool>(PumpFB.Message4Id);
             Status.ForceStop = GetPinValue<bool>(PumpFB.ForceStopId);
             Status.BlockStart = GetPinValue<bool>(PumpFB.BlockStartId);
             Status.BlockStop = GetPinValue<bool>(PumpFB.BlockStopId);
             Status.Use = GetPinValue<bool>(PumpFB.UseId);
+
+            var fb = FBConnector.Fb as PumpFB;
+            switch(fb.PumpType)
+            {
+                case PumpType.Forvacuum:
+                {
+
+                    break;
+                }
+                case PumpType.Turbine:
+                {
+                    Status.Units = GetPinValue<bool>(PumpFB.CustomId);
+
+                    Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
+                    break;
+                }
+                case PumpType.Ion:
+                {
+                    Status.SafeMode = GetPinValue<bool>(PumpFB.CustomId);
+
+                    Status.Voltage = GetPinValue<float>(PumpFB.IonPumpVoltage);
+                    Status.Current = GetPinValue<float>(PumpFB.IonPumpCurrent);
+                    Status.Power = GetPinValue<float>(PumpFB.IonPumpPower);
+                    break;
+                }
+                case PumpType.Cryogen:
+                {
+                    Status.TemperatureIn = GetPinValue<float>(PumpFB.CryoInTemperature);
+                    Status.TemperatureOut = GetPinValue<float>(PumpFB.CryoOutTemperature);
+                    break;
+                }
+            }
 
             bool animationNeeded = Status.AnimationNeeded;
             if(!_animationTimer.Enabled && animationNeeded)

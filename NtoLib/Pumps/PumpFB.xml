@@ -5,6 +5,12 @@
       <Pin ID="1"     Name="StatusWord"       Type="БеззнаковыйЦелый"  DefaultValue="0" />
       <Pout ID="5"    Name="CommandWord"      Type="БеззнаковыйЦелый" />
 
+      <Pin ID="20"    Name="Temperature"      Type="Вещественный"  DefaultValue="0" />
+      
+      <Group ID="50" Name="Типозависимые переменные">
+        <Items>
+        </Items>
+      </Group>
       <Group Name="Выходы для UI">
         <Items>
           <Pout ID="100"      Name="ConnectionOk"         Type="Логический" />
@@ -48,6 +54,16 @@
 
       <Pin ID="1100"       Name="StartCMD"             Type="Логический"    DefaultValue="false"/>
       <Pin ID="1101"       Name="StopCMD"              Type="Логический"    DefaultValue="false"/>
+
+
+      <Pout ID="1060"      Name="TurbineSpeed"         Type="Вещественный" />
+      
+      <Pout ID="1070"      Name="IonPumpVoltage"       Type="Вещественный" />
+      <Pout ID="1075"      Name="IonPumpCurrent"       Type="Вещественный" />
+      <Pout ID="1080"      Name="IonPumpPower"         Type="Вещественный" />
+      
+      <Pout ID="1090"      Name="CryoInTemperature"    Type="Вещественный" />
+      <Pout ID="1095"      Name="CryoOutTemperature"   Type="Вещественный" />
     </Items>
   </VisualMap>
   <Events>

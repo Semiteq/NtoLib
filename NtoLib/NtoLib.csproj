@@ -80,6 +80,7 @@
       <DependentUpon>PumpControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Pumps\PumpFB.cs" />
+    <Compile Include="Pumps\PumpType.cs" />
     <Compile Include="Pumps\Settings\PumpSettingForm.cs">
       <SubType>Form</SubType>
     </Compile>

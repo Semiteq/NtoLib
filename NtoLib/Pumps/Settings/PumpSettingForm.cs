@@ -5,17 +5,41 @@ namespace NtoLib.Pumps.Settings
     public partial class PumpSettingForm : Form
     {
         private PumpControl _pumpControl;
+        private PumpType _pumpType;
 
 
 
-        public PumpSettingForm(PumpControl pumpControl, bool useNoConnectionLamp)
+        public PumpSettingForm(PumpControl pumpControl)
         {
             _pumpControl = pumpControl;
 
             InitializeComponent();
 
-            if(!useNoConnectionLamp)
+            PumpFB pumpFB = _pumpControl.FBConnector.Fb as PumpFB;
+            if(!pumpFB.UseNoConnectionLamp)
                 flowLayoutPanel1.Controls.Remove(noConnectionLamp);
+
+            if(!pumpFB.UseTemperatureLabel)
+                flowLayoutPanel1.Controls.Remove(temperatureLabel);
+
+            _pumpType = pumpFB.PumpType;
+            if(_pumpType != PumpType.Turbine)
+            {
+                flowLayoutPanel1.Controls.Remove(speedLabel);
+            }
+            if(_pumpType != PumpType.Ion)
+            {
+                flowLayoutPanel1.Controls.Remove(safeModeLamp);
+
+                flowLayoutPanel1.Controls.Remove(voltageLabel);
+                flowLayoutPanel1.Controls.Remove(currentLabel);
+                flowLayoutPanel1.Controls.Remove(powerLabel);
+            }
+            if(_pumpType != PumpType.Cryogen)
+            {
+                flowLayoutPanel1.Controls.Remove(temperatureInLabel);
+                flowLayoutPanel1.Controls.Remove(temperatureOutLabel);
+            }
         }
 
 
@@ -39,6 +63,40 @@ namespace NtoLib.Pumps.Settings
             else if(status.Stopped)
                 state = "остановлен";
             stateLabel.Text = $"Состояние: {state}";
+
+            temperatureLabel.Text =     $"Температура: {status.Temperature} K";
+                                                       
+            switch(_pumpType)                          
+            {                                          
+                case PumpType.Forvacuum :              
+                {                                      
+                                                       
+                    break;                             
+                }                                      
+                case PumpType.Turbine:
+                {
+                    string units = status.Units ? "об/мин" : "%";
+                    speedLabel.Text =   $"Скорость: {status.Speed} {units}";
+
+                    break;                             
+                }                                      
+                case PumpType.Ion:                     
+                {
+                    safeModeLamp.Active = status.SafeMode;
+
+                    voltageLabel.Text = $"Напряжение: {status.Voltage} В";
+                    currentLabel.Text = $"Ток: {status.Current} А";
+                    powerLabel.Text =   $"Мощность: {status.Power} Вт";
+                    break;                             
+                }                                      
+                case PumpType.Cryogen:                 
+                {                                      
+                    powerLabel.Text =   $"Твх: {status.Power} К";
+                    powerLabel.Text =   $"Твых: {status.Power} К";
+                    break;
+                }
+            }
+
 
             forceStopLamp.Active = status.ForceStop;
             blockStartLamp.Active = status.BlockStart;

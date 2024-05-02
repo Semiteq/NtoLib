@@ -54,6 +54,11 @@ namespace NtoLib
             VisualPins.SetPinValue(id + 1000, value);
         }
 
+        protected void SetVisualPin(int id, object value)
+        {
+            VisualPins.SetPinValue(id + 1000, value);
+        }
+
         protected T GetVisualPin<T>(int id)
         {
             return (T)VisualPins.GetPinValue(id + 1000);

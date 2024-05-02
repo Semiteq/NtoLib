@@ -13,12 +13,26 @@
         public bool Message1;
         public bool Message2;
         public bool Message3;
-        public bool Message4;
+        public bool SafeMode;
+        public bool Units;
         public bool ForceStop;
         public bool BlockStart;
         public bool BlockStop;
         public bool Use;
 
         public bool AnimationNeeded => Accelerating || Decelerating;
+
+
+        public float Temperature;
+
+
+        public float Speed;
+
+        public float Voltage;
+        public float Current;
+        public float Power;
+
+        public float TemperatureIn;
+        public float TemperatureOut;
     }
 }
