@@ -155,6 +155,8 @@ namespace NtoLib.Pumps
             SetVisualAndUiPin(UseId, statusWord.GetBit(UseId));
 
 
+            SetVisualPin(TemperatureId, GetPinValue<float>(TemperatureId));
+
             switch(PumpType)
             {
                 case PumpType.Forvacuum:

@@ -234,6 +234,8 @@ namespace NtoLib.Pumps
             Status.Use = GetPinValue<bool>(PumpFB.UseId);
 
             var fb = FBConnector.Fb as PumpFB;
+            Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
+
             switch(fb.PumpType)
             {
                 case PumpType.Forvacuum:
