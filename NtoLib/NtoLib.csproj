@@ -94,6 +94,12 @@
     <Compile Include="Render\Pumps\PumpRenderer.cs" />
     <Compile Include="Utils\EventTrigger.cs" />
     <Compile Include="Utils\Int32Extension.cs" />
+    <Compile Include="Utils\LabeledValue.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Utils\LabeledValue.Designer.cs">
+      <DependentUpon>LabeledValue.cs</DependentUpon>
+    </Compile>
     <Compile Include="Utils\LabledLamp.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -134,6 +140,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Pumps\Settings\PumpSettingForm.resx">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Utils\LabeledValue.resx">
+      <DependentUpon>LabeledValue.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Utils\LabledLamp.resx">
       <DependentUpon>LabledLamp.cs</DependentUpon>

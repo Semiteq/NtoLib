@@ -64,7 +64,7 @@ namespace NtoLib.Pumps.Settings
                 state = "остановлен";
             stateLabel.Text = $"Состояние: {state}";
 
-            temperatureLabel.Text =     $"Температура: {status.Temperature} K";
+            temperatureLabel.ValueText =  $"{status.Temperature} K";
                                                        
             switch(_pumpType)                          
             {                                          
@@ -76,7 +76,7 @@ namespace NtoLib.Pumps.Settings
                 case PumpType.Turbine:
                 {
                     string units = status.Units ? "об/мин" : "%";
-                    speedLabel.Text =   $"Скорость: {status.Speed} {units}";
+                    speedLabel.ValueText =   $"{status.Speed} {units}";
 
                     break;                             
                 }                                      
@@ -84,15 +84,15 @@ namespace NtoLib.Pumps.Settings
                 {
                     safeModeLamp.Active = status.SafeMode;
 
-                    voltageLabel.Text = $"Напряжение: {status.Voltage} В";
-                    currentLabel.Text = $"Ток: {status.Current} А";
-                    powerLabel.Text =   $"Мощность: {status.Power} Вт";
+                    voltageLabel.ValueText = $"{status.Voltage} В";
+                    currentLabel.ValueText = $"{status.Current} А";
+                    powerLabel.ValueText =   $"{status.Power} Вт";
                     break;                             
                 }                                      
                 case PumpType.Cryogen:                 
                 {                                      
-                    powerLabel.Text =   $"Твх: {status.Power} К";
-                    powerLabel.Text =   $"Твых: {status.Power} К";
+                    powerLabel.ValueText =   $"{status.Power} К";
+                    powerLabel.ValueText =   $"{status.Power} К";
                     break;
                 }
             }
