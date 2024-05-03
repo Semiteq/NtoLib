@@ -37,6 +37,7 @@
       <Pout ID="1007"    Name="Closed"            Type="Логический" />
       <Pout ID="1008"    Name="OpeningClosing"    Type="Логический" />
 
+      <Pout ID="1012"    Name="ForceClose"        Type="Логический" />
       <Pout ID="1013"    Name="BlockClosing"      Type="Логический" />
       <Pout ID="1014"    Name="BlockOpening"      Type="Логический" />
       <Pout ID="1015"    Name="IsSmoothValve"     Type="Логический" />
