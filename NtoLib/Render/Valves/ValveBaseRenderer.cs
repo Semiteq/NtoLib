@@ -61,8 +61,6 @@ namespace NtoLib.Render.Valves
         /// </summary>
         protected bool IsBlocked(Status status)
         {
-            if(status.UsedByAutoMode)
-                return true;
             if(status.State == State.Opened && status.BlockClosing)
                 return true;
             if(status.State == State.Closed && status.BlockOpening)

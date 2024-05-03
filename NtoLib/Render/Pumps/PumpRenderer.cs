@@ -173,8 +173,6 @@ namespace NtoLib.Render.Pumps
         /// </summary>
         protected bool IsBlocked(Status status)
         {
-            if(status.UsedByAutoMode)
-                return true;
             if((status.Stopped || status.Decelerating) && status.BlockStart)
                 return true;
             if((status.WorkOnNominalSpeed || status.Accelerating) && status.BlockStop)
