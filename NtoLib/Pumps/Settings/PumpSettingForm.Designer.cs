@@ -30,8 +30,6 @@
         {
             this.stateLabel = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.lampAuto = new NtoLib.Utils.Lamp();
-            this.lampManual = new NtoLib.Utils.Lamp();
             this.blockStartLamp = new NtoLib.Utils.LabledLamp();
             this.blockStopLamp = new NtoLib.Utils.LabledLamp();
             this.forceStopLamp = new NtoLib.Utils.LabledLamp();
@@ -45,6 +43,8 @@
             this.powerLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureInLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureOutLabel = new NtoLib.Utils.LabeledValue();
+            this.lampAuto = new NtoLib.Utils.Lamp();
+            this.lampManual = new NtoLib.Utils.Lamp();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -83,37 +83,6 @@
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
             this.flowLayoutPanel1.Size = new System.Drawing.Size(192, 383);
             this.flowLayoutPanel1.TabIndex = 49;
-            // 
-            // lampAuto
-            // 
-            this.lampAuto.Active = false;
-            this.lampAuto.ActiveColor = System.Drawing.Color.LimeGreen;
-            this.lampAuto.BackColor = System.Drawing.Color.Transparent;
-            this.lampAuto.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampAuto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lampAuto.Location = new System.Drawing.Point(10, 10);
-            this.lampAuto.Margin = new System.Windows.Forms.Padding(5);
-            this.lampAuto.Name = "lampAuto";
-            this.lampAuto.Shape = NtoLib.Utils.Shape.Square;
-            this.lampAuto.Size = new System.Drawing.Size(90, 20);
-            this.lampAuto.TabIndex = 40;
-            this.lampAuto.TextOnLamp = "Авто";
-            // 
-            // lampManual
-            // 
-            this.lampManual.Active = false;
-            this.lampManual.ActiveColor = System.Drawing.Color.LimeGreen;
-            this.lampManual.AutoSize = true;
-            this.lampManual.BackColor = System.Drawing.Color.Transparent;
-            this.lampManual.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampManual.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lampManual.Location = new System.Drawing.Point(112, 10);
-            this.lampManual.Margin = new System.Windows.Forms.Padding(5);
-            this.lampManual.Name = "lampManual";
-            this.lampManual.Shape = NtoLib.Utils.Shape.Square;
-            this.lampManual.Size = new System.Drawing.Size(90, 20);
-            this.lampManual.TabIndex = 41;
-            this.lampManual.TextOnLamp = "Ручной";
             // 
             // blockStartLamp
             // 
@@ -195,9 +164,9 @@
             this.temperatureLabel.LabelText = "Температура";
             this.temperatureLabel.Location = new System.Drawing.Point(8, 199);
             this.temperatureLabel.Name = "temperatureLabel";
-            this.temperatureLabel.Size = new System.Drawing.Size(117, 20);
+            this.temperatureLabel.Size = new System.Drawing.Size(121, 20);
             this.temperatureLabel.TabIndex = 50;
-            this.temperatureLabel.ValueText = "К";
+            this.temperatureLabel.ValueText = "C°";
             // 
             // speedLabel
             // 
@@ -264,6 +233,37 @@
             this.temperatureOutLabel.Size = new System.Drawing.Size(117, 20);
             this.temperatureOutLabel.TabIndex = 63;
             this.temperatureOutLabel.ValueText = "К";
+            // 
+            // lampAuto
+            // 
+            this.lampAuto.Active = false;
+            this.lampAuto.ActiveColor = System.Drawing.Color.LimeGreen;
+            this.lampAuto.BackColor = System.Drawing.Color.Transparent;
+            this.lampAuto.Cursor = System.Windows.Forms.Cursors.Default;
+            this.lampAuto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.lampAuto.Location = new System.Drawing.Point(10, 10);
+            this.lampAuto.Margin = new System.Windows.Forms.Padding(5);
+            this.lampAuto.Name = "lampAuto";
+            this.lampAuto.Shape = NtoLib.Utils.Shape.Square;
+            this.lampAuto.Size = new System.Drawing.Size(90, 20);
+            this.lampAuto.TabIndex = 40;
+            this.lampAuto.TextOnLamp = "Авто";
+            // 
+            // lampManual
+            // 
+            this.lampManual.Active = false;
+            this.lampManual.ActiveColor = System.Drawing.Color.LimeGreen;
+            this.lampManual.AutoSize = true;
+            this.lampManual.BackColor = System.Drawing.Color.Transparent;
+            this.lampManual.Cursor = System.Windows.Forms.Cursors.Default;
+            this.lampManual.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.lampManual.Location = new System.Drawing.Point(112, 10);
+            this.lampManual.Margin = new System.Windows.Forms.Padding(5);
+            this.lampManual.Name = "lampManual";
+            this.lampManual.Shape = NtoLib.Utils.Shape.Square;
+            this.lampManual.Size = new System.Drawing.Size(90, 20);
+            this.lampManual.TabIndex = 41;
+            this.lampManual.TextOnLamp = "Ручной";
             // 
             // PumpSettingForm
             // 

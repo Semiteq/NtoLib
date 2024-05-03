@@ -64,7 +64,7 @@ namespace NtoLib.Pumps.Settings
                 state = "остановлен";
             stateLabel.Text = $"Состояние: {state}";
 
-            temperatureLabel.ValueText =  $"{status.Temperature} K";
+            temperatureLabel.ValueText =  $"{status.Temperature} C°";
                                                        
             switch(_pumpType)                          
             {                                          
