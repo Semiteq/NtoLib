@@ -48,8 +48,8 @@ namespace NtoLib.Pumps.Settings
         {
             Status status = _pumpControl.Status;
 
-            lampAuto.Active = status.UsedByAutoMode;
-            lampManual.Active = !status.UsedByAutoMode && status.ConnectionOk;
+            //lampAuto.Active = status.UsedByAutoMode;
+            //lampManual.Active = !status.UsedByAutoMode && status.ConnectionOk;
 
             string state = string.Empty;
             if(!status.Use || !status.ConnectionOk)

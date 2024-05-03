@@ -43,14 +43,12 @@
             this.powerLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureInLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureOutLabel = new NtoLib.Utils.LabeledValue();
-            this.lampAuto = new NtoLib.Utils.Lamp();
-            this.lampManual = new NtoLib.Utils.Lamp();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // stateLabel
             // 
-            this.stateLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.stateLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.stateLabel.Location = new System.Drawing.Point(8, 10);
             this.stateLabel.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
             this.stateLabel.Name = "stateLabel";
@@ -78,10 +76,10 @@
             this.flowLayoutPanel1.Controls.Add(this.temperatureInLabel);
             this.flowLayoutPanel1.Controls.Add(this.temperatureOutLabel);
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(10, 29);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(8, 8);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(192, 383);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(192, 418);
             this.flowLayoutPanel1.TabIndex = 49;
             // 
             // blockStartLamp
@@ -161,10 +159,11 @@
             // 
             this.temperatureLabel.AutoSize = true;
             this.temperatureLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.temperatureLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.temperatureLabel.LabelText = "Температура";
             this.temperatureLabel.Location = new System.Drawing.Point(8, 199);
             this.temperatureLabel.Name = "temperatureLabel";
-            this.temperatureLabel.Size = new System.Drawing.Size(121, 20);
+            this.temperatureLabel.Size = new System.Drawing.Size(160, 25);
             this.temperatureLabel.TabIndex = 50;
             this.temperatureLabel.ValueText = "C°";
             // 
@@ -172,10 +171,11 @@
             // 
             this.speedLabel.AutoSize = true;
             this.speedLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.speedLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.speedLabel.LabelText = "Скорость";
-            this.speedLabel.Location = new System.Drawing.Point(8, 225);
+            this.speedLabel.Location = new System.Drawing.Point(8, 230);
             this.speedLabel.Name = "speedLabel";
-            this.speedLabel.Size = new System.Drawing.Size(118, 20);
+            this.speedLabel.Size = new System.Drawing.Size(157, 25);
             this.speedLabel.TabIndex = 58;
             this.speedLabel.ValueText = "%";
             // 
@@ -183,10 +183,11 @@
             // 
             this.voltageLabel.AutoSize = true;
             this.voltageLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.voltageLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.voltageLabel.LabelText = "Нарпяжение";
-            this.voltageLabel.Location = new System.Drawing.Point(8, 251);
+            this.voltageLabel.Location = new System.Drawing.Point(8, 261);
             this.voltageLabel.Name = "voltageLabel";
-            this.voltageLabel.Size = new System.Drawing.Size(117, 20);
+            this.voltageLabel.Size = new System.Drawing.Size(154, 25);
             this.voltageLabel.TabIndex = 59;
             this.voltageLabel.ValueText = "В";
             // 
@@ -194,10 +195,11 @@
             // 
             this.currentLabel.AutoSize = true;
             this.currentLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.currentLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.currentLabel.LabelText = "Ток";
-            this.currentLabel.Location = new System.Drawing.Point(8, 277);
+            this.currentLabel.Location = new System.Drawing.Point(8, 292);
             this.currentLabel.Name = "currentLabel";
-            this.currentLabel.Size = new System.Drawing.Size(117, 20);
+            this.currentLabel.Size = new System.Drawing.Size(154, 25);
             this.currentLabel.TabIndex = 60;
             this.currentLabel.ValueText = "А";
             // 
@@ -205,10 +207,11 @@
             // 
             this.powerLabel.AutoSize = true;
             this.powerLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.powerLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.powerLabel.LabelText = "Мощность";
-            this.powerLabel.Location = new System.Drawing.Point(8, 303);
+            this.powerLabel.Location = new System.Drawing.Point(8, 323);
             this.powerLabel.Name = "powerLabel";
-            this.powerLabel.Size = new System.Drawing.Size(122, 20);
+            this.powerLabel.Size = new System.Drawing.Size(161, 25);
             this.powerLabel.TabIndex = 61;
             this.powerLabel.ValueText = "Вт";
             // 
@@ -216,10 +219,11 @@
             // 
             this.temperatureInLabel.AutoSize = true;
             this.temperatureInLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.temperatureInLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.temperatureInLabel.LabelText = "Твх";
-            this.temperatureInLabel.Location = new System.Drawing.Point(8, 329);
+            this.temperatureInLabel.Location = new System.Drawing.Point(8, 354);
             this.temperatureInLabel.Name = "temperatureInLabel";
-            this.temperatureInLabel.Size = new System.Drawing.Size(117, 20);
+            this.temperatureInLabel.Size = new System.Drawing.Size(154, 25);
             this.temperatureInLabel.TabIndex = 62;
             this.temperatureInLabel.ValueText = "К";
             // 
@@ -227,43 +231,13 @@
             // 
             this.temperatureOutLabel.AutoSize = true;
             this.temperatureOutLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.temperatureOutLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.temperatureOutLabel.LabelText = "Твых";
-            this.temperatureOutLabel.Location = new System.Drawing.Point(8, 355);
+            this.temperatureOutLabel.Location = new System.Drawing.Point(8, 385);
             this.temperatureOutLabel.Name = "temperatureOutLabel";
-            this.temperatureOutLabel.Size = new System.Drawing.Size(117, 20);
+            this.temperatureOutLabel.Size = new System.Drawing.Size(154, 25);
             this.temperatureOutLabel.TabIndex = 63;
             this.temperatureOutLabel.ValueText = "К";
-            // 
-            // lampAuto
-            // 
-            this.lampAuto.Active = false;
-            this.lampAuto.ActiveColor = System.Drawing.Color.LimeGreen;
-            this.lampAuto.BackColor = System.Drawing.Color.Transparent;
-            this.lampAuto.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampAuto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lampAuto.Location = new System.Drawing.Point(10, 10);
-            this.lampAuto.Margin = new System.Windows.Forms.Padding(5);
-            this.lampAuto.Name = "lampAuto";
-            this.lampAuto.Shape = NtoLib.Utils.Shape.Square;
-            this.lampAuto.Size = new System.Drawing.Size(90, 20);
-            this.lampAuto.TabIndex = 40;
-            this.lampAuto.TextOnLamp = "Авто";
-            // 
-            // lampManual
-            // 
-            this.lampManual.Active = false;
-            this.lampManual.ActiveColor = System.Drawing.Color.LimeGreen;
-            this.lampManual.AutoSize = true;
-            this.lampManual.BackColor = System.Drawing.Color.Transparent;
-            this.lampManual.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampManual.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lampManual.Location = new System.Drawing.Point(112, 10);
-            this.lampManual.Margin = new System.Windows.Forms.Padding(5);
-            this.lampManual.Name = "lampManual";
-            this.lampManual.Shape = NtoLib.Utils.Shape.Square;
-            this.lampManual.Size = new System.Drawing.Size(90, 20);
-            this.lampManual.TabIndex = 41;
-            this.lampManual.TextOnLamp = "Ручной";
             // 
             // PumpSettingForm
             // 
@@ -271,10 +245,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(321, 443);
+            this.ClientSize = new System.Drawing.Size(321, 477);
             this.ControlBox = false;
-            this.Controls.Add(this.lampAuto);
-            this.Controls.Add(this.lampManual);
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "PumpSettingForm";
@@ -290,9 +262,6 @@
         }
 
         #endregion
-
-        private Utils.Lamp lampManual;
-        private Utils.Lamp lampAuto;
         private System.Windows.Forms.Label stateLabel;
         private Utils.LabledLamp blockStartLamp;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
