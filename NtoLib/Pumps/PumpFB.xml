@@ -50,7 +50,7 @@
       <Pout ID="1012"      Name="ForceStop"            Type="Логический" />
       <Pout ID="1013"      Name="BlockStart"           Type="Логический" />
       <Pout ID="1014"      Name="BlockStop"            Type="Логический" />
-      <Pout ID="1015"      Name="Use"                  Type="Логический" />
+      <Pout ID="1015"      Name="Used"                  Type="Логический" />
 
       <Pin ID="1100"       Name="StartCMD"             Type="Логический"    DefaultValue="false"/>
       <Pin ID="1101"       Name="StopCMD"              Type="Логический"    DefaultValue="false"/>

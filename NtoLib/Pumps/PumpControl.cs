@@ -231,7 +231,7 @@ namespace NtoLib.Pumps
             Status.ForceStop = GetPinValue<bool>(PumpFB.ForceStopId);
             Status.BlockStart = GetPinValue<bool>(PumpFB.BlockStartId);
             Status.BlockStop = GetPinValue<bool>(PumpFB.BlockStopId);
-            Status.Use = GetPinValue<bool>(PumpFB.UseId);
+            Status.Use = GetPinValue<bool>(PumpFB.UsedId);
 
             var fb = FBConnector.Fb as PumpFB;
             Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);

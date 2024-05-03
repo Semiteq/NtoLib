@@ -60,7 +60,7 @@ namespace NtoLib.Pumps
         public const int ForceStopId = 12;
         public const int BlockStartId = 13;
         public const int BlockStopId = 14;
-        public const int UseId = 15;
+        public const int UsedId = 15;
 
         public const int TemperatureId = 20;
 
@@ -152,7 +152,7 @@ namespace NtoLib.Pumps
             SetVisualAndUiPin(ForceStopId, statusWord.GetBit(ForceStopId));
             SetVisualAndUiPin(BlockStartId, statusWord.GetBit(BlockStartId));
             SetVisualAndUiPin(BlockStopId, statusWord.GetBit(BlockStopId));
-            SetVisualAndUiPin(UseId, statusWord.GetBit(UseId));
+            SetVisualAndUiPin(UsedId, statusWord.GetBit(UsedId));
 
 
             SetVisualPin(TemperatureId, GetPinValue<float>(TemperatureId));
