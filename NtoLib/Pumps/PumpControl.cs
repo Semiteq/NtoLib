@@ -246,6 +246,7 @@ namespace NtoLib.Pumps
                 case PumpType.Turbine:
                 {
                     Status.Units = GetPinValue<bool>(PumpFB.CustomId);
+                    Status.Speed = GetPinValue<float>(PumpFB.TurbineSpeedId);
 
                     Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
                     break;

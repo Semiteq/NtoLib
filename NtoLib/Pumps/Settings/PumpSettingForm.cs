@@ -75,7 +75,7 @@ namespace NtoLib.Pumps.Settings
                 }                                      
                 case PumpType.Turbine:
                 {
-                    string units = status.Units ? "об/мин" : "%";
+                    string units = status.Units ? "%" : "об/мин";
                     speedLabel.ValueText =   $"{status.Speed} {units}";
 
                     break;                             
