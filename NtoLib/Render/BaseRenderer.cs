@@ -43,7 +43,7 @@ namespace NtoLib.Render
                 graphics.Transform = transform;
                 transform.Dispose();
 
-                if(orientation == Orientation.Button || orientation == Orientation.Top)
+                if(orientation == Orientation.Bottom || orientation == Orientation.Top)
                     (graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
             }
 
