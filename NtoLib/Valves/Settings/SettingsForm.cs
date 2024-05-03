@@ -21,18 +21,18 @@ namespace NtoLib.Valves.Settings
         {
             Status status = _valveControl.Status;
 
-            lampOpened.Active = status.State == State.Opened;
-            lampClosed.Active = status.State == State.Closed;
+            openedLamp.Active = status.State == State.Opened;
+            closedLamp.Active = status.State == State.Closed;
 
-            lampBlockOpening.Active = status.BlockOpening;
-            lampBlockClosing.Active = status.BlockClosing;
+            blockOpeningLamp.Active = status.BlockOpening;
+            blockClosingLamp.Active = status.BlockClosing;
 
 
             //lampAuto.Active = status.UsedByAutoMode;
             //lampManual.Active = !status.UsedByAutoMode && !status.NoConnection;
-            lampNotOpened.Active = status.NotOpened;
-            lampNotClosed.Active = status.NotClosed;
-            lampCollision.Active = status.Collision;
+            openedLamp.Active = status.NotOpened;
+            closedLamp.Active = status.NotClosed;
+            collisionLamp.Active = status.Collision;
 
             base.OnPaint(e);
         }

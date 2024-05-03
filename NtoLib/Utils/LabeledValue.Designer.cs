@@ -30,31 +30,41 @@
         {
             this.label = new System.Windows.Forms.Label();
             this.valueLabel = new System.Windows.Forms.Label();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label
             // 
-            this.label.AutoSize = true;
-            this.label.Location = new System.Drawing.Point(0, 0);
-            this.label.MaximumSize = new System.Drawing.Size(0, 20);
-            this.label.MinimumSize = new System.Drawing.Size(0, 20);
+            this.label.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label.Location = new System.Drawing.Point(3, 0);
             this.label.Name = "label";
-            this.label.Size = new System.Drawing.Size(29, 20);
+            this.label.Size = new System.Drawing.Size(150, 25);
             this.label.TabIndex = 0;
             this.label.Text = "label";
-            this.label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // valueLabel
             // 
-            this.valueLabel.AutoSize = true;
-            this.valueLabel.Location = new System.Drawing.Point(100, 0);
-            this.valueLabel.MaximumSize = new System.Drawing.Size(0, 20);
-            this.valueLabel.MinimumSize = new System.Drawing.Size(0, 20);
+            this.valueLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.valueLabel.Location = new System.Drawing.Point(159, 0);
             this.valueLabel.Name = "valueLabel";
-            this.valueLabel.Size = new System.Drawing.Size(33, 20);
+            this.valueLabel.Size = new System.Drawing.Size(100, 25);
             this.valueLabel.TabIndex = 1;
             this.valueLabel.Text = "value";
             this.valueLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.AutoSize = true;
+            this.flowLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel1.Controls.Add(this.label);
+            this.flowLayoutPanel1.Controls.Add(this.valueLabel);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(262, 25);
+            this.flowLayoutPanel1.TabIndex = 2;
             // 
             // LabeledValue
             // 
@@ -62,10 +72,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.Controls.Add(this.valueLabel);
-            this.Controls.Add(this.label);
+            this.Controls.Add(this.flowLayoutPanel1);
             this.Name = "LabeledValue";
-            this.Size = new System.Drawing.Size(136, 20);
+            this.Size = new System.Drawing.Size(262, 25);
+            this.flowLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -75,5 +85,6 @@
 
         private System.Windows.Forms.Label label;
         private System.Windows.Forms.Label valueLabel;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
     }
 }

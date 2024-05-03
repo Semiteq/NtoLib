@@ -28,285 +28,187 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.lampCollision = new NtoLib.Utils.Lamp();
-            this.lampNotClosed = new NtoLib.Utils.Lamp();
-            this.lampNotOpened = new NtoLib.Utils.Lamp();
-            this.lampConnectionNotOk = new NtoLib.Utils.Lamp();
-            this.lampOpened = new NtoLib.Utils.Lamp();
-            this.lampBlockClosing = new NtoLib.Utils.Lamp();
-            this.lampBlockOpening = new NtoLib.Utils.Lamp();
-            this.lampClosed = new NtoLib.Utils.Lamp();
-            this.label6 = new System.Windows.Forms.Label();
-            this.forceCloseLamp = new NtoLib.Utils.Lamp();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.openedLamp = new NtoLib.Utils.LabledLamp();
+            this.closedLamp = new NtoLib.Utils.LabledLamp();
+            this.blockOpeningLamp = new NtoLib.Utils.LabledLamp();
+            this.blockClosingLamp = new NtoLib.Utils.LabledLamp();
+            this.forceCloseLamp = new NtoLib.Utils.LabledLamp();
+            this.labledLamp2 = new NtoLib.Utils.LabledLamp();
+            this.notOpenedLamp = new NtoLib.Utils.LabledLamp();
+            this.notClosedLamp = new NtoLib.Utils.LabledLamp();
+            this.collisionLamp = new NtoLib.Utils.LabledLamp();
+            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // label1
+            // flowLayoutPanel1
             // 
-            this.label1.Location = new System.Drawing.Point(37, 12);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(150, 20);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Открыт";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.flowLayoutPanel1.AutoSize = true;
+            this.flowLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel1.Controls.Add(this.openedLamp);
+            this.flowLayoutPanel1.Controls.Add(this.closedLamp);
+            this.flowLayoutPanel1.Controls.Add(this.blockOpeningLamp);
+            this.flowLayoutPanel1.Controls.Add(this.blockClosingLamp);
+            this.flowLayoutPanel1.Controls.Add(this.forceCloseLamp);
+            this.flowLayoutPanel1.Controls.Add(this.labledLamp2);
+            this.flowLayoutPanel1.Controls.Add(this.notOpenedLamp);
+            this.flowLayoutPanel1.Controls.Add(this.notClosedLamp);
+            this.flowLayoutPanel1.Controls.Add(this.collisionLamp);
+            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(8, 8);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(264, 325);
+            this.flowLayoutPanel1.TabIndex = 50;
             // 
-            // label2
+            // openedLamp
             // 
-            this.label2.Location = new System.Drawing.Point(37, 42);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(150, 20);
-            this.label2.TabIndex = 9;
-            this.label2.Text = "Закрыт";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.openedLamp.Active = false;
+            this.openedLamp.ActiveColor = System.Drawing.Color.LimeGreen;
+            this.openedLamp.AutoSize = true;
+            this.openedLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.openedLamp.LabelText = "Открыт";
+            this.openedLamp.Location = new System.Drawing.Point(10, 10);
+            this.openedLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.openedLamp.Name = "openedLamp";
+            this.openedLamp.Size = new System.Drawing.Size(96, 25);
+            this.openedLamp.TabIndex = 51;
             // 
-            // label3
+            // closedLamp
             // 
-            this.label3.Location = new System.Drawing.Point(37, 102);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(150, 20);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "Блокировка закрытия";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.closedLamp.Active = false;
+            this.closedLamp.ActiveColor = System.Drawing.Color.LimeGreen;
+            this.closedLamp.AutoSize = true;
+            this.closedLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.closedLamp.LabelText = "Закрыт";
+            this.closedLamp.Location = new System.Drawing.Point(10, 45);
+            this.closedLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.closedLamp.Name = "closedLamp";
+            this.closedLamp.Size = new System.Drawing.Size(95, 25);
+            this.closedLamp.TabIndex = 52;
             // 
-            // label4
+            // blockOpeningLamp
             // 
-            this.label4.Location = new System.Drawing.Point(37, 72);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(150, 20);
-            this.label4.TabIndex = 11;
-            this.label4.Text = "Блокировка открытия";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.blockOpeningLamp.Active = false;
+            this.blockOpeningLamp.ActiveColor = System.Drawing.Color.Yellow;
+            this.blockOpeningLamp.AutoSize = true;
+            this.blockOpeningLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.blockOpeningLamp.LabelText = "Блокировка открытия";
+            this.blockOpeningLamp.Location = new System.Drawing.Point(10, 80);
+            this.blockOpeningLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.blockOpeningLamp.Name = "blockOpeningLamp";
+            this.blockOpeningLamp.Size = new System.Drawing.Size(206, 25);
+            this.blockOpeningLamp.TabIndex = 53;
             // 
-            // label5
+            // blockClosingLamp
             // 
-            this.label5.Location = new System.Drawing.Point(37, 162);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(150, 20);
-            this.label5.TabIndex = 16;
-            this.label5.Text = "Нет связи";
-            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // label7
-            // 
-            this.label7.Location = new System.Drawing.Point(37, 192);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(150, 20);
-            this.label7.TabIndex = 19;
-            this.label7.Text = "Не открылся";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // label8
-            // 
-            this.label8.Location = new System.Drawing.Point(37, 222);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(150, 20);
-            this.label8.TabIndex = 20;
-            this.label8.Text = "Не закрылся";
-            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // label9
-            // 
-            this.label9.Location = new System.Drawing.Point(37, 252);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(150, 20);
-            this.label9.TabIndex = 21;
-            this.label9.Text = "Коллизия концевиков";
-            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // lampCollision
-            // 
-            this.lampCollision.Active = false;
-            this.lampCollision.ActiveColor = System.Drawing.Color.OrangeRed;
-            this.lampCollision.BackColor = System.Drawing.Color.Transparent;
-            this.lampCollision.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampCollision.Location = new System.Drawing.Point(9, 252);
-            this.lampCollision.Margin = new System.Windows.Forms.Padding(5);
-            this.lampCollision.Name = "lampCollision";
-            this.lampCollision.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampCollision.Size = new System.Drawing.Size(20, 20);
-            this.lampCollision.TabIndex = 15;
-            this.lampCollision.TextOnLamp = null;
-            // 
-            // lampNotClosed
-            // 
-            this.lampNotClosed.Active = false;
-            this.lampNotClosed.ActiveColor = System.Drawing.Color.OrangeRed;
-            this.lampNotClosed.BackColor = System.Drawing.Color.Transparent;
-            this.lampNotClosed.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampNotClosed.Location = new System.Drawing.Point(9, 222);
-            this.lampNotClosed.Margin = new System.Windows.Forms.Padding(5);
-            this.lampNotClosed.Name = "lampNotClosed";
-            this.lampNotClosed.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampNotClosed.Size = new System.Drawing.Size(20, 20);
-            this.lampNotClosed.TabIndex = 14;
-            this.lampNotClosed.TextOnLamp = null;
-            // 
-            // lampNotOpened
-            // 
-            this.lampNotOpened.Active = false;
-            this.lampNotOpened.ActiveColor = System.Drawing.Color.OrangeRed;
-            this.lampNotOpened.BackColor = System.Drawing.Color.Transparent;
-            this.lampNotOpened.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampNotOpened.Location = new System.Drawing.Point(9, 192);
-            this.lampNotOpened.Margin = new System.Windows.Forms.Padding(5);
-            this.lampNotOpened.Name = "lampNotOpened";
-            this.lampNotOpened.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampNotOpened.Size = new System.Drawing.Size(20, 20);
-            this.lampNotOpened.TabIndex = 13;
-            this.lampNotOpened.TextOnLamp = null;
-            // 
-            // lampConnectionNotOk
-            // 
-            this.lampConnectionNotOk.Active = false;
-            this.lampConnectionNotOk.ActiveColor = System.Drawing.Color.OrangeRed;
-            this.lampConnectionNotOk.BackColor = System.Drawing.Color.Transparent;
-            this.lampConnectionNotOk.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampConnectionNotOk.Location = new System.Drawing.Point(9, 162);
-            this.lampConnectionNotOk.Margin = new System.Windows.Forms.Padding(5);
-            this.lampConnectionNotOk.Name = "lampConnectionNotOk";
-            this.lampConnectionNotOk.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampConnectionNotOk.Size = new System.Drawing.Size(20, 20);
-            this.lampConnectionNotOk.TabIndex = 12;
-            this.lampConnectionNotOk.TextOnLamp = null;
-            // 
-            // lampOpened
-            // 
-            this.lampOpened.Active = false;
-            this.lampOpened.ActiveColor = System.Drawing.Color.LimeGreen;
-            this.lampOpened.BackColor = System.Drawing.Color.Transparent;
-            this.lampOpened.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampOpened.Location = new System.Drawing.Point(9, 12);
-            this.lampOpened.Margin = new System.Windows.Forms.Padding(5);
-            this.lampOpened.Name = "lampOpened";
-            this.lampOpened.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampOpened.Size = new System.Drawing.Size(20, 20);
-            this.lampOpened.TabIndex = 0;
-            this.lampOpened.TextOnLamp = "";
-            // 
-            // lampBlockClosing
-            // 
-            this.lampBlockClosing.Active = false;
-            this.lampBlockClosing.ActiveColor = System.Drawing.Color.Yellow;
-            this.lampBlockClosing.BackColor = System.Drawing.Color.Transparent;
-            this.lampBlockClosing.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampBlockClosing.Location = new System.Drawing.Point(9, 102);
-            this.lampBlockClosing.Margin = new System.Windows.Forms.Padding(5);
-            this.lampBlockClosing.Name = "lampBlockClosing";
-            this.lampBlockClosing.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampBlockClosing.Size = new System.Drawing.Size(20, 20);
-            this.lampBlockClosing.TabIndex = 6;
-            this.lampBlockClosing.TextOnLamp = null;
-            // 
-            // lampBlockOpening
-            // 
-            this.lampBlockOpening.Active = false;
-            this.lampBlockOpening.ActiveColor = System.Drawing.Color.Yellow;
-            this.lampBlockOpening.BackColor = System.Drawing.Color.Transparent;
-            this.lampBlockOpening.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampBlockOpening.Location = new System.Drawing.Point(9, 72);
-            this.lampBlockOpening.Margin = new System.Windows.Forms.Padding(5);
-            this.lampBlockOpening.Name = "lampBlockOpening";
-            this.lampBlockOpening.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampBlockOpening.Size = new System.Drawing.Size(20, 20);
-            this.lampBlockOpening.TabIndex = 4;
-            this.lampBlockOpening.TextOnLamp = null;
-            // 
-            // lampClosed
-            // 
-            this.lampClosed.Active = false;
-            this.lampClosed.ActiveColor = System.Drawing.Color.LimeGreen;
-            this.lampClosed.BackColor = System.Drawing.Color.Transparent;
-            this.lampClosed.Cursor = System.Windows.Forms.Cursors.Default;
-            this.lampClosed.Location = new System.Drawing.Point(9, 42);
-            this.lampClosed.Margin = new System.Windows.Forms.Padding(5);
-            this.lampClosed.Name = "lampClosed";
-            this.lampClosed.Shape = NtoLib.Utils.Shape.Circle;
-            this.lampClosed.Size = new System.Drawing.Size(20, 20);
-            this.lampClosed.TabIndex = 2;
-            this.lampClosed.TextOnLamp = null;
-            // 
-            // label6
-            // 
-            this.label6.Location = new System.Drawing.Point(37, 132);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(150, 20);
-            this.label6.TabIndex = 25;
-            this.label6.Text = "Принудительное закрытие";
-            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.blockClosingLamp.Active = false;
+            this.blockClosingLamp.ActiveColor = System.Drawing.Color.Yellow;
+            this.blockClosingLamp.AutoSize = true;
+            this.blockClosingLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.blockClosingLamp.LabelText = "Блокировка закрытия";
+            this.blockClosingLamp.Location = new System.Drawing.Point(10, 115);
+            this.blockClosingLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.blockClosingLamp.Name = "blockClosingLamp";
+            this.blockClosingLamp.Size = new System.Drawing.Size(205, 25);
+            this.blockClosingLamp.TabIndex = 54;
             // 
             // forceCloseLamp
             // 
             this.forceCloseLamp.Active = false;
             this.forceCloseLamp.ActiveColor = System.Drawing.Color.Yellow;
-            this.forceCloseLamp.BackColor = System.Drawing.Color.Transparent;
-            this.forceCloseLamp.Cursor = System.Windows.Forms.Cursors.Default;
-            this.forceCloseLamp.Location = new System.Drawing.Point(9, 132);
+            this.forceCloseLamp.AutoSize = true;
+            this.forceCloseLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.forceCloseLamp.LabelText = "Принудительное закрытие";
+            this.forceCloseLamp.Location = new System.Drawing.Point(10, 150);
             this.forceCloseLamp.Margin = new System.Windows.Forms.Padding(5);
             this.forceCloseLamp.Name = "forceCloseLamp";
-            this.forceCloseLamp.Shape = NtoLib.Utils.Shape.Circle;
-            this.forceCloseLamp.Size = new System.Drawing.Size(20, 20);
-            this.forceCloseLamp.TabIndex = 24;
-            this.forceCloseLamp.TextOnLamp = null;
+            this.forceCloseLamp.Size = new System.Drawing.Size(244, 25);
+            this.forceCloseLamp.TabIndex = 55;
+            // 
+            // labledLamp2
+            // 
+            this.labledLamp2.Active = false;
+            this.labledLamp2.ActiveColor = System.Drawing.Color.OrangeRed;
+            this.labledLamp2.AutoSize = true;
+            this.labledLamp2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.labledLamp2.LabelText = "Нет связи";
+            this.labledLamp2.Location = new System.Drawing.Point(10, 185);
+            this.labledLamp2.Margin = new System.Windows.Forms.Padding(5);
+            this.labledLamp2.Name = "labledLamp2";
+            this.labledLamp2.Size = new System.Drawing.Size(115, 25);
+            this.labledLamp2.TabIndex = 56;
+            // 
+            // notOpenedLamp
+            // 
+            this.notOpenedLamp.Active = false;
+            this.notOpenedLamp.ActiveColor = System.Drawing.Color.OrangeRed;
+            this.notOpenedLamp.AutoSize = true;
+            this.notOpenedLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.notOpenedLamp.LabelText = "Не открылся";
+            this.notOpenedLamp.Location = new System.Drawing.Point(10, 220);
+            this.notOpenedLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.notOpenedLamp.Name = "notOpenedLamp";
+            this.notOpenedLamp.Size = new System.Drawing.Size(136, 25);
+            this.notOpenedLamp.TabIndex = 57;
+            // 
+            // notClosedLamp
+            // 
+            this.notClosedLamp.Active = false;
+            this.notClosedLamp.ActiveColor = System.Drawing.Color.OrangeRed;
+            this.notClosedLamp.AutoSize = true;
+            this.notClosedLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.notClosedLamp.LabelText = "Не закрылся";
+            this.notClosedLamp.Location = new System.Drawing.Point(10, 255);
+            this.notClosedLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.notClosedLamp.Name = "notClosedLamp";
+            this.notClosedLamp.Size = new System.Drawing.Size(135, 25);
+            this.notClosedLamp.TabIndex = 58;
+            // 
+            // collisionLamp
+            // 
+            this.collisionLamp.Active = false;
+            this.collisionLamp.ActiveColor = System.Drawing.Color.OrangeRed;
+            this.collisionLamp.AutoSize = true;
+            this.collisionLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.collisionLamp.LabelText = "Коллизия концевиков";
+            this.collisionLamp.Location = new System.Drawing.Point(10, 290);
+            this.collisionLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.collisionLamp.Name = "collisionLamp";
+            this.collisionLamp.Size = new System.Drawing.Size(204, 25);
+            this.collisionLamp.TabIndex = 59;
             // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(189, 283);
+            this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ClientSize = new System.Drawing.Size(629, 567);
             this.ControlBox = false;
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.forceCloseLamp);
-            this.Controls.Add(this.label9);
-            this.Controls.Add(this.label8);
-            this.Controls.Add(this.label7);
-            this.Controls.Add(this.label5);
-            this.Controls.Add(this.lampCollision);
-            this.Controls.Add(this.lampNotClosed);
-            this.Controls.Add(this.lampNotOpened);
-            this.Controls.Add(this.lampConnectionNotOk);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.lampOpened);
-            this.Controls.Add(this.lampBlockClosing);
-            this.Controls.Add(this.lampBlockOpening);
-            this.Controls.Add(this.lampClosed);
+            this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "SettingsForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
-
-        private Utils.Lamp lampOpened;
-        private System.Windows.Forms.Label label1;
-        private Utils.Lamp lampClosed;
-        private Utils.Lamp lampBlockOpening;
-        private Utils.Lamp lampBlockClosing;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
-        private Utils.Lamp lampConnectionNotOk;
-        private Utils.Lamp lampNotOpened;
-        private Utils.Lamp lampNotClosed;
-        private Utils.Lamp lampCollision;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Label label6;
-        private Utils.Lamp forceCloseLamp;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private Utils.LabledLamp openedLamp;
+        private Utils.LabledLamp closedLamp;
+        private Utils.LabledLamp blockOpeningLamp;
+        private Utils.LabledLamp blockClosingLamp;
+        private Utils.LabledLamp forceCloseLamp;
+        private Utils.LabledLamp labledLamp2;
+        private Utils.LabledLamp notOpenedLamp;
+        private Utils.LabledLamp notClosedLamp;
+        private Utils.LabledLamp collisionLamp;
     }
 }
