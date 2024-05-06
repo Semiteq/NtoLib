@@ -35,7 +35,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "PumpControl";
-            this.Size = new System.Drawing.Size(80, 80);
+            this.Size = new System.Drawing.Size(60, 60);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             this.DoubleClick += new System.EventHandler(this.HandleDoubleClick);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);

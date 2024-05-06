@@ -37,7 +37,7 @@
             this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.DoubleBuffered = false;
             this.Name = "ValveControl";
-            this.Size = new System.Drawing.Size(60, 60);
+            this.Size = new System.Drawing.Size(60, 50);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             this.DoubleClick += new System.EventHandler(this.HandleDoubleClick);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
