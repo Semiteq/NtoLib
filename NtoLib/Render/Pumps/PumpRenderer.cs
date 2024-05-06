@@ -58,6 +58,8 @@ namespace NtoLib.Render.Pumps
 
             if(status.MainError)
                 DrawErrorRectangle(graphics, errorBounds);
+            else if(status.Warning)
+                DrawWarningRectangle(graphics, errorBounds);
 
             return graphicsBounds;
         }

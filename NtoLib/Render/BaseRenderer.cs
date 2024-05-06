@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace NtoLib.Render
 {
@@ -70,6 +64,16 @@ namespace NtoLib.Render
         {
             PointF[] errorPoints = errorBounds.GetPoints(-ErrorLineWidth / 2f);
             using(Pen errorPen = new Pen(Colors.Error, ErrorLineWidth))
+                graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);
+        }
+
+        /// <summary>
+        /// Отрисовывает рамку предупреждения
+        /// </summary>
+        protected void DrawWarningRectangle(Graphics graphics, Bounds errorBounds)
+        {
+            PointF[] errorPoints = errorBounds.GetPoints(-ErrorLineWidth / 2f);
+            using(Pen errorPen = new Pen(Colors.Warning, ErrorLineWidth))
                 graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);
         }
 

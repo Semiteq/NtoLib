@@ -11,5 +11,6 @@ namespace NtoLib
         public static readonly Color NoData = Color.Gainsboro;
         public static readonly Color NoDataDark = Color.DarkGray;
         public static readonly Color Error = Color.Red;
+        public static readonly Color Warning = Color.Orange;
     }
 }
