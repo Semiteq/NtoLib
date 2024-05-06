@@ -64,7 +64,7 @@ namespace NtoLib.Pumps.Settings
                 state = "остановлен";
             stateLabel.Text = $"Состояние: {state}";
 
-            temperatureLabel.ValueText =  $"{status.Temperature} C°";
+            temperatureLabel.ValueText =  $"{status.Temperature.ToString("F0")} C°";
                                                        
             switch(_pumpType)                          
             {                                          
@@ -76,7 +76,7 @@ namespace NtoLib.Pumps.Settings
                 case PumpType.Turbine:
                 {
                     string units = status.Units ? "%" : "об/мин";
-                    speedLabel.ValueText =   $"{status.Speed} {units}";
+                    speedLabel.ValueText =   $"{status.Speed.ToString("F1")} {units}";
 
                     break;                             
                 }                                      
@@ -84,15 +84,15 @@ namespace NtoLib.Pumps.Settings
                 {
                     safeModeLamp.Active = status.SafeMode;
 
-                    voltageLabel.ValueText = $"{status.Voltage} В";
-                    currentLabel.ValueText = $"{status.Current} А";
-                    powerLabel.ValueText =   $"{status.Power} Вт";
+                    voltageLabel.ValueText = $"{status.Voltage.ToString("F2")} В";
+                    currentLabel.ValueText = $"{status.Current.ToString("F2")} А";
+                    powerLabel.ValueText =   $"{status.Power.ToString("F2")} Вт";
                     break;                             
                 }                                      
                 case PumpType.Cryogen:                 
                 {                                      
-                    powerLabel.ValueText =   $"{status.Power} К";
-                    powerLabel.ValueText =   $"{status.Power} К";
+                    temperatureInLabel.ValueText =   $"{status.TemperatureIn.ToString("F2")} К";
+                    temperatureOutLabel.ValueText =   $"{status.TemperatureOut.ToString("F2")} К";
                     break;
                 }
             }
