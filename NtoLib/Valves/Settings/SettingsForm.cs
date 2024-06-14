@@ -26,12 +26,9 @@ namespace NtoLib.Valves.Settings
 
             blockOpeningLamp.Active = status.BlockOpening;
             blockClosingLamp.Active = status.BlockClosing;
-
-
-            //lampAuto.Active = status.UsedByAutoMode;
-            //lampManual.Active = !status.UsedByAutoMode && !status.NoConnection;
-            openedLamp.Active = status.NotOpened;
-            closedLamp.Active = status.NotClosed;
+            
+            notOpenedLamp.Active = status.NotOpened;
+            notClosedLamp.Active = status.NotClosed;
             collisionLamp.Active = status.Collision;
 
             base.OnPaint(e);
