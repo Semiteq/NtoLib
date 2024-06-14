@@ -58,7 +58,7 @@
             this.flowLayoutPanel1.Location = new System.Drawing.Point(8, 8);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(264, 325);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(279, 325);
             this.flowLayoutPanel1.TabIndex = 50;
             // 
             // openedLamp
@@ -71,7 +71,7 @@
             this.openedLamp.Location = new System.Drawing.Point(10, 10);
             this.openedLamp.Margin = new System.Windows.Forms.Padding(5);
             this.openedLamp.Name = "openedLamp";
-            this.openedLamp.Size = new System.Drawing.Size(96, 25);
+            this.openedLamp.Size = new System.Drawing.Size(102, 25);
             this.openedLamp.TabIndex = 51;
             // 
             // closedLamp
@@ -84,7 +84,7 @@
             this.closedLamp.Location = new System.Drawing.Point(10, 45);
             this.closedLamp.Margin = new System.Windows.Forms.Padding(5);
             this.closedLamp.Name = "closedLamp";
-            this.closedLamp.Size = new System.Drawing.Size(95, 25);
+            this.closedLamp.Size = new System.Drawing.Size(101, 25);
             this.closedLamp.TabIndex = 52;
             // 
             // blockOpeningLamp
@@ -97,7 +97,7 @@
             this.blockOpeningLamp.Location = new System.Drawing.Point(10, 80);
             this.blockOpeningLamp.Margin = new System.Windows.Forms.Padding(5);
             this.blockOpeningLamp.Name = "blockOpeningLamp";
-            this.blockOpeningLamp.Size = new System.Drawing.Size(206, 25);
+            this.blockOpeningLamp.Size = new System.Drawing.Size(220, 25);
             this.blockOpeningLamp.TabIndex = 53;
             // 
             // blockClosingLamp
@@ -110,7 +110,7 @@
             this.blockClosingLamp.Location = new System.Drawing.Point(10, 115);
             this.blockClosingLamp.Margin = new System.Windows.Forms.Padding(5);
             this.blockClosingLamp.Name = "blockClosingLamp";
-            this.blockClosingLamp.Size = new System.Drawing.Size(205, 25);
+            this.blockClosingLamp.Size = new System.Drawing.Size(219, 25);
             this.blockClosingLamp.TabIndex = 54;
             // 
             // forceCloseLamp
@@ -123,7 +123,7 @@
             this.forceCloseLamp.Location = new System.Drawing.Point(10, 150);
             this.forceCloseLamp.Margin = new System.Windows.Forms.Padding(5);
             this.forceCloseLamp.Name = "forceCloseLamp";
-            this.forceCloseLamp.Size = new System.Drawing.Size(244, 25);
+            this.forceCloseLamp.Size = new System.Drawing.Size(259, 25);
             this.forceCloseLamp.TabIndex = 55;
             // 
             // labledLamp2
@@ -136,7 +136,7 @@
             this.labledLamp2.Location = new System.Drawing.Point(10, 185);
             this.labledLamp2.Margin = new System.Windows.Forms.Padding(5);
             this.labledLamp2.Name = "labledLamp2";
-            this.labledLamp2.Size = new System.Drawing.Size(115, 25);
+            this.labledLamp2.Size = new System.Drawing.Size(121, 25);
             this.labledLamp2.TabIndex = 56;
             // 
             // notOpenedLamp
@@ -149,7 +149,7 @@
             this.notOpenedLamp.Location = new System.Drawing.Point(10, 220);
             this.notOpenedLamp.Margin = new System.Windows.Forms.Padding(5);
             this.notOpenedLamp.Name = "notOpenedLamp";
-            this.notOpenedLamp.Size = new System.Drawing.Size(136, 25);
+            this.notOpenedLamp.Size = new System.Drawing.Size(145, 25);
             this.notOpenedLamp.TabIndex = 57;
             // 
             // notClosedLamp
@@ -162,7 +162,7 @@
             this.notClosedLamp.Location = new System.Drawing.Point(10, 255);
             this.notClosedLamp.Margin = new System.Windows.Forms.Padding(5);
             this.notClosedLamp.Name = "notClosedLamp";
-            this.notClosedLamp.Size = new System.Drawing.Size(135, 25);
+            this.notClosedLamp.Size = new System.Drawing.Size(144, 25);
             this.notClosedLamp.TabIndex = 58;
             // 
             // collisionLamp
@@ -175,7 +175,7 @@
             this.collisionLamp.Location = new System.Drawing.Point(10, 290);
             this.collisionLamp.Margin = new System.Windows.Forms.Padding(5);
             this.collisionLamp.Name = "collisionLamp";
-            this.collisionLamp.Size = new System.Drawing.Size(204, 25);
+            this.collisionLamp.Size = new System.Drawing.Size(218, 25);
             this.collisionLamp.TabIndex = 59;
             // 
             // SettingsForm
@@ -184,7 +184,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(629, 567);
+            this.ClientSize = new System.Drawing.Size(305, 348);
             this.ControlBox = false;
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
