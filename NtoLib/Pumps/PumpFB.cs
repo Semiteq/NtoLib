@@ -152,7 +152,8 @@ namespace NtoLib.Pumps
             SetVisualAndUiPin(ForceStopId, statusWord.GetBit(ForceStopId));
             SetVisualAndUiPin(BlockStartId, statusWord.GetBit(BlockStartId));
             SetVisualAndUiPin(BlockStopId, statusWord.GetBit(BlockStopId));
-            SetVisualAndUiPin(UsedId, statusWord.GetBit(UsedId));
+            bool used = statusWord.GetBit(UsedId);
+            SetVisualAndUiPin(UsedId, used);
 
 
             SetVisualPin(TemperatureId, GetPinValue<float>(TemperatureId));
@@ -191,13 +192,15 @@ namespace NtoLib.Pumps
             SetPinValue(CommandWordId, commandWord);
 
 
+            if(used)
+            {
+                _connectionDisabledEvent.Update(!connectionOk);
 
-            _connectionDisabledEvent.Update(!connectionOk);
-
-            _nominalSpeedEvent.Update(workOnNominalSpeed);
-            _stopEvent.Update(stopped);
-            _accelerationEvent.Update(accelerating);
-            _decelerationEvent.Update(decelerating);
+                _nominalSpeedEvent.Update(workOnNominalSpeed);
+                _stopEvent.Update(stopped);
+                _accelerationEvent.Update(accelerating);
+                _decelerationEvent.Update(decelerating);
+            }
         }
 
 
