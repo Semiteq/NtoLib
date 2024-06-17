@@ -26,6 +26,7 @@ namespace NtoLib.Valves.Settings
 
             blockOpeningLamp.Active = status.BlockOpening;
             blockClosingLamp.Active = status.BlockClosing;
+            forceCloseLamp.Active = status.ForceClose;
             
             notOpenedLamp.Active = status.NotOpened;
             notClosedLamp.Active = status.NotClosed;

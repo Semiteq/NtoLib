@@ -292,6 +292,7 @@ namespace NtoLib.Valves
 
             Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpeningId);
             Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosingId);
+            Status.ForceClose = GetPinValue<bool>(ValveFB.ForceCloseId);
 
             _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
 

@@ -7,6 +7,7 @@
         public bool UsedByAutoMode;
         public bool BlockOpening;
         public bool BlockClosing;
+        public bool ForceClose;
         public bool NoConnection;
         public bool NotOpened;
         public bool NotClosed;
