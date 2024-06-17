@@ -24,17 +24,17 @@ namespace NtoLib.Render.Valves
         {
             Color[] colors = new Color[2];
 
-            if(status.State == State.NoData)
+            if(!status.ConnectionOk)
             {
                 colors[0] = Colors.NoData;
                 colors[1] = Colors.NoData;
             }
-            else if(status.State == State.Opened)
+            else if(status.Opened & !status.Collision)
             {
                 colors[0] = Colors.Opened;
                 colors[1] = Colors.Opened;
             }
-            else if(status.State == State.Closed || status.State == State.SmothlyOpened)
+            else if((status.Closed & !status.Collision) || status.OpenedSmoothly)
             {
                 colors[0] = Colors.Closed;
                 colors[1] = Colors.Closed;
@@ -57,15 +57,15 @@ namespace NtoLib.Render.Valves
         }
 
         /// <summary>
-        /// Возвращет истину, если должна быть показана блокировка
+        /// Возвращает истину, если должна быть показана блокировка
         /// </summary>
         protected bool IsBlocked(Status status)
         {
-            if(status.State == State.Opened && status.BlockClosing)
+            if(status.Opened && status.BlockClosing)
                 return true;
-            if(status.State == State.Closed && (status.BlockOpening || status.ForceClose))
+            if(status.Closed && (status.BlockOpening || status.ForceClose))
                 return true;
-            if(status.State == State.SmothlyOpened && (status.BlockClosing || status.BlockOpening))
+            if(status.OpenedSmoothly && (status.BlockClosing || status.BlockOpening))
                 return true;
 
             return false;

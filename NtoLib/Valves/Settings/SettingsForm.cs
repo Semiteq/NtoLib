@@ -21,8 +21,8 @@ namespace NtoLib.Valves.Settings
         {
             Status status = _valveControl.Status;
 
-            openedLamp.Active = status.State == State.Opened;
-            closedLamp.Active = status.State == State.Closed;
+            openedLamp.Active = status.Opened;
+            closedLamp.Active = status.Closed;
 
             blockOpeningLamp.Active = status.BlockOpening;
             blockClosingLamp.Active = status.BlockClosing;

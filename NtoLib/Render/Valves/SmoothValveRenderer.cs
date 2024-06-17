@@ -81,17 +81,17 @@ namespace NtoLib.Render.Valves
         {
             Color color;
 
-            if(status.State == State.NoData)
+            if(!status.ConnectionOk)
             {
                 color = Colors.NoData;
             }
-            else if(status.State == State.Closed)
+            else if(status.Opened || status.OpenedSmoothly)
             {
-                color = Colors.Closed;
+                color = Colors.Opened;
             }
             else
             {
-                color = Colors.Opened;
+                color = Colors.Closed;
             }
 
             return color;

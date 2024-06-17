@@ -157,11 +157,11 @@ namespace NtoLib.Render.Valves
             float gap = (grooveBounds.Width - 2f * LineWidth - gateBounds.Width) / 2f;
             gateBounds.Height = (grooveBounds.Height - 2f * LineWidth - 3f * gap) / 2f;
 
-            if(status.State == State.Opened || (status.State == State.OpeningClosing && isLight))
+            if(status.Opened || (status.OpeningClosing && isLight))
             {
                 gateBounds.Y -= grooveBounds.Height / 4f - LineWidth / 2f;
             }
-            else if(status.State == State.Closed || (status.State == State.OpeningClosing && !isLight))
+            else if(status.Closed || (status.OpeningClosing && !isLight))
             {
                 gateBounds.Y += grooveBounds.Height / 4f - LineWidth / 2f;
             }
