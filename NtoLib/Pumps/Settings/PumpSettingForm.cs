@@ -100,6 +100,7 @@ namespace NtoLib.Pumps.Settings
             blockStopLamp.Active = status.BlockStop;
             noConnectionLamp.Active = status.Use && !status.ConnectionOk;
             errorLamp.Active = status.Use && status.MainError;
+            warningLamp.Active = status.Warning;
 
             base.OnPaint(e);
         }

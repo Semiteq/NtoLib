@@ -43,6 +43,7 @@
             this.powerLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureInLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureOutLabel = new NtoLib.Utils.LabeledValue();
+            this.warningLamp = new NtoLib.Utils.LabledLamp();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -68,6 +69,7 @@
             this.flowLayoutPanel1.Controls.Add(this.safeModeLamp);
             this.flowLayoutPanel1.Controls.Add(this.noConnectionLamp);
             this.flowLayoutPanel1.Controls.Add(this.errorLamp);
+            this.flowLayoutPanel1.Controls.Add(this.warningLamp);
             this.flowLayoutPanel1.Controls.Add(this.temperatureLabel);
             this.flowLayoutPanel1.Controls.Add(this.speedLabel);
             this.flowLayoutPanel1.Controls.Add(this.voltageLabel);
@@ -80,7 +82,7 @@
             this.flowLayoutPanel1.Location = new System.Drawing.Point(8, 8);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(384, 496);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(384, 531);
             this.flowLayoutPanel1.TabIndex = 49;
             // 
             // blockStartLamp
@@ -162,7 +164,7 @@
             this.errorLamp.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.errorLamp.LabelText = "Ошибка";
             this.errorLamp.Location = new System.Drawing.Point(10, 220);
-            this.errorLamp.Margin = new System.Windows.Forms.Padding(5, 5, 5, 15);
+            this.errorLamp.Margin = new System.Windows.Forms.Padding(5);
             this.errorLamp.Name = "errorLamp";
             this.errorLamp.Size = new System.Drawing.Size(105, 25);
             this.errorLamp.TabIndex = 50;
@@ -172,7 +174,7 @@
             this.temperatureLabel.AutoSize = true;
             this.temperatureLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.temperatureLabel.LabelText = "Температура:";
-            this.temperatureLabel.Location = new System.Drawing.Point(9, 264);
+            this.temperatureLabel.Location = new System.Drawing.Point(9, 299);
             this.temperatureLabel.Margin = new System.Windows.Forms.Padding(4);
             this.temperatureLabel.Name = "temperatureLabel";
             this.temperatureLabel.Size = new System.Drawing.Size(366, 25);
@@ -184,7 +186,7 @@
             this.speedLabel.AutoSize = true;
             this.speedLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.speedLabel.LabelText = "Скорость:";
-            this.speedLabel.Location = new System.Drawing.Point(9, 297);
+            this.speedLabel.Location = new System.Drawing.Point(9, 332);
             this.speedLabel.Margin = new System.Windows.Forms.Padding(4);
             this.speedLabel.Name = "speedLabel";
             this.speedLabel.Size = new System.Drawing.Size(366, 25);
@@ -196,7 +198,7 @@
             this.voltageLabel.AutoSize = true;
             this.voltageLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.voltageLabel.LabelText = "Напряжение:";
-            this.voltageLabel.Location = new System.Drawing.Point(9, 330);
+            this.voltageLabel.Location = new System.Drawing.Point(9, 365);
             this.voltageLabel.Margin = new System.Windows.Forms.Padding(4);
             this.voltageLabel.Name = "voltageLabel";
             this.voltageLabel.Size = new System.Drawing.Size(366, 25);
@@ -208,7 +210,7 @@
             this.currentLabel.AutoSize = true;
             this.currentLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.currentLabel.LabelText = "Ток:";
-            this.currentLabel.Location = new System.Drawing.Point(9, 363);
+            this.currentLabel.Location = new System.Drawing.Point(9, 398);
             this.currentLabel.Margin = new System.Windows.Forms.Padding(4);
             this.currentLabel.Name = "currentLabel";
             this.currentLabel.Size = new System.Drawing.Size(366, 25);
@@ -220,7 +222,7 @@
             this.powerLabel.AutoSize = true;
             this.powerLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.powerLabel.LabelText = "Мощность:";
-            this.powerLabel.Location = new System.Drawing.Point(9, 396);
+            this.powerLabel.Location = new System.Drawing.Point(9, 431);
             this.powerLabel.Margin = new System.Windows.Forms.Padding(4);
             this.powerLabel.Name = "powerLabel";
             this.powerLabel.Size = new System.Drawing.Size(366, 25);
@@ -232,7 +234,7 @@
             this.temperatureInLabel.AutoSize = true;
             this.temperatureInLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.temperatureInLabel.LabelText = "Твх:";
-            this.temperatureInLabel.Location = new System.Drawing.Point(9, 429);
+            this.temperatureInLabel.Location = new System.Drawing.Point(9, 464);
             this.temperatureInLabel.Margin = new System.Windows.Forms.Padding(4);
             this.temperatureInLabel.Name = "temperatureInLabel";
             this.temperatureInLabel.Size = new System.Drawing.Size(366, 25);
@@ -244,12 +246,26 @@
             this.temperatureOutLabel.AutoSize = true;
             this.temperatureOutLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.temperatureOutLabel.LabelText = "Твых:";
-            this.temperatureOutLabel.Location = new System.Drawing.Point(9, 462);
+            this.temperatureOutLabel.Location = new System.Drawing.Point(9, 497);
             this.temperatureOutLabel.Margin = new System.Windows.Forms.Padding(4);
             this.temperatureOutLabel.Name = "temperatureOutLabel";
             this.temperatureOutLabel.Size = new System.Drawing.Size(366, 25);
             this.temperatureOutLabel.TabIndex = 63;
             this.temperatureOutLabel.ValueText = "К";
+            // 
+            // warningLamp
+            // 
+            this.warningLamp.Active = false;
+            this.warningLamp.ActiveColor = System.Drawing.Color.Yellow;
+            this.warningLamp.AutoSize = true;
+            this.warningLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.warningLamp.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.warningLamp.LabelText = "Предупреждение";
+            this.warningLamp.Location = new System.Drawing.Point(10, 255);
+            this.warningLamp.Margin = new System.Windows.Forms.Padding(5, 5, 5, 15);
+            this.warningLamp.Name = "warningLamp";
+            this.warningLamp.Size = new System.Drawing.Size(181, 25);
+            this.warningLamp.TabIndex = 64;
             // 
             // PumpSettingForm
             // 
@@ -257,7 +273,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(422, 530);
+            this.ClientSize = new System.Drawing.Size(418, 560);
             this.ControlBox = false;
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -289,5 +305,6 @@
         private Utils.LabeledValue powerLabel;
         private Utils.LabeledValue temperatureInLabel;
         private Utils.LabeledValue temperatureOutLabel;
+        private Utils.LabledLamp warningLamp;
     }
 }
