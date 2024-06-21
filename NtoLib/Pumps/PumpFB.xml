@@ -21,14 +21,14 @@
           <Pout ID="105"      Name="Accelerating"         Type="Логический" />
           <Pout ID="106"      Name="Decelerating"         Type="Логический" />
           <Pout ID="107"      Name="Warning"              Type="Логический" />
-          <Pout ID="108"      Name="Error1"               Type="Логический" />
-          <Pout ID="109"      Name="Error2"               Type="Логический" />
-          <Pout ID="110"      Name="Error3"               Type="Логический" />
-          <Pout ID="111"      Name="Error4"               Type="Логический" />
+          <Pout ID="108"      Name="Message1"             Type="Логический" />
+          <Pout ID="109"      Name="Message2"             Type="Логический" />
+          <Pout ID="110"      Name="Message3"             Type="Логический" />
+          <Pout ID="111"      Name="Custom"               Type="Логический" />
           <Pout ID="112"      Name="ForceStop"            Type="Логический" />
           <Pout ID="113"      Name="BlockStart"           Type="Логический" />
           <Pout ID="114"      Name="BlockStop"            Type="Логический" />
-          <Pout ID="115"      Name="Use"                  Type="Логический" />
+          <Pout ID="115"      Name="Used"                 Type="Логический" />
         </Items>
       </Group>
     </Items>
@@ -43,14 +43,14 @@
       <Pout ID="1005"      Name="Accelerating"         Type="Логический" />
       <Pout ID="1006"      Name="Decelerating"         Type="Логический" />
       <Pout ID="1007"      Name="Warning"              Type="Логический" />
-      <Pout ID="1008"      Name="Error1"               Type="Логический" />
-      <Pout ID="1009"      Name="Error2"               Type="Логический" />
-      <Pout ID="1010"      Name="Error3"               Type="Логический" />
-      <Pout ID="1011"      Name="Error4"               Type="Логический" />
+      <Pout ID="1008"      Name="Message1"             Type="Логический" />
+      <Pout ID="1009"      Name="Message2"             Type="Логический" />
+      <Pout ID="1010"      Name="Message3"             Type="Логический" />
+      <Pout ID="1011"      Name="Custom"               Type="Логический" />
       <Pout ID="1012"      Name="ForceStop"            Type="Логический" />
       <Pout ID="1013"      Name="BlockStart"           Type="Логический" />
       <Pout ID="1014"      Name="BlockStop"            Type="Логический" />
-      <Pout ID="1015"      Name="Used"                  Type="Логический" />
+      <Pout ID="1015"      Name="Used"                 Type="Логический" />
 
       <Pin ID="1100"       Name="StartCMD"             Type="Логический"    DefaultValue="false"/>
       <Pin ID="1101"       Name="StopCMD"              Type="Логический"    DefaultValue="false"/>
