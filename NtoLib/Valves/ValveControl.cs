@@ -37,22 +37,6 @@ namespace NtoLib.Valves
             }
         }
 
-        private int _buttonSize = 20;
-        public int ButtonSize
-        {
-            get
-            {
-                return _buttonSize;
-            }
-            set
-            {
-                bool updateRequired = _buttonSize != value;
-                _buttonSize = value;
-                if(updateRequired)
-                    UpdateLayout();
-            }
-        }
-
         private ButtonOrientation _buttonOrientation;
         public ButtonOrientation ButtonOrientation
         {
@@ -213,7 +197,8 @@ namespace NtoLib.Valves
                 buttonOpenSmoothly.Visible = false;
                 buttons = new Button[] { buttonOpen, buttonClose };
             }
-            LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons, ButtonSize);
+
+            LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons);
         }
 
         private void UpdateSprite()

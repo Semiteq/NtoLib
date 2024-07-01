@@ -32,7 +32,7 @@ namespace NtoLib.Utils
             return layout;
         }
 
-        public static void RebuildTable(TableLayoutPanel table, Render.Orientation orientation, Button[] buttons, int buttonSize)
+        public static void RebuildTable(TableLayoutPanel table, Render.Orientation orientation, Button[] buttons)
         {
             if(orientation == Render.Orientation.Top || orientation == Render.Orientation.Bottom)
             {
@@ -83,8 +83,6 @@ namespace NtoLib.Utils
 
             if(IsHorizontal(valve.Orientation))
             {
-                bounds.Height -= valve.ButtonSize;
-
                 int heightFromWidth = (int)(hwRatio * bounds.Width);
                 if(heightFromWidth < bounds.Height)
                 {
@@ -97,13 +95,11 @@ namespace NtoLib.Utils
                     valveSize.Width = (int)((1 / hwRatio) * bounds.Height);
                 }
 
-                tableSize.Height = valve.ButtonSize;
+                tableSize.Height = bounds.Height - valveSize.Height;
                 tableSize.Width = valveSize.Width;
             }
             else
             {
-                bounds.Width -= valve.ButtonSize;
-
                 int widthFromHeight = (int)(hwRatio * bounds.Height);
                 if(widthFromHeight < bounds.Width)
                 {
@@ -117,7 +113,7 @@ namespace NtoLib.Utils
                 }
 
                 tableSize.Height = valveSize.Height;
-                tableSize.Width = valve.ButtonSize;
+                tableSize.Width = bounds.Width - valveSize.Width;
             }
 
             return (valveSize, tableSize);
