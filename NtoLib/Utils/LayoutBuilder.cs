@@ -1,14 +1,16 @@
 ﻿using FB.VisualFB;
+using NtoLib.Pumps;
 using NtoLib.Valves;
 using System;
 using System.Drawing;
+using System.IO.IsolatedStorage;
 using System.Windows.Forms;
 
 namespace NtoLib.Utils
 {
     public static class LayoutBuilder
     {
-        public static DeviceLayout BuildValveLayout(VisualControlBase control)
+        public static DeviceLayout BuildLayout(VisualControlBase control)
         {
             Size elementSize = new Size();
             Size tableSize = new Size();
@@ -19,7 +21,44 @@ namespace NtoLib.Utils
             if(control is ValveControl valveControl)
             {
                 (elementSize, tableSize) = CalculateValveSize(valveControl);
-                (elementLocation, tableLocation) = CalculatePositions((elementSize, tableSize), valveControl.Orientation, valveControl.ButtonOrientation);
+
+                Render.Orientation buttonOrientation;
+                if(IsHorizontal(valveControl.Orientation))
+                {
+                    if(valveControl.ButtonOrientation == ButtonOrientation.RigthBottom)
+                        buttonOrientation = Render.Orientation.Bottom;
+                    else
+                        buttonOrientation = Render.Orientation.Top;
+                }
+                else
+                {
+                    if(valveControl.ButtonOrientation == ButtonOrientation.RigthBottom)
+                        buttonOrientation = Render.Orientation.Right;
+                    else
+                        buttonOrientation = Render.Orientation.Left;
+                }
+                (elementLocation, tableLocation) = CalculatePositions((elementSize, tableSize), buttonOrientation);
+            }
+            else if(control is PumpControl pumpControl)
+            {
+                (elementSize, tableSize) = CalculatePumpSize(pumpControl); 
+                
+                Render.Orientation buttonOrientation;
+                if(pumpControl.IsHorizontal())
+                {
+                    if(pumpControl.ButtonOrientation == ButtonOrientation.RigthBottom)
+                        buttonOrientation = Render.Orientation.Right;
+                    else
+                        buttonOrientation = Render.Orientation.Left;
+                }
+                else
+                {
+                    if(pumpControl.ButtonOrientation == ButtonOrientation.RigthBottom)
+                        buttonOrientation = Render.Orientation.Bottom;
+                    else
+                        buttonOrientation = Render.Orientation.Top;
+                }
+                (elementLocation, tableLocation) = CalculatePositions((elementSize, tableSize), buttonOrientation);
             }
             else
             {
@@ -119,41 +158,76 @@ namespace NtoLib.Utils
             return (valveSize, tableSize);
         }
 
-        private static (Point ElementLocation, Point TableLocation) CalculatePositions((Size Element, Size Table) size, Render.Orientation orientation, ButtonOrientation tableOrientation)
+        private static (Size pumpSize, Size tableSize) CalculatePumpSize(PumpControl pump)
+        {
+            Rectangle bounds = pump.Bounds;
+
+            Size pumpSize = new Size();
+            Size tableSize = new Size();
+
+            int pumpHeight = Math.Min(bounds.Height, bounds.Width);
+            pumpSize = new Size(pumpHeight, pumpHeight);
+            
+            if(pumpHeight == bounds.Width)
+            {
+                tableSize.Height = bounds.Height - pumpSize.Height;
+                tableSize.Width = pumpSize.Width;
+            }
+            else
+            {
+                tableSize.Height = pumpSize.Height;
+                tableSize.Width = bounds.Width - pumpSize.Width;
+            }
+
+            return (pumpSize, tableSize);
+        }
+
+        private static (Point ElementLocation, Point TableLocation) CalculatePositions((Size Element, Size Table) size, Render.Orientation tableOrientation)
         {
             Point valveLocation = new Point();
             Point tableLocation = new Point();
 
-            if(IsHorizontal(orientation))
+            switch(tableOrientation)
             {
-                valveLocation.X = 0;
-                tableLocation.X = 0;
-
-                if(tableOrientation == ButtonOrientation.LeftTop)
-                {
-                    valveLocation.Y = size.Table.Height;
-                    tableLocation.Y = 0;
-                }
-                else
-                {
-                    valveLocation.Y = 0;
-                    tableLocation.Y = size.Element.Height;
-                }
-            }
-            else
-            {
-                valveLocation.Y = 0;
-                tableLocation.Y = 0;
-
-                if(tableOrientation == ButtonOrientation.LeftTop)
-                {
-                    valveLocation.X = size.Table.Width;
-                    tableLocation.X = 0;
-                }
-                else
+                case Render.Orientation.Bottom:
                 {
                     valveLocation.X = 0;
+                    tableLocation.X = 0;
+
+                    valveLocation.Y = 0;
+                    tableLocation.Y = size.Element.Height;
+
+                    break;
+                }
+                case Render.Orientation.Right:
+                {
+                    valveLocation.Y = 0;
+                    tableLocation.Y = 0;
+
+                    valveLocation.X = 0;
                     tableLocation.X = size.Element.Width;
+
+                    break;
+                }
+                case Render.Orientation.Top:
+                {
+                    valveLocation.X = 0;
+                    tableLocation.X = 0; 
+                    
+                    valveLocation.Y = size.Table.Height;
+                    tableLocation.Y = 0;
+
+                    break;
+                }
+                case Render.Orientation.Left:
+                {
+                    valveLocation.Y = 0;
+                    tableLocation.Y = 0; 
+                    
+                    valveLocation.X = size.Table.Width;
+                    tableLocation.X = 0;
+
+                    break;
                 }
             }
 

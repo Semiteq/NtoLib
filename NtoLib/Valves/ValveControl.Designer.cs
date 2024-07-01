@@ -30,9 +30,9 @@
         {
             this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
-            this.buttonOpenSmoothly = new System.Windows.Forms.Button();
             this.buttonClose = new NtoLib.Utils.LabledButton();
             this.buttonOpen = new NtoLib.Utils.LabledButton();
+            this.buttonOpenSmoothly = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
             this.buttonTable.SuspendLayout();
             this.SuspendLayout();
@@ -44,6 +44,9 @@
             this.spriteBox.Size = new System.Drawing.Size(106, 103);
             this.spriteBox.TabIndex = 0;
             this.spriteBox.TabStop = false;
+            this.spriteBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
+            this.spriteBox.MouseLeave += new System.EventHandler(this.StopHoldTimer);
+            this.spriteBox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
             // 
             // buttonTable
             // 
@@ -63,22 +66,6 @@
             this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.Size = new System.Drawing.Size(454, 351);
             this.buttonTable.TabIndex = 1;
-            // 
-            // buttonOpenSmoothly
-            // 
-            this.buttonOpenSmoothly.BackColor = System.Drawing.Color.AntiqueWhite;
-            this.buttonOpenSmoothly.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonOpenSmoothly.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.buttonOpenSmoothly.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.buttonOpenSmoothly.Location = new System.Drawing.Point(152, 118);
-            this.buttonOpenSmoothly.Margin = new System.Windows.Forms.Padding(1);
-            this.buttonOpenSmoothly.Name = "buttonOpenSmoothly";
-            this.buttonOpenSmoothly.Size = new System.Drawing.Size(149, 115);
-            this.buttonOpenSmoothly.TabIndex = 2;
-            this.buttonOpenSmoothly.TabStop = false;
-            this.buttonOpenSmoothly.Text = "S";
-            this.buttonOpenSmoothly.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.buttonOpenSmoothly.UseVisualStyleBackColor = false;
             // 
             // buttonClose
             // 
@@ -106,6 +93,23 @@
             this.buttonOpen.OnButton = true;
             this.buttonOpen.Size = new System.Drawing.Size(149, 115);
             this.buttonOpen.TabIndex = 2;
+            this.buttonOpen.UseVisualStyleBackColor = false;
+            // 
+            // buttonOpenSmoothly
+            // 
+            this.buttonOpenSmoothly.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonOpenSmoothly.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonOpenSmoothly.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.buttonOpenSmoothly.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.buttonOpenSmoothly.Location = new System.Drawing.Point(152, 118);
+            this.buttonOpenSmoothly.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonOpenSmoothly.Name = "buttonOpenSmoothly";
+            this.buttonOpenSmoothly.Size = new System.Drawing.Size(149, 115);
+            this.buttonOpenSmoothly.TabIndex = 2;
+            this.buttonOpenSmoothly.TabStop = false;
+            this.buttonOpenSmoothly.Text = "S";
+            this.buttonOpenSmoothly.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.buttonOpenSmoothly.UseVisualStyleBackColor = false;
             // 
             // ValveControl
             // 
@@ -118,9 +122,6 @@
             this.Name = "ValveControl";
             this.Size = new System.Drawing.Size(725, 436);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
-            this.MouseLeave += new System.EventHandler(this.StopHoldTimer);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
             this.Resize += new System.EventHandler(this.HandleResize);
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).EndInit();
             this.buttonTable.ResumeLayout(false);

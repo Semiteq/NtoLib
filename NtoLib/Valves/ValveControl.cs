@@ -38,6 +38,7 @@ namespace NtoLib.Valves
         }
 
         private ButtonOrientation _buttonOrientation;
+        [DisplayName("Ориентация кнопок")]
         public ButtonOrientation ButtonOrientation
         {
             get
@@ -170,7 +171,7 @@ namespace NtoLib.Valves
 
         private void UpdateLayout()
         {
-            DeviceLayout layout = LayoutBuilder.BuildValveLayout(this);
+            DeviceLayout layout = LayoutBuilder.BuildLayout(this);
             spriteBox.Bounds = layout.DeviceRectangle;
             buttonTable.Bounds = layout.ButtonTableRectangle;
 

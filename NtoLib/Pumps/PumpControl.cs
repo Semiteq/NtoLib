@@ -3,6 +3,7 @@ using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
 using NtoLib.Pumps.Settings;
 using NtoLib.Render.Pumps;
+using NtoLib.Utils;
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -18,18 +19,35 @@ namespace NtoLib.Pumps
     {
         private Render.Orientation _orientation;
         [DisplayName("Ориентация")]
-        public Render.Orientation Orientation
-        {
+        public Render.Orientation Orientation 
+        { 
             get
             {
                 return _orientation;
             }
+            set 
+            {
+                bool updateRequired = _orientation != value;
+                _orientation = value;
+                if(updateRequired)
+                    UpdateLayout();
+            }
+        }
+
+        private ButtonOrientation _buttonOrientation;
+        [DisplayName("Ориентация кнопок")]
+        public ButtonOrientation ButtonOrientation
+        {
+            get
+            {
+                return _buttonOrientation;
+            }
             set
             {
-                if(_orientation != value)
-                    (Width, Height) = (Height, Width);
-
-                _orientation = value;
+                bool updateRequired = _buttonOrientation != value;
+                _buttonOrientation = value;
+                if(updateRequired)
+                    UpdateLayout();
             }
         }
 
@@ -59,6 +77,13 @@ namespace NtoLib.Pumps
             InitializeComponent();
 
             _renderer = new PumpRenderer(this);
+        }
+
+
+        protected override void ToRuntime()
+        {
+            base.ToRuntime();
+            UpdateLayout();
 
             _impulseTimer = new Timer();
             _impulseTimer.Interval = 500;
@@ -73,6 +98,24 @@ namespace NtoLib.Pumps
             _mouseHoldTimer.Tick += HandleMouseHoldDown;
         }
 
+        protected override void ToDesign()
+        {
+            base.ToDesign();
+            UpdateLayout();
+
+            _settingsForm?.Close();
+
+            _impulseTimer?.Dispose();
+            _animationTimer?.Dispose();
+            _mouseHoldTimer?.Dispose();
+        }
+
+        private void HandleResize(object sender, EventArgs e)
+        {
+            UpdateLayout();
+        }
+
+
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -81,19 +124,54 @@ namespace NtoLib.Pumps
             if(!FBConnector.DesignMode)
                 UpdateStatus();
 
-            _renderer.Draw(e.Graphics, Bounds, Orientation, _animationClocker);
-        }
-
-        protected override void ToDesign()
-        {
-            _settingsForm?.Close();
-            base.ToDesign();
+            UpdateSprite();
         }
 
         private void UpdateAnimation(object sender, EventArgs e)
         {
             _animationClocker = !_animationClocker;
-            this.Invalidate();
+            UpdateSprite();
+        }
+
+        private void UpdateLayout()
+        {
+            DeviceLayout layout = LayoutBuilder.BuildLayout(this);
+            spriteBox.Bounds = layout.DeviceRectangle;
+            buttonTable.Bounds = layout.ButtonTableRectangle;
+
+            UpdateButtonTable();
+            UpdateSprite();
+        }
+
+        private void UpdateButtonTable()
+        {
+            Render.Orientation buttonsOrientation;
+            if(!IsHorizontal())
+                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Top : Render.Orientation.Bottom;
+            else
+                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
+
+            var buttons = new Button[] { buttonOpen, buttonClose };
+
+            LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons);
+        }
+
+        private void UpdateSprite()
+        {
+            spriteBox.Image = new Bitmap(Math.Max(1, spriteBox.Width), Math.Max(1, spriteBox.Height));
+
+            using(var g = Graphics.FromImage(spriteBox.Image))
+            {
+                g.Clear(BackColor);
+
+                GraphicsUnit unit = GraphicsUnit.Point;
+                _renderer.Draw(g, spriteBox.Image.GetBounds(ref unit), Orientation, _animationClocker);
+            }
+        }
+
+        public bool IsHorizontal()
+        {
+            return Bounds.Width >= Bounds.Height;
         }
 
 
@@ -131,39 +209,6 @@ namespace NtoLib.Pumps
         }
 
 
-
-        private void HandleDoubleClick(object sender, EventArgs e)
-        {
-            MouseEventArgs me = (MouseEventArgs)e;
-            if(Status.UsedByAutoMode)
-                return;
-
-
-            int commandId = -1;
-
-            if(me.Button == MouseButtons.Left)
-            {
-                if(Status.BlockStart)
-                    return;
-
-                if(Status.Stopped || Status.Decelerating)
-                    commandId = PumpFB.StartCmdId;
-                else if(Status.WorkOnNominalSpeed || Status.Accelerating)
-                    commandId = PumpFB.StopCmdId;
-            }
-            else if(me.Button == MouseButtons.Right)
-            {
-                if(Status.BlockStop)
-                    return;
-
-                commandId = PumpFB.StopCmdId;
-            }
-
-            if(commandId < 0)
-                return;
-
-            SendCommand(commandId);
-        }
 
         private void HandleVisibleChanged(object sender, EventArgs e)
         {

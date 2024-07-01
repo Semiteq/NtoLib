@@ -28,23 +28,90 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
+            this.spriteBox = new System.Windows.Forms.PictureBox();
+            this.buttonOpen = new NtoLib.Utils.LabledButton();
+            this.buttonClose = new NtoLib.Utils.LabledButton();
+            this.buttonTable.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
             this.SuspendLayout();
+            // 
+            // buttonTable
+            // 
+            this.buttonTable.ColumnCount = 2;
+            this.buttonTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.buttonTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.buttonTable.Controls.Add(this.buttonOpen, 0, 0);
+            this.buttonTable.Controls.Add(this.buttonClose, 1, 1);
+            this.buttonTable.Location = new System.Drawing.Point(112, 3);
+            this.buttonTable.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonTable.Name = "buttonTable";
+            this.buttonTable.RowCount = 2;
+            this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.buttonTable.Size = new System.Drawing.Size(108, 103);
+            this.buttonTable.TabIndex = 3;
+            // 
+            // spriteBox
+            // 
+            this.spriteBox.Location = new System.Drawing.Point(3, 3);
+            this.spriteBox.Name = "spriteBox";
+            this.spriteBox.Size = new System.Drawing.Size(106, 103);
+            this.spriteBox.TabIndex = 2;
+            this.spriteBox.TabStop = false;
+            this.spriteBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
+            this.spriteBox.MouseLeave += new System.EventHandler(this.StopHoldTimer);
+            this.spriteBox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
+            // 
+            // buttonOpen
+            // 
+            this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOpen.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonOpen.Location = new System.Drawing.Point(1, 1);
+            this.buttonOpen.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonOpen.Name = "buttonOpen";
+            this.buttonOpen.OnButton = true;
+            this.buttonOpen.Size = new System.Drawing.Size(52, 49);
+            this.buttonOpen.TabIndex = 2;
+            this.buttonOpen.UseVisualStyleBackColor = false;
+            // 
+            // buttonClose
+            // 
+            this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonClose.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonClose.Location = new System.Drawing.Point(55, 52);
+            this.buttonClose.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonClose.Name = "buttonClose";
+            this.buttonClose.OnButton = false;
+            this.buttonClose.Size = new System.Drawing.Size(52, 50);
+            this.buttonClose.TabIndex = 2;
+            this.buttonClose.UseVisualStyleBackColor = false;
             // 
             // PumpControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.buttonTable);
+            this.Controls.Add(this.spriteBox);
             this.Name = "PumpControl";
-            this.Size = new System.Drawing.Size(60, 60);
+            this.Size = new System.Drawing.Size(223, 110);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
-            this.DoubleClick += new System.EventHandler(this.HandleDoubleClick);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
-            this.MouseLeave += new System.EventHandler(this.StopHoldTimer);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
+            this.Resize += new System.EventHandler(this.HandleResize);
+            this.buttonTable.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+        private System.Windows.Forms.TableLayoutPanel buttonTable;
+        private Utils.LabledButton buttonOpen;
+        private Utils.LabledButton buttonClose;
+        private System.Windows.Forms.PictureBox spriteBox;
     }
 }

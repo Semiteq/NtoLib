@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Valves
+﻿namespace NtoLib
 {
     public enum ButtonOrientation
     {
