@@ -134,7 +134,7 @@ namespace NtoLib.Utils
                     valveSize.Width = (int)((1 / hwRatio) * bounds.Height);
                 }
 
-                tableSize.Height = bounds.Height - valveSize.Height;
+                tableSize.Height = bounds.Height - valveSize.Height - 1;
                 tableSize.Width = valveSize.Width;
             }
             else
@@ -152,7 +152,7 @@ namespace NtoLib.Utils
                 }
 
                 tableSize.Height = valveSize.Height;
-                tableSize.Width = bounds.Width - valveSize.Width;
+                tableSize.Width = bounds.Width - valveSize.Width - 1;
             }
 
             return (valveSize, tableSize);
