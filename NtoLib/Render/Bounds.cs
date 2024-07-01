@@ -60,7 +60,7 @@ namespace NtoLib.Render
 
 
         /// <summary>
-        /// Создаём экземпляр Bounds на основе RectangleF
+        /// Создаёт экземпляр Bounds на основе RectangleF
         /// </summary>
         public static Bounds FromRectangle(RectangleF rectangle, PointF pivot)
         {
@@ -77,6 +77,30 @@ namespace NtoLib.Render
         }
 
 
+
+        /// <summary>
+        /// Изменяет ширину и высоту, умножая их на коэффициент,
+        /// и возвращает получившиеся границы
+        /// </summary>
+        public Bounds Resize(float sizeFactor)
+        {
+            Bounds result = this;
+            result.Width *= sizeFactor;
+            result.Height *= sizeFactor;
+            return result;
+        }
+
+        /// <summary>
+        /// Изменяет ширину и высоту, умножая их на соответствующие
+        /// относительные значения, и возвращает получившиеся границы
+        /// </summary>
+        public Bounds Resize(float widthFactor, float heightFactor)
+        {
+            Bounds result = this;
+            result.Width *= widthFactor;
+            result.Height *= heightFactor;
+            return result;
+        }
 
         /// <summary>
         /// Возвращает массив точек, представляющих собой 4 угла данной области
