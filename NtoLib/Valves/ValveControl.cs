@@ -2,6 +2,7 @@
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
 using NtoLib.Render.Valves;
+using NtoLib.Utils;
 using NtoLib.Valves.Settings;
 using System;
 using System.ComponentModel;
@@ -17,7 +18,7 @@ namespace NtoLib.Valves
     public partial class ValveControl : VisualControlBase
     {
         private Render.Orientation _orientation;
-        [DisplayName("Ориентация")]
+        [DisplayName("Ориентация клапана")]
         public Render.Orientation Orientation
         {
             get
@@ -29,7 +30,42 @@ namespace NtoLib.Valves
                 if(Math.Abs((int)_orientation - (int)value) % 180 == 90)
                     (Width, Height) = (Height, Width);
 
+                bool updateRequired = _orientation != value;
                 _orientation = value;
+                if(updateRequired)
+                    UpdateLayout();
+            }
+        }
+
+        private int _buttonSize = 20;
+        public int ButtonSize
+        {
+            get
+            {
+                return _buttonSize;
+            }
+            set
+            {
+                bool updateRequired = _buttonSize != value;
+                _buttonSize = value;
+                if(updateRequired)
+                    UpdateLayout();
+            }
+        }
+
+        private ButtonOrientation _buttonOrientation;
+        public ButtonOrientation ButtonOrientation
+        {
+            get
+            {
+                return _buttonOrientation;
+            }
+            set
+            {
+                bool updateRequired = _buttonOrientation != value;
+                _buttonOrientation = value;
+                if(updateRequired)
+                    UpdateLayout();
             }
         }
 
@@ -67,6 +103,7 @@ namespace NtoLib.Valves
         }
 
         internal Status Status;
+        private bool _previousSmoothValve;
 
         private ValveBaseRenderer _renderer;
 
@@ -94,6 +131,12 @@ namespace NtoLib.Valves
             InitializeComponent();
 
             _renderer = new CommonValveRenderer(this);
+        }
+
+        protected override void ToRuntime()
+        {
+            base.ToRuntime();
+            UpdateLayout();
 
             _impulseTimer = new Timer();
             _impulseTimer.Interval = 500;
@@ -108,28 +151,87 @@ namespace NtoLib.Valves
             _mouseHoldTimer.Tick += HandleMouseHoldDown;
         }
 
+        protected override void ToDesign()
+        {
+            base.ToDesign();
+            UpdateLayout();
+
+            _settingsForm?.Close();
+
+            _impulseTimer?.Dispose();
+            _animationTimer?.Dispose();
+            _mouseHoldTimer?.Dispose();
+        }
+
+        private void HandleResize(object sender, EventArgs e)
+        {
+            UpdateLayout();
+        }
+
 
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            e.Graphics.Clear(BackColor);
-
             if(!FBConnector.DesignMode)
                 UpdateStatus();
 
-            _renderer.Draw(e.Graphics, Bounds, Orientation, _animationClocker);
-        }
-
-        protected override void ToDesign()
-        {
-            _settingsForm?.Close();
-            base.ToDesign();
+            UpdateSprite();
         }
 
         private void UpdateAnimation(object sender, EventArgs e)
         {
             _animationClocker = !_animationClocker;
-            this.Invalidate();
+            UpdateSprite();
+        }
+
+        private void UpdateLayout()
+        {
+            DeviceLayout layout = LayoutBuilder.BuildValveLayout(this);
+            spriteBox.Bounds = layout.DeviceRectangle;
+            buttonTable.Bounds = layout.ButtonTableRectangle;
+
+            UpdateButtonTable();
+            UpdateSprite();
+        }
+
+        private void UpdateButtonTable()
+        {
+            Render.Orientation buttonsOrientation;
+            if(IsHorizontal())
+                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Top : Render.Orientation.Bottom;
+            else
+                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
+
+            Button[] buttons;
+            if(_isSmoothValve)
+            {
+                buttonOpenSmoothly.Visible = true;
+                buttons = new Button[] { buttonOpen, buttonOpenSmoothly, buttonClose };
+            }
+            else
+            {
+                buttonOpenSmoothly.Visible = false;
+                buttons = new Button[] { buttonOpen, buttonClose };
+            }
+            LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons, ButtonSize);
+        }
+
+        private void UpdateSprite()
+        {
+            spriteBox.Image = new Bitmap(Math.Max(1, spriteBox.Width), Math.Max(1, spriteBox.Height));
+
+            using(var g = Graphics.FromImage(spriteBox.Image))
+            {
+                g.Clear(BackColor);
+
+                GraphicsUnit unit = GraphicsUnit.Point;
+                _renderer.Draw(g, spriteBox.Image.GetBounds(ref unit), Orientation, _animationClocker);
+            }
+        }
+
+        private bool IsHorizontal()
+        {
+            return Orientation == Render.Orientation.Right || Orientation == Render.Orientation.Left;
         }
 
 
@@ -167,43 +269,6 @@ namespace NtoLib.Valves
         }
 
 
-
-        private void HandleDoubleClick(object sender, EventArgs e)
-        {
-            MouseEventArgs me = (MouseEventArgs)e;
-            if(Status.UsedByAutoMode)
-                return;
-
-
-            int commandId = -1;
-
-            if(me.Button == MouseButtons.Left)
-            {
-                if(Status.Closed && !Status.BlockOpening)
-                {
-                    if(_isSmoothValve)
-                        commandId = ValveFB.OpenSmoothlyCmdId;
-                    else
-                        commandId = ValveFB.OpenCmdId;
-                }
-                else if(Status.OpenedSmoothly && !Status.BlockOpening)
-                    commandId = ValveFB.OpenCmdId;
-                else if(Status.Opened && !Status.BlockClosing)
-                    commandId = ValveFB.CloseCmdId;
-            }
-            else if(me.Button == MouseButtons.Right)
-            {
-                if(Status.BlockClosing)
-                    return;
-
-                commandId = ValveFB.CloseCmdId;
-            }
-
-            if(commandId < 0)
-                return;
-
-            SendCommand(commandId);
-        }
 
         private void HandleVisibleChanged(object sender, EventArgs e)
         {
@@ -264,7 +329,7 @@ namespace NtoLib.Valves
             Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
             Status.Opened = GetPinValue<bool>(ValveFB.OpenedId);
             Status.OpenedSmoothly = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
-            Status.Closed= GetPinValue<bool>(ValveFB.ClosedId);
+            Status.Closed = GetPinValue<bool>(ValveFB.ClosedId);
             Status.OpeningClosing = GetPinValue<bool>(ValveFB.OpeningClosingId);
 
             Status.ForceClose = GetPinValue<bool>(ValveFB.ForceCloseId);
@@ -273,6 +338,9 @@ namespace NtoLib.Valves
 
 
             _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
+            if(_isSmoothValve != _previousSmoothValve)
+                UpdateLayout();
+            _previousSmoothValve = _isSmoothValve;
 
             if(!IsSlideGate)
             {
