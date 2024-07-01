@@ -62,8 +62,7 @@ namespace NtoLib.Utils
                         e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
 
                     float resizeFactor = 5f / 7f;
-                    bounds.Width = bounds.Width * resizeFactor;
-                    bounds.Height = bounds.Height * resizeFactor;
+                    bounds = bounds.Resize(resizeFactor);
                     using(SolidBrush brush = new SolidBrush(BackColor))
                         e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
 
@@ -71,8 +70,7 @@ namespace NtoLib.Utils
                 }
                 case SymbolType.SmoothOpen:
                 {
-                    //Тут квадратик поменьше сделать
-
+                    bounds = bounds.Resize(0.75f);
                     using(SolidBrush brush = new SolidBrush(ForeColor))
                         e.Graphics.FillRectangle(brush, bounds.ToRectangleF());
 
@@ -80,7 +78,7 @@ namespace NtoLib.Utils
                 }
             }
         }
-        
+
         private void OnPress(object sender, MouseEventArgs e)
         {
             if(e.Button != MouseButtons.Left)
@@ -98,7 +96,7 @@ namespace NtoLib.Utils
             Invalidate();
         }
 
-        private void OnLeave(object senser,  EventArgs e)
+        private void OnLeave(object senser, EventArgs e)
         {
             IsButtonPressed = false;
         }
