@@ -80,6 +80,7 @@
             this.buttonOpenSmoothly.SymbolOnButton = NtoLib.Utils.SymbolType.SmoothOpen;
             this.buttonOpenSmoothly.TabIndex = 2;
             this.buttonOpenSmoothly.UseVisualStyleBackColor = false;
+            this.buttonOpenSmoothly.Click += new System.EventHandler(this.HandleOpenSmoothlyClick);
             // 
             // buttonClose
             // 
@@ -95,6 +96,7 @@
             this.buttonClose.SymbolOnButton = NtoLib.Utils.SymbolType.Off;
             this.buttonClose.TabIndex = 2;
             this.buttonClose.UseVisualStyleBackColor = false;
+            this.buttonClose.Click += new System.EventHandler(this.HandleCloseClick);
             // 
             // buttonOpen
             // 
@@ -110,6 +112,7 @@
             this.buttonOpen.SymbolOnButton = NtoLib.Utils.SymbolType.On;
             this.buttonOpen.TabIndex = 2;
             this.buttonOpen.UseVisualStyleBackColor = false;
+            this.buttonOpen.Click += new System.EventHandler(this.HandleOpenClick);
             // 
             // ValveControl
             // 

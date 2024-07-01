@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
+            this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonOpen = new NtoLib.Utils.LabledButton();
             this.buttonClose = new NtoLib.Utils.LabledButton();
-            this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
             this.SuspendLayout();
@@ -52,6 +52,17 @@
             this.buttonTable.Size = new System.Drawing.Size(103, 103);
             this.buttonTable.TabIndex = 3;
             // 
+            // spriteBox
+            // 
+            this.spriteBox.Location = new System.Drawing.Point(3, 3);
+            this.spriteBox.Name = "spriteBox";
+            this.spriteBox.Size = new System.Drawing.Size(106, 103);
+            this.spriteBox.TabIndex = 2;
+            this.spriteBox.TabStop = false;
+            this.spriteBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
+            this.spriteBox.MouseLeave += new System.EventHandler(this.StopHoldTimer);
+            this.spriteBox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
+            // 
             // buttonOpen
             // 
             this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -66,6 +77,7 @@
             this.buttonOpen.SymbolOnButton = NtoLib.Utils.SymbolType.On;
             this.buttonOpen.TabIndex = 2;
             this.buttonOpen.UseVisualStyleBackColor = false;
+            this.buttonOpen.Click += new System.EventHandler(this.HandleStartClick);
             // 
             // buttonClose
             // 
@@ -81,17 +93,7 @@
             this.buttonClose.SymbolOnButton = NtoLib.Utils.SymbolType.Off;
             this.buttonClose.TabIndex = 2;
             this.buttonClose.UseVisualStyleBackColor = false;
-            // 
-            // spriteBox
-            // 
-            this.spriteBox.Location = new System.Drawing.Point(3, 3);
-            this.spriteBox.Name = "spriteBox";
-            this.spriteBox.Size = new System.Drawing.Size(106, 103);
-            this.spriteBox.TabIndex = 2;
-            this.spriteBox.TabStop = false;
-            this.spriteBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
-            this.spriteBox.MouseLeave += new System.EventHandler(this.StopHoldTimer);
-            this.spriteBox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
+            this.buttonClose.Click += new System.EventHandler(this.HandleStopClick);
             // 
             // PumpControl
             // 

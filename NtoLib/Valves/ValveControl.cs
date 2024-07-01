@@ -155,6 +155,26 @@ namespace NtoLib.Valves
 
 
 
+        private void HandleOpenClick(object sender, EventArgs e)
+        {
+            if(!Status.UsedByAutoMode && !Status.BlockOpening)
+                SendCommand(ValveFB.OpenCmdId);
+        }
+
+        private void HandleOpenSmoothlyClick(object sender, EventArgs e)
+        {
+            if(!Status.UsedByAutoMode && !Status.BlockOpening)
+                SendCommand(ValveFB.OpenSmoothlyCmdId);
+        }
+
+        private void HandleCloseClick(object sender, EventArgs e)
+        {
+            if(!Status.UsedByAutoMode && !Status.BlockClosing)
+                SendCommand(ValveFB.CloseCmdId);
+        }
+
+
+
         protected override void OnPaint(PaintEventArgs e)
         {
             if(!FBConnector.DesignMode)

@@ -4,6 +4,7 @@ using InSAT.Library.Interop.Win32;
 using NtoLib.Pumps.Settings;
 using NtoLib.Render.Pumps;
 using NtoLib.Utils;
+using NtoLib.Valves;
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -113,6 +114,20 @@ namespace NtoLib.Pumps
         private void HandleResize(object sender, EventArgs e)
         {
             UpdateLayout();
+        }
+
+
+
+        private void HandleStartClick(object sender, EventArgs e)
+        {
+            if(!Status.UsedByAutoMode && !Status.BlockStart)
+                SendCommand(PumpFB.StartCmdId);
+        }
+
+        private void HandleStopClick(object sender, EventArgs e)
+        {
+            if(!Status.UsedByAutoMode && !Status.BlockStop)
+                SendCommand(PumpFB.StopCmdId);
         }
 
 
