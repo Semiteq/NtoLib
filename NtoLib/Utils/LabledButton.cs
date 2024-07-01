@@ -7,7 +7,7 @@ namespace NtoLib.Utils
 {
     public partial class LabledButton : Button
     {
-        public bool OnButton { get; set; }
+        public SymbolType SymbolOnButton { get; set; }
 
         public bool IsButtonPressed { get; private set; }
 
@@ -46,23 +46,38 @@ namespace NtoLib.Utils
             }
 
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            if(OnButton)
+            switch(SymbolOnButton)
             {
-                bounds.Width = bounds.Height / 7f;
-                using(SolidBrush brush = new SolidBrush(ForeColor))
-                    e.Graphics.FillRectangle(brush, bounds.ToRectangleF());
-            }
-            else
-            {
-                bounds.Width = bounds.Height;
-                using(SolidBrush brush = new SolidBrush(ForeColor))
-                    e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
+                case SymbolType.On:
+                {
+                    bounds.Width = bounds.Height / 7f;
+                    using(SolidBrush brush = new SolidBrush(ForeColor))
+                        e.Graphics.FillRectangle(brush, bounds.ToRectangleF());
 
-                float resizeFactor = 5f / 7f;
-                bounds.Width = bounds.Width * resizeFactor;
-                bounds.Height = bounds.Height * resizeFactor;
-                using(SolidBrush brush = new SolidBrush(BackColor))
-                    e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
+                    break;
+                }
+                case SymbolType.Off:
+                {
+                    using(SolidBrush brush = new SolidBrush(ForeColor))
+                        e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
+
+                    float resizeFactor = 5f / 7f;
+                    bounds.Width = bounds.Width * resizeFactor;
+                    bounds.Height = bounds.Height * resizeFactor;
+                    using(SolidBrush brush = new SolidBrush(BackColor))
+                        e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
+
+                    break;
+                }
+                case SymbolType.SmoothOpen:
+                {
+                    //Тут квадратик поменьше сделать
+
+                    using(SolidBrush brush = new SolidBrush(ForeColor))
+                        e.Graphics.FillRectangle(brush, bounds.ToRectangleF());
+
+                    break;
+                }
             }
         }
         

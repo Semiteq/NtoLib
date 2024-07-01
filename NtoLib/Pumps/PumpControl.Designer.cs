@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
-            this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonOpen = new NtoLib.Utils.LabledButton();
             this.buttonClose = new NtoLib.Utils.LabledButton();
+            this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
             this.SuspendLayout();
@@ -49,8 +49,38 @@
             this.buttonTable.RowCount = 2;
             this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.buttonTable.Size = new System.Drawing.Size(108, 103);
+            this.buttonTable.Size = new System.Drawing.Size(103, 103);
             this.buttonTable.TabIndex = 3;
+            // 
+            // buttonOpen
+            // 
+            this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOpen.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonOpen.ForeColor = System.Drawing.Color.LimeGreen;
+            this.buttonOpen.Location = new System.Drawing.Point(1, 1);
+            this.buttonOpen.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonOpen.Name = "buttonOpen";
+            this.buttonOpen.Size = new System.Drawing.Size(49, 49);
+            this.buttonOpen.SymbolOnButton = NtoLib.Utils.SymbolType.On;
+            this.buttonOpen.TabIndex = 2;
+            this.buttonOpen.UseVisualStyleBackColor = false;
+            // 
+            // buttonClose
+            // 
+            this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonClose.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonClose.ForeColor = System.Drawing.Color.Red;
+            this.buttonClose.Location = new System.Drawing.Point(52, 52);
+            this.buttonClose.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonClose.Name = "buttonClose";
+            this.buttonClose.Size = new System.Drawing.Size(50, 50);
+            this.buttonClose.SymbolOnButton = NtoLib.Utils.SymbolType.Off;
+            this.buttonClose.TabIndex = 2;
+            this.buttonClose.UseVisualStyleBackColor = false;
             // 
             // spriteBox
             // 
@@ -63,34 +93,6 @@
             this.spriteBox.MouseLeave += new System.EventHandler(this.StopHoldTimer);
             this.spriteBox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
             // 
-            // buttonOpen
-            // 
-            this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOpen.BackColor = System.Drawing.Color.AntiqueWhite;
-            this.buttonOpen.Location = new System.Drawing.Point(1, 1);
-            this.buttonOpen.Margin = new System.Windows.Forms.Padding(1);
-            this.buttonOpen.Name = "buttonOpen";
-            this.buttonOpen.OnButton = true;
-            this.buttonOpen.Size = new System.Drawing.Size(52, 49);
-            this.buttonOpen.TabIndex = 2;
-            this.buttonOpen.UseVisualStyleBackColor = false;
-            // 
-            // buttonClose
-            // 
-            this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClose.BackColor = System.Drawing.Color.AntiqueWhite;
-            this.buttonClose.Location = new System.Drawing.Point(55, 52);
-            this.buttonClose.Margin = new System.Windows.Forms.Padding(1);
-            this.buttonClose.Name = "buttonClose";
-            this.buttonClose.OnButton = false;
-            this.buttonClose.Size = new System.Drawing.Size(52, 50);
-            this.buttonClose.TabIndex = 2;
-            this.buttonClose.UseVisualStyleBackColor = false;
-            // 
             // PumpControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -98,7 +100,7 @@
             this.Controls.Add(this.buttonTable);
             this.Controls.Add(this.spriteBox);
             this.Name = "PumpControl";
-            this.Size = new System.Drawing.Size(223, 110);
+            this.Size = new System.Drawing.Size(220, 110);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             this.Resize += new System.EventHandler(this.HandleResize);
             this.buttonTable.ResumeLayout(false);

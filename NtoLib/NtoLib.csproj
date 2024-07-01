@@ -130,6 +130,7 @@
     <Compile Include="Render\Valves\SlideGateRenderer.cs" />
     <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
     <Compile Include="ButtonOrientation.cs" />
+    <Compile Include="Utils\SymbolType.cs" />
     <Compile Include="Valves\Status.cs" />
     <Compile Include="Render\Valves\CommonValveRenderer.cs" />
     <Compile Include="Valves\Settings\SettingsForm.cs">
