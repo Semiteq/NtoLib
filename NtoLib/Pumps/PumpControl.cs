@@ -166,7 +166,7 @@ namespace NtoLib.Pumps
             else
                 buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
 
-            var buttons = new Button[] { buttonOpen, buttonClose };
+            var buttons = new Button[] { buttonStart, buttonStop };
 
             LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons);
         }
@@ -292,6 +292,9 @@ namespace NtoLib.Pumps
             Status.BlockStart = GetPinValue<bool>(PumpFB.BlockStartId);
             Status.BlockStop = GetPinValue<bool>(PumpFB.BlockStopId);
             Status.Use = GetPinValue<bool>(PumpFB.UsedId);
+
+            buttonStart.Enabled = !Status.UsedByAutoMode && !Status.BlockStart;
+            buttonStop.Enabled = !Status.UsedByAutoMode && !Status.BlockStop;
 
             var fb = FBConnector.Fb as PumpFB;
             Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
