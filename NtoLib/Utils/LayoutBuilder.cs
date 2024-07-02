@@ -170,13 +170,13 @@ namespace NtoLib.Utils
             
             if(pumpHeight == bounds.Width)
             {
-                tableSize.Height = bounds.Height - pumpSize.Height;
+                tableSize.Height = bounds.Height - pumpSize.Height - 1;
                 tableSize.Width = pumpSize.Width;
             }
             else
             {
                 tableSize.Height = pumpSize.Height;
-                tableSize.Width = bounds.Width - pumpSize.Width;
+                tableSize.Width = bounds.Width - pumpSize.Width - 1;
             }
 
             return (pumpSize, tableSize);
