@@ -65,25 +65,24 @@ namespace NtoLib.Valves
             set
             {
                 _isSlideGate = value;
+                UpdateRenderer();
+                UpdateLayout();
+            }
+        }
 
-                if(_isSlideGate)
-                {
-                    if(_renderer.GetType() != typeof(SlideGateRenderer))
-                        _renderer = new SlideGateRenderer(this);
-                }
-                else
-                {
-                    if(_isSmoothValve)
-                    {
-                        if(_renderer.GetType() != typeof(SmoothValveRenderer))
-                            _renderer = new SmoothValveRenderer(this);
-                    }
-                    else
-                    {
-                        if(_renderer.GetType() != typeof(CommonValveRenderer))
-                            _renderer = new CommonValveRenderer(this);
-                    }
-                }
+        private bool _smoothValvePreview;
+        [DisplayName("Предпросмотре плавного клапана")]
+        public bool SmoothValvePreview
+        {
+            get
+            {
+                return _smoothValvePreview;
+            }
+            set
+            {
+                _smoothValvePreview = value;
+                UpdateRenderer();
+                UpdateLayout();
             }
         }
 
@@ -208,15 +207,15 @@ namespace NtoLib.Valves
                 buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
 
             Button[] buttons;
-            if(_isSmoothValve)
-            {
-                buttonOpenSmoothly.Visible = true;
-                buttons = new Button[] { buttonOpen, buttonOpenSmoothly, buttonClose };
-            }
-            else
+            if(_isSlideGate || !(_isSmoothValve || (DesignMode && SmoothValvePreview)))
             {
                 buttonOpenSmoothly.Visible = false;
                 buttons = new Button[] { buttonOpen, buttonClose };
+            }
+            else
+            {
+                buttonOpenSmoothly.Visible = true;
+                buttons = new Button[] { buttonOpen, buttonOpenSmoothly, buttonClose };
             }
 
             LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons);
@@ -347,17 +346,12 @@ namespace NtoLib.Valves
 
 
             _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
+            UpdateRenderer();
+
             if(_isSmoothValve != _previousSmoothValve)
                 UpdateLayout();
             _previousSmoothValve = _isSmoothValve;
 
-            if(!IsSlideGate)
-            {
-                if(_isSmoothValve && _renderer.GetType() != typeof(SmoothValveRenderer))
-                    _renderer = new SmoothValveRenderer(this);
-                else if(!_isSmoothValve && _renderer.GetType() != typeof(CommonValveRenderer))
-                    _renderer = new CommonValveRenderer(this);
-            }
 
             bool animationNeeded = Status.OpeningClosing || (Status.Collision & !Status.OpenedSmoothly);
             if(!_animationTimer.Enabled && animationNeeded)
@@ -366,6 +360,25 @@ namespace NtoLib.Valves
                 _animationTimer.Stop();
 
             _settingsForm?.Invalidate();
+        }
+
+        private void UpdateRenderer()
+        {
+            if(IsSlideGate)
+            {
+                if(_renderer.GetType() != typeof(SlideGateRenderer))
+                    _renderer = new SlideGateRenderer(this);
+            }
+            else if(_isSmoothValve || (DesignMode && SmoothValvePreview))
+            {
+                if(_renderer.GetType() != typeof(SmoothValveRenderer))
+                    _renderer = new SmoothValveRenderer(this);
+            }
+            else
+            {
+                if(_renderer.GetType() != typeof(CommonValveRenderer))
+                    _renderer = new CommonValveRenderer(this);
+            }
         }
 
         private T GetPinValue<T>(int id)
