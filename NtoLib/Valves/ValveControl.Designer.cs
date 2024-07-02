@@ -73,7 +73,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOpenSmoothly.BackColor = System.Drawing.Color.AntiqueWhite;
-            this.buttonOpenSmoothly.ForeColor = System.Drawing.Color.DeepSkyBlue;
+            this.buttonOpenSmoothly.ForeColor = System.Drawing.Color.RoyalBlue;
             this.buttonOpenSmoothly.Location = new System.Drawing.Point(35, 35);
             this.buttonOpenSmoothly.Margin = new System.Windows.Forms.Padding(1);
             this.buttonOpenSmoothly.Name = "buttonOpenSmoothly";
