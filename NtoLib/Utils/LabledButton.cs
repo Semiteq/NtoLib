@@ -11,6 +11,9 @@ namespace NtoLib.Utils
 
         public bool IsButtonPressed { get; private set; }
 
+        private Color _enabledBackColor;
+        private Color _enabledForeColor;
+
 
 
         public LabledButton()
@@ -20,6 +23,8 @@ namespace NtoLib.Utils
             MouseDown += OnPress;
             MouseClick += OnRelease;
             Leave += OnLeave;
+
+            EnabledChanged += HandleEnabledChanged;
         }
 
 
@@ -99,6 +104,29 @@ namespace NtoLib.Utils
         private void OnLeave(object senser, EventArgs e)
         {
             IsButtonPressed = false;
+        }
+
+
+
+        private void HandleEnabledChanged(object sender, EventArgs e)
+        {
+            if(Enabled)
+            {
+                FlatStyle = FlatStyle.Standard;
+
+                ForeColor = _enabledForeColor;
+                BackColor = _enabledBackColor;
+            }
+            else
+            {
+                FlatStyle = FlatStyle.Flat;
+
+                _enabledForeColor = ForeColor;
+                _enabledBackColor = BackColor;
+
+                ForeColor = Color.DimGray;
+                BackColor = Color.Gainsboro;
+            }
         }
     }
 }

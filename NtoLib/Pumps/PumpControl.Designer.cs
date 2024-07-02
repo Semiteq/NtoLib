@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
-            this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonStart = new NtoLib.Utils.LabledButton();
             this.buttonStop = new NtoLib.Utils.LabledButton();
+            this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
             this.SuspendLayout();
@@ -52,6 +52,38 @@
             this.buttonTable.Size = new System.Drawing.Size(103, 103);
             this.buttonTable.TabIndex = 3;
             // 
+            // buttonStart
+            // 
+            this.buttonStart.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonStart.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonStart.ForeColor = System.Drawing.Color.Green;
+            this.buttonStart.Location = new System.Drawing.Point(1, 1);
+            this.buttonStart.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonStart.Name = "buttonStart";
+            this.buttonStart.Size = new System.Drawing.Size(49, 49);
+            this.buttonStart.SymbolOnButton = NtoLib.Utils.SymbolType.On;
+            this.buttonStart.TabIndex = 2;
+            this.buttonStart.UseVisualStyleBackColor = false;
+            this.buttonStart.Click += new System.EventHandler(this.HandleStartClick);
+            // 
+            // buttonStop
+            // 
+            this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonStop.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonStop.ForeColor = System.Drawing.Color.Red;
+            this.buttonStop.Location = new System.Drawing.Point(52, 52);
+            this.buttonStop.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonStop.Name = "buttonStop";
+            this.buttonStop.Size = new System.Drawing.Size(50, 50);
+            this.buttonStop.SymbolOnButton = NtoLib.Utils.SymbolType.Off;
+            this.buttonStop.TabIndex = 2;
+            this.buttonStop.UseVisualStyleBackColor = false;
+            this.buttonStop.Click += new System.EventHandler(this.HandleStopClick);
+            // 
             // spriteBox
             // 
             this.spriteBox.Location = new System.Drawing.Point(3, 3);
@@ -62,38 +94,6 @@
             this.spriteBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
             this.spriteBox.MouseLeave += new System.EventHandler(this.StopHoldTimer);
             this.spriteBox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
-            // 
-            // buttonOpen
-            // 
-            this.buttonStart.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStart.BackColor = System.Drawing.Color.AntiqueWhite;
-            this.buttonStart.ForeColor = System.Drawing.Color.LimeGreen;
-            this.buttonStart.Location = new System.Drawing.Point(1, 1);
-            this.buttonStart.Margin = new System.Windows.Forms.Padding(1);
-            this.buttonStart.Name = "buttonOpen";
-            this.buttonStart.Size = new System.Drawing.Size(49, 49);
-            this.buttonStart.SymbolOnButton = NtoLib.Utils.SymbolType.On;
-            this.buttonStart.TabIndex = 2;
-            this.buttonStart.UseVisualStyleBackColor = false;
-            this.buttonStart.Click += new System.EventHandler(this.HandleStartClick);
-            // 
-            // buttonClose
-            // 
-            this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStop.BackColor = System.Drawing.Color.AntiqueWhite;
-            this.buttonStop.ForeColor = System.Drawing.Color.Red;
-            this.buttonStop.Location = new System.Drawing.Point(52, 52);
-            this.buttonStop.Margin = new System.Windows.Forms.Padding(1);
-            this.buttonStop.Name = "buttonClose";
-            this.buttonStop.Size = new System.Drawing.Size(50, 50);
-            this.buttonStop.SymbolOnButton = NtoLib.Utils.SymbolType.Off;
-            this.buttonStop.TabIndex = 2;
-            this.buttonStop.UseVisualStyleBackColor = false;
-            this.buttonStop.Click += new System.EventHandler(this.HandleStopClick);
             // 
             // PumpControl
             // 
