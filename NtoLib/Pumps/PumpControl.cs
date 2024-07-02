@@ -4,7 +4,6 @@ using InSAT.Library.Interop.Win32;
 using NtoLib.Pumps.Settings;
 using NtoLib.Render.Pumps;
 using NtoLib.Utils;
-using NtoLib.Valves;
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -20,13 +19,13 @@ namespace NtoLib.Pumps
     {
         private Render.Orientation _orientation;
         [DisplayName("Ориентация")]
-        public Render.Orientation Orientation 
-        { 
+        public Render.Orientation Orientation
+        {
             get
             {
                 return _orientation;
             }
-            set 
+            set
             {
                 bool updateRequired = _orientation != value;
                 _orientation = value;
