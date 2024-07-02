@@ -56,6 +56,7 @@ namespace NtoLib.Valves
 
         private bool _isSlideGate;
         [DisplayName("Шибер")]
+        [Description("Изменяет отображение на шибер. Имеет приоретет над плавным клапаном.")]
         public bool IsSlideGate
         {
             get
@@ -72,6 +73,7 @@ namespace NtoLib.Valves
 
         private bool _smoothValvePreview;
         [DisplayName("Предпросмотре плавного клапана")]
+        [Description("Изменяет отображение на плавный клапан в DesignMode. В Runtime тип будет определятся из StatusWord.")]
         public bool SmoothValvePreview
         {
             get
