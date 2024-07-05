@@ -108,19 +108,55 @@ namespace NtoLib.Pumps
 
             TimeSpan initialInactivity = TimeSpan.FromSeconds(10);
 
-            string message = $"Нет соединения с {name}";
+            string[] type = new string[3];
+            switch(PumpType) 
+            {
+                case PumpType.Forvacuum: 
+                {
+                    type[0] = "Форнасосом";
+                    type[1] = "Форнасоса";
+                    type[2] = "Форнасос";
+                    break;
+                }
+                case PumpType.Turbine:
+                {
+                    type[0] = "Турбиной";
+                    type[1] = "Турбины";
+                    type[2] = "Турбина";
+                    break;
+                }
+                case PumpType.Ion:
+                {
+                    type[0] = "Ионным насосом";
+                    type[1] = "Ионного насоса";
+                    type[2] = "Ионный насос";
+                    break;
+                }
+                case PumpType.Cryogen:
+                {
+                    type[0] = "Криогенным насосом";
+                    type[1] = "Криогенного насоса";
+                    type[2] = "Криогенный насос";
+                    break;
+                }
+            }
+
+
+            string message = $"Нет соединения с {type[0].ToLower()} {name}";
             _connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message, initialInactivity);
 
-            message = $"Начало разгона {name}";
+            message = $"Начало разгона {type[1].ToLower()} {name}";
             _accelerationEvent = new EventTrigger(this, AccelerationStartEventId, message, initialInactivity);
 
-            message = $"Начало торможения {name}";
+            message = $"Начало торможения {type[1].ToLower()} {name}";
             _decelerationEvent = new EventTrigger(this, DecelerationStartEventId, message, initialInactivity);
-
-            message = $"{name} вышел на номинальную скорость";
+            
+            string action = PumpType == PumpType.Turbine ? "вышла" : "вышел";
+            message = $"{type[2]} {name} {action} на номинальную скорость";
             _nominalSpeedEvent = new EventTrigger(this, ReachNominalSpeedEventId, message, initialInactivity);
 
-            message = $"{name} остановился";
+            action = PumpType == PumpType.Turbine ? "остановилась" : "остановился";
+            message = $"{type[2]} {name} {action}";
             _stopEvent = new EventTrigger(this, StopEventId, message, initialInactivity, true);
         }
 
