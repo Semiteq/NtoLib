@@ -309,7 +309,7 @@ namespace NtoLib.Pumps
             Status.BlockStop = GetPinValue<bool>(PumpFB.BlockStopId);
             Status.Use = GetPinValue<bool>(PumpFB.UsedId);
 
-            buttonStart.Enabled = !Status.UsedByAutoMode && !Status.BlockStart;
+            buttonStart.Enabled = !Status.UsedByAutoMode && !Status.BlockStart && !Status.ForceStop;
             buttonStop.Enabled = !Status.UsedByAutoMode && !Status.BlockStop;
 
             var fb = FBConnector.Fb as PumpFB;

@@ -372,8 +372,8 @@ namespace NtoLib.Valves
             Status.ForceClose = GetPinValue<bool>(ValveFB.ForceCloseId);
             Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosingId);
             Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpeningId);
-            buttonOpen.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening;
-            buttonOpenSmoothly.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening;
+            buttonOpen.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening && !Status.ForceClose;
+            buttonOpenSmoothly.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening && !Status.ForceClose;
             buttonClose.Enabled = !Status.UsedByAutoMode && !Status.BlockClosing;
 
 
