@@ -41,8 +41,10 @@ namespace NtoLib.Utils
 
             Render.Bounds bounds = Render.Bounds.FromRectangle(boundsRect, new PointF(0.5f, 0.5f));
             float size = Math.Min(bounds.Width, bounds.Height);
-            bounds.Width = size * 0.6f;
-            bounds.Height = size * 0.6f;
+            bounds.X -= 0.5f;
+            bounds.Y -= 0.5f;
+            bounds.Width = (size - 4) * 0.75f;
+            bounds.Height = (size - 4) * 0.75f;
 
             if(IsButtonPressed)
             {
