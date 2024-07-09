@@ -72,7 +72,7 @@ namespace NtoLib.Valves
         }
 
         private bool _smoothValvePreview;
-        [DisplayName("Предпросмотре плавного клапана")]
+        [DisplayName("Предпросмотр плавного клапана")]
         [Description("Изменяет отображение на плавный клапан в DesignMode. В Runtime тип будет определятся из StatusWord.")]
         public bool SmoothValvePreview
         {
