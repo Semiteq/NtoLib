@@ -3,14 +3,13 @@ using NtoLib.Pumps;
 using NtoLib.Valves;
 using System;
 using System.Drawing;
-using System.IO.IsolatedStorage;
 using System.Windows.Forms;
 
 namespace NtoLib.Utils
 {
     public static class LayoutBuilder
     {
-        public static DeviceLayout BuildLayout(VisualControlBase control)
+        public static DeviceLayout BuildLayout(VisualControlBase control, bool noButtons)
         {
             Size elementSize = new Size();
             Size tableSize = new Size();
@@ -20,7 +19,7 @@ namespace NtoLib.Utils
 
             if(control is ValveControl valveControl)
             {
-                (elementSize, tableSize) = CalculateValveSize(valveControl);
+                (elementSize, tableSize) = CalculateValveSize(valveControl, noButtons);
 
                 Render.Orientation buttonOrientation;
                 if(IsHorizontal(valveControl.Orientation))
@@ -41,7 +40,7 @@ namespace NtoLib.Utils
             }
             else if(control is PumpControl pumpControl)
             {
-                (elementSize, tableSize) = CalculatePumpSize(pumpControl); 
+                (elementSize, tableSize) = CalculatePumpSize(pumpControl, noButtons); 
                 
                 Render.Orientation buttonOrientation;
                 if(pumpControl.IsHorizontal())
@@ -107,12 +106,19 @@ namespace NtoLib.Utils
 
 
 
-        private static (Size valveSize, Size tableSize) CalculateValveSize(ValveControl valve)
+        private static (Size valveSize, Size tableSize) CalculateValveSize(ValveControl valve, bool noButtons)
         {
             Rectangle bounds = valve.Bounds;
 
             Size valveSize = new Size();
             Size tableSize = new Size();
+
+            if(noButtons)
+            {
+                valveSize = bounds.Size;
+                tableSize = new Size();
+                return (valveSize, tableSize);
+            }
 
             float hwRatio;
             if(valve.IsSlideGate)
@@ -158,7 +164,7 @@ namespace NtoLib.Utils
             return (valveSize, tableSize);
         }
 
-        private static (Size pumpSize, Size tableSize) CalculatePumpSize(PumpControl pump)
+        private static (Size pumpSize, Size tableSize) CalculatePumpSize(PumpControl pump, bool noButtons)
         {
             Rectangle bounds = pump.Bounds;
 
@@ -167,6 +173,12 @@ namespace NtoLib.Utils
 
             int pumpHeight = Math.Min(bounds.Height, bounds.Width);
             pumpSize = new Size(pumpHeight, pumpHeight);
+
+            if(noButtons)
+            {
+                tableSize = new Size();
+                return (pumpSize, tableSize);
+            }
             
             if(pumpHeight == bounds.Width)
             {

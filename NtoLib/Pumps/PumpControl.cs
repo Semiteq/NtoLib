@@ -17,6 +17,23 @@ namespace NtoLib.Pumps
     [DisplayName("Насос")]
     public partial class PumpControl : VisualControlBase
     {
+        private bool _noButtons;
+        [DisplayName("Скрыть кнопки")]
+        public bool NoButtons
+        {
+            get
+            {
+                return _noButtons;
+            }
+            set
+            {
+                bool updateRequired = _noButtons != value;
+                _noButtons = value;
+                if(updateRequired)
+                    UpdateLayout();
+            }
+        }
+
         private Render.Orientation _orientation;
         [DisplayName("Ориентация")]
         public Render.Orientation Orientation
@@ -149,7 +166,7 @@ namespace NtoLib.Pumps
 
         private void UpdateLayout()
         {
-            DeviceLayout layout = LayoutBuilder.BuildLayout(this);
+            DeviceLayout layout = LayoutBuilder.BuildLayout(this, NoButtons);
             spriteBox.Bounds = layout.DeviceRectangle;
             buttonTable.Bounds = layout.ButtonTableRectangle;
 

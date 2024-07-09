@@ -17,6 +17,23 @@ namespace NtoLib.Valves
     [DisplayName("Клапан")]
     public partial class ValveControl : VisualControlBase
     {
+        private bool _noButtons;
+        [DisplayName("Скрыть кнопки")]
+        public bool NoButtons
+        {
+            get
+            {
+                return _noButtons;
+            }
+            set
+            {
+                bool updateRequired = _noButtons != value;
+                _noButtons = value;
+                if(updateRequired)
+                    UpdateLayout();
+            }
+        }
+
         private Render.Orientation _orientation;
         [DisplayName("Ориентация клапана")]
         public Render.Orientation Orientation
@@ -192,7 +209,7 @@ namespace NtoLib.Valves
 
         private void UpdateLayout()
         {
-            DeviceLayout layout = LayoutBuilder.BuildLayout(this);
+            DeviceLayout layout = LayoutBuilder.BuildLayout(this, NoButtons);
             spriteBox.Bounds = layout.DeviceRectangle;
             buttonTable.Bounds = layout.ButtonTableRectangle;
 
@@ -209,15 +226,28 @@ namespace NtoLib.Valves
                 buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
 
             Button[] buttons;
-            if(_isSlideGate || !(_isSmoothValve || (DesignMode && SmoothValvePreview)))
+            if(NoButtons)
             {
+                buttonOpen.Visible = false;
                 buttonOpenSmoothly.Visible = false;
-                buttons = new Button[] { buttonOpen, buttonClose };
+                buttonClose.Visible = false;
+                buttons = new Button[] { };
             }
             else
             {
-                buttonOpenSmoothly.Visible = true;
-                buttons = new Button[] { buttonOpen, buttonOpenSmoothly, buttonClose };
+                buttonOpen.Visible = true;
+                buttonClose.Visible = true;
+
+                if(_isSlideGate || !(_isSmoothValve || (DesignMode && SmoothValvePreview)))
+                {
+                    buttonOpenSmoothly.Visible = false;
+                    buttons = new Button[] { buttonOpen, buttonClose };
+                }
+                else
+                {
+                    buttonOpenSmoothly.Visible = true;
+                    buttons = new Button[] { buttonOpen, buttonOpenSmoothly, buttonClose };
+                }
             }
 
             LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons);
