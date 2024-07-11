@@ -1,5 +1,6 @@
 ﻿using NtoLib.Valves;
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace NtoLib.Render.Valves
 {
@@ -29,12 +30,12 @@ namespace NtoLib.Render.Valves
                 colors[0] = Colors.NoData;
                 colors[1] = Colors.NoData;
             }
-            else if(status.Opened & !status.Collision)
+            else if(status.Opened && !status.Collision && !status.UnknownState)
             {
                 colors[0] = Colors.Opened;
                 colors[1] = Colors.Opened;
             }
-            else if((status.Closed & !status.Collision) || status.OpenedSmoothly)
+            else if((status.Closed && !status.Collision && !status.UnknownState) || status.OpenedSmoothly)
             {
                 colors[0] = Colors.Closed;
                 colors[1] = Colors.Closed;

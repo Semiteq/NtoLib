@@ -362,6 +362,16 @@ namespace NtoLib.Valves
             Status.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
             Status.NotOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
             Status.NotClosed = GetPinValue<bool>(ValveFB.NotClosedId);
+            if(Status.NotOpened && Status.NotClosed)
+            {
+                Status.NotOpened = false;
+                Status.NotClosed = false;
+                Status.UnknownState = true;
+            }
+            else
+            {
+                Status.UnknownState = false;
+            }
             Status.Collision = GetPinValue<bool>(ValveFB.CollisionId);
             Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
             Status.Opened = GetPinValue<bool>(ValveFB.OpenedId);
@@ -385,7 +395,7 @@ namespace NtoLib.Valves
             _previousSmoothValve = _isSmoothValve;
 
 
-            bool animationNeeded = Status.OpeningClosing || (Status.Collision & !Status.OpenedSmoothly);
+            bool animationNeeded = Status.OpeningClosing || Status.UnknownState || (Status.Collision & !Status.OpenedSmoothly);
             if(!_animationTimer.Enabled && animationNeeded)
                 _animationTimer.Start();
             if(_animationTimer.Enabled && !animationNeeded)

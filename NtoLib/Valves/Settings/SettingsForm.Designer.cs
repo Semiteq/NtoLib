@@ -38,6 +38,7 @@
             this.notOpenedLamp = new NtoLib.Utils.LabledLamp();
             this.notClosedLamp = new NtoLib.Utils.LabledLamp();
             this.collisionLamp = new NtoLib.Utils.LabledLamp();
+            this.unknownStateLamp = new NtoLib.Utils.LabledLamp();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -53,12 +54,13 @@
             this.flowLayoutPanel1.Controls.Add(this.labledLamp2);
             this.flowLayoutPanel1.Controls.Add(this.notOpenedLamp);
             this.flowLayoutPanel1.Controls.Add(this.notClosedLamp);
+            this.flowLayoutPanel1.Controls.Add(this.unknownStateLamp);
             this.flowLayoutPanel1.Controls.Add(this.collisionLamp);
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(8, 8);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(279, 325);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(287, 360);
             this.flowLayoutPanel1.TabIndex = 50;
             // 
             // openedLamp
@@ -172,11 +174,24 @@
             this.collisionLamp.AutoSize = true;
             this.collisionLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.collisionLamp.LabelText = "Коллизия концевиков";
-            this.collisionLamp.Location = new System.Drawing.Point(10, 290);
+            this.collisionLamp.Location = new System.Drawing.Point(10, 325);
             this.collisionLamp.Margin = new System.Windows.Forms.Padding(5);
             this.collisionLamp.Name = "collisionLamp";
             this.collisionLamp.Size = new System.Drawing.Size(218, 25);
             this.collisionLamp.TabIndex = 59;
+            // 
+            // unknownStateLamp
+            // 
+            this.unknownStateLamp.Active = false;
+            this.unknownStateLamp.ActiveColor = System.Drawing.Color.OrangeRed;
+            this.unknownStateLamp.AutoSize = true;
+            this.unknownStateLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.unknownStateLamp.LabelText = "Неопределённое состояние";
+            this.unknownStateLamp.Location = new System.Drawing.Point(10, 290);
+            this.unknownStateLamp.Margin = new System.Windows.Forms.Padding(5);
+            this.unknownStateLamp.Name = "unknownStateLamp";
+            this.unknownStateLamp.Size = new System.Drawing.Size(267, 25);
+            this.unknownStateLamp.TabIndex = 60;
             // 
             // SettingsForm
             // 
@@ -184,7 +199,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(305, 348);
+            this.ClientSize = new System.Drawing.Size(305, 377);
             this.ControlBox = false;
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -210,5 +225,6 @@
         private Utils.LabledLamp notOpenedLamp;
         private Utils.LabledLamp notClosedLamp;
         private Utils.LabledLamp collisionLamp;
+        private Utils.LabledLamp unknownStateLamp;
     }
 }

@@ -5,6 +5,7 @@
         public bool ConnectionOk;
         public bool NotOpened;
         public bool NotClosed;
+        public bool UnknownState;
         public bool Collision;
         public bool UsedByAutoMode;
         public bool Opened;
@@ -16,6 +17,6 @@
         public bool BlockClosing;
         public bool BlockOpening;
 
-        public bool AnyError => !ConnectionOk || NotOpened || NotClosed || Collision;
+        public bool AnyError => !ConnectionOk || NotOpened || NotClosed || Collision || UnknownState;
     }
 }
