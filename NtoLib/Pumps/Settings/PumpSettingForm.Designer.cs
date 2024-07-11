@@ -36,6 +36,7 @@
             this.safeModeLamp = new NtoLib.Utils.LabledLamp();
             this.noConnectionLamp = new NtoLib.Utils.LabledLamp();
             this.errorLamp = new NtoLib.Utils.LabledLamp();
+            this.warningLamp = new NtoLib.Utils.LabledLamp();
             this.temperatureLabel = new NtoLib.Utils.LabeledValue();
             this.speedLabel = new NtoLib.Utils.LabeledValue();
             this.voltageLabel = new NtoLib.Utils.LabeledValue();
@@ -43,7 +44,6 @@
             this.powerLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureInLabel = new NtoLib.Utils.LabeledValue();
             this.temperatureOutLabel = new NtoLib.Utils.LabeledValue();
-            this.warningLamp = new NtoLib.Utils.LabledLamp();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -169,6 +169,20 @@
             this.errorLamp.Size = new System.Drawing.Size(105, 25);
             this.errorLamp.TabIndex = 50;
             // 
+            // warningLamp
+            // 
+            this.warningLamp.Active = false;
+            this.warningLamp.ActiveColor = System.Drawing.Color.Yellow;
+            this.warningLamp.AutoSize = true;
+            this.warningLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.warningLamp.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.warningLamp.LabelText = "Предупреждение";
+            this.warningLamp.Location = new System.Drawing.Point(10, 255);
+            this.warningLamp.Margin = new System.Windows.Forms.Padding(5, 5, 5, 15);
+            this.warningLamp.Name = "warningLamp";
+            this.warningLamp.Size = new System.Drawing.Size(181, 25);
+            this.warningLamp.TabIndex = 64;
+            // 
             // temperatureLabel
             // 
             this.temperatureLabel.AutoSize = true;
@@ -253,27 +267,13 @@
             this.temperatureOutLabel.TabIndex = 63;
             this.temperatureOutLabel.ValueText = "К";
             // 
-            // warningLamp
-            // 
-            this.warningLamp.Active = false;
-            this.warningLamp.ActiveColor = System.Drawing.Color.Yellow;
-            this.warningLamp.AutoSize = true;
-            this.warningLamp.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.warningLamp.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.warningLamp.LabelText = "Предупреждение";
-            this.warningLamp.Location = new System.Drawing.Point(10, 255);
-            this.warningLamp.Margin = new System.Windows.Forms.Padding(5, 5, 5, 15);
-            this.warningLamp.Name = "warningLamp";
-            this.warningLamp.Size = new System.Drawing.Size(181, 25);
-            this.warningLamp.TabIndex = 64;
-            // 
             // PumpSettingForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(418, 560);
+            this.ClientSize = new System.Drawing.Size(399, 546);
             this.ControlBox = false;
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
