@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+  <Map>
+    <Items>
+      <Pin  ID="5"    Name="Input"    Type="Целый" />
+      <Pout ID="10"   Name="Output"   Type="Целый" />
+    </Items>
+  </Map>
+  <VisualMap>
+    <Items>
+      <Pout ID="1005"   Name="InputToControl"     Type="Целый" />
+      <Pin  ID="1010"   Name="OutputFromControl"  Type="Целый" />
+    </Items>
+  </VisualMap>
+</FBConfig>
