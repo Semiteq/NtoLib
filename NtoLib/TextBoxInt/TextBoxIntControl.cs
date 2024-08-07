@@ -17,6 +17,46 @@ namespace NtoLib.TextBoxInt
         [DisplayName("Цвет рамки")]
         public override Color BackColor { get; set; }
 
+        private string _textBefore;
+        [Category("Внешний вид")]
+        [DisplayName("Текст до")]
+        public string TextBefore
+        {
+            get
+            {
+                return _textBefore;
+            }
+            set
+            {
+                _textBefore = value;
+                UpdateText();
+            }
+        }
+
+        private string _textAfter;
+        [Category("Внешний вид")]
+        [DisplayName("Текст после")]
+        public string TextAfter
+        {
+            get
+            {
+                return _textAfter;
+            }
+            set
+            {
+                _textAfter = value;
+                UpdateText();
+            }
+        }
+
+        [Category("Внешний вид")]
+        [DisplayName("Выравнивание")]
+        public HorizontalAlignment Alignment
+        {
+            get => textBox.TextAlign;
+            set => textBox.TextAlign = value;
+        }
+
         private int _maxValue;
         [Category("Значение")]
         [DisplayName("Максимальное значение")]
@@ -53,6 +93,7 @@ namespace NtoLib.TextBoxInt
 
         [Category("Я - запретная зона")]
         [DisplayName("Шрифт")]
+        [Browsable(false)]
         public Font TextBoxFont
         {
             get
@@ -139,14 +180,25 @@ namespace NtoLib.TextBoxInt
 
 
 
+        private void UpdateText()
+        {
+            string text = _value.ToString();
+
+            if(!string.IsNullOrEmpty(TextBefore))
+                text = TextBefore + ' ' + text;
+
+            if(!string.IsNullOrEmpty(TextAfter))
+                text = text + ' ' + TextAfter;
+
+            textBox.Text = text;
+        }
+
         private void ValidateValue()
         {
             ReadResult readResult = ReadValue(out var value);
 
             if(readResult != ReadResult.Success)
             {
-                textBox.Text = _value.ToString();
-
                 string message;
                 switch(readResult)
                 {
@@ -176,11 +228,12 @@ namespace NtoLib.TextBoxInt
             else
             {
                 _value = value;
-                textBox.Text = _value.ToString();
 
                 if(!DesignMode)
                     FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
             }
+
+            UpdateText();
 
             textBox.Enabled = false;
             textBox.Enabled = true;
