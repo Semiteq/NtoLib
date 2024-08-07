@@ -18,8 +18,14 @@ namespace NtoLib.TextBoxInt
         private const int InputFromScadaId = 10;
         private const int OutputToScadaId = 50;
 
+        private const int MaxValueId = 20;
+        private const int MinValueId = 25;
+
         public const int OutputToControlId = 110;
         public const int InputFromControlId = 150;
+
+        public const int MaxValueToControlId = 120;
+        public const int MinValueToControlId = 125;
 
 
 
@@ -37,6 +43,12 @@ namespace NtoLib.TextBoxInt
 
             int output = VisualPins.GetPinInt(InputFromControlId);
             SetPinValue(OutputToScadaId, output);
+
+            int max = GetPinInt(MaxValueId);
+            VisualPins.SetPinValue(MaxValueToControlId, max);
+
+            int min = GetPinInt(MinValueId);
+            VisualPins.SetPinValue(MinValueToControlId, min);
         }
     }
 }

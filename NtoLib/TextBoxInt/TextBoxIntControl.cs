@@ -57,42 +57,46 @@ namespace NtoLib.TextBoxInt
             set => textBox.TextAlign = value;
         }
 
-        private int _maxValue;
+        [Category("Значение")]
+        [DisplayName("Использовать ограничения ниже")]
+        [Description("Не влияет на ограничения, поступающие со входов ФБ")]
+        public bool UseLimitsFromUI { get; set; }
+
+        private int _maxValueProperty;
         [Category("Значение")]
         [DisplayName("Максимальное значение")]
-        public int MaxValue
+        public int MaxValueProperty
+
         {
             get
             {
-                return _maxValue;
+                return _maxValueProperty;
             }
             set
             {
-                _maxValue = value;
-                if(_maxValue < _minValue)
-                    _maxValue = _minValue;
+                _maxValueProperty = value;
+                if(_maxValueProperty < _minValueProperty)
+                    _maxValueProperty = _minValueProperty;
             }
         }
 
-        private int _minValue;
+        private int _minValueProperty;
         [Category("Значение")]
         [DisplayName("Минимальное значение")]
-        public int MinValue
+        public int MinValueProperty
         {
             get
             {
-                return _minValue;
+                return _minValueProperty;
             }
             set
             {
-                _minValue = value;
-                if(_minValue > _maxValue)
-                    _minValue = MaxValue;
+                _minValueProperty = value;
+                if(_minValueProperty > _maxValueProperty)
+                    _minValueProperty = MaxValueProperty;
             }
         }
 
-        [Category("Я - запретная зона")]
-        [DisplayName("Шрифт")]
         [Browsable(false)]
         public Font TextBoxFont
         {
@@ -106,17 +110,22 @@ namespace NtoLib.TextBoxInt
             }
         }
 
+        private int _minValueInput;
+        private int _maxValueInput;
+
+        private int _actualMinValue;
+        private int _actualMaxValue;
+
         private int _value;
         private bool _isInitialized = false;
+
+        private int _lastInput;
 
 
 
         public TextBoxIntControl()
         {
             InitializeComponent();
-
-            MinValue = int.MinValue;
-            MaxValue = int.MaxValue;
         }
 
 
@@ -127,7 +136,8 @@ namespace NtoLib.TextBoxInt
 
             _isInitialized = true;
 
-            ValidateValue();
+            UpdateLimits();
+            ValidateValue(false);
             textBox.ValidatingValue += ValidateValue;
         }
 
@@ -137,7 +147,7 @@ namespace NtoLib.TextBoxInt
 
             _isInitialized = false;
 
-            ValidateValue();
+            ValidateValue(false);
             textBox.ValidatingValue -= ValidateValue;
         }
 
@@ -170,15 +180,39 @@ namespace NtoLib.TextBoxInt
 
             if(!DesignMode)
             {
-                int value = FBConnector.GetPinInt(TextBoxIntFB.OutputToControlId);
-                textBox.Text = value.ToString();
+                _maxValueInput = FBConnector.GetPinInt(TextBoxIntFB.MaxValueToControlId);
+                _minValueInput = FBConnector.GetPinInt(TextBoxIntFB.MinValueToControlId);
+                UpdateLimits();
+
+                int input = FBConnector.GetPinInt(TextBoxIntFB.OutputToControlId);
+                if(input != _lastInput)
+                {
+                    _lastInput = input;
+                    _value = input;
+
+                    textBox.Text = input.ToString();
+                }
 
                 if(_isInitialized)
-                    FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, value);
+                    FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
             }
         }
 
 
+
+        private void UpdateLimits()
+        {
+            if(UseLimitsFromUI)
+            {
+                _actualMaxValue = Math.Min(_maxValueInput, MaxValueProperty);
+                _actualMinValue = Math.Max(_minValueInput, MinValueProperty);
+            }
+            else
+            {
+                _actualMaxValue = _minValueInput;
+                _actualMinValue = _maxValueInput;
+            }
+        }
 
         private void UpdateText()
         {
@@ -195,35 +229,43 @@ namespace NtoLib.TextBoxInt
 
         private void ValidateValue()
         {
+            ValidateValue(true);
+        }
+
+        private void ValidateValue(bool callMessages = true)
+        {
             ReadResult readResult = ReadValue(out var value);
 
             if(readResult != ReadResult.Success)
             {
-                string message;
-                switch(readResult)
+                if(callMessages)
                 {
-                    case ReadResult.AboveMax:
+                    string message;
+                    switch(readResult)
                     {
-                        message = $"Значение должно быть меньше {MaxValue}";
-                        break;
+                        case ReadResult.AboveMax:
+                        {
+                            message = $"Значение должно быть меньше {_actualMaxValue}";
+                            break;
+                        }
+                        case ReadResult.BelowMin:
+                        {
+                            message = $"Значение должно быть больше {_actualMinValue}";
+                            break;
+                        }
+                        case ReadResult.ParseError:
+                        {
+                            message = "Ошибка ввода";
+                            break;
+                        }
+                        default:
+                        {
+                            throw new NotImplementedException();
+                        }
                     }
-                    case ReadResult.BelowMin:
-                    {
-                        message = $"Значение должно быть больше {MinValue}";
-                        break;
-                    }
-                    case ReadResult.ParseError:
-                    {
-                        message = "Ошибка ввода";
-                        break;
-                    }
-                    default:
-                    {
-                        throw new NotImplementedException();
-                    }
-                }
 
-                MessageBox.Show(message);
+                    MessageBox.Show(message);
+                }
             }
             else
             {
@@ -252,11 +294,11 @@ namespace NtoLib.TextBoxInt
             {
                 return ReadResult.ParseError;
             }
-            else if(number < MinValue)
+            else if(number < _actualMinValue)
             {
                 return ReadResult.BelowMin;
             }
-            else if(number > MaxValue)
+            else if(number > _actualMaxValue)
             {
                 return ReadResult.AboveMax;
             }
