@@ -58,8 +58,8 @@ namespace NtoLib.TextBoxInt
         }
 
         [Category("Значение")]
-        [DisplayName("Использовать ограничения ниже")]
-        [Description("Не влияет на ограничения, поступающие со входов ФБ")]
+        [DisplayName("Границы из контрола")]
+        [Description("Переключает ограничение вводимого значения пределами ниже")]
         public bool UseLimitsFromUI { get; set; }
 
         private int _maxValueProperty;
@@ -118,6 +118,7 @@ namespace NtoLib.TextBoxInt
 
         private int _value;
         private bool _isInitialized = false;
+        private bool _editMode = false;
 
         private int _lastInput;
 
@@ -190,12 +191,34 @@ namespace NtoLib.TextBoxInt
                     _lastInput = input;
                     _value = input;
 
-                    textBox.Text = input.ToString();
+                    UpdateText();
                 }
 
                 if(_isInitialized)
                     FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
             }
+        }
+
+
+
+        private void HandleTextBoxMouseDown(object sender, MouseEventArgs e)
+        {
+            ToEditMode();
+        }
+
+        private void ToEditMode()
+        {
+            if(!_editMode)
+            {
+                int beforeLenght = TextBefore.Length;
+                int afterLenght = TextAfter.Length;
+
+                textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght - 1);
+
+                textBox.SelectAll();
+            }
+
+            _editMode = true;
         }
 
 
@@ -234,6 +257,8 @@ namespace NtoLib.TextBoxInt
 
         private void ValidateValue(bool callMessages = true)
         {
+            _editMode = false;
+
             ReadResult readResult = ReadValue(out var value);
 
             if(readResult != ReadResult.Success)
@@ -245,12 +270,12 @@ namespace NtoLib.TextBoxInt
                     {
                         case ReadResult.AboveMax:
                         {
-                            message = $"Значение должно быть меньше {_actualMaxValue}";
+                            message = $"Значение должно быть ≤ {_actualMaxValue}";
                             break;
                         }
                         case ReadResult.BelowMin:
                         {
-                            message = $"Значение должно быть больше {_actualMinValue}";
+                            message = $"Значение должно быть ≥ {_actualMinValue}";
                             break;
                         }
                         case ReadResult.ParseError:

@@ -48,6 +48,7 @@
             this.textBox.TabIndex = 0;
             this.textBox.Text = "0";
             this.textBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.textBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleTextBoxMouseDown);
             // 
             // pictureBox1
             // 
