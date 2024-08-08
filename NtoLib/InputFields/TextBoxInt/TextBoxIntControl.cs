@@ -223,6 +223,8 @@ namespace NtoLib.InputFields.TextBoxInt
 
             textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
             textBox.SelectAll();
+
+            _editMode = true;
         }
 
         private void ToCommonMode()
@@ -232,6 +234,8 @@ namespace NtoLib.InputFields.TextBoxInt
 
             UpdateText();
             DropFocus();
+
+            _editMode = false;
         }
 
         private void DropFocus()
@@ -276,8 +280,6 @@ namespace NtoLib.InputFields.TextBoxInt
 
         private void ValidateValue(bool callMessages = true)
         {
-            _editMode = false;
-
             ReadResult readResult = ReadValue(textBox.Text, out var value);
 
             if(readResult != ReadResult.Success)
@@ -319,8 +321,7 @@ namespace NtoLib.InputFields.TextBoxInt
                     FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
             }
 
-            UpdateText();
-            DropFocus();
+            ToCommonMode();
         }
 
         private ReadResult ReadValue(string text, out int value)

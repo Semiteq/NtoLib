@@ -57,6 +57,28 @@ namespace NtoLib.InputFields.TextBoxFloat
             set => textBox.TextAlign = value;
         }
 
+        private int _significatDigits;
+        [Category("Внешний вид")]
+        [DisplayName("Значащих цифр")]
+        public int SignificantDigits
+        {
+            get
+            {
+                return _significatDigits;
+            }
+            set
+            {
+                _significatDigits = value;
+
+                if(_significatDigits < 4)
+                    _significatDigits = 4;
+                else if(_significatDigits > 10)
+                    _significatDigits = 10;
+
+                UpdateText();
+            }
+        }
+
         [Category("Значение")]
         [DisplayName("Границы из контрола")]
         [Description("Переключает ограничение вводимого значения пределами ниже")]
@@ -94,28 +116,6 @@ namespace NtoLib.InputFields.TextBoxFloat
                 _minValueProperty = value;
                 if(_minValueProperty > _maxValueProperty)
                     _minValueProperty = MaxValueProperty;
-            }
-        }
-
-        private int _significatDigits;
-        [Category("Значение")]
-        [DisplayName("Доп. значащие цифры")]
-        public int SignificantDigits
-        {
-            get
-            {
-                return _significatDigits;
-            }
-            set
-            {
-                _significatDigits = value;
-
-                if(_significatDigits < 4)
-                    _significatDigits = 4;
-                else if(_significatDigits > 10)
-                    _significatDigits = 10;
-
-                UpdateText();
             }
         }
 
@@ -245,6 +245,8 @@ namespace NtoLib.InputFields.TextBoxFloat
 
             textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
             textBox.SelectAll();
+
+            _editMode = true;
         }
 
         private void ToCommonMode()
@@ -254,6 +256,8 @@ namespace NtoLib.InputFields.TextBoxFloat
 
             UpdateText();
             DropFocus();
+
+            _editMode = false;
         }
 
         private void DropFocus()
@@ -323,8 +327,6 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private void ValidateValue(bool callMessages = true)
         {
-            _editMode = false;
-
             string text = textBox.Text.Replace('.', ',');
             ReadResult readResult = ReadValue(text, out var value);
 
@@ -367,8 +369,7 @@ namespace NtoLib.InputFields.TextBoxFloat
                     FBConnector.SetPinValue(TextBoxFloatFB.InputFromControlId, _value);
             }
 
-            UpdateText();
-            DropFocus();
+            ToCommonMode();
         }
 
         private ReadResult ReadValue(string text, out float value)
