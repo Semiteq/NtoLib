@@ -141,6 +141,8 @@ namespace NtoLib.InputFields.TextBoxInt
             UpdateTextBoxFontSize();
             ValidateValue(false);
             textBox.ValidatingValue += ValidateValue;
+
+            FocusManager.Focused += UpdateFocus;
         }
 
         protected override void ToDesign()
@@ -152,6 +154,8 @@ namespace NtoLib.InputFields.TextBoxInt
             UpdateTextBoxFontSize();
             ValidateValue(false);
             textBox.ValidatingValue -= ValidateValue;
+
+            FocusManager.Focused -= UpdateFocus;
         }
 
         private void HandleResize(object sender, EventArgs e)
@@ -201,6 +205,12 @@ namespace NtoLib.InputFields.TextBoxInt
             ToCommonMode();
         }
 
+        private void UpdateFocus(VisualControlBase focusedControl)
+        {
+            if(this != focusedControl)
+                ToCommonMode();
+        }
+
 
 
         private void HandleTextBoxMouseDown(object sender, MouseEventArgs e)
@@ -224,6 +234,7 @@ namespace NtoLib.InputFields.TextBoxInt
             textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
             textBox.SelectAll();
 
+            FocusManager.OnFocused(this);
             _editMode = true;
         }
 

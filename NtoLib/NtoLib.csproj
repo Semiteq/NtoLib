@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
+    <Compile Include="FocusManager.cs" />
     <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
     <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
       <SubType>UserControl</SubType>
