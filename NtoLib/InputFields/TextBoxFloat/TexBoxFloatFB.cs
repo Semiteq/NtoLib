@@ -27,6 +27,8 @@ namespace NtoLib.InputFields.TextBoxFloat
         public const int MaxValueToControlId = 120;
         public const int MinValueToControlId = 125;
 
+        private float _lastInput;
+
 
 
         protected override void ToRuntime()
@@ -42,6 +44,12 @@ namespace NtoLib.InputFields.TextBoxFloat
             VisualPins.SetPinValue(OutputToControlId, input);
 
             float output = VisualPins.GetPinValue<float>(InputFromControlId);
+            if(input != _lastInput)
+            {
+                _lastInput = input;
+                output = input;
+            }
+
             SetPinValue(OutputToScadaId, output);
 
             float max = GetPinValue<float>(MaxValueId);
