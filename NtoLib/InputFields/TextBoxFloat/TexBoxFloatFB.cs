@@ -5,15 +5,15 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace NtoLib.TextBoxInt
+namespace NtoLib.InputFields.TextBoxFloat
 {
     [Serializable]
     [ComVisible(true)]
-    [Guid("FF21CFEA-B957-43E8-B035-09BAE4CB6DB1")]
+    [Guid("47B598E0-BE96-4E09-BEE6-CFD835BE4B9A")]
     [CatID(CatIDs.CATID_OTHER)]
-    [DisplayName("Целочисленное поле")]
-    [VisualControls(typeof(TextBoxIntControl))]
-    public class TextBoxIntFB : VisualFBBase
+    [DisplayName("Дробное поле")]
+    [VisualControls(typeof(TextBoxFloatControl))]
+    public class TextBoxFloatFB : VisualFBBase
     {
         private const int InputFromScadaId = 10;
         private const int OutputToScadaId = 50;
@@ -38,16 +38,16 @@ namespace NtoLib.TextBoxInt
         {
             base.UpdateData();
 
-            int input = GetPinInt(InputFromScadaId);
+            float input = GetPinValue<float>(InputFromScadaId);
             VisualPins.SetPinValue(OutputToControlId, input);
 
-            int output = VisualPins.GetPinInt(InputFromControlId);
+            float output = VisualPins.GetPinValue<float>(InputFromControlId);
             SetPinValue(OutputToScadaId, output);
 
-            int max = GetPinInt(MaxValueId);
+            float max = GetPinValue<float>(MaxValueId);
             VisualPins.SetPinValue(MaxValueToControlId, max);
 
-            int min = GetPinInt(MinValueId);
+            float min = GetPinValue<float>(MinValueId);
             VisualPins.SetPinValue(MinValueToControlId, min);
         }
     }

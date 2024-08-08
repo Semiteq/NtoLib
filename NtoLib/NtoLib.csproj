@@ -66,14 +66,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
-    <Compile Include="NumberTextBox\NumberTextBoxControl.cs">
+    <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
+    <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="NumberTextBox\NumberTextBoxControl.Designer.cs">
-      <DependentUpon>NumberTextBoxControl.cs</DependentUpon>
+    <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.Designer.cs">
+      <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="NumberTextBox\NumberTextBoxFB.cs" />
-    <Compile Include="NumberTextBox\ReadResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Colors.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -101,17 +100,18 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Pumps\Status.cs" />
+    <Compile Include="Utils\ReadResult.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
     <Compile Include="Render\Orientation.cs" />
     <Compile Include="Render\Pumps\PumpRenderer.cs" />
-    <Compile Include="TextBoxInt\TextBoxIntControl.cs">
+    <Compile Include="InputFields\TextBoxInt\TextBoxIntControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="TextBoxInt\TextBoxIntControl.Designer.cs">
+    <Compile Include="InputFields\TextBoxInt\TextBoxIntControl.Designer.cs">
       <DependentUpon>TextBoxIntControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="TextBoxInt\TextBoxIntFB.cs" />
+    <Compile Include="InputFields\TextBoxInt\TextBoxIntFB.cs" />
     <Compile Include="Utils\DeviceLayout.cs" />
     <Compile Include="Utils\EventTrigger.cs" />
     <Compile Include="Utils\Int32Extension.cs" />
@@ -146,6 +146,12 @@
     <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
     <Compile Include="ButtonOrientation.cs" />
     <Compile Include="Utils\SymbolType.cs" />
+    <Compile Include="Utils\TextBoxFloat.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Utils\TextBoxFloat.Designer.cs">
+      <DependentUpon>TextBoxFloat.cs</DependentUpon>
+    </Compile>
     <Compile Include="Utils\TextBoxInt.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -170,8 +176,8 @@
     <Compile Include="VisualFBBaseExtended.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="NumberTextBox\NumberTextBoxControl.resx">
-      <DependentUpon>NumberTextBoxControl.cs</DependentUpon>
+    <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatControl.resx">
+      <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -183,7 +189,7 @@
     <EmbeddedResource Include="Pumps\Settings\PumpSettingForm.resx">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="TextBoxInt\TextBoxIntControl.resx">
+    <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntControl.resx">
       <DependentUpon>TextBoxIntControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Utils\LabeledValue.resx">
@@ -228,12 +234,14 @@
     <EmbeddedResource Include="ClockGenerator\ClockGeneratorFB.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="NumberTextBox\NumberTextBoxFB.xml" />
-    <EmbeddedResource Include="NumberTextBox\NumberTextBoxFB.bmp" />
+    <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntFB.bmp" />
+    <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntFB.xml" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="TextBoxInt\TextBoxIntFB.bmp" />
-    <EmbeddedResource Include="TextBoxInt\TextBoxIntFB.xml" />
+    <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatFB.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatFB.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

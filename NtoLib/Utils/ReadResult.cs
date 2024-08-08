@@ -1,4 +1,4 @@
-﻿namespace NtoLib.NumberTextBox
+﻿namespace NtoLib.Utils
 {
     public enum ReadResult
     {

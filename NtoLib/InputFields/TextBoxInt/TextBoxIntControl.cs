@@ -1,12 +1,12 @@
 ﻿using FB.VisualFB;
-using NtoLib.NumberTextBox;
+using NtoLib.Utils;
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace NtoLib.TextBoxInt
+namespace NtoLib.InputFields.TextBoxInt
 {
     [ComVisible(true)]
     [Guid("02D828FA-39A4-4363-A58A-C2DEE974C04F")]
@@ -101,8 +101,8 @@ namespace NtoLib.TextBoxInt
         public Font TextBoxFont
         {
             get
-            { 
-                return textBox.Font; 
+            {
+                return textBox.Font;
             }
             set
             {
@@ -138,6 +138,7 @@ namespace NtoLib.TextBoxInt
             _isInitialized = true;
 
             UpdateLimits();
+            UpdateTextBoxFontSize();
             ValidateValue(false);
             textBox.ValidatingValue += ValidateValue;
         }
@@ -148,6 +149,7 @@ namespace NtoLib.TextBoxInt
 
             _isInitialized = false;
 
+            UpdateTextBoxFontSize();
             ValidateValue(false);
             textBox.ValidatingValue -= ValidateValue;
         }
@@ -155,19 +157,12 @@ namespace NtoLib.TextBoxInt
         private void HandleResize(object sender, EventArgs e)
         {
             UpdateTextBoxFontSize();
-            UpdateLayout();
-        }
-
-        private void UpdateLayout()
-        {
-            textBox.Location = new Point(1, 1);
-            textBox.Width = Width - 2;
         }
 
         private void UpdateTextBoxFontSize()
         {
-            float size = (Height - 2f - 1f) / 1.525f;
-            size = size <= 0 ? 1 : size;
+            float size = (Height - 8f - 1f) / 1.525f;
+            size = size <= 1 ? 1 : size;
 
             Font font = new Font(textBox.Font.FontFamily, size, FontStyle.Regular);
             textBox.Font = font;
@@ -211,10 +206,14 @@ namespace NtoLib.TextBoxInt
             if(!_editMode)
             {
                 int beforeLenght = TextBefore.Length;
+                if(beforeLenght > 0)
+                    beforeLenght++;
+
                 int afterLenght = TextAfter.Length;
+                if(afterLenght > 0)
+                    afterLenght++;
 
-                textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght - 1);
-
+                textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
                 textBox.SelectAll();
             }
 
@@ -232,8 +231,8 @@ namespace NtoLib.TextBoxInt
             }
             else
             {
-                _actualMaxValue = _minValueInput;
-                _actualMinValue = _maxValueInput;
+                _actualMaxValue = _maxValueInput;
+                _actualMinValue = _minValueInput;
             }
         }
 
@@ -259,7 +258,7 @@ namespace NtoLib.TextBoxInt
         {
             _editMode = false;
 
-            ReadResult readResult = ReadValue(out var value);
+            ReadResult readResult = ReadValue(textBox.Text, out var value);
 
             if(readResult != ReadResult.Success)
             {
@@ -306,16 +305,16 @@ namespace NtoLib.TextBoxInt
             textBox.Enabled = true;
         }
 
-        private ReadResult ReadValue(out int value)
+        private ReadResult ReadValue(string text, out int value)
         {
             value = 0;
 
-            if(string.IsNullOrEmpty(textBox.Text))
+            if(string.IsNullOrEmpty(text))
             {
                 value = 0;
                 return ReadResult.Success;
             }
-            else if(!int.TryParse(textBox.Text, out var number))
+            else if(!int.TryParse(text, out var number))
             {
                 return ReadResult.ParseError;
             }
