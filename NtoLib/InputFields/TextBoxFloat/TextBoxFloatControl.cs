@@ -196,6 +196,13 @@ namespace NtoLib.InputFields.TextBoxFloat
 
 
 
+        private void HandleVisibleChanged(object sender, EventArgs e)
+        {
+            ToCommonMode();
+        }
+
+
+
         private void HandleTextBoxMouseDown(object sender, MouseEventArgs e)
         {
             ToEditMode();
@@ -203,21 +210,34 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private void ToEditMode()
         {
+            if(_editMode)
+                return;
+
+            int beforeLenght = TextBefore.Length;
+            if(beforeLenght > 0)
+                beforeLenght++;
+
+            int afterLenght = TextAfter.Length;
+            if(afterLenght > 0)
+                afterLenght++;
+
+            textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
+            textBox.SelectAll();
+        }
+
+        private void ToCommonMode()
+        {
             if(!_editMode)
-            {
-                int beforeLenght = TextBefore.Length;
-                if(beforeLenght > 0)
-                    beforeLenght++;
+                return;
 
-                int afterLenght = TextAfter.Length;
-                if(afterLenght > 0)
-                    afterLenght++;
+            UpdateText();
+            DropFocus();
+        }
 
-                textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
-                textBox.SelectAll();
-            }
-
-            _editMode = true;
+        private void DropFocus()
+        {
+            textBox.Enabled = false;
+            textBox.Enabled = true;
         }
 
 
@@ -301,9 +321,7 @@ namespace NtoLib.InputFields.TextBoxFloat
             }
 
             UpdateText();
-
-            textBox.Enabled = false;
-            textBox.Enabled = true;
+            DropFocus();
         }
 
         private ReadResult ReadValue(string text, out float value)

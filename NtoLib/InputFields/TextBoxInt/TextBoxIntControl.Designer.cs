@@ -71,6 +71,7 @@
             this.Controls.Add(this.pictureBox);
             this.Name = "TextBoxIntControl";
             this.Size = new System.Drawing.Size(150, 30);
+            this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             this.Resize += new System.EventHandler(this.HandleResize);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.ResumeLayout(false);
