@@ -97,6 +97,28 @@ namespace NtoLib.InputFields.TextBoxFloat
             }
         }
 
+        private int _significatDigits;
+        [Category("Значение")]
+        [DisplayName("Доп. значащие цифры")]
+        public int SignificantDigits
+        {
+            get
+            {
+                return _significatDigits;
+            }
+            set
+            {
+                _significatDigits = value;
+
+                if(_significatDigits < 4)
+                    _significatDigits = 4;
+                else if(_significatDigits > 10)
+                    _significatDigits = 10;
+
+                UpdateText();
+            }
+        }
+
         [Browsable(false)]
         public Font TextBoxFont
         {
@@ -258,7 +280,8 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private void UpdateText()
         {
-            string text = _value.ToString();
+            string format = CreateFormat(_value, _significatDigits);
+            string text = _value.ToString(format);
 
             if(!string.IsNullOrEmpty(TextBefore))
                 text = TextBefore + ' ' + text;
@@ -267,6 +290,30 @@ namespace NtoLib.InputFields.TextBoxFloat
                 text = text + ' ' + TextAfter;
 
             textBox.Text = text;
+        }
+
+        private string CreateFormat(float number, int significantDigit)
+        {
+            float absNumber = Math.Abs(number);
+
+            int addDigits = significantDigit - 4;
+            addDigits = addDigits > 0 ? addDigits : 0;
+            string additionalDigits = new string('#', addDigits);
+
+            if(absNumber == 0)
+                return "0.000" + additionalDigits;
+            else if(absNumber < 0.1)
+                return "0.000" + additionalDigits + "e0";
+            else if(absNumber < 10)
+                return "0.000" + additionalDigits;
+            else if(absNumber < 100)
+                return "#0.00" + additionalDigits;
+            else if(absNumber < 1000)
+                return "##0.0" + additionalDigits;
+            else if(absNumber < 10000)
+                return "###0." + additionalDigits;
+            else
+                return "0.000" + additionalDigits + "e0";
         }
 
         private void ValidateValue()
