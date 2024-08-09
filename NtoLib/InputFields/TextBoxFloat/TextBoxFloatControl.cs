@@ -13,11 +13,13 @@ namespace NtoLib.InputFields.TextBoxFloat
     [DisplayName("Дробное поле")]
     public partial class TextBoxFloatControl : VisualControlBase
     {
+        [DispId(10)]
         [Category("Внешний вид")]
         [DisplayName("Цвет границы")]
         public override Color BackColor { get; set; } = Color.Black;
 
         private bool _userLock;
+        [DispId(20)]
         [Category("Поведение")]
         [DisplayName("Блокировка ввода")]
         public bool UserLock
@@ -34,6 +36,7 @@ namespace NtoLib.InputFields.TextBoxFloat
         }
 
         private Color _backColorUnlocked = Color.White;
+        [DispId(30)]
         [Category("Внешний вид")]
         [DisplayName("Цвет разблокированного")]
         public Color BackColorUnlocked
@@ -50,6 +53,7 @@ namespace NtoLib.InputFields.TextBoxFloat
         }
 
         private Color _backColorLocked = Color.WhiteSmoke;
+        [DispId(40)]
         [Category("Внешний вид")]
         [DisplayName("Цвет заблокированного")]
         public Color BackColorLocked
@@ -66,6 +70,7 @@ namespace NtoLib.InputFields.TextBoxFloat
         }
 
         private string _textBefore;
+        [DispId(50)]
         [Category("Внешний вид")]
         [DisplayName("Текст до")]
         public string TextBefore
@@ -82,6 +87,7 @@ namespace NtoLib.InputFields.TextBoxFloat
         }
 
         private string _textAfter;
+        [DispId(60)]
         [Category("Внешний вид")]
         [DisplayName("Текст после")]
         public string TextAfter
@@ -97,6 +103,7 @@ namespace NtoLib.InputFields.TextBoxFloat
             }
         }
 
+        [DispId(70)]
         [Category("Внешний вид")]
         [DisplayName("Выравнивание")]
         public HorizontalAlignment Alignment
@@ -119,6 +126,7 @@ namespace NtoLib.InputFields.TextBoxFloat
         }
 
         private int _decimalPoint = 2;
+        [DispId(80)]
         [Category("Внешний вид")]
         [DisplayName("Цифр после запятой")]
         public int DecimalPoint
@@ -142,9 +150,10 @@ namespace NtoLib.InputFields.TextBoxFloat
         }
 
         public bool _exponentialForm;
+        [DispId(90)]
         [Category("Внешний вид")]
         [DisplayName("Экспоненциальный вид")]
-        public bool ExponentialForm 
+        public bool ExponentialForm
         {
             get
             {
@@ -159,12 +168,14 @@ namespace NtoLib.InputFields.TextBoxFloat
             }
         }
 
+        [DispId(100)]
         [Category("Значение")]
         [DisplayName("Границы из контрола")]
         [Description("Переключает ограничение вводимого значения пределами ниже")]
         public bool UseLimitsFromUI { get; set; }
 
         private float _maxValueProperty;
+        [DispId(120)]
         [Category("Значение")]
         [DisplayName("Максимальное значение")]
         public float MaxValueProperty
@@ -183,6 +194,7 @@ namespace NtoLib.InputFields.TextBoxFloat
         }
 
         private float _minValueProperty;
+        [DispId(130)]
         [Category("Значение")]
         [DisplayName("Минимальное значение")]
         public float MinValueProperty

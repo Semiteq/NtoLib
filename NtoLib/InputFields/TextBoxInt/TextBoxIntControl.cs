@@ -1,5 +1,4 @@
 ﻿using FB.VisualFB;
-using NtoLib.InputFields.TextBoxFloat;
 using NtoLib.Utils;
 using System;
 using System.ComponentModel;
@@ -14,11 +13,13 @@ namespace NtoLib.InputFields.TextBoxInt
     [DisplayName("Целочисленное поле")]
     public partial class TextBoxIntControl : VisualControlBase
     {
+        [DispId(10)]
         [Category("Внешний вид")]
         [DisplayName("Цвет границы")]
         public override Color BackColor { get; set; } = Color.Black;
 
         private bool _userLock;
+        [DispId(20)]
         [Category("Поведение")]
         [DisplayName("Блокировка ввода")]
         public bool UserLock
@@ -35,6 +36,7 @@ namespace NtoLib.InputFields.TextBoxInt
         }
 
         private Color _backColorUnlocked = Color.White;
+        [DispId(30)]
         [Category("Внешний вид")]
         [DisplayName("Цвет разблокированного")]
         public Color BackColorUnlocked
@@ -51,6 +53,7 @@ namespace NtoLib.InputFields.TextBoxInt
         }
 
         private Color _backColorLocked = Color.WhiteSmoke;
+        [DispId(40)]
         [Category("Внешний вид")]
         [DisplayName("Цвет заблокированного")]
         public Color BackColorLocked
@@ -67,6 +70,7 @@ namespace NtoLib.InputFields.TextBoxInt
         }
 
         private string _textBefore;
+        [DispId(50)]
         [Category("Внешний вид")]
         [DisplayName("Текст до")]
         public string TextBefore
@@ -83,6 +87,7 @@ namespace NtoLib.InputFields.TextBoxInt
         }
 
         private string _textAfter;
+        [DispId(60)]
         [Category("Внешний вид")]
         [DisplayName("Текст после")]
         public string TextAfter
@@ -98,6 +103,7 @@ namespace NtoLib.InputFields.TextBoxInt
             }
         }
 
+        [DispId(70)]
         [Category("Внешний вид")]
         [DisplayName("Выравнивание")]
         public HorizontalAlignment Alignment
@@ -119,12 +125,14 @@ namespace NtoLib.InputFields.TextBoxInt
             }
         }
 
+        [DispId(80)]
         [Category("Значение")]
         [DisplayName("Границы из контрола")]
         [Description("Переключает ограничение вводимого значения пределами ниже")]
         public bool UseLimitsFromUI { get; set; }
 
         private int _maxValueProperty;
+        [DispId(90)]
         [Category("Значение")]
         [DisplayName("Максимальное значение")]
         public int MaxValueProperty
@@ -143,6 +151,7 @@ namespace NtoLib.InputFields.TextBoxInt
         }
 
         private int _minValueProperty;
+        [DispId(100)]
         [Category("Значение")]
         [DisplayName("Минимальное значение")]
         public int MinValueProperty
@@ -168,7 +177,7 @@ namespace NtoLib.InputFields.TextBoxInt
             }
             set
             {
-                textBox.Font = value; 
+                textBox.Font = value;
                 label.Font = value;
             }
         }
@@ -382,7 +391,7 @@ namespace NtoLib.InputFields.TextBoxInt
             if(!string.IsNullOrEmpty(TextAfter))
                 text = text + ' ' + TextAfter;
 
-            textBox.Text = text; 
+            textBox.Text = text;
             label.Text = text;
         }
 
