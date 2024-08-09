@@ -32,12 +32,18 @@ namespace NtoLib.InputFields.TextBoxFloat
         public const int MinValueToControlId = 125;
 
         private float _lastInput;
+        private float _lastOutput;
 
 
 
         protected override void ToRuntime()
         {
             base.ToRuntime();
+
+            int input = GetPinValue<int>(InputFromScadaId);
+            VisualPins.SetPinValue(OutputToControlId, input);
+
+            SetPinValue(OutputToScadaId, input);
         }
 
         protected override void UpdateData()
@@ -45,16 +51,27 @@ namespace NtoLib.InputFields.TextBoxFloat
             base.UpdateData();
 
             float input = GetPinValue<float>(InputFromScadaId);
-            VisualPins.SetPinValue(OutputToControlId, input);
-
-            float output = VisualPins.GetPinValue<float>(InputFromControlId);
+            bool inputChanged = false;
             if(input != _lastInput)
             {
                 _lastInput = input;
-                output = input;
+                inputChanged = true;
+
+                VisualPins.SetPinValue(OutputToControlId, input);
             }
 
-            SetPinValue(OutputToScadaId, output);
+            float output = VisualPins.GetPinValue<float>(InputFromControlId);
+            bool outputChanged = false;
+            if(output != _lastOutput)
+            {
+                _lastOutput = output;
+                outputChanged = true;
+            }
+
+            if(inputChanged)
+                SetPinValue(OutputToScadaId, input);
+            else if(outputChanged)
+                SetPinValue(OutputToScadaId, output);
 
             bool locked = GetPinValue<bool>(LockFromScadaId);
             VisualPins.SetPinValue(LockToControl, locked);

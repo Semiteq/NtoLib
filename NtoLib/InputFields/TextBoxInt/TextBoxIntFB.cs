@@ -32,37 +32,54 @@ namespace NtoLib.InputFields.TextBoxInt
         public const int MinValueToControlId = 125;
 
         private int _lastInput;
+        private int _lastOutput;
 
 
 
         protected override void ToRuntime()
         {
             base.ToRuntime();
+
+            int input = GetPinValue<int>(InputFromScadaId); 
+            VisualPins.SetPinValue(OutputToControlId, input);
+
+            SetPinValue(OutputToScadaId, input);
         }
 
         protected override void UpdateData()
         {
             base.UpdateData();
 
-            int input = GetPinInt(InputFromScadaId);
-            VisualPins.SetPinValue(OutputToControlId, input);
-
-            int output = VisualPins.GetPinInt(InputFromControlId);
+            int input = GetPinValue<int>(InputFromScadaId);
+            bool inputChanged = false;
             if(input != _lastInput)
             {
                 _lastInput = input;
-                output = input;
+                inputChanged = true;
+
+                VisualPins.SetPinValue(OutputToControlId, input);
             }
 
-            SetPinValue(OutputToScadaId, output);
+            int output = VisualPins.GetPinValue<int>(InputFromControlId);
+            bool outputChanged = false;
+            if(output != _lastOutput)
+            {
+                _lastOutput = output;
+                outputChanged = true;
+            }
+
+            if(inputChanged)
+                SetPinValue(OutputToScadaId, input);
+            else if(outputChanged)
+                SetPinValue(OutputToScadaId, output);
 
             bool locked = GetPinValue<bool>(LockFromScadaId);
             VisualPins.SetPinValue(LockToControl, locked);
 
-            int max = GetPinInt(MaxValueId);
+            int max = GetPinValue<int>(MaxValueId);
             VisualPins.SetPinValue(MaxValueToControlId, max);
 
-            int min = GetPinInt(MinValueId);
+            int min = GetPinValue<int>(MinValueId);
             VisualPins.SetPinValue(MinValueToControlId, min);
         }
     }
