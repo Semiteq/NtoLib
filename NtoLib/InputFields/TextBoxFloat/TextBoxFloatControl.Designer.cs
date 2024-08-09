@@ -28,10 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.textBox = new NtoLib.Utils.TextBoxFloat();
             this.pictureBox = new System.Windows.Forms.PictureBox();
+            this.textBox = new NtoLib.Utils.TextBoxFloat();
+            this.label = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             this.SuspendLayout();
+            // 
+            // pictureBox
+            // 
+            this.pictureBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBox.BackColor = System.Drawing.Color.White;
+            this.pictureBox.Location = new System.Drawing.Point(1, 1);
+            this.pictureBox.Margin = new System.Windows.Forms.Padding(1);
+            this.pictureBox.Name = "pictureBox";
+            this.pictureBox.Size = new System.Drawing.Size(148, 28);
+            this.pictureBox.TabIndex = 2;
+            this.pictureBox.TabStop = false;
             // 
             // textBox
             // 
@@ -50,23 +64,25 @@
             this.textBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.textBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleTextBoxMouseDown);
             // 
-            // pictureBox
+            // label
             // 
-            this.pictureBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox.BackColor = System.Drawing.Color.White;
-            this.pictureBox.Location = new System.Drawing.Point(1, 1);
-            this.pictureBox.Margin = new System.Windows.Forms.Padding(1);
-            this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(148, 28);
-            this.pictureBox.TabIndex = 2;
-            this.pictureBox.TabStop = false;
+            this.label.BackColor = System.Drawing.Color.White;
+            this.label.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.label.Font = new System.Drawing.Font("Arial", 14F);
+            this.label.Location = new System.Drawing.Point(4, 4);
+            this.label.Margin = new System.Windows.Forms.Padding(4);
+            this.label.Name = "label";
+            this.label.Size = new System.Drawing.Size(142, 22);
+            this.label.TabIndex = 3;
+            this.label.Text = "0";
+            this.label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label.Visible = false;
             // 
             // TextBoxFloatControl
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.Black;
+            this.Controls.Add(this.label);
             this.Controls.Add(this.textBox);
             this.Controls.Add(this.pictureBox);
             this.Name = "TextBoxFloatControl";
@@ -82,5 +98,6 @@
         #endregion
         private Utils.TextBoxFloat textBox;
         private System.Windows.Forms.PictureBox pictureBox;
+        private System.Windows.Forms.Label label;
     }
 }

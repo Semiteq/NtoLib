@@ -1,4 +1,5 @@
 ﻿using FB.VisualFB;
+using NtoLib.InputFields.TextBoxFloat;
 using NtoLib.Utils;
 using System;
 using System.ComponentModel;
@@ -14,8 +15,56 @@ namespace NtoLib.InputFields.TextBoxInt
     public partial class TextBoxIntControl : VisualControlBase
     {
         [Category("Внешний вид")]
-        [DisplayName("Цвет рамки")]
-        public override Color BackColor { get; set; }
+        [DisplayName("Цвет границы")]
+        public override Color BackColor { get; set; } = Color.Black;
+
+        private bool _userLock;
+        [Category("Поведение")]
+        [DisplayName("Блокировка ввода")]
+        public bool UserLock
+        {
+            get
+            {
+                return _userLock;
+            }
+            set
+            {
+                _userLock = value;
+                UpdateLockBehaviour();
+            }
+        }
+
+        private Color _backColorUnlocked = Color.White;
+        [Category("Внешний вид")]
+        [DisplayName("Цвет разблокированного")]
+        public Color BackColorUnlocked
+        {
+            get
+            {
+                return _backColorUnlocked;
+            }
+            set
+            {
+                _backColorUnlocked = value;
+                UpdateLockBehaviour(true);
+            }
+        }
+
+        private Color _backColorLocked = Color.WhiteSmoke;
+        [Category("Внешний вид")]
+        [DisplayName("Цвет заблокированного")]
+        public Color BackColorLocked
+        {
+            get
+            {
+                return _backColorLocked;
+            }
+            set
+            {
+                _backColorLocked = value;
+                UpdateLockBehaviour(true);
+            }
+        }
 
         private string _textBefore;
         [Category("Внешний вид")]
@@ -53,8 +102,21 @@ namespace NtoLib.InputFields.TextBoxInt
         [DisplayName("Выравнивание")]
         public HorizontalAlignment Alignment
         {
-            get => textBox.TextAlign;
-            set => textBox.TextAlign = value;
+            get
+            {
+                return textBox.TextAlign;
+            }
+            set
+            {
+                textBox.TextAlign = value;
+
+                if(value == HorizontalAlignment.Left)
+                    label.TextAlign = ContentAlignment.MiddleCenter;
+                else if(value == HorizontalAlignment.Right)
+                    label.TextAlign = ContentAlignment.MiddleRight;
+                else
+                    label.TextAlign = ContentAlignment.MiddleCenter;
+            }
         }
 
         [Category("Значение")]
@@ -106,7 +168,8 @@ namespace NtoLib.InputFields.TextBoxInt
             }
             set
             {
-                textBox.Font = value;
+                textBox.Font = value; 
+                label.Font = value;
             }
         }
 
@@ -119,6 +182,9 @@ namespace NtoLib.InputFields.TextBoxInt
         private int _value;
         private bool _isInitialized = false;
         private bool _editMode = false;
+
+        private bool _inputLock;
+        private bool _isLocked = false;
 
         private int _lastInput;
 
@@ -139,7 +205,8 @@ namespace NtoLib.InputFields.TextBoxInt
 
             UpdateLimits();
             UpdateTextBoxFontSize();
-            ValidateValue(false);
+            UpdateLockBehaviour(true);
+            ValidateValue(true);
             textBox.ValidatingValue += ValidateValue;
 
             FocusManager.Focused += UpdateFocus;
@@ -152,7 +219,8 @@ namespace NtoLib.InputFields.TextBoxInt
             _isInitialized = false;
 
             UpdateTextBoxFontSize();
-            ValidateValue(false);
+            UpdateLockBehaviour(true);
+            ValidateValue(true);
             textBox.ValidatingValue -= ValidateValue;
 
             FocusManager.Focused -= UpdateFocus;
@@ -168,8 +236,8 @@ namespace NtoLib.InputFields.TextBoxInt
             float size = (Height - 8f - 1f) / 1.525f;
             size = size <= 1 ? 1 : size;
 
-            Font font = new Font(textBox.Font.FontFamily, size, FontStyle.Regular);
-            textBox.Font = font;
+            Font font = new Font(TextBoxFont.FontFamily, size, FontStyle.Regular);
+            TextBoxFont = font;
         }
 
 
@@ -193,6 +261,9 @@ namespace NtoLib.InputFields.TextBoxInt
                     UpdateText();
                 }
 
+                _inputLock = FBConnector.GetPinValue<bool>(TextBoxFloatFB.LockToControl);
+                UpdateLockBehaviour();
+
                 if(_isInitialized)
                     FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
             }
@@ -209,6 +280,36 @@ namespace NtoLib.InputFields.TextBoxInt
         {
             if(this != focusedControl)
                 ToCommonMode();
+        }
+
+
+
+        private void UpdateLockBehaviour(bool forceUpdate = false)
+        {
+            bool actualIsLocked = _inputLock || UserLock;
+            if((actualIsLocked == _isLocked) && !forceUpdate)
+                return;
+
+            if(actualIsLocked)
+            {
+                textBox.BackColor = BackColorLocked;
+                label.BackColor = BackColorLocked;
+                pictureBox.BackColor = BackColorLocked;
+
+                textBox.Enabled = false;
+                label.Visible = true;
+                _isLocked = true;
+            }
+            else
+            {
+                textBox.BackColor = BackColorUnlocked;
+                label.BackColor = BackColorUnlocked;
+                pictureBox.BackColor = BackColorUnlocked;
+
+                textBox.Enabled = true;
+                label.Visible = false;
+                _isLocked = false;
+            }
         }
 
 
@@ -281,21 +382,22 @@ namespace NtoLib.InputFields.TextBoxInt
             if(!string.IsNullOrEmpty(TextAfter))
                 text = text + ' ' + TextAfter;
 
-            textBox.Text = text;
+            textBox.Text = text; 
+            label.Text = text;
         }
 
         private void ValidateValue()
         {
-            ValidateValue(true);
+            ValidateValue(false);
         }
 
-        private void ValidateValue(bool callMessages = true)
+        private void ValidateValue(bool supressMessages = false)
         {
             ReadResult readResult = ReadValue(textBox.Text, out var value);
 
             if(readResult != ReadResult.Success)
             {
-                if(callMessages)
+                if(!supressMessages)
                 {
                     string message;
                     switch(readResult)
