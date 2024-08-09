@@ -261,7 +261,7 @@ namespace NtoLib.InputFields.TextBoxInt
                     UpdateText();
                 }
 
-                _inputLock = FBConnector.GetPinValue<bool>(TextBoxFloatFB.LockToControl);
+                _inputLock = FBConnector.GetPinValue<bool>(TextBoxIntFB.LockToControl);
                 UpdateLockBehaviour();
 
                 if(_isInitialized)

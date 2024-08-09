@@ -118,24 +118,43 @@ namespace NtoLib.InputFields.TextBoxFloat
             }
         }
 
-        private int _significatDigits;
+        private int _decimalPoint = 2;
         [Category("Внешний вид")]
-        [DisplayName("Значащих цифр")]
-        public int SignificantDigits
+        [DisplayName("Цифр после запятой")]
+        public int DecimalPoint
         {
             get
             {
-                return _significatDigits;
+                return _decimalPoint;
             }
             set
             {
-                _significatDigits = value;
+                _decimalPoint = value;
 
-                if(_significatDigits < 4)
-                    _significatDigits = 4;
-                else if(_significatDigits > 10)
-                    _significatDigits = 10;
+                if(_decimalPoint < 0)
+                    _decimalPoint = 0;
+                else if(_decimalPoint > 10)
+                    _decimalPoint = 10;
 
+                _stringFormat = CreateFormat(_decimalPoint);
+                UpdateText();
+            }
+        }
+
+        public bool _exponentialForm;
+        [Category("Внешний вид")]
+        [DisplayName("Экспоненциальный вид")]
+        public bool ExponentialForm 
+        {
+            get
+            {
+                return _exponentialForm;
+            }
+            set
+            {
+                _exponentialForm = value;
+
+                _stringFormat = CreateFormat(DecimalPoint);
                 UpdateText();
             }
         }
@@ -193,6 +212,9 @@ namespace NtoLib.InputFields.TextBoxFloat
                 label.Font = value;
             }
         }
+
+        private string _stringFormat;
+
 
         private float _minValueInput;
         private float _maxValueInput;
@@ -395,8 +417,7 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private void UpdateText()
         {
-            string format = CreateFormat(_value, _significatDigits);
-            string text = _value.ToString(format);
+            string text = _value.ToString(_stringFormat);
 
             if(!string.IsNullOrEmpty(TextBefore))
                 text = TextBefore + ' ' + text;
@@ -408,28 +429,14 @@ namespace NtoLib.InputFields.TextBoxFloat
             label.Text = text;
         }
 
-        private string CreateFormat(float number, int significantDigit)
+        private string CreateFormat(int decimalPoints)
         {
-            float absNumber = Math.Abs(number);
+            string format = "0." + new string('0', decimalPoints);
 
-            int addDigits = significantDigit - 4;
-            addDigits = addDigits > 0 ? addDigits : 0;
-            string additionalDigits = new string('#', addDigits);
+            if(ExponentialForm)
+                format += "e0";
 
-            if(absNumber == 0)
-                return "0.000" + additionalDigits;
-            else if(absNumber < 0.1)
-                return "0.000" + additionalDigits + "e0";
-            else if(absNumber < 10)
-                return "0.000" + additionalDigits;
-            else if(absNumber < 100)
-                return "#0.00" + additionalDigits;
-            else if(absNumber < 1000)
-                return "##0.0" + additionalDigits;
-            else if(absNumber < 10000)
-                return "###0." + additionalDigits;
-            else
-                return "0.000" + additionalDigits + "e0";
+            return format;
         }
 
         private void ValidateValue()
