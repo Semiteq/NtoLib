@@ -186,6 +186,10 @@ namespace NtoLib.InputFields.TextBoxInt
             }
         }
 
+        /// <summary>
+        /// Свойство, необходимое для сохранения настроек
+        /// шрифта между перезапусками средствами MasterSCADA
+        /// </summary>
         [Browsable(false)]
         public Font TextBoxFont
         {
@@ -200,25 +204,34 @@ namespace NtoLib.InputFields.TextBoxInt
             }
         }
 
-        /// <summary> 
-        /// Отступ от границы до TextBox.
-        /// Нужен для того, чтобы символы не "прилипали к границе"
-        /// </summary>
+        /// <summary> Отступ от границы до TextBox.
+        /// Нужен для того, чтобы символы не "прилипали к границе" </summary>
         private const int _textBoxOffset = 3;
 
+        /// <summary> Нижний порог значения, полученный с входа ФБ </summary>
         private int _minValueInput;
+        /// <summary> Верхний порог значения, полученны с входа ФБ </summary>
         private int _maxValueInput;
 
+        /// <summary> Текущий нижний порог значения, учитывающий как вход ФБ, 
+        /// так и свойство контрола </summary>
         private int _actualMinValue;
+        /// <summary> Текущий верхний порог значения, учитывающий как вход ФБ,
+        /// так и свойство контрола </summary>
         private int _actualMaxValue;
 
+        /// <summary> Последнее отображаемое значение </summary>
         private int _value;
         private bool _isInitialized = false;
         private bool _editMode = false;
 
-        private bool _inputLock;
+        /// <summary> Переменная требуемого состояния блокировки ввода,
+        /// полученная с входа ФБ </summary>
+        private bool _inputIsLock;
+        /// <summary> Текущее состояние блокировки ввода </summary>
         private bool _isLocked = false;
 
+        /// <summary> Поледнее значение, полученное из ФБ </summary>
         private int _lastInput;
 
 
@@ -266,6 +279,48 @@ namespace NtoLib.InputFields.TextBoxInt
             UpdateFontSize();
         }
 
+        private void HandleVisibleChanged(object sender, EventArgs e)
+        {
+            ToCommonMode();
+        }
+
+        private void UpdateFocus(VisualControlBase focusedControl)
+        {
+            if(this != focusedControl)
+                ToCommonMode();
+        }
+
+
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            if(!DesignMode)
+            {
+                _maxValueInput = FBConnector.GetPinInt(TextBoxIntFB.MaxValueToControlId);
+                _minValueInput = FBConnector.GetPinInt(TextBoxIntFB.MinValueToControlId);
+                UpdateLimits();
+
+                int input = FBConnector.GetPinInt(TextBoxIntFB.OutputToControlId);
+                if(input != _lastInput)
+                {
+                    _lastInput = input;
+                    _value = input;
+
+                    UpdateText();
+                }
+
+                _inputIsLock = FBConnector.GetPinValue<bool>(TextBoxIntFB.LockToControl);
+                UpdateLockBehaviour();
+
+                if(_isInitialized)
+                    FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
+            }
+        }
+
+
+
         private void UpdateFontSize()
         {
             int doubledBorder = 2 * BorderWidth;
@@ -293,53 +348,9 @@ namespace NtoLib.InputFields.TextBoxInt
             label.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
         }
 
-
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-
-            if(!DesignMode)
-            {
-                _maxValueInput = FBConnector.GetPinInt(TextBoxIntFB.MaxValueToControlId);
-                _minValueInput = FBConnector.GetPinInt(TextBoxIntFB.MinValueToControlId);
-                UpdateLimits();
-
-                int input = FBConnector.GetPinInt(TextBoxIntFB.OutputToControlId);
-                if(input != _lastInput)
-                {
-                    _lastInput = input;
-                    _value = input;
-
-                    UpdateText();
-                }
-
-                _inputLock = FBConnector.GetPinValue<bool>(TextBoxIntFB.LockToControl);
-                UpdateLockBehaviour();
-
-                if(_isInitialized)
-                    FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
-            }
-        }
-
-
-
-        private void HandleVisibleChanged(object sender, EventArgs e)
-        {
-            ToCommonMode();
-        }
-
-        private void UpdateFocus(VisualControlBase focusedControl)
-        {
-            if(this != focusedControl)
-                ToCommonMode();
-        }
-
-
-
         private void UpdateLockBehaviour(bool forceUpdate = false)
         {
-            bool actualIsLocked = _inputLock || UserLock;
+            bool actualIsLocked = _inputIsLock || UserLock;
             if((actualIsLocked == _isLocked) && !forceUpdate)
                 return;
 
@@ -364,8 +375,6 @@ namespace NtoLib.InputFields.TextBoxInt
                 _isLocked = false;
             }
         }
-
-
 
         private void ToEditMode(object sender, MouseEventArgs e)
         {
@@ -409,8 +418,6 @@ namespace NtoLib.InputFields.TextBoxInt
             textBox.Enabled = false;
             textBox.Enabled = true;
         }
-
-
 
         private void UpdateLimits()
         {

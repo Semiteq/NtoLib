@@ -229,6 +229,10 @@ namespace NtoLib.InputFields.TextBoxFloat
             }
         }
 
+        /// <summary>
+        /// Свойство, необходимое для сохранения настроек
+        /// шрифта между перезапусками средствами MasterSCADA
+        /// </summary>
         [Browsable(false)]
         public Font TextBoxFont
         {
@@ -245,25 +249,34 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private string _stringFormat;
 
-        /// <summary> 
-        /// Отступ от границы до TextBox.
-        /// Нужен для того, чтобы символы не "прилипали к границе"
-        /// </summary>
+        /// <summary> Отступ от границы до TextBox.
+        /// Нужен для того, чтобы символы не "прилипали к границе" </summary>
         private const int _textBoxOffset = 3;
 
+        /// <summary> Нижний порог значения, полученный с входа ФБ </summary>
         private float _minValueInput;
+        /// <summary> Верхний порог значения, полученны с входа ФБ </summary>
         private float _maxValueInput;
 
+        /// <summary> Текущий нижний порог значения, учитывающий как вход ФБ, 
+        /// так и свойство контрола </summary>
         private float _actualMinValue;
+        /// <summary> Текущий верхний порог значения, учитывающий как вход ФБ,
+        /// так и свойство контрола </summary>
         private float _actualMaxValue;
 
+        /// <summary> Последнее отображаемое значение </summary>
         private float _value;
         private bool _isInitialized = false;
         private bool _editMode = false;
 
+        /// <summary> Переменная требуемого состояния блокировки ввода,
+        /// полученная с входа ФБ </summary>
         private bool _inputLock;
+        /// <summary> Текущее состояние блокировки ввода </summary>
         private bool _isLocked = false;
 
+        /// <summary> Поледнее значение, полученное из ФБ </summary>
         private float _lastInput;
 
 
@@ -311,31 +324,15 @@ namespace NtoLib.InputFields.TextBoxFloat
             UpdateFontSize();
         }
 
-        private void UpdateFontSize()
+        private void HandleVisibleChanged(object sender, EventArgs e)
         {
-            int doubledBorder = 2 * BorderWidth;
-            int doubledOffset = 2 * _textBoxOffset;
-
-            float size = (Height - doubledBorder - doubledOffset - 1f) / 1.525f;
-            size = size <= 1 ? 1 : size;
-
-            Font font = new Font(TextBoxFont.FontFamily, size, FontStyle.Regular);
-            TextBoxFont = font;
+            ToCommonMode();
         }
 
-        private void UpdateBorderWidth()
+        private void UpdateFocus(VisualControlBase focusedControl)
         {
-            int doubledBorder = 2 * BorderWidth;
-            int doubledOffset = 2 * _textBoxOffset;
-
-            pictureBox.Location = new Point(BorderWidth, BorderWidth);
-            pictureBox.Size = new Size(Width - doubledBorder, Height - doubledBorder);
-
-            textBox.Location = new Point(BorderWidth + 3, BorderWidth + 3);
-            textBox.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
-
-            label.Location = new Point(BorderWidth + 3, BorderWidth + 3);
-            label.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
+            if(this != focusedControl)
+                ToCommonMode();
         }
 
 
@@ -369,18 +366,32 @@ namespace NtoLib.InputFields.TextBoxFloat
 
 
 
-        private void HandleVisibleChanged(object sender, EventArgs e)
+        private void UpdateFontSize()
         {
-            ToCommonMode();
+            int doubledBorder = 2 * BorderWidth;
+            int doubledOffset = 2 * _textBoxOffset;
+
+            float size = (Height - doubledBorder - doubledOffset - 1f) / 1.525f;
+            size = size <= 1 ? 1 : size;
+
+            Font font = new Font(TextBoxFont.FontFamily, size, FontStyle.Regular);
+            TextBoxFont = font;
         }
 
-        private void UpdateFocus(VisualControlBase focusedControl)
+        private void UpdateBorderWidth()
         {
-            if(this != focusedControl)
-                ToCommonMode();
+            int doubledBorder = 2 * BorderWidth;
+            int doubledOffset = 2 * _textBoxOffset;
+
+            pictureBox.Location = new Point(BorderWidth, BorderWidth);
+            pictureBox.Size = new Size(Width - doubledBorder, Height - doubledBorder);
+
+            textBox.Location = new Point(BorderWidth + 3, BorderWidth + 3);
+            textBox.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
+
+            label.Location = new Point(BorderWidth + 3, BorderWidth + 3);
+            label.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
         }
-
-
 
         private void UpdateLockBehaviour(bool forceUpdate = false)
         {
@@ -409,8 +420,6 @@ namespace NtoLib.InputFields.TextBoxFloat
                 _isLocked = false;
             }
         }
-
-
 
         private void ToEditMode(object sender, MouseEventArgs e)
         {
@@ -454,8 +463,6 @@ namespace NtoLib.InputFields.TextBoxFloat
             textBox.Enabled = false;
             textBox.Enabled = true;
         }
-
-
 
         private void UpdateLimits()
         {
