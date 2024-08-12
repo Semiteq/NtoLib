@@ -18,6 +18,24 @@ namespace NtoLib.InputFields.TextBoxFloat
         [DisplayName("Цвет границы")]
         public override Color BackColor { get; set; } = Color.Black;
 
+        private int _borderWidth = 1;
+        [DispId(11)]
+        [Category("Внешний вид")]
+        [DisplayName("Толщина границы")]
+        public int BorderWidth
+        {
+            get
+            {
+                return _borderWidth;
+            }
+            set
+            {
+                _borderWidth = value < 0 ? 0 : value;
+                UpdateBorderWidth();
+                UpdateFontSize();
+            }
+        }
+
         private bool _userLock;
         [DispId(20)]
         [Category("Поведение")]
@@ -227,6 +245,11 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private string _stringFormat;
 
+        /// <summary> 
+        /// Отступ от границы до TextBox.
+        /// Нужен для того, чтобы символы не "прилипали к границе"
+        /// </summary>
+        private const int _textBoxOffset = 3;
 
         private float _minValueInput;
         private float _maxValueInput;
@@ -259,7 +282,8 @@ namespace NtoLib.InputFields.TextBoxFloat
             _isInitialized = true;
 
             UpdateLimits();
-            UpdateTextBoxFontSize();
+            UpdateBorderWidth();
+            UpdateFontSize();
             UpdateLockBehaviour(true);
             ValidateValue(true);
             textBox.ValidatingValue += ValidateValue;
@@ -273,7 +297,8 @@ namespace NtoLib.InputFields.TextBoxFloat
 
             _isInitialized = false;
 
-            UpdateTextBoxFontSize();
+            UpdateBorderWidth();
+            UpdateFontSize();
             UpdateLockBehaviour(true);
             ValidateValue(true);
             textBox.ValidatingValue -= ValidateValue;
@@ -283,16 +308,34 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private void HandleResize(object sender, EventArgs e)
         {
-            UpdateTextBoxFontSize();
+            UpdateFontSize();
         }
 
-        private void UpdateTextBoxFontSize()
+        private void UpdateFontSize()
         {
-            float size = (Height - 8f - 1f) / 1.525f;
+            int doubledBorder = 2 * BorderWidth;
+            int doubledOffset = 2 * _textBoxOffset;
+
+            float size = (Height - doubledBorder - doubledOffset - 1f) / 1.525f;
             size = size <= 1 ? 1 : size;
 
             Font font = new Font(TextBoxFont.FontFamily, size, FontStyle.Regular);
             TextBoxFont = font;
+        }
+
+        private void UpdateBorderWidth()
+        {
+            int doubledBorder = 2 * BorderWidth;
+            int doubledOffset = 2 * _textBoxOffset;
+
+            pictureBox.Location = new Point(BorderWidth, BorderWidth);
+            pictureBox.Size = new Size(Width - doubledBorder, Height - doubledBorder);
+
+            textBox.Location = new Point(BorderWidth + 3, BorderWidth + 3);
+            textBox.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
+
+            label.Location = new Point(BorderWidth + 3, BorderWidth + 3);
+            label.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
         }
 
 
