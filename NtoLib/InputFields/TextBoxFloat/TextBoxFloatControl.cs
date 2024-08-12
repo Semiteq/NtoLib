@@ -412,7 +412,7 @@ namespace NtoLib.InputFields.TextBoxFloat
 
 
 
-        private void HandleTextBoxMouseDown(object sender, MouseEventArgs e)
+        private void ToEditMode(object sender, MouseEventArgs e)
         {
             ToEditMode();
         }
@@ -431,6 +431,7 @@ namespace NtoLib.InputFields.TextBoxFloat
                 afterLenght++;
 
             textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
+            textBox.Focus();
             textBox.SelectAll();
 
             FocusManager.OnFocused(this);

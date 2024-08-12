@@ -367,7 +367,7 @@ namespace NtoLib.InputFields.TextBoxInt
 
 
 
-        private void HandleTextBoxMouseDown(object sender, MouseEventArgs e)
+        private void ToEditMode(object sender, MouseEventArgs e)
         {
             ToEditMode();
         }
@@ -386,6 +386,7 @@ namespace NtoLib.InputFields.TextBoxInt
                 afterLenght++;
 
             textBox.Text = textBox.Text.Substring(beforeLenght, textBox.Text.Length - beforeLenght - afterLenght);
+            textBox.Focus();
             textBox.SelectAll();
 
             FocusManager.OnFocused(this);
