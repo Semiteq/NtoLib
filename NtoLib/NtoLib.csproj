@@ -93,6 +93,57 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Pumps\Status.cs" />
+    <Compile Include="Recipes\MbeTable\ActionTime.cs" />
+    <Compile Include="Recipes\MbeTable\BufferActions.cs" />
+    <Compile Include="Recipes\MbeTable\CellType.cs" />
+    <Compile Include="Recipes\MbeTable\Commands.cs" />
+    <Compile Include="Recipes\MbeTable\CommunicationSettings.cs" />
+    <Compile Include="Recipes\MbeTable\PLC_Communication.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLine.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLineFactory.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLineParser.cs" />
+    <Compile Include="Recipes\MbeTable\Reg.cs" />
+    <Compile Include="Recipes\MbeTable\SettingsReader.cs" />
+    <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
+    <Compile Include="Recipes\MbeTable\TableAddLine.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableColumn.cs" />
+    <Compile Include="Recipes\MbeTable\TableControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableControl.Designer.cs">
+      <DependentUpon>TableControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableEnumType.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\Close.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\CloseAll.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\End.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\EndFor_Loop.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\For_Loop.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\NH3_Close.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\NH3_Open.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\NH3_Purge.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\Open.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\OpenTime.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\Pause.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\Power.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\PowerSmooth.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\PowerWait.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\Temperature.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\TemperatureSmooth.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\TemperatureWait.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\Wait.cs" />
+    <Compile Include="Recipes\MbeTable\TableLoadSave.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableLoops.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableMode.cs" />
+    <Compile Include="Recipes\MbeTable\TCell.cs" />
+    <Compile Include="Recipes\MbeTable\Utils\Enumeration.cs" />
+    <Compile Include="Recipes\MbeTable\XmlTableDescriptionReader.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
     <Compile Include="Render\Orientation.cs" />
@@ -159,6 +210,9 @@
     <EmbeddedResource Include="Pumps\Settings\PumpSettingForm.resx">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Recipes\MbeTable\TableControl.resx">
+      <DependentUpon>TableControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Utils\LabeledValue.resx">
       <DependentUpon>LabeledValue.cs</DependentUpon>
     </EmbeddedResource>
@@ -199,6 +253,10 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ClockGenerator\ClockGeneratorFB.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Recipes\MbeTable\MbeTableFB.bmp" />
+    <EmbeddedResource Include="Recipes\MbeTable\MbeTableFB.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
