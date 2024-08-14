@@ -376,10 +376,6 @@ namespace NtoLib.Recipes.MbeTable
             this.button_del.Width = this._buttons_size;
             this.button_del.Top = ((Control)this).Height - this._buttons_size;
             this.button_del.Height = this._buttons_size;
-            this.TimeRecalculate.Left = ((Control)this).Width - this._buttons_size * 6 - 40;
-            this.TimeRecalculate.Width = this._buttons_size;
-            this.TimeRecalculate.Top = ((Control)this).Height - this._buttons_size;
-            this.TimeRecalculate.Height = this._buttons_size;
 
             this.DbgMsg.Left = 5;
             this.DbgMsg.Top = ((Control)this).Height - this._buttons_size;

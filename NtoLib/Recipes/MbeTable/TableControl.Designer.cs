@@ -36,7 +36,6 @@ namespace NtoLib.Recipes.MbeTable
             this.button_open = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.TimeRecalculate = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -179,21 +178,10 @@ namespace NtoLib.Recipes.MbeTable
             this.saveFileDialog1.Filter = "recipe(*.csv)|*.csv";
             this.saveFileDialog1.InitialDirectory = "c:\\";
             // 
-            // TimeRecalculate
-            // 
-            this.TimeRecalculate.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.TimeRecalculate.Location = new System.Drawing.Point(245, 426);
-            this.TimeRecalculate.Name = "TimeRecalculate";
-            this.TimeRecalculate.Size = new System.Drawing.Size(43, 40);
-            this.TimeRecalculate.TabIndex = 14;
-            this.TimeRecalculate.Text = "Time";
-            this.TimeRecalculate.UseVisualStyleBackColor = true;
-            // 
             // TableControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.TimeRecalculate);
             this.Controls.Add(this.button_add_after);
             this.Controls.Add(this.button_add_before);
             this.Controls.Add(this.button_del);
@@ -217,6 +205,5 @@ namespace NtoLib.Recipes.MbeTable
         private DataGridViewTextBoxColumn Column3;
         private DataGridViewTextBoxColumn Column4;
         private DataGridViewTextBoxColumn Column5;
-        private Button TimeRecalculate;
     }
 }
