@@ -30,8 +30,6 @@ namespace NtoLib.Recipes.MbeTable
         private Button button_save;
         private Button button_open;
 
-        private TextBox DbgMsg;
-
         private OpenFileDialog openFileDialog1;
         private SaveFileDialog saveFileDialog1;
 
@@ -335,7 +333,6 @@ namespace NtoLib.Recipes.MbeTable
         public TableControl() : base(true)
         {
             InitializeComponent();
-            ResizeTable();
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -344,44 +341,6 @@ namespace NtoLib.Recipes.MbeTable
 
 
         #region TableView
-        private void MainTable_SizeChanged(object sender, EventArgs e) => this.ResizeTable();
-        private void ResizeTable()
-        {
-            if(((Control)this).Width < 100)
-                ((Control)this).Width = 100;
-            if(((Control)this).Height < 100)
-                ((Control)this).Height = 100;
-
-            this.dataGridView1.Left = 0;
-            this.dataGridView1.Top = 0;
-            this.dataGridView1.Width = ((Control)this).Width;
-            this.dataGridView1.Height = ((Control)this).Height - this._buttons_size - 5;
-            this.button_save.Left = ((Control)this).Width - this._buttons_size - 5;
-            this.button_save.Width = this._buttons_size;
-            this.button_save.Top = ((Control)this).Height - this._buttons_size;
-            this.button_save.Height = this._buttons_size;
-            this.button_open.Left = ((Control)this).Width - this._buttons_size * 2 - 10;
-            this.button_open.Width = this._buttons_size;
-            this.button_open.Top = ((Control)this).Height - this._buttons_size;
-            this.button_open.Height = this._buttons_size;
-            this.button_add_after.Left = ((Control)this).Width - this._buttons_size * 3 - 25;
-            this.button_add_after.Width = this._buttons_size;
-            this.button_add_after.Top = ((Control)this).Height - this._buttons_size;
-            this.button_add_after.Height = this._buttons_size;
-            this.button_add_before.Left = ((Control)this).Width - this._buttons_size * 4 - 30;
-            this.button_add_before.Width = this._buttons_size;
-            this.button_add_before.Top = ((Control)this).Height - this._buttons_size;
-            this.button_add_before.Height = this._buttons_size;
-            this.button_del.Left = ((Control)this).Width - this._buttons_size * 5 - 35;
-            this.button_del.Width = this._buttons_size;
-            this.button_del.Top = ((Control)this).Height - this._buttons_size;
-            this.button_del.Height = this._buttons_size;
-
-            this.DbgMsg.Left = 5;
-            this.DbgMsg.Top = ((Control)this).Height - this._buttons_size;
-            this.DbgMsg.Width = (this._tableType == TableMode.View ? this.button_open.Left : this.button_del.Left) - 10;
-            this.DbgMsg.Height = this._buttons_size;
-        }
         private void ChangeRowFont()
         {
             int index;
@@ -424,7 +383,6 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
             columns = RecipeLine.ColumnHeaders;
-            //this.ReadTableDescriptionFromXML();
             make_table_msg += " Успешно.";
             foreach(TableColumn column in columns)
             {
@@ -511,17 +469,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void WriteStatusMessage(string message, bool isError)
         {
-            //string[] stringArray = new string[3];
-            //for (int index = 0; index < stringArray.Length; ++index)
-            //    stringArray[index] = "";
-            //for (int index = 1; index < this.DbgMsg.Lines.Length && index < stringArray.Length; ++index)
-            //    stringArray[index - 1] = this.DbgMsg.Lines[index];
-            //stringArray[stringArray.Length - 1] = message;
-
-            string[] stringArray = new string[1];
-            stringArray[0] = message;
-            this.DbgMsg.Lines = stringArray;
-
+            this.DbgMsg.Text = message;
             this.DbgMsg.BackColor = isError ? Color.OrangeRed : Color.White;
         }
 
@@ -532,7 +480,6 @@ namespace NtoLib.Recipes.MbeTable
         {
             if(this._resize)
             {
-                this.ResizeTable();
                 this._resize = false;
             }
             if(this._headerFontChanged)
@@ -691,7 +638,6 @@ namespace NtoLib.Recipes.MbeTable
         #endregion
 
 
-        private void MainTable_Load(object sender, EventArgs e) => this.ResizeTable();
 
         private void MainTable_Click(object sender, EventArgs e)
         {
