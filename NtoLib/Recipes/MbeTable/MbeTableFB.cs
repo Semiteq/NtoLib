@@ -12,7 +12,7 @@ namespace NtoLib.Recipes.MbeTable
     [Guid("DFB05172-07CD-492C-925E-A091B197D8A8")]
     [FBOptions(FBOptions.EnableChangeConfigInRT)]
     [VisualControls(typeof(TableControl))]
-    [DisplayName("Таблица рецептов")]
+    [DisplayName("Таблица рецептов MBE")]
     [ComVisible(true)]
     [Serializable]
     public class MbeTableFB : VisualFBBase

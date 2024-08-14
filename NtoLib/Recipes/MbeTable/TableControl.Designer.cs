@@ -205,6 +205,7 @@ namespace NtoLib.Recipes.MbeTable
             this.Size = new System.Drawing.Size(968, 526);
             this.Load += new System.EventHandler(this.MainTable_Load);
             this.SizeChanged += new System.EventHandler(this.MainTable_SizeChanged);
+            this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

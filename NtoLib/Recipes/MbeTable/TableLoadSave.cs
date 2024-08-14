@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using NtoLib.Properties;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -89,6 +90,29 @@ namespace NtoLib.Recipes.MbeTable
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Загружает рецепт из ПЛК и отображает его в таблице
+        /// </summary>
+        private bool TryLoadRecipeFromPlc()
+        {
+            SettingsReader settingsReader = new SettingsReader(FBConnector);
+            CommunicationSettings commSettings = settingsReader.ReadTableSettings();
+            PLC_Communication plcCommunication = new PLC_Communication();
+            List<RecipeLine> recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
+
+            if(recipe == null)
+                return false;
+
+            dataGridView1.Rows.Clear();
+            _tableData.Clear();
+
+            foreach(RecipeLine line in recipe)
+                AddLineToRecipe(line, true);
+
+            RefreshTable();
+            return true;
         }
 
         private bool CompareRecipes(List<RecipeLine> recipe1, List<RecipeLine> recipe2)
