@@ -38,7 +38,7 @@ namespace NtoLib.InputFields.TextBoxInt
 
         private bool _userLock;
         [DispId(20)]
-        [Category("Поведение")]
+        [Category("Внешний вид")]
         [DisplayName("Блокировка ввода")]
         public bool UserLock
         {
