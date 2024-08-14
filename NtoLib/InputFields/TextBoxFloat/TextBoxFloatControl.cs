@@ -189,7 +189,7 @@ namespace NtoLib.InputFields.TextBoxFloat
         [DispId(100)]
         [Category("Значение")]
         [DisplayName("Границы из контрола")]
-        [Description("Переключает ограничение вводимого значения пределами ниже")]
+        [Description("Ограничивать вводимое значение пределами, заданными в свойстах контрола (таблица выше)")]
         public bool UseLimitsFromUI { get; set; }
 
         private float _maxValueProperty;
