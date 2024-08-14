@@ -57,10 +57,11 @@
             this.label.BackColor = System.Drawing.Color.White;
             this.label.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.label.Font = new System.Drawing.Font("Arial", 14F);
-            this.label.Location = new System.Drawing.Point(4, 4);
-            this.label.Margin = new System.Windows.Forms.Padding(4);
+            this.label.ForeColor = System.Drawing.Color.Black;
+            this.label.Location = new System.Drawing.Point(1, 4);
+            this.label.Margin = new System.Windows.Forms.Padding(1, 4, 1, 4);
             this.label.Name = "label";
-            this.label.Size = new System.Drawing.Size(142, 22);
+            this.label.Size = new System.Drawing.Size(148, 22);
             this.label.TabIndex = 2;
             this.label.Text = "0";
             this.label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

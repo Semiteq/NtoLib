@@ -389,8 +389,8 @@ namespace NtoLib.InputFields.TextBoxFloat
             textBox.Location = new Point(BorderWidth + 3, BorderWidth + 3);
             textBox.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
 
-            label.Location = new Point(BorderWidth + 3, BorderWidth + 3);
-            label.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
+            label.Location = new Point(BorderWidth, BorderWidth + 3);
+            label.Size = new Size(Width - doubledBorder, Height - doubledBorder - doubledOffset);
         }
 
         private void UpdateLockBehaviour(bool forceUpdate = false)
