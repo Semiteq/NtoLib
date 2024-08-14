@@ -70,7 +70,7 @@ namespace NtoLib.InputFields.TextBoxInt
             }
         }
 
-        private Color _backColorLocked = Color.WhiteSmoke;
+        private Color _backColorLocked = Color.LightYellow;
         [DispId(40)]
         [Category("Внешний вид")]
         [DisplayName("Цвет заблокированного")]
@@ -135,7 +135,7 @@ namespace NtoLib.InputFields.TextBoxInt
                 textBox.TextAlign = value;
 
                 if(value == HorizontalAlignment.Left)
-                    label.TextAlign = ContentAlignment.MiddleCenter;
+                    label.TextAlign = ContentAlignment.MiddleLeft;
                 else if(value == HorizontalAlignment.Right)
                     label.TextAlign = ContentAlignment.MiddleRight;
                 else
@@ -344,8 +344,8 @@ namespace NtoLib.InputFields.TextBoxInt
             textBox.Location = new Point(BorderWidth + 3, BorderWidth + 3);
             textBox.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
 
-            label.Location = new Point(BorderWidth + 3, BorderWidth + 3);
-            label.Size = new Size(Width - doubledBorder - doubledOffset, Height - doubledBorder - doubledOffset);
+            label.Location = new Point(BorderWidth, BorderWidth + 3);
+            label.Size = new Size(Width - doubledBorder, Height - doubledBorder - doubledOffset);
         }
 
         private void UpdateLockBehaviour(bool forceUpdate = false)

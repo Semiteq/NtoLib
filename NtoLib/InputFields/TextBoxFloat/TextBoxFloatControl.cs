@@ -70,7 +70,7 @@ namespace NtoLib.InputFields.TextBoxFloat
             }
         }
 
-        private Color _backColorLocked = Color.WhiteSmoke;
+        private Color _backColorLocked = Color.LightYellow;
         [DispId(40)]
         [Category("Внешний вид")]
         [DisplayName("Цвет заблокированного")]
@@ -135,7 +135,7 @@ namespace NtoLib.InputFields.TextBoxFloat
                 textBox.TextAlign = value;
 
                 if(value == HorizontalAlignment.Left)
-                    label.TextAlign = ContentAlignment.MiddleCenter;
+                    label.TextAlign = ContentAlignment.MiddleLeft;
                 else if(value == HorizontalAlignment.Right)
                     label.TextAlign = ContentAlignment.MiddleRight;
                 else
