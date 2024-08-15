@@ -53,7 +53,7 @@
             this.stateLabel.Location = new System.Drawing.Point(8, 5);
             this.stateLabel.Margin = new System.Windows.Forms.Padding(3, 0, 3, 10);
             this.stateLabel.Name = "stateLabel";
-            this.stateLabel.Size = new System.Drawing.Size(263, 25);
+            this.stateLabel.Size = new System.Drawing.Size(367, 25);
             this.stateLabel.TabIndex = 25;
             this.stateLabel.Text = "Состояние: ";
             this.stateLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -247,7 +247,7 @@
             // 
             this.temperatureInLabel.AutoSize = true;
             this.temperatureInLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.temperatureInLabel.LabelText = "Твх:";
+            this.temperatureInLabel.LabelText = "Т1:";
             this.temperatureInLabel.Location = new System.Drawing.Point(9, 464);
             this.temperatureInLabel.Margin = new System.Windows.Forms.Padding(4);
             this.temperatureInLabel.Name = "temperatureInLabel";
@@ -259,7 +259,7 @@
             // 
             this.temperatureOutLabel.AutoSize = true;
             this.temperatureOutLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.temperatureOutLabel.LabelText = "Твых:";
+            this.temperatureOutLabel.LabelText = "Т2:";
             this.temperatureOutLabel.Location = new System.Drawing.Point(9, 497);
             this.temperatureOutLabel.Margin = new System.Windows.Forms.Padding(4);
             this.temperatureOutLabel.Name = "temperatureOutLabel";
@@ -273,7 +273,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(399, 546);
+            this.ClientSize = new System.Drawing.Size(398, 546);
             this.ControlBox = false;
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
