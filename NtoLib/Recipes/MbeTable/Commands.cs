@@ -10,10 +10,12 @@
         public const string TEMP = "TEMP";
         public const string TEMP_WAIT = "TEMP + WAIT";
         public const string TEMP_SMOOTH = "TEMP_SMOOTH";
+        public const string TEMP_BY_TIME = "TEMP_BY_TIME";
 
         public const string POWER = "POWER";
         public const string POWER_WAIT = "POWER + WAIT";
         public const string POWER_SMOOTH = "POWER_SMOOTH";
+        public const string POWER_BY_TIME = "POWER_BY_TIME";
 
         public const string WAIT = "WAIT";
 

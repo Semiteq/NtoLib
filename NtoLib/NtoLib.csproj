@@ -128,9 +128,11 @@
     <Compile Include="Recipes\MbeTable\TableLines\OpenTime.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\Pause.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\Power.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\PowerByTime.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\PowerSmooth.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\PowerWait.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\Temperature.cs" />
+    <Compile Include="Recipes\MbeTable\TableLines\TemperatureByTime.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\TemperatureSmooth.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\TemperatureWait.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\Wait.cs" />

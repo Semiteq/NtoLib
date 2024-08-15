@@ -55,28 +55,30 @@ namespace NtoLib.Recipes.MbeTable
             get 
             {
                 var actions = new TableEnumType("Actions");
-                actions.AddEnum(Commands.CLOSE, 1);
-                actions.AddEnum(Commands.OPEN, 2);
-                actions.AddEnum(Commands.OPEN_TIME, 3);
-                actions.AddEnum(Commands.CLOSE_ALL, 4);
+                actions.AddEnum(Commands.CLOSE, 10);
+                actions.AddEnum(Commands.OPEN, 20);
+                actions.AddEnum(Commands.OPEN_TIME, 30);
+                actions.AddEnum(Commands.CLOSE_ALL, 40);
 
-                actions.AddEnum(Commands.TEMP, 5);
-                actions.AddEnum(Commands.TEMP_WAIT, 6);
-                actions.AddEnum(Commands.TEMP_SMOOTH, 7);
+                actions.AddEnum(Commands.TEMP, 50);
+                actions.AddEnum(Commands.TEMP_WAIT, 60);
+                actions.AddEnum(Commands.TEMP_SMOOTH, 70);
+                actions.AddEnum(Commands.TEMP_BY_TIME, 80);
 
-                actions.AddEnum(Commands.POWER, 8);
-                actions.AddEnum(Commands.POWER_WAIT, 9);
-                actions.AddEnum(Commands.POWER_SMOOTH, 10);
+                actions.AddEnum(Commands.POWER, 90);
+                actions.AddEnum(Commands.POWER_WAIT, 100);
+                actions.AddEnum(Commands.POWER_SMOOTH, 110);
+                actions.AddEnum(Commands.POWER_BY_TIME, 120);
 
-                actions.AddEnum(Commands.WAIT, 11);
+                actions.AddEnum(Commands.WAIT, 130);
 
-                actions.AddEnum(Commands.FOR, 12);
-                actions.AddEnum(Commands.END_FOR, 13);
-                actions.AddEnum(Commands.PAUSE, 14);
+                actions.AddEnum(Commands.FOR, 140);
+                actions.AddEnum(Commands.END_FOR, 150);
+                actions.AddEnum(Commands.PAUSE, 160);
 
-                actions.AddEnum(Commands.NH3_OPEN, 15);
-                actions.AddEnum(Commands.NH3_CLOSE, 16);
-                actions.AddEnum(Commands.NH3_PURGE, 17);
+                actions.AddEnum(Commands.NH3_OPEN, 170);
+                actions.AddEnum(Commands.NH3_CLOSE, 180);
+                actions.AddEnum(Commands.NH3_PURGE, 190);
 
                 return actions;
             }
@@ -90,12 +92,12 @@ namespace NtoLib.Recipes.MbeTable
             {
                 return new List<TableColumn>() 
                 {
-                    new TableColumn("Действие", Actions),
-                    new TableColumn("Номер", CellType._int),
-                    new TableColumn("Задание", CellType._float),
-                    new TableColumn("Скорость/Время", CellType._float),
-                    new TableColumn("Время", CellType._float),
-                    new TableColumn("Комментарий", CellType._string)
+                    new TableColumn("Действие", Actions, 120),
+                    new TableColumn("Номер", CellType._int, 50),
+                    new TableColumn("Задание", CellType._float, 70),
+                    new TableColumn("Скорость/Время", CellType._float, 120),
+                    new TableColumn("Время", CellType._float, 100),
+                    new TableColumn("Комментарий", CellType._string, 200)
                 };
             }
         }
@@ -104,7 +106,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             get
             {
-                var column = new TableColumn("Действие", Actions);
+                var column = new TableColumn("Действие", Actions, 50);
                 DataGridViewComboBoxCell viewComboBoxCell = new DataGridViewComboBoxCell();
                 viewComboBoxCell.MaxDropDownItems = column.EnumType.enum_counts;
                 for (int ittr_num = 0; ittr_num < column.EnumType.enum_counts; ++ittr_num)
