@@ -243,6 +243,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Recipes\MbeTable\TableControl.resx">
       <DependentUpon>TableControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntControl.resx">
       <DependentUpon>TextBoxIntControl.cs</DependentUpon>
     </EmbeddedResource>
