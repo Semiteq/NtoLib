@@ -102,7 +102,6 @@
     <Compile Include="Recipes\MbeTable\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLineFactory.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLineParser.cs" />
-    <Compile Include="Recipes\MbeTable\Reg.cs" />
     <Compile Include="Recipes\MbeTable\SettingsReader.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\TableAddLine.cs">
@@ -145,7 +144,6 @@
     <Compile Include="Recipes\MbeTable\TableMode.cs" />
     <Compile Include="Recipes\MbeTable\TCell.cs" />
     <Compile Include="Recipes\MbeTable\Utils\Enumeration.cs" />
-    <Compile Include="Recipes\MbeTable\XmlTableDescriptionReader.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
     <Compile Include="Render\Orientation.cs" />
