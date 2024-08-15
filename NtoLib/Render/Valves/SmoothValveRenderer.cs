@@ -1,4 +1,4 @@
-﻿using NtoLib.Valves;
+﻿using NtoLib.Devices.Valves;
 using System.Drawing;
 
 namespace NtoLib.Render.Valves

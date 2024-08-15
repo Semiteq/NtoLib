@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Pumps
+﻿namespace NtoLib.Devices.Pumps
 {
     partial class PumpControl
     {

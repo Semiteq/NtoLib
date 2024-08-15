@@ -1,6 +1,6 @@
 ﻿using FB.VisualFB;
-using NtoLib.Pumps;
-using NtoLib.Valves;
+using NtoLib.Devices.Pumps;
+using NtoLib.Devices.Valves;
 using System;
 using System.Drawing;
 using System.Windows.Forms;

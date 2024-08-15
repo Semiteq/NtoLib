@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Pumps.Settings
+﻿namespace NtoLib.Devices.Pumps.Settings
 {
     partial class PumpSettingForm
     {

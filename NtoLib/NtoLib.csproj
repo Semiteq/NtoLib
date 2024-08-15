@@ -86,21 +86,21 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Pumps\PumpControl.cs">
+    <Compile Include="Devices\Pumps\PumpControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Pumps\PumpControl.Designer.cs">
+    <Compile Include="Devices\Pumps\PumpControl.Designer.cs">
       <DependentUpon>PumpControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Pumps\PumpFB.cs" />
-    <Compile Include="Pumps\PumpType.cs" />
-    <Compile Include="Pumps\Settings\PumpSettingForm.cs">
+    <Compile Include="Devices\Pumps\PumpFB.cs" />
+    <Compile Include="Devices\Pumps\PumpType.cs" />
+    <Compile Include="Devices\Pumps\Settings\PumpSettingForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Pumps\Settings\PumpSettingForm.Designer.cs">
+    <Compile Include="Devices\Pumps\Settings\PumpSettingForm.Designer.cs">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Pumps\Status.cs" />
+    <Compile Include="Devices\Pumps\Status.cs" />
     <Compile Include="Recipes\MbeTable\ActionTime.cs" />
     <Compile Include="Recipes\MbeTable\BufferActions.cs" />
     <Compile Include="Recipes\MbeTable\CellType.cs" />
@@ -210,19 +210,19 @@
     <Compile Include="Utils\TextBoxInt.Designer.cs">
       <DependentUpon>TextBoxInt.cs</DependentUpon>
     </Compile>
-    <Compile Include="Valves\Status.cs" />
+    <Compile Include="Devices\Valves\Status.cs" />
     <Compile Include="Render\Valves\CommonValveRenderer.cs" />
-    <Compile Include="Valves\Settings\SettingsForm.cs">
+    <Compile Include="Devices\Valves\Settings\SettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Valves\Settings\SettingsForm.Designer.cs">
+    <Compile Include="Devices\Valves\Settings\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Valves\ValveFB.cs" />
-    <Compile Include="Valves\ValveControl.cs">
+    <Compile Include="Devices\Valves\ValveFB.cs" />
+    <Compile Include="Devices\Valves\ValveControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Valves\ValveControl.Designer.cs">
+    <Compile Include="Devices\Valves\ValveControl.Designer.cs">
       <DependentUpon>ValveControl.cs</DependentUpon>
     </Compile>
     <Compile Include="VisualFBBaseExtended.cs" />
@@ -235,10 +235,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Pumps\PumpControl.resx">
+    <EmbeddedResource Include="Devices\Pumps\PumpControl.resx">
       <DependentUpon>PumpControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Pumps\Settings\PumpSettingForm.resx">
+    <EmbeddedResource Include="Devices\Pumps\Settings\PumpSettingForm.resx">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Recipes\MbeTable\TableControl.resx">
@@ -259,14 +259,14 @@
     <EmbeddedResource Include="Utils\Lamp.resx">
       <DependentUpon>Lamp.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Valves\Settings\SettingsForm.resx">
+    <EmbeddedResource Include="Devices\Valves\Settings\SettingsForm.resx">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Valves\ValveControl.resx">
+    <EmbeddedResource Include="Devices\Valves\ValveControl.resx">
       <DependentUpon>ValveControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Valves\ValveFB.bmp" />
-    <EmbeddedResource Include="Valves\ValveFB.xml" />
+    <EmbeddedResource Include="Devices\Valves\ValveFB.bmp" />
+    <EmbeddedResource Include="Devices\Valves\ValveFB.xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -279,8 +279,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Pumps\PumpFB.bmp" />
-    <EmbeddedResource Include="Pumps\PumpFB.xml" />
+    <EmbeddedResource Include="Devices\Pumps\PumpFB.bmp" />
+    <EmbeddedResource Include="Devices\Pumps\PumpFB.xml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ClockGenerator\ClockGeneratorFB.xml" />

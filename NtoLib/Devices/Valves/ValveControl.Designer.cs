@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Valves
+﻿namespace NtoLib.Devices.Valves
 {
     partial class ValveControl
     {

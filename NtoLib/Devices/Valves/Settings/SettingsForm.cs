@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace NtoLib.Valves.Settings
+namespace NtoLib.Devices.Valves.Settings
 {
     public partial class SettingsForm : Form
     {

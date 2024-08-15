@@ -8,7 +8,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace NtoLib.Pumps
+namespace NtoLib.Devices.Pumps
 {
     [Serializable]
     [ComVisible(true)]

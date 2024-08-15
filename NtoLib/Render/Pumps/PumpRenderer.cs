@@ -1,4 +1,4 @@
-﻿using NtoLib.Pumps;
+﻿using NtoLib.Devices.Pumps;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 

@@ -1,21 +1,21 @@
 ﻿using FB.VisualFB;
 using InSAT.Library.Gui;
 using InSAT.Library.Interop.Win32;
-using NtoLib.Render.Valves;
+using NtoLib.Devices.Pumps.Settings;
+using NtoLib.Render.Pumps;
 using NtoLib.Utils;
-using NtoLib.Valves.Settings;
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace NtoLib.Valves
+namespace NtoLib.Devices.Pumps
 {
     [ComVisible(true)]
-    [Guid("4641CB00-693D-46F2-85EC-5142B0C0EDA4")]
-    [DisplayName("Клапан")]
-    public partial class ValveControl : VisualControlBase
+    [Guid("664141D1-44B3-43D7-9897-3A10C936315A")]
+    [DisplayName("Насос")]
+    public partial class PumpControl : VisualControlBase
     {
         private bool _noButtons;
         [DisplayName("Скрыть кнопки")]
@@ -35,7 +35,7 @@ namespace NtoLib.Valves
         }
 
         private Render.Orientation _orientation;
-        [DisplayName("Ориентация клапана")]
+        [DisplayName("Ориентация")]
         public Render.Orientation Orientation
         {
             get
@@ -44,9 +44,6 @@ namespace NtoLib.Valves
             }
             set
             {
-                if(Math.Abs((int)_orientation - (int)value) % 180 == 90)
-                    (Width, Height) = (Height, Width);
-
                 bool updateRequired = _orientation != value;
                 _orientation = value;
                 if(updateRequired)
@@ -71,48 +68,11 @@ namespace NtoLib.Valves
             }
         }
 
-        private bool _isSlideGate;
-        [DisplayName("Шибер")]
-        [Description("Изменяет отображение на шибер. Имеет приоретет над плавным клапаном.")]
-        public bool IsSlideGate
-        {
-            get
-            {
-                return _isSlideGate;
-            }
-            set
-            {
-                _isSlideGate = value;
-                UpdateRenderer();
-                UpdateLayout();
-            }
-        }
-
-        private bool _smoothValvePreview;
-        [DisplayName("Предпросмотр плавного клапана")]
-        [Description("Изменяет отображение на плавный клапан в DesignMode. В Runtime тип будет определятся из StatusWord.")]
-        public bool SmoothValvePreview
-        {
-            get
-            {
-                return _smoothValvePreview;
-            }
-            set
-            {
-                _smoothValvePreview = value;
-                UpdateRenderer();
-                UpdateLayout();
-            }
-        }
-
         internal Status Status;
-        private bool _previousSmoothValve;
 
-        private ValveBaseRenderer _renderer;
+        private PumpRenderer _renderer;
 
-        private SettingsForm _settingsForm;
-
-        private bool _isSmoothValve = false;
+        private PumpSettingForm _settingsForm;
 
         private Timer _impulseTimer;
         private int _currentCommand;
@@ -124,7 +84,7 @@ namespace NtoLib.Valves
 
 
 
-        public ValveControl()
+        public PumpControl()
         {
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
@@ -133,8 +93,9 @@ namespace NtoLib.Valves
 
             InitializeComponent();
 
-            _renderer = new CommonValveRenderer(this);
+            _renderer = new PumpRenderer(this);
         }
+
 
         protected override void ToRuntime()
         {
@@ -173,28 +134,24 @@ namespace NtoLib.Valves
 
 
 
-        private void HandleOpenClick(object sender, EventArgs e)
+        private void HandleStartClick(object sender, EventArgs e)
         {
-            if(!Status.UsedByAutoMode && !Status.BlockOpening)
-                SendCommand(ValveFB.OpenCmdId);
+            if(!Status.UsedByAutoMode && !Status.BlockStart)
+                SendCommand(PumpFB.StartCmdId);
         }
 
-        private void HandleOpenSmoothlyClick(object sender, EventArgs e)
+        private void HandleStopClick(object sender, EventArgs e)
         {
-            if(!Status.UsedByAutoMode && !Status.BlockOpening)
-                SendCommand(ValveFB.OpenSmoothlyCmdId);
-        }
-
-        private void HandleCloseClick(object sender, EventArgs e)
-        {
-            if(!Status.UsedByAutoMode && !Status.BlockClosing)
-                SendCommand(ValveFB.CloseCmdId);
+            if(!Status.UsedByAutoMode && !Status.BlockStop)
+                SendCommand(PumpFB.StopCmdId);
         }
 
 
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            e.Graphics.Clear(BackColor);
+
             if(!FBConnector.DesignMode)
                 UpdateStatus();
 
@@ -220,35 +177,12 @@ namespace NtoLib.Valves
         private void UpdateButtonTable()
         {
             Render.Orientation buttonsOrientation;
-            if(IsHorizontal())
+            if(!IsHorizontal())
                 buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Top : Render.Orientation.Bottom;
             else
                 buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
 
-            Button[] buttons;
-            if(NoButtons)
-            {
-                buttonOpen.Visible = false;
-                buttonOpenSmoothly.Visible = false;
-                buttonClose.Visible = false;
-                buttons = new Button[] { };
-            }
-            else
-            {
-                buttonOpen.Visible = true;
-                buttonClose.Visible = true;
-
-                if(_isSlideGate || !(_isSmoothValve || (DesignMode && SmoothValvePreview)))
-                {
-                    buttonOpenSmoothly.Visible = false;
-                    buttons = new Button[] { buttonOpen, buttonClose };
-                }
-                else
-                {
-                    buttonOpenSmoothly.Visible = true;
-                    buttons = new Button[] { buttonOpen, buttonOpenSmoothly, buttonClose };
-                }
-            }
+            var buttons = new Button[] { buttonStart, buttonStop };
 
             LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons);
         }
@@ -266,9 +200,9 @@ namespace NtoLib.Valves
             }
         }
 
-        private bool IsHorizontal()
+        public bool IsHorizontal()
         {
-            return Orientation == Render.Orientation.Right || Orientation == Render.Orientation.Left;
+            return Bounds.Width >= Bounds.Height;
         }
 
 
@@ -336,7 +270,7 @@ namespace NtoLib.Valves
 
         private void OpenSettingsForm()
         {
-            _settingsForm = new SettingsForm(this);
+            _settingsForm = new PumpSettingForm(this);
             Point formLocation = MousePosition;
             Rectangle area = Screen.GetWorkingArea(formLocation);
             if(formLocation.X + _settingsForm.Width > area.Right)
@@ -351,76 +285,75 @@ namespace NtoLib.Valves
 
         private void RemoveSettingsFormReference(object sender, FormClosedEventArgs e)
         {
-            SettingsForm form = (SettingsForm)sender;
+            PumpSettingForm form = (PumpSettingForm)sender;
             form.FormClosed -= RemoveSettingsFormReference;
             _settingsForm = null;
         }
 
 
         private void UpdateStatus()
-        {   
-            Status.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
-            Status.NotOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
-            Status.NotClosed = GetPinValue<bool>(ValveFB.NotClosedId);
-            if(Status.NotOpened && Status.NotClosed)
+        {
+            Status.ConnectionOk = GetPinValue<bool>(PumpFB.ConnectionOkId);
+            Status.MainError = GetPinValue<bool>(PumpFB.MainErrorId);
+            Status.UsedByAutoMode = GetPinValue<bool>(PumpFB.UsedByAutoModeId);
+            Status.WorkOnNominalSpeed = GetPinValue<bool>(PumpFB.WorkOnNominalSpeedId);
+            Status.Stopped = GetPinValue<bool>(PumpFB.StoppedId);
+            Status.Accelerating = GetPinValue<bool>(PumpFB.AcceleratingId);
+            Status.Decelerating = GetPinValue<bool>(PumpFB.DeceseratingId);
+            Status.Warning = GetPinValue<bool>(PumpFB.WarningId);
+            Status.Message1 = GetPinValue<bool>(PumpFB.Message1Id);
+            Status.Message2 = GetPinValue<bool>(PumpFB.Message2Id);
+            Status.Message3 = GetPinValue<bool>(PumpFB.Message3Id);
+            Status.ForceStop = GetPinValue<bool>(PumpFB.ForceStopId);
+            Status.BlockStart = GetPinValue<bool>(PumpFB.BlockStartId);
+            Status.BlockStop = GetPinValue<bool>(PumpFB.BlockStopId);
+            Status.Use = GetPinValue<bool>(PumpFB.UsedId);
+
+            buttonStart.Enabled = !Status.UsedByAutoMode && !Status.BlockStart && !Status.ForceStop;
+            buttonStop.Enabled = !Status.UsedByAutoMode && !Status.BlockStop;
+
+            var fb = FBConnector.Fb as PumpFB;
+            Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
+
+            switch(fb.PumpType)
             {
-                Status.NotOpened = false;
-                Status.NotClosed = false;
-                Status.UnknownState = true;
+                case PumpType.Forvacuum:
+                {
+
+                    break;
+                }
+                case PumpType.Turbine:
+                {
+                    Status.Units = GetPinValue<bool>(PumpFB.CustomId);
+                    Status.Speed = GetPinValue<float>(PumpFB.TurbineSpeedId);
+
+                    Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
+                    break;
+                }
+                case PumpType.Ion:
+                {
+                    Status.SafeMode = GetPinValue<bool>(PumpFB.CustomId);
+
+                    Status.Voltage = GetPinValue<float>(PumpFB.IonPumpVoltage);
+                    Status.Current = GetPinValue<float>(PumpFB.IonPumpCurrent);
+                    Status.Power = GetPinValue<float>(PumpFB.IonPumpPower);
+                    break;
+                }
+                case PumpType.Cryogen:
+                {
+                    Status.TemperatureIn = GetPinValue<float>(PumpFB.CryoInTemperature);
+                    Status.TemperatureOut = GetPinValue<float>(PumpFB.CryoOutTemperature);
+                    break;
+                }
             }
-            else
-            {
-                Status.UnknownState = false;
-            }
-            Status.Collision = GetPinValue<bool>(ValveFB.CollisionId);
-            Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
-            Status.Opened = GetPinValue<bool>(ValveFB.OpenedId);
-            Status.OpenedSmoothly = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
-            Status.Closed = GetPinValue<bool>(ValveFB.ClosedId);
-            Status.OpeningClosing = GetPinValue<bool>(ValveFB.OpeningClosingId);
 
-            Status.ForceClose = GetPinValue<bool>(ValveFB.ForceCloseId);
-            Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosingId);
-            Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpeningId);
-            buttonOpen.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening && !Status.ForceClose;
-            buttonOpenSmoothly.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening && !Status.ForceClose;
-            buttonClose.Enabled = !Status.UsedByAutoMode && !Status.BlockClosing;
-
-
-            _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
-            UpdateRenderer();
-
-            if(_isSmoothValve != _previousSmoothValve)
-                UpdateLayout();
-            _previousSmoothValve = _isSmoothValve;
-
-
-            bool animationNeeded = Status.OpeningClosing || Status.UnknownState || (Status.Collision & !Status.OpenedSmoothly);
+            bool animationNeeded = Status.AnimationNeeded;
             if(!_animationTimer.Enabled && animationNeeded)
                 _animationTimer.Start();
             if(_animationTimer.Enabled && !animationNeeded)
                 _animationTimer.Stop();
 
             _settingsForm?.Invalidate();
-        }
-
-        private void UpdateRenderer()
-        {
-            if(IsSlideGate)
-            {
-                if(_renderer.GetType() != typeof(SlideGateRenderer))
-                    _renderer = new SlideGateRenderer(this);
-            }
-            else if(_isSmoothValve || (DesignMode && SmoothValvePreview))
-            {
-                if(_renderer.GetType() != typeof(SmoothValveRenderer))
-                    _renderer = new SmoothValveRenderer(this);
-            }
-            else
-            {
-                if(_renderer.GetType() != typeof(CommonValveRenderer))
-                    _renderer = new CommonValveRenderer(this);
-            }
         }
 
         private T GetPinValue<T>(int id)

@@ -7,7 +7,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace NtoLib.Valves
+namespace NtoLib.Devices.Valves
 {
     [Serializable]
     [ComVisible(true)]

@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Valves.Settings
+﻿namespace NtoLib.Devices.Valves.Settings
 {
     partial class SettingsForm
     {

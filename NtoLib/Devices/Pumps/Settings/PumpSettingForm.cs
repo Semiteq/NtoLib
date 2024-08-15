@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace NtoLib.Pumps.Settings
+namespace NtoLib.Devices.Pumps.Settings
 {
     public partial class PumpSettingForm : Form
     {
