@@ -358,7 +358,7 @@ namespace NtoLib.Valves
 
 
         private void UpdateStatus()
-        {
+        {   
             Status.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
             Status.NotOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
             Status.NotClosed = GetPinValue<bool>(ValveFB.NotClosedId);
