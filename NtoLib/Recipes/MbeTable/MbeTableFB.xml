@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+	
+	<Map>
+		<Items>
+			<Pin ID="1" Name="ActualLine" Type="Целый"/>
+			<Pin ID="2" Name="EnaLoad" Type="Логический"/>
+
+			<Group Name="ActTemmerature" ID="100">
+				<ItemsRange Type="Вещественный">
+					<Direction>Pin</Direction>
+					<BaseName>CH</BaseName>
+					<BaseNumber>1</BaseNumber>
+					<Count>16</Count>
+				</ItemsRange>
+			</Group>
+
+			<Group Name="ActPower" ID="200">
+				<ItemsRange Type="Вещественный">
+					<Direction>Pin</Direction>
+					<BaseName>CH</BaseName>
+					<BaseNumber>1</BaseNumber>
+					<Count>16</Count>
+				</ItemsRange>
+			</Group>
+
+			<Group Name="ActLoopCount" ID="300">
+				<ItemsRange Type="Целый">
+					<Direction>Pin</Direction>
+					<BaseName>Loop</BaseName>
+					<BaseNumber>1</BaseNumber>
+					<Count>5</Count>
+				</ItemsRange>
+			</Group>
+			
+		</Items>
+	</Map>
+	
+	<VisualMap>
+		<Items>
+			<Pout ID="1001" Name="CommProtocol" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1002" Name="AddrArea" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1003" Name="FloatBaseAddr" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1004" Name="FloatAreaSize" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1005" Name="IntBaseAddr" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1006" Name="IntAreaSize" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1007" Name="BoolBaseAddr" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1008" Name="BoolAreaSize" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1009" Name="ControlBaseAddr" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1010" Name="IP1" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1011" Name="IP2" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1012" Name="IP3" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1013" Name="IP4" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1014" Name="Port" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1015" Name="Timeout" Type="БеззнаковыйЦелый"/>
+			<Pout ID="1016" Name="HMIActualLine" Type="Целый"/>
+			<Pout ID="1017" Name="HMIStatus" Type="БеззнаковыйЦелый"/>
+
+			<Pout ID="1101" Name="ActTempCh1" Type="Вещественный"/>
+			<Pout ID="1102" Name="ActTempCh2" Type="Вещественный"/>
+			<Pout ID="1103" Name="ActTempCh3" Type="Вещественный"/>
+			<Pout ID="1104" Name="ActTempCh4" Type="Вещественный"/>
+			<Pout ID="1105" Name="ActTempCh5" Type="Вещественный"/>
+			<Pout ID="1106" Name="ActTempCh6" Type="Вещественный"/>
+			<Pout ID="1107" Name="ActTempCh7" Type="Вещественный"/>
+			<Pout ID="1108" Name="ActTempCh8" Type="Вещественный"/>
+			<Pout ID="1109" Name="ActTempCh9" Type="Вещественный"/>
+			<Pout ID="1110" Name="ActTempCh10" Type="Вещественный"/>
+			<Pout ID="1111" Name="ActTempCh11" Type="Вещественный"/>
+			<Pout ID="1112" Name="ActTempCh12" Type="Вещественный"/>
+			<Pout ID="1113" Name="ActTempCh13" Type="Вещественный"/>
+			<Pout ID="1114" Name="ActTempCh14" Type="Вещественный"/>
+			<Pout ID="1115" Name="ActTempCh15" Type="Вещественный"/>
+			<Pout ID="1116" Name="ActTempCh16" Type="Вещественный"/>
+
+			<Pout ID="1201" Name="ActPowerCh1" Type="Вещественный"/>
+			<Pout ID="1202" Name="ActPowerCh2" Type="Вещественный"/>
+			<Pout ID="1203" Name="ActPowerCh3" Type="Вещественный"/>
+			<Pout ID="1204" Name="ActPowerCh4" Type="Вещественный"/>
+			<Pout ID="1205" Name="ActPowerCh5" Type="Вещественный"/>
+			<Pout ID="1206" Name="ActPowerCh6" Type="Вещественный"/>
+			<Pout ID="1207" Name="ActPowerCh7" Type="Вещественный"/>
+			<Pout ID="1208" Name="ActPowerCh8" Type="Вещественный"/>
+			<Pout ID="1209" Name="ActPowerCh9" Type="Вещественный"/>
+			<Pout ID="1210" Name="ActPowerCh10" Type="Вещественный"/>
+			<Pout ID="1211" Name="ActPowerCh11" Type="Вещественный"/>
+			<Pout ID="1212" Name="ActPowerCh12" Type="Вещественный"/>
+			<Pout ID="1213" Name="ActPowerCh13" Type="Вещественный"/>
+			<Pout ID="1214" Name="ActPowerCh14" Type="Вещественный"/>
+			<Pout ID="1215" Name="ActPowerCh15" Type="Вещественный"/>
+			<Pout ID="1216" Name="ActPowerCh16" Type="Вещественный"/>
+
+			<Pout ID="1301" Name="LoopCount1" Type="Вещественный"/>
+			<Pout ID="1302" Name="LoopCount2" Type="Вещественный"/>
+			<Pout ID="1303" Name="LoopCount3" Type="Вещественный"/>
+			<Pout ID="1304" Name="LoopCount4" Type="Вещественный"/>
+			<Pout ID="1305" Name="LoopCount5" Type="Вещественный"/>
+		</Items>
+	</VisualMap>
+</FBConfig>
