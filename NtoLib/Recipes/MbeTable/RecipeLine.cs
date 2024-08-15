@@ -92,12 +92,12 @@ namespace NtoLib.Recipes.MbeTable
             {
                 return new List<TableColumn>() 
                 {
-                    new TableColumn("Действие", Actions, 120),
-                    new TableColumn("Номер", CellType._int, 50),
-                    new TableColumn("Задание", CellType._float, 70),
-                    new TableColumn("Скорость/Время", CellType._float, 120),
-                    new TableColumn("Время", CellType._float, 100),
-                    new TableColumn("Комментарий", CellType._string, 200)
+                    new TableColumn("Действие", Actions),
+                    new TableColumn("Номер", CellType._int),
+                    new TableColumn("Задание", CellType._float),
+                    new TableColumn("Скорость/Время", CellType._float),
+                    new TableColumn("Время", CellType._float),
+                    new TableColumn("Комментарий", CellType._string)
                 };
             }
         }
@@ -106,7 +106,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             get
             {
-                var column = new TableColumn("Действие", Actions, 50);
+                var column = new TableColumn("Действие", Actions);
                 DataGridViewComboBoxCell viewComboBoxCell = new DataGridViewComboBoxCell();
                 viewComboBoxCell.MaxDropDownItems = column.EnumType.enum_counts;
                 for (int ittr_num = 0; ittr_num < column.EnumType.enum_counts; ++ittr_num)

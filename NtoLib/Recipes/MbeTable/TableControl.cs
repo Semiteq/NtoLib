@@ -18,6 +18,7 @@ namespace NtoLib.Recipes.MbeTable
         #region Private fields
 
 
+        private const int _rowHeadersWidth = 75;
 
         private const int ROW_HEIGHT = 32;
         private const int _max_data_lenght_modbus = 100;
@@ -321,7 +322,7 @@ namespace NtoLib.Recipes.MbeTable
                 this._pathToXmlTableDefinition = value;
                 this.WriteStatusMessage("Описание таблицы будет изменено", false);
                 //this.make_table(!this.FBConnector.DesignMode && this._table_type == table_edit.edit);
-                this.FillColumnNames(this._tableType == TableMode.Edit);
+                this.ConfigureColumns(this._tableType == TableMode.Edit);
                 this.WriteStatusMessage("Описание таблицы изменено", false);
             }
         }
@@ -335,7 +336,7 @@ namespace NtoLib.Recipes.MbeTable
             InitializeComponent();
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
-            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
         }
         #endregion
 
@@ -377,16 +378,21 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        private void FillColumnNames(bool edit_mode)
+        /// <summary>
+        /// Конфигурирует ширину, тип и названия столбцов.
+        /// </summary>
+        private void ConfigureColumns(bool editMode)
         {
-            make_table_msg = "Подготовка таблицы. ";
+            WriteStatusMessage("Подготовка таблицы. ");
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
+
+            dataGridView1.RowHeadersWidth = _rowHeadersWidth;
+
             columns = RecipeLine.ColumnHeaders;
-            make_table_msg += " Успешно.";
             foreach(TableColumn column in columns)
             {
-                if(edit_mode)
+                if(editMode)
                 {
                     if(column.type == CellType._bool)
                     {
@@ -394,10 +400,12 @@ namespace NtoLib.Recipes.MbeTable
                         viewComboBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                         viewComboBoxColumn.Name = column.Name;
                         viewComboBoxColumn.Tag = (object)column;
+                        viewComboBoxColumn.Width = GetWidth(column);
                         viewComboBoxColumn.MaxDropDownItems = 2;
                         viewComboBoxColumn.Items.Add((object)"Да");
                         viewComboBoxColumn.Items.Add((object)"Нет");
-                        column.GridIndex = this.dataGridView1.Columns.Add((DataGridViewColumn)viewComboBoxColumn);
+
+                        column.GridIndex = this.dataGridView1.Columns.Add(viewComboBoxColumn);
                     }
                     else if(column.type == CellType._enum)
                     {
@@ -405,10 +413,12 @@ namespace NtoLib.Recipes.MbeTable
                         viewComboBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                         viewComboBoxColumn.Name = column.Name;
                         viewComboBoxColumn.Tag = (object)column;
+                        viewComboBoxColumn.Width = GetWidth(column);
                         viewComboBoxColumn.MaxDropDownItems = column.EnumType.enum_counts;
                         for(int ittr_num = 0; ittr_num < column.EnumType.enum_counts; ++ittr_num)
                             viewComboBoxColumn.Items.Add((object)column.EnumType.GetNameByIterrator(ittr_num));
-                        column.GridIndex = this.dataGridView1.Columns.Add((DataGridViewColumn)viewComboBoxColumn);
+
+                        column.GridIndex = this.dataGridView1.Columns.Add(viewComboBoxColumn);
                     }
                     else
                     {
@@ -416,7 +426,9 @@ namespace NtoLib.Recipes.MbeTable
                         viewTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                         viewTextBoxColumn.Name = column.Name;
                         viewTextBoxColumn.Tag = (object)column;
-                        column.GridIndex = this.dataGridView1.Columns.Add((DataGridViewColumn)viewTextBoxColumn);
+                        viewTextBoxColumn.Width = GetWidth(column);
+
+                        column.GridIndex = this.dataGridView1.Columns.Add(viewTextBoxColumn);
                     }
                 }
                 else
@@ -425,15 +437,34 @@ namespace NtoLib.Recipes.MbeTable
                     viewTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                     viewTextBoxColumn.Name = column.Name;
                     viewTextBoxColumn.Tag = (object)column;
+                    viewTextBoxColumn.Width = GetWidth(column);
 
-                    column.GridIndex = this.dataGridView1.Columns.Add((DataGridViewColumn)viewTextBoxColumn);
+                    column.GridIndex = this.dataGridView1.Columns.Add(viewTextBoxColumn);
                 }
             }
 
             ChangeCellAlignment();
 
-            this.make_table_msg += " Таблица подготовлена.";
-            this.WriteStatusMessage(this.make_table_msg, false);
+            WriteStatusMessage("Таблица подготовлена. ");
+        }
+
+        private int GetWidth(TableColumn column)
+        {
+            switch(column.Name)
+            {
+                case "Действие":
+                    return 200;
+                case "Номер":
+                    return 80;
+                case "Задание":
+                    return 150;
+                case "Скорость/Время":
+                    return 200;
+                case "Время":
+                    return 150;
+                default:
+                    return dataGridView1.Width - 780 - _rowHeadersWidth - 2;
+            }
         }
 
         private void ChangeCellAlignment()
@@ -444,7 +475,7 @@ namespace NtoLib.Recipes.MbeTable
                 dataGridView1.Columns[cellIndex].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
 
-            dataGridView1.RowHeadersWidth = 180;
+            dataGridView1.RowHeadersWidth = _rowHeadersWidth;
         }
 
 
@@ -467,7 +498,7 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        private void WriteStatusMessage(string message, bool isError)
+        private void WriteStatusMessage(string message, bool isError = false)
         {
             this.DbgMsg.Text = message;
             this.DbgMsg.BackColor = isError ? Color.OrangeRed : Color.White;
@@ -620,7 +651,7 @@ namespace NtoLib.Recipes.MbeTable
         #region MasterScada methods override
         protected override void ToDesign()
         {
-            FillColumnNames(false);
+            ConfigureColumns(false);
             currentRecipeLine = 2;
             ChangeRowFont();
             WriteStatusMessage(this.make_table_msg, false);
@@ -630,7 +661,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             _to_runtime = true;
             DbgMsg.Text = "";
-            FillColumnNames(this._tableType == TableMode.Edit);
+            ConfigureColumns(this._tableType == TableMode.Edit);
             make_upload = 1;
             dataGridView1.ReadOnly = this._tableType == TableMode.View;
             _tableData.Clear();
