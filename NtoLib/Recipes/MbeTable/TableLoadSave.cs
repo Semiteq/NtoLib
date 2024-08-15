@@ -72,9 +72,15 @@ namespace NtoLib.Recipes.MbeTable
 
                         Thread.Sleep(200);
 
+                        dataGridView1.Rows.Clear();
+                        _tableData.Clear();
+
                         var recipeFromPlc = plcCommunication.LoadRecipeFromPlc(settings);
                         if(recipeFromPlc == null)
+                        {
                             WriteStatusMessage("Рецепт не удалось загрузить в контроллер", true);
+                            return;
+                        }
                         else
                         {
                             if(CompareRecipes(recipe, recipeFromPlc))
@@ -82,9 +88,6 @@ namespace NtoLib.Recipes.MbeTable
                             else
                                 WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!", true);
                         }
-
-                        dataGridView1.Rows.Clear();
-                        _tableData.Clear();
 
                         foreach(RecipeLine line in recipe)
                             AddLineToRecipe(line, true);

@@ -448,6 +448,10 @@ namespace NtoLib.Recipes.MbeTable
             WriteStatusMessage("Таблица подготовлена. ");
         }
 
+        /// <summary>
+        /// Возвращает ширину столбца в зависимости от имени. 
+        /// Код в этом методе нарушает положения Женевской конвенции, его обязательно надо будет переделать
+        /// </summary>
         private int GetWidth(TableColumn column)
         {
             switch(column.Name)
@@ -556,7 +560,6 @@ namespace NtoLib.Recipes.MbeTable
             OpcQuality pinQuality1 = ((FBBase)this.FBConnector).GetPinQuality(1017);
             int pinValue2 = ((FBBase)this.FBConnector).GetPinValue<int>(1016);
             OpcQuality pinQuality2 = ((FBBase)this.FBConnector).GetPinQuality(1016);
-            //this.button_open.Enabled = readSettingsOk && pinQuality1 == OpcQuality.Good && ((int)pinValue1 & 3) == 3;
 
             this.button_save.Visible = true;
             if(pinQuality2 != OpcQuality.Good || pinQuality1 != OpcQuality.Good || ((int)pinValue1 & 4) != 4)
@@ -780,7 +783,6 @@ namespace NtoLib.Recipes.MbeTable
         #endregion
 
 
-        
         /// <summary> Таймер для автоматической подгрузки рецепта из ПЛК </summary>
         private Timer _loadDelay;
 
@@ -797,7 +799,11 @@ namespace NtoLib.Recipes.MbeTable
                     _loadDelay.Interval = 100;
                     
                     _loadDelay.Tick += (object sender2, EventArgs e2) => {
-                        TryLoadRecipeFromPlc();
+                        if(TryLoadRecipeFromPlc())
+                            WriteStatusMessage("Рецепт загружен из ПЛК");
+                        else
+                            WriteStatusMessage("Не удалось загрузить рецепт из ПЛК");
+
                         _loadDelay.Stop();
                     };
                 }

@@ -101,7 +101,6 @@ namespace NtoLib.Recipes.MbeTable
                 };
             }
         }
-
         private DataGridViewComboBoxCell ActionCell
         {
             get
