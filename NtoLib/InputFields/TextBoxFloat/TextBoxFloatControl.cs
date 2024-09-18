@@ -32,7 +32,7 @@ namespace NtoLib.InputFields.TextBoxFloat
             {
                 _borderWidth = value < 0 ? 0 : value;
                 UpdateBorderWidth();
-                UpdateFontSize();
+                UpdateFont();
             }
         }
 
@@ -140,6 +140,23 @@ namespace NtoLib.InputFields.TextBoxFloat
                     label.TextAlign = ContentAlignment.MiddleRight;
                 else
                     label.TextAlign = ContentAlignment.MiddleCenter;
+            }
+        }
+
+        private bool _boldFont = true;
+        [DispId(75)]
+        [Category("Внешний вид")]
+        [DisplayName("Жирный шрифт")]
+        public bool BoldFont
+        {
+            get
+            {
+                return _boldFont;
+            }
+            set
+            {
+                _boldFont = value;
+                UpdateFont();
             }
         }
 
@@ -296,7 +313,7 @@ namespace NtoLib.InputFields.TextBoxFloat
 
             UpdateLimits();
             UpdateBorderWidth();
-            UpdateFontSize();
+            UpdateFont();
             UpdateLockBehaviour(true);
             ValidateValue(true);
             textBox.ValidatingValue += ValidateValue;
@@ -311,7 +328,7 @@ namespace NtoLib.InputFields.TextBoxFloat
             _isInitialized = false;
 
             UpdateBorderWidth();
-            UpdateFontSize();
+            UpdateFont();
             UpdateLockBehaviour(true);
             ValidateValue(true);
             textBox.ValidatingValue -= ValidateValue;
@@ -321,7 +338,7 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private void HandleResize(object sender, EventArgs e)
         {
-            UpdateFontSize();
+            UpdateFont();
         }
 
         private void HandleVisibleChanged(object sender, EventArgs e)
@@ -366,7 +383,7 @@ namespace NtoLib.InputFields.TextBoxFloat
 
 
 
-        private void UpdateFontSize()
+        private void UpdateFont()
         {
             int doubledBorder = 2 * BorderWidth;
             int doubledOffset = 2 * _textBoxOffset;
@@ -374,7 +391,9 @@ namespace NtoLib.InputFields.TextBoxFloat
             float size = (Height - doubledBorder - doubledOffset - 1f) / 1.525f;
             size = size <= 1 ? 1 : size;
 
-            Font font = new Font(TextBoxFont.FontFamily, size, FontStyle.Regular);
+            FontStyle style = _boldFont ? FontStyle.Bold : FontStyle.Regular;
+
+            Font font = new Font(TextBoxFont.FontFamily, size, style);
             TextBoxFont = font;
         }
 
