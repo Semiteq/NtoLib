@@ -725,14 +725,15 @@ namespace NtoLib.Recipes.MbeTable
             }
             else if(columnIndex == RecipeLine.TimeSetpointIndex)
             {
-                bool isParseOk = float.TryParse(dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString(), out float newValue);
+                string text = dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString();
+                bool isParseOk = DateTimeParser.TryParse(text, out var newValue) || newValue < _tableData[rowIndex].MinTimeSetpoint || newValue > _tableData[rowIndex].MaxTimeSetpoint;
 
                 if(!_tableData[rowIndex].ChangeSpeed(newValue) || !isParseOk)
                 {
                     dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetTime();
                     MessageBox.Show($"Введите число: \n" +
-                                    $"минимальное значение: {_tableData[rowIndex].MinTimeSetpoint}\n" +
-                                    $"максимальное значение: {_tableData[rowIndex].MaxTimeSetpoint}\n",
+                                    $"минимальное значение: {_tableData[rowIndex].MinTimeSetpoint} с\n" +
+                                    $"максимальное значение: {_tableData[rowIndex].MaxTimeSetpoint} с\n",
                                     $"Ошибка ввода данных:",
                                     MessageBoxButtons.OK,
                                     MessageBoxIcon.Error);

@@ -106,6 +106,7 @@
     <Compile Include="Recipes\MbeTable\CellType.cs" />
     <Compile Include="Recipes\MbeTable\Commands.cs" />
     <Compile Include="Recipes\MbeTable\CommunicationSettings.cs" />
+    <Compile Include="Recipes\MbeTable\DateTimeParser.cs" />
     <Compile Include="Recipes\MbeTable\PLC_Communication.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLineFactory.cs" />

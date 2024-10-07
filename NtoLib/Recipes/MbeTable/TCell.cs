@@ -134,6 +134,14 @@ namespace NtoLib.Recipes.MbeTable
                     throw new Exception("Wrong value(BoolType): \"" + value + "\"");
             }
 
+            else if(Type == CellType._floatSecond)
+            {
+                if(!DateTime.TryParse(value, out var dateTime))
+                    throw new Exception("Wrong value(TimeValue): \"" + value + "\"");
+
+                floatValue = (float)dateTime.Second + (float)dateTime.Millisecond / 1000;
+            }
+
             else if (Type == CellType._float || Type == CellType._floatTemp || Type == CellType._floatPercent || Type == CellType._floatSecond || Type == CellType._floatTempSpeed || Type == CellType._floatPowerSpeed)
             {
                 if (!double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out this.floatValue))
