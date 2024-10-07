@@ -2,14 +2,14 @@
 
 namespace NtoLib.Recipes.MbeTable.TableLines
 {
-    internal class TemperatureSmooth : RecipeLine
+    internal class TemperatureBySpeed : RecipeLine
     {
-        public const string Name = Commands.TEMP_SMOOTH;
+        public const string Name = Commands.TEMP_BY_SPEED;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public TemperatureSmooth() : this(1, 500f, 1f, "") { }
+        public TemperatureBySpeed() : this(1, 500f, 1f, "") { }
 
-        public TemperatureSmooth(int number, float temperatureSetpoint, float temperatureSpeed, string comment) : base(Name)
+        public TemperatureBySpeed(int number, float temperatureSetpoint, float temperatureSpeed, string comment) : base(Name)
         {
             int actionNumber = (int)Actions.GetActionNumber(Name);
 

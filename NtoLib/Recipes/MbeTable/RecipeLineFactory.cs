@@ -22,8 +22,8 @@ namespace NtoLib.Recipes.MbeTable
                 return new Temperature();
             else if(command == TemperatureWait.Name)
                 return new TemperatureWait();
-            else if(command == TemperatureSmooth.Name)
-                return new TemperatureSmooth();
+            else if(command == TemperatureBySpeed.Name)
+                return new TemperatureBySpeed();
             else if(command == TemperatureByTime.Name)
                 return new TemperatureByTime();
 
@@ -31,8 +31,8 @@ namespace NtoLib.Recipes.MbeTable
                 return new Power();
             else if(command == PowerWait.Name)
                 return new PowerWait();
-            else if(command == PowerSmooth.Name)
-                return new PowerSmooth();
+            else if(command == PowerBySpeed.Name)
+                return new PowerBySpeed();
             else if(command == PowerByTime.Name)
                 return new PowerByTime();
 
@@ -65,8 +65,8 @@ namespace NtoLib.Recipes.MbeTable
                 return new Temperature(number, setpoint, comment);
             else if(command == TemperatureWait.Name)
                 return new TemperatureWait(number, setpoint, timeSetpoint, comment);
-            else if(command == TemperatureSmooth.Name)
-                return new TemperatureSmooth(number, setpoint, timeSetpoint, comment);
+            else if(command == TemperatureBySpeed.Name)
+                return new TemperatureBySpeed(number, setpoint, timeSetpoint, comment);
             else if(command == TemperatureByTime.Name)
                 return new TemperatureByTime(number, setpoint, timeSetpoint, comment);
 
@@ -74,8 +74,8 @@ namespace NtoLib.Recipes.MbeTable
                 return new Power(number, setpoint, comment);
             else if(command == PowerWait.Name)
                 return new PowerWait(number, setpoint, timeSetpoint, comment);
-            else if(command == PowerSmooth.Name)
-                return new PowerSmooth(number, setpoint, timeSetpoint, comment);
+            else if(command == PowerBySpeed.Name)
+                return new PowerBySpeed(number, setpoint, timeSetpoint, comment);
             else if(command == PowerByTime.Name)
                 return new PowerByTime(number, setpoint, timeSetpoint, comment);
 

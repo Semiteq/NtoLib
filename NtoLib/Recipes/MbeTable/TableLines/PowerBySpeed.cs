@@ -2,14 +2,14 @@
 
 namespace NtoLib.Recipes.MbeTable.TableLines
 {
-    internal class PowerSmooth : RecipeLine
+    internal class PowerBySpeed : RecipeLine
     {
-        public const string Name = Commands.POWER_SMOOTH;
+        public const string Name = Commands.POWER_BY_SPEED;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public PowerSmooth() : this(1, 10f, 1f, "") { }
+        public PowerBySpeed() : this(1, 10f, 1f, "") { }
 
-        public PowerSmooth(int number, float powerSetpoint, float speedSetpoint, string comment) : base(Name)
+        public PowerBySpeed(int number, float powerSetpoint, float speedSetpoint, string comment) : base(Name)
         {
             int actionNumber = (int)Actions.GetActionNumber(Name);
 

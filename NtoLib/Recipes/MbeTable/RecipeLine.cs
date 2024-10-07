@@ -62,12 +62,12 @@ namespace NtoLib.Recipes.MbeTable
 
                 actions.AddEnum(Commands.TEMP, 50);
                 actions.AddEnum(Commands.TEMP_WAIT, 60);
-                actions.AddEnum(Commands.TEMP_SMOOTH, 70);
+                actions.AddEnum(Commands.TEMP_BY_SPEED, 70);
                 actions.AddEnum(Commands.TEMP_BY_TIME, 80);
 
                 actions.AddEnum(Commands.POWER, 90);
                 actions.AddEnum(Commands.POWER_WAIT, 100);
-                actions.AddEnum(Commands.POWER_SMOOTH, 110);
+                actions.AddEnum(Commands.POWER_BY_SPEED, 110);
                 actions.AddEnum(Commands.POWER_BY_TIME, 120);
 
                 actions.AddEnum(Commands.WAIT, 130);
