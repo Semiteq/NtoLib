@@ -87,7 +87,7 @@ namespace NtoLib.Recipes.MbeTable
             if (_tableData.Count > 0)
             {
                 _tableData[0].CycleTime = 0f;
-                dataGridView1.Rows[0].Cells[RecipeLine.RecipeTimeIndex].Value = TimeSpan.Zero.ToString();
+                dataGridView1.Rows[0].Cells[RecipeLine.RecipeTimeIndex].Value = TimeSpan.Zero.ToString(@"hh\:mm\:ss\.ff");
             }
             else
                 return;

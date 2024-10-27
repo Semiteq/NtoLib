@@ -219,41 +219,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private string FormatTime(double time)
         {
-            if (time < 60.0f)
-            {
-                return TimeSpan.FromSeconds(time).ToString(@"s\.ff") + " c";
-            }
-            else if (time < 3600.0f)
-            {
-                return TimeSpan.FromSeconds(time).ToString(@"m\:ss\.ff") + " c";
-            }
-            else 
-            {
-                return TimeSpan.FromSeconds(time).ToString(@"h\:mm\:ss\.ff") + " c";
-            }
-
-            /*TimeSpan timeSpan = TimeSpan.FromSeconds(time);
-
-            if (timeSpan.TotalHours >= 1)
-                return timeSpan.ToString(@"hh\:mm\:ss\.f");
-            else if (timeSpan.TotalMinutes >= 1)
-                return timeSpan.ToString(@"m\:ss\.f");
-            else
-                return timeSpan.ToString(@"s\.f");
-
-
-            double miliseconds = time % 1.0f;
-
-            int seconds = (int)((time - miliseconds) % 60);
-            int minutes = (int)((time - miliseconds) / 60);
-
-            string ms = miliseconds != 0 ? "," + String.Format("{0:f0}", miliseconds * 1000) : "";
-            ms = ms.TrimEnd('0');
-
-            string s = seconds != 0 ? seconds + ms + "s" : "0" + ms + "s";
-            string m = minutes != 0 ? minutes + "m" : "";
-
-            return m + s;*/
+            return TimeSpan.FromSeconds(time).ToString(@"hh\:mm\:ss\.ff");
         }
     }
 }
