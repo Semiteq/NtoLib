@@ -34,5 +34,7 @@
 
         public float TemperatureIn;
         public float TemperatureOut;
+
+        public bool AnyError => (MainError || ConnectionOk) || (Use && ConnectionOk);
     }
 }

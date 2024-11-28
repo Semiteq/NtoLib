@@ -107,51 +107,76 @@ namespace NtoLib.Devices.Pumps.Settings
                 {
                     if(status.Accelerating)
                         return "разгон";
-                    else if(status.Decelerating)
+                    
+                    if(status.Decelerating)
                         return "замедление";
-                    else if(status.WorkOnNominalSpeed)
+                    
+                    if(status.WorkOnNominalSpeed)
                         return "рабочий режим";
-                    else if(status.Stopped)
+                    
+                    if(status.Stopped)
                         return "остановлен";
+
+                    if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+                        return "не определено";
 
                     throw new NotImplementedException();
                 }
                 case PumpType.Turbine:
-                {
-                    if(status.Accelerating)
-                        return "разгон";
-                    else if(status.Decelerating)
-                        return "замедление";
-                    else if(status.WorkOnNominalSpeed)
-                        return "рабочий режим";
-                    else if(status.Stopped)
-                        return "остановлена";
+                    {
+                        if (status.Accelerating)
+                            return "разгон";
 
-                    throw new NotImplementedException();
-                }
+                        if (status.Decelerating)
+                            return "замедление";
+
+                        if (status.WorkOnNominalSpeed)
+                            return "рабочий режим";
+
+                        if (status.Stopped)
+                            return "остановлена";
+
+                        if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+                            return "не определено";
+
+                        throw new NotImplementedException();
+                    }
                 case PumpType.Ion:
                 {
-                    if(status.Accelerating)
+                    if (status.Accelerating)
                         return "охлаждение";
-                    else if(status.Decelerating)
+
+                    if (status.Decelerating)
                         return "нагрев";
-                    else if(status.WorkOnNominalSpeed)
+
+                    if (status.WorkOnNominalSpeed)
                         return "рабочий режим";
-                    else if(status.Stopped)
+
+                    if (status.Stopped)
                         return "остановлен";
+
+                    if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+                        return "не определено";
 
                     throw new NotImplementedException();
                 }
                 case PumpType.Cryogen:
                 {
-                    if(status.Accelerating)
+
+                    if (status.Accelerating)
                         return "повышение напряжения";
-                    else if(status.Decelerating)
+
+                    if (status.Decelerating)
                         return "выключение";
-                    else if(status.WorkOnNominalSpeed)
+
+                    if (status.WorkOnNominalSpeed)
                         return "рабочий режим";
-                    else if(status.Stopped)
+
+                    if (status.Stopped)
                         return "остановлен";
+
+                    if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+                        return "не определено";
 
                     throw new NotImplementedException();
                 }

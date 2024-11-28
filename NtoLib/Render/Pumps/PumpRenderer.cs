@@ -56,11 +56,14 @@ namespace NtoLib.Render.Pumps
             }
 
 
+
             if(status.Use)
             {
-                if(status.MainError || !status.ConnectionOk)
+                if (status.AnyError)
                     DrawErrorRectangle(graphics, errorBounds);
-                else if(status.Warning)
+                
+
+                if (status.Warning)
                     DrawWarningRectangle(graphics, errorBounds);
             }
 
