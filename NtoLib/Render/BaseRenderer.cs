@@ -56,12 +56,15 @@ namespace NtoLib.Render
 
             return Bounds.FromRectangle(boundsRect, pivot);
         }
-
+        
         /// <summary>
         /// Отрисовывает рамку ошибки
         /// </summary>
-        protected void DrawErrorRectangle(Graphics graphics, Bounds errorBounds)
+        protected void DrawErrorRectangle(Graphics graphics, Bounds errorBounds, bool isLight)
         {
+            if (isLight)
+                return;
+
             PointF[] errorPoints = errorBounds.GetPoints(-ErrorLineWidth / 2f);
             using(Pen errorPen = new Pen(Colors.Error, ErrorLineWidth))
                 graphics.DrawClosedCurve(errorPen, errorPoints, 0, FillMode.Alternate);

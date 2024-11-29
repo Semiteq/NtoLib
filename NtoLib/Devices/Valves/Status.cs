@@ -18,5 +18,7 @@
         public bool BlockOpening;
 
         public bool AnyError => !ConnectionOk || NotOpened || NotClosed || Collision || UnknownState;
+
+        public bool AnimationNeeded => OpeningClosing || (Collision && !OpenedSmoothly) || AnyError;
     }
 }
