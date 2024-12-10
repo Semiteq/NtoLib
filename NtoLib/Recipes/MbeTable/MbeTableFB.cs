@@ -23,6 +23,8 @@ namespace NtoLib.Recipes.MbeTable
         private const int GroupID_ActTemperaure = 100;
         private const int GroupID_ActPower = 200;
         private const int GroupID_ActLoopCount = 300;
+        private const int GroupID_ShutterNames = 400;
+        private const int GroupID_HeaterNames = 500;
 
         public const int ID_HMI_CommProtocol = 1001;
         public const int ID_HMI_AddrArea = 1002;
@@ -222,6 +224,8 @@ namespace NtoLib.Recipes.MbeTable
             object[] actTemperature = new object[16];
             object[] actPower = new object[16];
             object[] actLoopAcount = new object[5];
+            object[] ShutterName = new object[32];
+            object[] HeaterName = new object[32];
 
             for (int i = 0; i < 16; i++)
             {
@@ -236,6 +240,15 @@ namespace NtoLib.Recipes.MbeTable
             {
                 actLoopAcount[i] = GetPinValue(PinDef.CreateID(i, GroupID_ActLoopCount));
                 VisualPins.SetPinValue(1301 + i, actLoopAcount[i]);
+            }
+
+            for (int i = 0; i < 32; i++)
+            {
+                ShutterName[i] = GetPinValue(PinDef.CreateID(i, GroupID_ShutterNames));
+                VisualPins.SetPinValue(1401 + i, ShutterName[i]);
+
+                HeaterName[i] = GetPinValue(PinDef.CreateID(i, GroupID_HeaterNames));
+                VisualPins.SetPinValue(1501 + i, HeaterName[i]);
             }
         }
 
