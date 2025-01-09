@@ -11,17 +11,16 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public Close(int number, string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
-
+            int actionNumber = Actions[Name];
             _cells = new List<TCell>
             {
-                new TCell(CellType._enum, Name, actionNumber),
-                new TCell(CellType._int, number),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, Name, actionNumber),
+                new(CellType._int, number),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
-        }  
+        }
     }
 }

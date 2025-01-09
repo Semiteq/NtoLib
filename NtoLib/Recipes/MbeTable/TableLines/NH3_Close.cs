@@ -11,7 +11,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public NH3_Close(string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
+            int actionNumber = Actions[Name];
 
             _cells = new List<TCell>
             {

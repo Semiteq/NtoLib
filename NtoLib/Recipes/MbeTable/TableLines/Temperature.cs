@@ -11,7 +11,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public Temperature(int number, float temperatureSetpoint, string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
+            int actionNumber = Actions[Name];
 
             _cells = new List<TCell>
             {

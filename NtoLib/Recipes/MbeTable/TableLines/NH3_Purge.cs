@@ -10,7 +10,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public NH3_Purge() : this("") { }
         public NH3_Purge(string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
+            int actionNumber = Actions[Name];
 
             _cells = new List<TCell>
             {

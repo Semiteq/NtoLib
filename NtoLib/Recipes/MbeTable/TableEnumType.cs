@@ -1,86 +1,76 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NtoLib.Recipes.MbeTable
 {
-    internal class TableEnumType
+    internal class TableEnumType : IEnumerable<KeyValuePair<string, int>>
     {
-        private Dictionary<string, int> _map;
-        private string _name;
+        /// <summary>
+        /// Расширение стандартного enum до таблицы которая связывает строки с числами. 
+        /// Позволяет добавлять, обновлять и получать значения по ключу или значению, 
+        /// а также поддерживает перебор элементов с помощью foreach.
+        /// </summary>
 
-        public TableEnumType(string name)
+        private readonly Dictionary<string, int> _items;
+        public int EnumCount => _items.Count;
+
+        public TableEnumType()
         {
-            this._name = name;
-            this._map = new Dictionary<string, int>();
+            _items = new Dictionary<string, int>();
         }
 
-        public string Name => this._name;
-
-        public void AddEnum(string str, int value)
+        // Реализуем метод Add для Collection Initializer, вместо AddEnum
+        public void Add(string key, int value)
         {
-            if (string.IsNullOrEmpty(str))
-                return;
-            if (this._map.ContainsKey(str))
-                this._map[str] = value;
-            else
-                this._map.Add(str, value);
+            if (_items.ContainsKey(key))
+                throw new ArgumentException($"Key '{key}' already exists.");
+            _items[key] = value;
         }
 
-        public int enum_counts => this._map.Count;
-
-
-        public int? GetActionNumber(string action)
+        public void AddRange(IEnumerable<KeyValuePair<string, int>> items)
         {
-            if (_map.ContainsKey(action))
-                return _map[action];
-            else
-                return null;
+            // Проверка на пустую коллекцию
+            if (items == null || !items.Any()) return;
+            foreach (var item in items)
+                Add(item.Key, item.Value);
         }
 
-        public string GetNameByIterrator(int ittr_num)
+        public bool IsEmpty => (_items.Count == 0);
+
+        // Обращение по индексу вместо GetActionNumber
+        public int this[string key] => _items.ContainsKey(key) ? _items[key] : 0;
+
+        public string GetValueByIndex(int index)
         {
-            int num = 0;
-            foreach (KeyValuePair<string, int> pair in this._map)
+            if (index < 0 || index >= _items.Count)
+                //return string.Empty;
+                throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            return _items.ElementAt(index).Key;
+        }
+
+        // Реализация IEnumerable для поддержки foreach и collection initializer
+        public IEnumerator<KeyValuePair<string, int>> GetEnumerator() => _items.GetEnumerator();
+
+        // Поддержка IEnumerator для не-генерик версии
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        // Аддитивность 
+        public static TableEnumType operator +(TableEnumType left, TableEnumType right)
+        {
+            var result = new TableEnumType();
+            result.AddRange(left);
+
+            foreach (var item in right)
             {
-                if (num == ittr_num)
-                    return pair.Key;
-                ++num;
+                if (!result._items.ContainsKey(item.Key))
+                    result.Add(item.Key, item.Value);
+                else
+                    throw new ArgumentException($"Duplicate key detected: {item.Key}");
             }
-            return "";
-        }
 
-        public int get_value_by_ittr_num(int ittr_num)
-        {
-            int num = 0;
-            foreach (KeyValuePair<string, int> pair in this._map)
-            {
-                if (num == ittr_num)
-                    return pair.Value;
-                ++num;
-            }
-            return 0;
-        }
-
-        public string GetNameByNumber(int num)
-        {
-            foreach (KeyValuePair<string, int> pair in this._map)
-            {
-                if (pair.Value == num)
-                    return pair.Key;
-            }
-            return "";
-        }
-
-        public int get_by_str(string str) => this._map.ContainsKey(str) ? this._map[str] : 0;
-
-        public bool TryParse(string str, out int val)
-        {
-            if (this._map.ContainsKey(str))
-            {
-                val = this._map[str];
-                return true;
-            }
-            val = 0;
-            return false;
+            return result;
         }
     }
 }

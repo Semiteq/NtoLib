@@ -11,8 +11,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public CloseAll(string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
-
+            int actionNumber = Actions[Name];
             _cells = new List<TCell>
             {
                 new TCell(CellType._enum, Name, actionNumber),

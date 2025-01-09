@@ -6,7 +6,7 @@ namespace NtoLib.Recipes.MbeTable
 {
     internal abstract class RecipeLine
     {
-        public List<TCell> GetCells => this._cells;
+        public List<TCell> GetCells => _cells;
 
         public const int CommandIndex = 0;
         public const int NumberIndex = 1;
@@ -17,7 +17,7 @@ namespace NtoLib.Recipes.MbeTable
 
         public const int ColumnCount = 6;
 
-        protected List<TCell> _cells = new List<TCell>();
+        protected List<TCell> _cells = new();
 
         public int tabulateLevel = 0;
 
@@ -49,48 +49,38 @@ namespace NtoLib.Recipes.MbeTable
             Row.Cells[0].Value = name;
         }
 
-        public static TableEnumType Actions
+        public static TableEnumType Actions = new()
         {
             // TODO: переделать! Убрать постоянную реинициализацию!
-            get 
-            {
-                var actions = new TableEnumType("Actions");
-                actions.AddEnum(Commands.CLOSE, 10);
-                actions.AddEnum(Commands.OPEN, 20);
-                actions.AddEnum(Commands.OPEN_TIME, 30);
-                actions.AddEnum(Commands.CLOSE_ALL, 40);
+            { Commands.CLOSE,            10 },
+            { Commands.OPEN,             20 },
+            { Commands.OPEN_TIME,        30 },
+            { Commands.CLOSE_ALL,        40 },
+            { Commands.TEMP,             50 },
+            { Commands.TEMP_WAIT,        60 },
+            { Commands.TEMP_BY_SPEED,    70 },
+            { Commands.TEMP_BY_TIME,     80 },
+            { Commands.POWER,            90 },
+            { Commands.POWER_WAIT,       100 },
+            { Commands.POWER_BY_SPEED,   110 },
+            { Commands.POWER_BY_TIME,    120 },
+            { Commands.WAIT,             130 },
+            { Commands.FOR,              140 },
+            { Commands.END_FOR,          150 },
+            { Commands.PAUSE,            160 },
+            { Commands.NH3_OPEN,         170 },
+            { Commands.NH3_CLOSE,        180 },
+            { Commands.NH3_PURGE,        190 }
 
-                actions.AddEnum(Commands.TEMP, 50);
-                actions.AddEnum(Commands.TEMP_WAIT, 60);
-                actions.AddEnum(Commands.TEMP_BY_SPEED, 70);
-                actions.AddEnum(Commands.TEMP_BY_TIME, 80);
-
-                actions.AddEnum(Commands.POWER, 90);
-                actions.AddEnum(Commands.POWER_WAIT, 100);
-                actions.AddEnum(Commands.POWER_BY_SPEED, 110);
-                actions.AddEnum(Commands.POWER_BY_TIME, 120);
-
-                actions.AddEnum(Commands.WAIT, 130);
-
-                actions.AddEnum(Commands.FOR, 140);
-                actions.AddEnum(Commands.END_FOR, 150);
-                actions.AddEnum(Commands.PAUSE, 160);
-
-                actions.AddEnum(Commands.NH3_OPEN, 170);
-                actions.AddEnum(Commands.NH3_CLOSE, 180);
-                actions.AddEnum(Commands.NH3_PURGE, 190);
-
-                return actions;
-            }
-            private set { }
-        }
+        };
 
         public static List<TableColumn> ColumnHeaders
         {
             // TODO: переделать! Убрать постоянную реинициализацию!
             get
             {
-                return new List<TableColumn>() 
+                var growthList = new GrowthList();
+                return new List<TableColumn>()
                 {
                     new TableColumn("Действие", Actions),
                     new TableColumn("Номер", CellType._int),
@@ -106,20 +96,36 @@ namespace NtoLib.Recipes.MbeTable
             get
             {
                 var column = new TableColumn("Действие", Actions);
+
                 DataGridViewComboBoxCell viewComboBoxCell = new DataGridViewComboBoxCell();
-                viewComboBoxCell.MaxDropDownItems = column.EnumType.enum_counts;
-                for (int ittr_num = 0; ittr_num < column.EnumType.enum_counts; ++ittr_num)
-                    viewComboBoxCell.Items.Add((object)column.EnumType.GetNameByIterrator(ittr_num));
+                viewComboBoxCell.MaxDropDownItems = column.EnumType.EnumCount;
+
+                for (int ittr_num = 0; ittr_num < column.EnumType.EnumCount; ++ittr_num)
+                    viewComboBoxCell.Items.Add((object)column.EnumType.GetValueByIndex(ittr_num));
                 return viewComboBoxCell;
             }
         }
 
+        private static DataGridViewComboBoxCell GrowthListCell
+        {
+            get
+            {
+                int ListItemsCount = GrowthList.CombinedList.EnumCount;
+
+                var viewComboBoxCell = new DataGridViewComboBoxCell();
+
+                for (int i = 0; i < ListItemsCount; i++)
+                    viewComboBoxCell.Items.Add(GrowthList.CombinedList.GetValueByIndex(i));
+
+                return viewComboBoxCell;
+            }
+        }
 
         public bool ChangeNumber(int number)
         {
             if (number >= MinNumber && number <= MaxNumber)
             {
-                _cells[NumberIndex].SetNewValue(number);
+                _cells[NumberIndex].ParseValue(number);
                 Row.Cells[NumberIndex].Value = number;
                 return true;
             }
@@ -127,9 +133,9 @@ namespace NtoLib.Recipes.MbeTable
         }
         public bool ChangeSetpoint(float value)
         {
-            if(value >= MinSetpoint && value <= MaxSetpoint)
+            if (value >= MinSetpoint && value <= MaxSetpoint)
             {
-                _cells[SetpointIndex].SetNewValue(value);
+                _cells[SetpointIndex].ParseValue(value);
                 Row.Cells[SetpointIndex].Value = value;
                 return true;
             }
@@ -139,7 +145,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             if (value >= MinTimeSetpoint && value <= MaxTimeSetpoint)
             {
-                _cells[TimeSetpointIndex].SetNewValue(value);
+                _cells[TimeSetpointIndex].ParseValue(value);
                 Row.Cells[TimeSetpointIndex].Value = value;
                 return true;
             }
@@ -147,21 +153,21 @@ namespace NtoLib.Recipes.MbeTable
         }
 
 
-        public float CycleTime 
+        public float CycleTime
         {
             get => (float)_cells[RecipeTimeIndex].FloatValue;
-            
-            set 
+
+            set
             {
-                _cells[RecipeTimeIndex].SetNewValue(value);
-                _cells[RecipeTimeIndex].SetNewValue(TimeSpan.FromSeconds(value).ToString(@"hh\:mm\:ss\.ff"));
+                _cells[RecipeTimeIndex].ParseValue(value);
+                _cells[RecipeTimeIndex].ParseValue(TimeSpan.FromSeconds(value).ToString(@"hh\:mm\:ss\.ff"));
                 Row.Cells[RecipeTimeIndex].Value = value;
             }
         }
 
         public void ChangeComment(string comment)
         {
-            _cells[CommentIndex].SetNewValue(comment);
+            _cells[CommentIndex].ParseValue(comment);
             Row.Cells[CommentIndex].Value = comment;
         }
 

@@ -95,7 +95,7 @@ namespace NtoLib.Recipes.MbeTable
 
         public RecipeLine NewLine(ushort[] int_data, ushort[] float_data, ushort[] bool_data, int index)
         {
-            string command = RecipeLine.Actions.GetNameByNumber((int)int_data[index * 2]);
+            string command = RecipeLine.Actions.GetValueByIndex((int)int_data[index * 2]).ToString();
             int number = (int)int_data[index * 2 + 1];
 
             float setpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)float_data[index * 4] + ((uint)float_data[index * 4 + 1] << 16)), 0);

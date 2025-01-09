@@ -3,6 +3,8 @@ using FB.VisualFB;
 using InSAT.OPC;
 using System;
 
+// todo: use constants for pin numbers
+
 namespace NtoLib.Recipes.MbeTable
 {
     internal class SettingsReader

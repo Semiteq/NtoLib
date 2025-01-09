@@ -10,7 +10,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public Pause() : this("") { }
         public Pause(string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
+            int actionNumber = Actions[Name];
 
             _cells = new List<TCell>
             {

@@ -11,7 +11,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public Power(int number, float powerSetpoint, string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
+            int actionNumber = Actions[Name];
 
             _cells = new List<TCell>
             {

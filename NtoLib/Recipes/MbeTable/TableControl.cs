@@ -83,7 +83,7 @@ namespace NtoLib.Recipes.MbeTable
             get => actLoopCount;
             set
             {
-                if(value != actLoopCount)
+                if (value != actLoopCount)
                     RecalculateTime();
 
                 actLoopCount = value;
@@ -105,7 +105,7 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 _tableType = value;
-                if(_tableType == TableMode.View)
+                if (_tableType == TableMode.View)
                     ChangeToViewMode();
                 else
                     ChangeToEditMode();
@@ -118,7 +118,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._controlBackgroundColor;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._controlBackgroundColor = value;
                 ((Control)this).BackColor = this._controlBackgroundColor;
                 this.DbgMsg.BackColor = this._controlBackgroundColor;
@@ -131,7 +131,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._tableBackgroundColor;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._tableBackgroundColor = value;
                 this.dataGridView1.BackgroundColor = this._tableBackgroundColor;
             }
@@ -154,7 +154,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._headerTextColor;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._headerTextColor = value;
                 this._headerTextColorChanged = true;
             }
@@ -166,7 +166,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._header_bg_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._header_bg_color = value;
                 this._header_bg_color_changed = true;
             }
@@ -189,7 +189,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._line_text_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._line_text_color = value;
                 this.ChangeRowFont();
             }
@@ -201,7 +201,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._line_bg_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._line_bg_color = value;
                 this.ChangeRowFont();
             }
@@ -224,7 +224,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._selected_line_text_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._selected_line_text_color = value;
                 this.ChangeRowFont();
             }
@@ -236,7 +236,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._selected_line_bg_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._selected_line_bg_color = value;
                 this.ChangeRowFont();
             }
@@ -259,7 +259,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._passed_line_text_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._passed_line_text_color = value;
                 this.ChangeRowFont();
             }
@@ -271,7 +271,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._passed_line_bg_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._passed_line_bg_color = value;
                 this.ChangeRowFont();
             }
@@ -294,7 +294,7 @@ namespace NtoLib.Recipes.MbeTable
             get => this._buttons_color;
             set
             {
-                if(value != Color.Transparent)
+                if (value != Color.Transparent)
                     this._buttons_color = value;
                 this.button_open.BackColor = this._buttons_color;
                 this.button_save.BackColor = this._buttons_color;
@@ -345,19 +345,19 @@ namespace NtoLib.Recipes.MbeTable
         private void ChangeRowFont()
         {
             int index;
-            for(index = 0; index < this.dataGridView1.Rows.Count && index < this.currentRecipeLine; ++index)
+            for (index = 0; index < this.dataGridView1.Rows.Count && index < this.currentRecipeLine; ++index)
             {
                 this.dataGridView1.Rows[index].DefaultCellStyle.BackColor = this._passed_line_bg_color;
                 this.dataGridView1.Rows[index].DefaultCellStyle.Font = this._passed_line_font;
                 this.dataGridView1.Rows[index].DefaultCellStyle.ForeColor = this._passed_line_text_color;
             }
-            for(; index < this.dataGridView1.Rows.Count && index < this.currentRecipeLine + 1; ++index)
+            for (; index < this.dataGridView1.Rows.Count && index < this.currentRecipeLine + 1; ++index)
             {
                 this.dataGridView1.Rows[index].DefaultCellStyle.BackColor = this._selected_line_bg_color;
                 this.dataGridView1.Rows[index].DefaultCellStyle.Font = this._selected_line_font;
                 this.dataGridView1.Rows[index].DefaultCellStyle.ForeColor = this._selected_line_text_color;
             }
-            for(; index < this.dataGridView1.Rows.Count; ++index)
+            for (; index < this.dataGridView1.Rows.Count; ++index)
             {
                 this.dataGridView1.Rows[index].DefaultCellStyle.BackColor = this._line_bg_color;
                 this.dataGridView1.Rows[index].DefaultCellStyle.Font = this._line_font;
@@ -368,7 +368,7 @@ namespace NtoLib.Recipes.MbeTable
         private void FillColumns(List<TableColumn> columns)
         {
             columns.Clear();
-            foreach(TableColumn column in columns)
+            foreach (TableColumn column in columns)
             {
                 DataGridViewTextBoxColumn viewTextBoxColumn = new DataGridViewTextBoxColumn();
                 viewTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
@@ -390,45 +390,56 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.RowHeadersWidth = _rowHeadersWidth;
 
             columns = RecipeLine.ColumnHeaders;
-            foreach(TableColumn column in columns)
+            foreach (TableColumn column in columns)
             {
-                if(editMode)
+                if (editMode)
                 {
-                    if(column.type == CellType._bool)
+                    if (column.type == CellType._bool)
                     {
                         DataGridViewComboBoxColumn viewComboBoxColumn = new DataGridViewComboBoxColumn();
                         viewComboBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                         viewComboBoxColumn.Name = column.Name;
-                        viewComboBoxColumn.Tag = (object)column;
+                        viewComboBoxColumn.Tag = column;
                         viewComboBoxColumn.Width = GetWidth(column);
                         viewComboBoxColumn.MaxDropDownItems = 2;
-                        viewComboBoxColumn.Items.Add((object)"Да");
-                        viewComboBoxColumn.Items.Add((object)"Нет");
+                        viewComboBoxColumn.Items.Add("Да");
+                        viewComboBoxColumn.Items.Add("Нет");
 
-                        column.GridIndex = this.dataGridView1.Columns.Add(viewComboBoxColumn);
+                        column.GridIndex = dataGridView1.Columns.Add(viewComboBoxColumn);
                     }
-                    else if(column.type == CellType._enum)
+                    else if (column.type == CellType._enum)
                     {
                         DataGridViewComboBoxColumn viewComboBoxColumn = new DataGridViewComboBoxColumn();
                         viewComboBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                         viewComboBoxColumn.Name = column.Name;
-                        viewComboBoxColumn.Tag = (object)column;
+                        viewComboBoxColumn.Tag = column;
                         viewComboBoxColumn.Width = GetWidth(column);
-                        viewComboBoxColumn.MaxDropDownItems = column.EnumType.enum_counts;
-                        for(int ittr_num = 0; ittr_num < column.EnumType.enum_counts; ++ittr_num)
-                            viewComboBoxColumn.Items.Add((object)column.EnumType.GetNameByIterrator(ittr_num));
 
-                        column.GridIndex = this.dataGridView1.Columns.Add(viewComboBoxColumn);
+                        if (!column.EnumType.IsEmpty)
+                        {
+                            viewComboBoxColumn.MaxDropDownItems = column.EnumType.EnumCount;
+                            for (int ittr_num = 0; ittr_num < column.EnumType.EnumCount; ++ittr_num)
+                            {
+                                viewComboBoxColumn.Items.Add(column.EnumType.GetValueByIndex(ittr_num));
+                            }
+                        }
+                        else
+                        {
+                            viewComboBoxColumn.MaxDropDownItems = 1;
+                            viewComboBoxColumn.Items.Add("Нет элементов");
+                        }
+
+                        column.GridIndex = dataGridView1.Columns.Add(viewComboBoxColumn);
                     }
                     else
                     {
                         DataGridViewTextBoxColumn viewTextBoxColumn = new DataGridViewTextBoxColumn();
                         viewTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                         viewTextBoxColumn.Name = column.Name;
-                        viewTextBoxColumn.Tag = (object)column;
+                        viewTextBoxColumn.Tag = column;
                         viewTextBoxColumn.Width = GetWidth(column);
 
-                        column.GridIndex = this.dataGridView1.Columns.Add(viewTextBoxColumn);
+                        column.GridIndex = dataGridView1.Columns.Add(viewTextBoxColumn);
                     }
                 }
                 else
@@ -436,10 +447,10 @@ namespace NtoLib.Recipes.MbeTable
                     DataGridViewTextBoxColumn viewTextBoxColumn = new DataGridViewTextBoxColumn();
                     viewTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
                     viewTextBoxColumn.Name = column.Name;
-                    viewTextBoxColumn.Tag = (object)column;
+                    viewTextBoxColumn.Tag = column;
                     viewTextBoxColumn.Width = GetWidth(column);
 
-                    column.GridIndex = this.dataGridView1.Columns.Add(viewTextBoxColumn);
+                    column.GridIndex = dataGridView1.Columns.Add(viewTextBoxColumn);
                 }
             }
 
@@ -454,7 +465,7 @@ namespace NtoLib.Recipes.MbeTable
         /// </summary>
         private int GetWidth(TableColumn column)
         {
-            switch(column.Name)
+            switch (column.Name)
             {
                 case "Действие":
                     return 200;
@@ -473,7 +484,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ChangeCellAlignment()
         {
-            for(int cellIndex = 1; cellIndex < RecipeLine.ColumnCount - 1; cellIndex++)
+            for (int cellIndex = 1; cellIndex < RecipeLine.ColumnCount - 1; cellIndex++)
             {
                 dataGridView1.Columns[cellIndex].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 dataGridView1.Columns[cellIndex].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -485,9 +496,9 @@ namespace NtoLib.Recipes.MbeTable
 
         private void BlockCells(int rowIndex)
         {
-            for(int cellIndex = 1; cellIndex < RecipeLine.ColumnCount - 1; cellIndex++)
+            for (int cellIndex = 1; cellIndex < RecipeLine.ColumnCount - 1; cellIndex++)
             {
-                if(_tableData[rowIndex].GetCells[cellIndex].Type == CellType._blocked)
+                if (_tableData[rowIndex].GetCells[cellIndex].Type == CellType._blocked)
                 {
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].ReadOnly = true;
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].Style.BackColor = Color.LightGray;
@@ -513,47 +524,47 @@ namespace NtoLib.Recipes.MbeTable
         #region OnPaint
         protected override void OnPaint(PaintEventArgs e)
         {
-            if(this._resize)
+            if (this._resize)
             {
                 this._resize = false;
             }
-            if(this._headerFontChanged)
+            if (this._headerFontChanged)
             {
                 this.dataGridView1.RowHeadersDefaultCellStyle.Font = this._headerFont;
                 this.dataGridView1.ColumnHeadersDefaultCellStyle.Font = this._headerFont;
                 this._headerFontChanged = false;
             }
-            if(this._headerTextColorChanged)
+            if (this._headerTextColorChanged)
             {
                 this.dataGridView1.RowHeadersDefaultCellStyle.ForeColor = this._headerTextColor;
                 this.dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = this._headerTextColor;
                 this._headerTextColorChanged = false;
             }
-            if(this._header_bg_color_changed)
+            if (this._header_bg_color_changed)
             {
                 this.dataGridView1.RowHeadersDefaultCellStyle.BackColor = this._header_bg_color;
                 this.dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = this._header_bg_color;
                 this._header_bg_color_changed = false;
             }
-            if(this._to_runtime)
+            if (this._to_runtime)
             {
                 this.currentRecipeLine = -1;
                 this.prevCurrentRecipeLine = -2;
                 this._to_runtime = false;
             }
-            if(this.currentRecipeLine != this.prevCurrentRecipeLine)
+            if (this.currentRecipeLine != this.prevCurrentRecipeLine)
                 this.ChangeRowFont();
             this.prevCurrentRecipeLine = this.currentRecipeLine;
-            if(this.FBConnector.DesignMode)
+            if (this.FBConnector.DesignMode)
                 return;
 
-            if(ReadPinGroupQuality(1101, 16))
+            if (ReadPinGroupQuality(1101, 16))
                 actTemperature = ReadFloatPinGroup(1101, 16);
 
-            if(ReadPinGroupQuality(1201, 16))
+            if (ReadPinGroupQuality(1201, 16))
                 actPower = ReadFloatPinGroup(1201, 16);
 
-            if(ReadPinGroupQuality(1301, 5))
+            if (ReadPinGroupQuality(1301, 5))
                 actLoopCount = ReadIntPinGroup(1301, 5);
 
             uint pinValue1 = ((FBBase)this.FBConnector).GetPinValue<uint>(1017);
@@ -562,11 +573,11 @@ namespace NtoLib.Recipes.MbeTable
             OpcQuality pinQuality2 = ((FBBase)this.FBConnector).GetPinQuality(1016);
 
             this.button_save.Visible = true;
-            if(pinQuality2 != OpcQuality.Good || pinQuality1 != OpcQuality.Good || ((int)pinValue1 & 4) != 4)
+            if (pinQuality2 != OpcQuality.Good || pinQuality1 != OpcQuality.Good || ((int)pinValue1 & 4) != 4)
                 return;
             currentRecipeLine = pinValue2;
 
-            if(currentRecipeLine != prevCurrentRecipeLine)
+            if (currentRecipeLine != prevCurrentRecipeLine)
             {
                 ChangeRowFont();
                 prevCurrentRecipeLine = currentRecipeLine;
@@ -576,9 +587,9 @@ namespace NtoLib.Recipes.MbeTable
 
         private bool ReadPinGroupQuality(int startPinIndex, int count)
         {
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
-                if(((FBBase)this.FBConnector).GetPinQuality(startPinIndex + i) != OpcQuality.Good)
+                if (((FBBase)this.FBConnector).GetPinQuality(startPinIndex + i) != OpcQuality.Good)
                     return false;
             }
             return true;
@@ -588,7 +599,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             float[] pinValues = new float[count];
 
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
                 pinValues[i] = ((FBBase)this.FBConnector).GetPinValue<float>(startPinIndex);
 
             return pinValues;
@@ -598,7 +609,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             int[] pinValues = new int[count];
 
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
                 pinValues[i] = ((FBBase)this.FBConnector).GetPinValue<int>(startPinIndex);
 
             return pinValues;
@@ -685,11 +696,11 @@ namespace NtoLib.Recipes.MbeTable
             int columnIndex = e.ColumnIndex;
             int rowIndex = e.RowIndex;
 
-            if(columnIndex == RecipeLine.NumberIndex)
+            if (columnIndex == RecipeLine.NumberIndex)
             {
                 bool isParseOk = Int32.TryParse(dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString(), out int currentNumber);
 
-                if(!isParseOk || !_tableData[rowIndex].ChangeNumber(currentNumber))
+                if (!isParseOk || !_tableData[rowIndex].ChangeNumber(currentNumber))
                 {
                     MessageBoxIcon icon = MessageBoxIcon.Error;
                     dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetNumber();
@@ -703,11 +714,11 @@ namespace NtoLib.Recipes.MbeTable
                 else
                     dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = currentNumber;
             }
-            else if(columnIndex == RecipeLine.SetpointIndex)
+            else if (columnIndex == RecipeLine.SetpointIndex)
             {
                 bool isParseOk = float.TryParse(dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString(), out float newValue);
 
-                if(!_tableData[rowIndex].ChangeSetpoint(newValue) || !isParseOk)
+                if (!_tableData[rowIndex].ChangeSetpoint(newValue) || !isParseOk)
                 {
                     dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetSetpoint();
                     MessageBox.Show($"Введите число: \n" +
@@ -723,12 +734,12 @@ namespace NtoLib.Recipes.MbeTable
                     RefreshTable();
                 }
             }
-            else if(columnIndex == RecipeLine.TimeSetpointIndex)
+            else if (columnIndex == RecipeLine.TimeSetpointIndex)
             {
                 string text = dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString();
                 bool isParseOk = DateTimeParser.TryParse(text, out var newValue) || newValue < _tableData[rowIndex].MinTimeSetpoint || newValue > _tableData[rowIndex].MaxTimeSetpoint;
 
-                if(!_tableData[rowIndex].ChangeSpeed(newValue) || !isParseOk)
+                if (!_tableData[rowIndex].ChangeSpeed(newValue) || !isParseOk)
                 {
                     dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetTime();
                     MessageBox.Show($"Введите число: \n" +
@@ -744,7 +755,7 @@ namespace NtoLib.Recipes.MbeTable
                     RefreshTable();
                 }
             }
-            else if(columnIndex == RecipeLine.CommentIndex)
+            else if (columnIndex == RecipeLine.CommentIndex)
             {
                 string newValue = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
                 _tableData[rowIndex].ChangeComment(newValue);
@@ -752,23 +763,23 @@ namespace NtoLib.Recipes.MbeTable
         }
         void dataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            if(dataGridView1.IsCurrentCellDirty)
+            if (dataGridView1.IsCurrentCellDirty)
                 dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
         private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             DataGridViewComboBoxCell comboBox = (DataGridViewComboBoxCell)dataGridView1.Rows[e.RowIndex].Cells[RecipeLine.CommandIndex];
 
-            if(comboBox.Value != null && e.ColumnIndex == RecipeLine.CommandIndex && !isLoadingActive)
+            if (comboBox.Value != null && e.ColumnIndex == RecipeLine.CommandIndex && !isLoadingActive)
             {
                 string newCommand = (string)dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
                 int rowIndex = e.RowIndex;
 
-                if(e.ColumnIndex == RecipeLine.CommandIndex)
+                if (e.ColumnIndex == RecipeLine.CommandIndex)
                 {
                     RecipeLine newLine = factory.NewLine(newCommand);
 
-                    if(newLine != null)
+                    if (newLine != null)
                     {
                         _tableData.RemoveAt(rowIndex);
                         _tableData.Insert(rowIndex, newLine);
@@ -789,18 +800,19 @@ namespace NtoLib.Recipes.MbeTable
 
         private void HandleVisibleChanged(object sender, EventArgs e)
         {
-            if(!Visible)
+            if (!Visible)
                 return;
 
-            if(!DesignMode && _tableType == TableMode.View)
+            if (!DesignMode && _tableType == TableMode.View)
             {
-                if(_loadDelay == null)
+                if (_loadDelay == null)
                 {
                     _loadDelay = new Timer();
                     _loadDelay.Interval = 100;
-                    
-                    _loadDelay.Tick += (object sender2, EventArgs e2) => {
-                        if(TryLoadRecipeFromPlc())
+
+                    _loadDelay.Tick += (object sender2, EventArgs e2) =>
+                    {
+                        if (TryLoadRecipeFromPlc())
                             WriteStatusMessage("Рецепт загружен из ПЛК");
                         else
                             WriteStatusMessage("Не удалось загрузить рецепт из ПЛК");

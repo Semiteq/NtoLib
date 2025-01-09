@@ -1,172 +1,148 @@
-﻿using InSAT.Library.Linq;
-using System;
+﻿using System;
+using MasterSCADA.Hlp;
+using System.Runtime.InteropServices;
 
 namespace NtoLib.Recipes.MbeTable
 {
     internal class TCell
     {
-        public CellType Type { get => _type; }
+        public CellType Type { get; }
 
         private bool boolValue;
         private double floatValue;
         private int intValue;
         private string stringValue;
 
-        private CellType _type;
-
         public TCell(CellType type, string value)
         {
-            _type = type;
-            this.SetNewValue(value);
+            Type = type;
+            ParseValue(value);
         }
 
         public TCell(CellType type, string value, int intValue)
         {
-            _type = type;
+            Type = type;
             UIntValue = (uint)intValue;
-            this.SetNewValue(value);
+            ParseValue(value);
         }
 
-
-        public TCell(CellType type, float value)
+        public TCell(CellType type, int value) : this(type, value.ToString())
         {
-            _type = type;
-            floatValue = value;
-        }
-
-        public TCell(CellType type, int value)
-        {
-            _type = type;
             intValue = value;
         }
 
-        public TCell(CellType type, byte[] buf, ref int offset)
+        public TCell(CellType type, float value) : this(type, value.ToString())
         {
-            _type = type;
-            if (Type == CellType._bool)
-                boolValue = BitConverter.ToUInt32(buf, offset) != 0U;
-
-            if (Type == CellType._float)
-                floatValue = (double)BitConverter.ToSingle(buf, offset);
-
-            if (Type == CellType._int || Type == CellType._enum)
-                intValue = BitConverter.ToInt32(buf, offset);
-
-            offset += 4;
+            floatValue = value;
         }
 
-        public uint servalue
+        public TCell(CellType type, byte[] buffer, ref int offset)
         {
-            get => Type == CellType._bool ? (!boolValue ? 0U : 1U) : (Type == CellType._int || Type == CellType._enum ? (uint)intValue : BitConverter.ToUInt32(BitConverter.GetBytes((float)floatValue), 0));
+            Type = type;
+            ParseBuffer(buffer, ref offset);
+        }
+
+        #region Conversions to different types
+        public int IntValue
+        {
+            get => Type == CellType._bool ? (boolValue ? 1 : 0) :
+                   Type == CellType._float ? (int)floatValue : intValue;
+        }
+
+        public uint UIntValue
+        {
+            // Работа с целочисленным представлением значений
+            get => Type == CellType._bool ? (boolValue ? 1U : 0U) :
+                   (Type == CellType._int || Type == CellType._enum) ? (uint)intValue :
+                   BitConverter.ToUInt32(BitConverter.GetBytes((float)floatValue), 0);
+
             set
             {
-                if (Type == CellType._bool)
-                    this.boolValue = value != 0U;
-                else if (Type == CellType._int || Type == CellType._enum)
-                    this.intValue = (int)value;
-                else
-                    this.floatValue = (double)BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
+                if (Type == CellType._bool) boolValue = value != 0U;
+
+                else if (Type == CellType._int || Type == CellType._enum) intValue = (int)value;
+
+                else floatValue = BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
             }
         }
 
-
+        public double FloatValue
+        {
+            get => Type == CellType._bool ? (boolValue ? 1.0 : 0.0) :
+                   (Type == CellType._int || Type == CellType._enum) ? (double)intValue : floatValue;
+        }
 
         public bool BoolValue
         {
-            get
-            {
-                if (Type == CellType._int || Type == CellType._enum)
-                    return this.intValue != 0;
-                return Type == CellType._float ? this.floatValue != 0.0 : this.boolValue;
-            }
+            //Проверка не boolean переменной на TRUE или FALSE
+            get => Type == CellType._int || Type == CellType._enum ? intValue != 0 : (Type == CellType._float ? this.floatValue != 0.0 : this.boolValue);
         }
-        public uint UIntValue
-        {
-            get => Type == CellType._bool ? (!this.boolValue ? 0U : 1U) : (Type == CellType._int || Type == CellType._enum ? (uint)this.intValue : BitConverter.ToUInt32(BitConverter.GetBytes((float)this.floatValue), 0));
-            set
-            {
-                if (Type == CellType._bool)
-                    this.boolValue = value != 0U;
-                else if (Type == CellType._int || Type == CellType._enum)
-                    this.intValue = (int)value;
-                else
-                    this.floatValue = (double)BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
-            }
-        }
-        public int IntValue => Type == CellType._bool ? (this.boolValue ? 1 : 0) : (Type == CellType._float ? (int)this.floatValue : this.intValue);
-        public double FloatValue => Type == CellType._bool ? (this.boolValue ? 1.0 : 0.0) : (Type == CellType._int || Type == CellType._enum ? (double)this.intValue : this.floatValue);
+
         public string StringValue
         {
-            get
-            {
-                if (Type == CellType._bool)
-                    return boolValue.ToString();
+            get =>
+                Type == CellType._bool ? boolValue.ToString() :
+                Type == CellType._int ? intValue.ToString() :
 
-                else if (Type == CellType._int)
-                    return intValue.ToString();
+                ((Type == CellType._float) ||
+                (Type == CellType._floatPercent) ||
+                (Type == CellType._floatTemp) ||
+                (Type == CellType._floatSecond) ||
+                (Type == CellType._floatTempSpeed) ||
+                (Type == CellType._floatPowerSpeed)) ? floatValue.ToString("F5") :
 
-                else if ((Type == CellType._float) ||
-                    (Type == CellType._floatPercent) ||
-                    (Type == CellType._floatTemp) ||
-                    (Type == CellType._floatSecond) ||
-                    (Type == CellType._floatTempSpeed) ||
-                    (Type == CellType._floatPowerSpeed))
-                    return floatValue.ToString("F5");
-
-                else if ((Type == CellType._enum) ||
-                    (Type == CellType._string))
-                    return stringValue;
-                return stringValue;
-            }
+                (Type == CellType._enum || Type == CellType._string) ? stringValue :
+                stringValue;
         }
-        public override string ToString() => this.StringValue;
 
+        #endregion
 
-        public void SetNewValue(string value)
+        // Преобразование ячейки в строку
+        public override string ToString() => GetValue();
+
+        public void ParseValue(string value)
         {
+            string upperValue = value?.ToUpper();
+
             if (Type == CellType._bool)
             {
-                if (value.ToUpper() == "TRUE" || value.ToUpper() == "ДА" || value.ToUpper() == "YES" || value.ToUpper() == "ON" || value.ToUpper() == "1")
+                if (upperValue == "TRUE" || upperValue == "ДА" || upperValue == "YES" || upperValue == "ON" || upperValue == "1")
                     boolValue = true;
-                else if (value.ToUpper() == "FALSE" || value.ToUpper() == "НЕТ" || value.ToUpper() == "NO" || value.ToUpper() == "OFF" || value.ToUpper() == "0")
+                else if (upperValue == "FALSE" || upperValue == "НЕТ" || upperValue == "NO" || upperValue == "OFF" || upperValue == "0")
                     boolValue = false;
                 else
-                    throw new Exception("Wrong value(BoolType): \"" + value + "\"");
+                    throw new Exception($"Wrong value(BoolType): \"{value}\"");
             }
-
-            else if(Type == CellType._floatSecond)
+            else if (Type == CellType._floatSecond)
             {
-                if(!DateTime.TryParse(value, out var dateTime))
-                    throw new Exception("Wrong value(TimeValue): \"" + value + "\"");
+                if (!DateTime.TryParse(value, out var dateTime))
+                    throw new Exception($"Wrong value(TimeValue): \"{value}\"");
 
                 floatValue = (float)dateTime.Second + (float)dateTime.Millisecond / 1000;
             }
-
-            else if (Type == CellType._float || Type == CellType._floatTemp || Type == CellType._floatPercent || Type == CellType._floatSecond || Type == CellType._floatTempSpeed || Type == CellType._floatPowerSpeed)
+            else if (Type == CellType._float || Type == CellType._floatTemp || Type == CellType._floatPercent || Type == CellType._floatTempSpeed || Type == CellType._floatPowerSpeed)
             {
                 if (!double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out this.floatValue))
-                    throw new Exception("Wrong value(FloatType): \"" + value + "\"");
+                    throw new Exception($"Wrong value(FloatType): \"{value}\"");
             }
-
             else if (Type == CellType._int)
             {
                 if (!int.TryParse(value, out this.intValue))
-                    throw new Exception("Wrong value(IntType): \"" + value + "\"");
+                    throw new Exception($"Wrong value(IntType): \"{value}\"");
             }
-
             else if (Type == CellType._enum)
             {
-                if (!value.IsEmpty() && value != null)
+                if (!string.IsNullOrEmpty(value))
                     stringValue = value;
                 else
-                    throw new Exception("Wrong value(EnumType): \"" + value + "\"");
+                    throw new Exception($"Wrong value(EnumType): \"{value}\"");
             }
             else if (Type == CellType._string || Type == CellType._blocked)
             {
                 if (value != null)
                     stringValue = value;
                 else
-                    throw new Exception("Wrong value(StringType): \"" + value + "\"");
+                    throw new Exception($"Wrong value(StringType): \"{value}\"");
             }
             else
             {
@@ -174,52 +150,51 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        public void SetNewValue(int value)
+
+        public void ParseValue(int value)
         {
             intValue = value;
         }
 
-        public void SetNewValue(float value)
-        { 
+        public void ParseValue(float value)
+        {
             floatValue = value;
         }
 
+        // Парсинг данных из буфера
+        private void ParseBuffer(byte[] buffer, ref int offset)
+        {
+            if (Type == CellType._bool) boolValue = BitConverter.ToUInt32(buffer, offset) != 0;
+
+            else if (Type == CellType._float) floatValue = BitConverter.ToSingle(buffer, offset);
+
+            else if (Type == CellType._int || Type == CellType._enum) intValue = BitConverter.ToInt32(buffer, offset);
+
+            else throw new NotSupportedException($"Unsupported type for buffer parsing: {Type}");
+
+            offset += 4;
+        }
+
+
+        // Получение строки с форматированным значением
         public string GetValue()
         {
-            if (Type == CellType._bool)
-                return boolValue.ToString();
-
-            else if (Type == CellType._float)
-                return floatValue.ToString();
-
-            else if (Type == CellType._floatTemp)
-                return string.Format("{0:f0}", floatValue) + " ⁰C";
-
-            else if (Type == CellType._floatPercent)
-                return string.Format("{0:f1}", floatValue) + " %";
-
-            else if (Type == CellType._floatSecond)
-                return FormatTime(floatValue);
-
-            else if (Type == CellType._floatTempSpeed)
-                return string.Format("{0:f1}", floatValue)  + " ⁰C/мин";
-
-            else if (Type == CellType._floatPowerSpeed)
-                return string.Format("{0:f2}", floatValue) + " %/мин";
-
-            else if (Type == CellType._int)
-                return intValue.ToString();
-
-            else if (Type == CellType._enum || Type == CellType._string)
-                return stringValue;
-
-            else
-                return String.Empty;
+            if (Type == CellType._bool) return boolValue.ToString();
+            if (Type == CellType._float) return floatValue.ToString("F5");
+            if (Type == CellType._floatTemp) return $"{floatValue:F0} ⁰C";
+            if (Type == CellType._floatPercent) return $"{floatValue:F1} %";
+            if (Type == CellType._floatSecond) return FormatTime(floatValue);
+            if (Type == CellType._floatTempSpeed) return $"{floatValue:F1} ⁰C/мин";
+            if (Type == CellType._floatPowerSpeed) return $"{floatValue:F2} %/мин";
+            if (Type == CellType._int) return intValue.ToString();
+            if (Type == CellType._string || Type == CellType._enum) return stringValue;
+            return string.Empty;
         }
+
 
         private string FormatTime(double time)
         {
-            return TimeSpan.FromSeconds(time).ToString(@"hh\:mm\:ss\.ff");
+            return TimeSpan.FromSeconds(time).ToString("hh\\:mm\\:ss\\.ff");
         }
     }
 }

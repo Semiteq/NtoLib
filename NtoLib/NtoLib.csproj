@@ -106,7 +106,9 @@
     <Compile Include="Recipes\MbeTable\CellType.cs" />
     <Compile Include="Recipes\MbeTable\Commands.cs" />
     <Compile Include="Recipes\MbeTable\CommunicationSettings.cs" />
+    <Compile Include="Recipes\MbeTable\Params.cs" />
     <Compile Include="Recipes\MbeTable\DateTimeParser.cs" />
+    <Compile Include="Recipes\MbeTable\GrowthList.cs" />
     <Compile Include="Recipes\MbeTable\PLC_Communication.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLineFactory.cs" />
@@ -271,6 +273,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Directory.Build.props" />
     <None Include="NtoLib_reg.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

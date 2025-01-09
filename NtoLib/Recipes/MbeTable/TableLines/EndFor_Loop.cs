@@ -14,7 +14,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public EndFor_Loop(string comment) : base(Name)
         {
-            int actionNumber = (int)Actions.GetActionNumber(Name);
+            int actionNumber = Actions[Name];
 
             _cells = new List<TCell>
             {

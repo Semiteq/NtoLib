@@ -28,8 +28,8 @@
 
         public int GridIndex
         {
-            get => this._gridIndex;
-            set => this._gridIndex = value;
+            get => _gridIndex;
+            set => _gridIndex = value;
         }
     }
 }
