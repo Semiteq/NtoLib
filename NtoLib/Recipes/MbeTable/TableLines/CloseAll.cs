@@ -4,22 +4,20 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 {
     internal class CloseAll : RecipeLine
     {
-        public const string Name = Commands.CLOSE_ALL;
+        public const string ActionName = Commands.CLOSE_ALL;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public CloseAll() : this("") { }
-
-        public CloseAll(string comment) : base(Name)
+        public CloseAll(string comment = "") : base(ActionName)
         {
-            int actionNumber = Actions[Name];
+            int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {
-                new TCell(CellType._enum, Name, actionNumber),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
         }
     }

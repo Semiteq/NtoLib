@@ -46,14 +46,8 @@ namespace NtoLib.Recipes.MbeTable
         public const int ID_HMI_ActualLine = 1016;
         public const int ID_HMI_Status = 1017;
 
-        //Номер пина, с которого начинается нумерация пинов с информацией о температуре в MasterSCADA
-        //public const int FirstPinActTemperature = 1101;
-
-        //Номер пина, с которого начинается нумерация пинов с информацией о мощности в MasterSCADA
-        //public const int FirstPinActPower = 1201;
-
         //Номер пина, с которого начинается нумерация пинов с информацией о количестве циклов включения в MasterSCADA
-        //public const int FirstPinActLoopAcount = 1301;
+        public const int FirstPinActLoopAcount = 1301;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях заслонок в MasterSCADA
         public const int FirstPinShutterName = 1401;
@@ -61,13 +55,19 @@ namespace NtoLib.Recipes.MbeTable
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях нагревателей в MasterSCADA
         public const int FirstPinHeaterName = 1501;
 
-
-        public const int ActTemperatureQuantity = 16;
-        public const int ActPowerQuantity = 16;
         public const int ActLoopAcountQuantity = 5;
         public const int ShutterNameQuantity = 32;
         public const int HeaterNameQuantity = 32;
-        
 
+        //Номера столбцов соответствующих параметров в таблице
+        public const int CommandIndex = 0;
+        public const int NumberIndex = 1;
+        public const int SetpointIndex = 2;
+        public const int TimeSetpointIndex = 3;
+        public const int RecipeTimeIndex = 4;
+        public const int CommentIndex = 5;
+
+        //Общее число столбцов в таблице
+        public const int ColumnCount = 6;
     }
 }

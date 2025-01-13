@@ -13,6 +13,8 @@ namespace NtoLib.Recipes.MbeTable
         private int intValue;
         private string stringValue;
 
+        #region Constructors
+
         public TCell(CellType type, string value)
         {
             Type = type;
@@ -26,23 +28,30 @@ namespace NtoLib.Recipes.MbeTable
             ParseValue(value);
         }
 
-        public TCell(CellType type, int value) : this(type, value.ToString())
+        public TCell(CellType type, int value)
         {
+            Type = type;
+            ParseValue(value);
             intValue = value;
         }
 
-        public TCell(CellType type, float value) : this(type, value.ToString())
+        public TCell(CellType type, float value)
         {
+            Type = type;
+            ParseValue(value);
             floatValue = value;
         }
 
-        public TCell(CellType type, byte[] buffer, ref int offset)
-        {
-            Type = type;
-            ParseBuffer(buffer, ref offset);
-        }
+        //public TCell(CellType type, byte[] buffer, ref int offset)
+        //{
+        //    Type = type;
+        //    ParseBuffer(buffer, ref offset);
+        //}
+
+        #endregion
 
         #region Conversions to different types
+
         public int IntValue
         {
             get => Type == CellType._bool ? (boolValue ? 1 : 0) :
@@ -97,8 +106,7 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
 
-        // Преобразование ячейки в строку
-        public override string ToString() => GetValue();
+        //public override string ToString() => GetValue();
 
         public void ParseValue(string value)
         {
@@ -161,19 +169,19 @@ namespace NtoLib.Recipes.MbeTable
             floatValue = value;
         }
 
-        // Парсинг данных из буфера
-        private void ParseBuffer(byte[] buffer, ref int offset)
-        {
-            if (Type == CellType._bool) boolValue = BitConverter.ToUInt32(buffer, offset) != 0;
+        //// Парсинг данных из буфера
+        //private void ParseBuffer(byte[] buffer, ref int offset)
+        //{
+        //    if (Type == CellType._bool) boolValue = BitConverter.ToUInt32(buffer, offset) != 0;
 
-            else if (Type == CellType._float) floatValue = BitConverter.ToSingle(buffer, offset);
+        //    else if (Type == CellType._float) floatValue = BitConverter.ToSingle(buffer, offset);
 
-            else if (Type == CellType._int || Type == CellType._enum) intValue = BitConverter.ToInt32(buffer, offset);
+        //    else if (Type == CellType._int || Type == CellType._enum) intValue = BitConverter.ToInt32(buffer, offset);
 
-            else throw new NotSupportedException($"Unsupported type for buffer parsing: {Type}");
+        //    else throw new NotSupportedException($"Unsupported type for buffer parsing: {Type}");
 
-            offset += 4;
-        }
+        //    offset += 4;
+        //}
 
 
         // Получение строки с форматированным значением
@@ -190,7 +198,6 @@ namespace NtoLib.Recipes.MbeTable
             if (Type == CellType._string || Type == CellType._enum) return stringValue;
             return string.Empty;
         }
-
 
         private string FormatTime(double time)
         {

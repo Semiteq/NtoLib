@@ -87,7 +87,7 @@ namespace NtoLib.Recipes.MbeTable
             if (_tableData.Count > 0)
             {
                 _tableData[0].CycleTime = 0f;
-                dataGridView1.Rows[0].Cells[RecipeLine.RecipeTimeIndex].Value = TimeSpan.Zero.ToString(@"hh\:mm\:ss\.ff");
+                dataGridView1.Rows[0].Cells[Params.RecipeTimeIndex].Value = TimeSpan.Zero.ToString(@"hh\:mm\:ss\.ff");
             }
             else
                 return;
@@ -119,7 +119,7 @@ namespace NtoLib.Recipes.MbeTable
                 if (rowIndex < _tableData.Count - 1)
                 {
                     _tableData[rowIndex + 1].CycleTime = (float)time.TotalSeconds;
-                    dataGridView1.Rows[rowIndex + 1].Cells[RecipeLine.RecipeTimeIndex].Value = time.ToString(@"hh\:mm\:ss\.ff");
+                    dataGridView1.Rows[rowIndex + 1].Cells[Params.RecipeTimeIndex].Value = time.ToString(@"hh\:mm\:ss\.ff");
                 }
             }
         }

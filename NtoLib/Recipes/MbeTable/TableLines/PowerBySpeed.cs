@@ -4,23 +4,21 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 {
     internal class PowerBySpeed : RecipeLine
     {
-        public const string Name = Commands.POWER_BY_SPEED;
+        public const string ActionName = Commands.POWER_BY_SPEED;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public PowerBySpeed() : this(1, 10f, 1f, "") { }
-
-        public PowerBySpeed(int number, float powerSetpoint, float speedSetpoint, string comment) : base(Name)
+        public PowerBySpeed(int number = 1, float powerSetpoint = 10f, float speedSetpoint = 1f, string comment = "") : base(ActionName)
         {
-            int actionNumber = Actions[Name];
-
+            heaterName = GrowthList.HeaterNames.GetValueByIndex(number);
+            int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {
-                new TCell(CellType._enum, Name, actionNumber),
-                new TCell(CellType._int, number),
-                new TCell(CellType._floatPercent, powerSetpoint),
-                new TCell(CellType._floatPowerSpeed, speedSetpoint),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._enum, heaterName, number),
+                new(CellType._floatPercent, powerSetpoint),
+                new(CellType._floatPowerSpeed, speedSetpoint),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
 
             MinSetpoint = 0f;

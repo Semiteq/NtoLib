@@ -172,7 +172,7 @@ namespace NtoLib.Recipes.MbeTable
                 dataGridView1.Rows[index].HeaderCell.Value = (object)(index + 1).ToString();
                 dataGridView1.Rows[index].Height = ROW_HEIGHT;
 
-                for(int i = 0; i < RecipeLine.ColumnCount; i++)
+                for(int i = 0; i < Params.ColumnCount; i++)
                 {
                     object value = (object)recipeLine.GetCells[i].StringValue;
                     dataGridView1.Rows[index].Cells[i].Value = value;

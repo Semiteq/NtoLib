@@ -5,25 +5,23 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 {
     internal class EndFor_Loop : RecipeLine
     {
-        public const string Name = Commands.END_FOR;
+        public const string ActionName = Commands.END_FOR;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
         public TimeSpan cycleTime;
 
-        public EndFor_Loop() : this("") { }
-
-        public EndFor_Loop(string comment) : base(Name)
+        public EndFor_Loop(string comment = "") : base(ActionName)
         {
-            int actionNumber = Actions[Name];
+            int actionNumber = Actions[ActionName];
 
             _cells = new List<TCell>
             {
-                new TCell(CellType._enum, Name, actionNumber),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
             cycleTime = TimeSpan.Zero;
         }

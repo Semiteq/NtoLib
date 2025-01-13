@@ -71,10 +71,6 @@ namespace NtoLib.Recipes.MbeTable
         private DateTime starttime = DateTime.Now;
         private int make_upload;
 
-
-
-        private float[] actTemperature = new float[16];
-        private float[] actPower = new float[16];
         private int[] actLoopCount = new int[5];
 
         public int[] LoopCount
@@ -470,7 +466,7 @@ namespace NtoLib.Recipes.MbeTable
                 case "Действие":
                     return 200;
                 case "Номер":
-                    return 80;
+                    return 150;
                 case "Задание":
                     return 150;
                 case "Скорость/Время":
@@ -484,7 +480,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ChangeCellAlignment()
         {
-            for (int cellIndex = 1; cellIndex < RecipeLine.ColumnCount - 1; cellIndex++)
+            for (int cellIndex = 1; cellIndex < Params.ColumnCount - 1; cellIndex++)
             {
                 dataGridView1.Columns[cellIndex].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 dataGridView1.Columns[cellIndex].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -496,7 +492,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void BlockCells(int rowIndex)
         {
-            for (int cellIndex = 1; cellIndex < RecipeLine.ColumnCount - 1; cellIndex++)
+            for (int cellIndex = 1; cellIndex < Params.ColumnCount - 1; cellIndex++)
             {
                 if (_tableData[rowIndex].GetCells[cellIndex].Type == CellType._blocked)
                 {
@@ -509,7 +505,7 @@ namespace NtoLib.Recipes.MbeTable
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].ReadOnly = false;
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].Style.BackColor = Color.White;
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].Value = _tableData[rowIndex].GetCells[cellIndex].GetValue();
-                }
+                } 
             }
         }
 
@@ -558,19 +554,13 @@ namespace NtoLib.Recipes.MbeTable
             if (this.FBConnector.DesignMode)
                 return;
 
-            if (ReadPinGroupQuality(1101, 16))
-                actTemperature = ReadFloatPinGroup(1101, 16);
+            if (ReadPinGroupQuality(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity))
+                actLoopCount = ReadIntPinGroup(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity);
 
-            if (ReadPinGroupQuality(1201, 16))
-                actPower = ReadFloatPinGroup(1201, 16);
-
-            if (ReadPinGroupQuality(1301, 5))
-                actLoopCount = ReadIntPinGroup(1301, 5);
-
-            uint pinValue1 = ((FBBase)this.FBConnector).GetPinValue<uint>(1017);
-            OpcQuality pinQuality1 = ((FBBase)this.FBConnector).GetPinQuality(1017);
-            int pinValue2 = ((FBBase)this.FBConnector).GetPinValue<int>(1016);
-            OpcQuality pinQuality2 = ((FBBase)this.FBConnector).GetPinQuality(1016);
+            uint pinValue1 = ((FBBase)this.FBConnector).GetPinValue<uint>(Params.ID_HMI_Status);
+            OpcQuality pinQuality1 = ((FBBase)this.FBConnector).GetPinQuality(Params.ID_HMI_Status);
+            int pinValue2 = ((FBBase)this.FBConnector).GetPinValue<int>(Params.ID_HMI_ActualLine);
+            OpcQuality pinQuality2 = ((FBBase)this.FBConnector).GetPinQuality(Params.ID_HMI_ActualLine);
 
             this.button_save.Visible = true;
             if (pinQuality2 != OpcQuality.Good || pinQuality1 != OpcQuality.Good || ((int)pinValue1 & 4) != 4)
@@ -696,7 +686,7 @@ namespace NtoLib.Recipes.MbeTable
             int columnIndex = e.ColumnIndex;
             int rowIndex = e.RowIndex;
 
-            if (columnIndex == RecipeLine.NumberIndex)
+            if (columnIndex == Params.NumberIndex)
             {
                 bool isParseOk = Int32.TryParse(dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString(), out int currentNumber);
 
@@ -714,7 +704,7 @@ namespace NtoLib.Recipes.MbeTable
                 else
                     dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = currentNumber;
             }
-            else if (columnIndex == RecipeLine.SetpointIndex)
+            else if (columnIndex == Params.SetpointIndex)
             {
                 bool isParseOk = float.TryParse(dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString(), out float newValue);
 
@@ -734,7 +724,7 @@ namespace NtoLib.Recipes.MbeTable
                     RefreshTable();
                 }
             }
-            else if (columnIndex == RecipeLine.TimeSetpointIndex)
+            else if (columnIndex == Params.TimeSetpointIndex)
             {
                 string text = dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString();
                 bool isParseOk = DateTimeParser.TryParse(text, out var newValue) || newValue < _tableData[rowIndex].MinTimeSetpoint || newValue > _tableData[rowIndex].MaxTimeSetpoint;
@@ -755,7 +745,7 @@ namespace NtoLib.Recipes.MbeTable
                     RefreshTable();
                 }
             }
-            else if (columnIndex == RecipeLine.CommentIndex)
+            else if (columnIndex == Params.CommentIndex)
             {
                 string newValue = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
                 _tableData[rowIndex].ChangeComment(newValue);
@@ -768,14 +758,14 @@ namespace NtoLib.Recipes.MbeTable
         }
         private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            DataGridViewComboBoxCell comboBox = (DataGridViewComboBoxCell)dataGridView1.Rows[e.RowIndex].Cells[RecipeLine.CommandIndex];
+            DataGridViewComboBoxCell comboBox = (DataGridViewComboBoxCell)dataGridView1.Rows[e.RowIndex].Cells[Params.CommandIndex];
 
-            if (comboBox.Value != null && e.ColumnIndex == RecipeLine.CommandIndex && !isLoadingActive)
+            if (comboBox.Value != null && e.ColumnIndex == Params.CommandIndex && !isLoadingActive)
             {
                 string newCommand = (string)dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
                 int rowIndex = e.RowIndex;
 
-                if (e.ColumnIndex == RecipeLine.CommandIndex)
+                if (e.ColumnIndex == Params.CommandIndex)
                 {
                     RecipeLine newLine = factory.NewLine(newCommand);
 

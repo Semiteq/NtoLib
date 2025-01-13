@@ -4,23 +4,21 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 {
     internal class Wait : RecipeLine
     {
-        public const string Name = Commands.WAIT;
+        public const string ActionName = Commands.WAIT;
         public override ActionTime ActionTime => ActionTime.TimeSetpoint;
 
-        public Wait() : this(10f, "") { }
-
-        public Wait(float timeSetpoint, string comment) : base(Name)
+        public Wait(float timeSetpoint = 10f, string comment = "") : base(ActionName)
         {
-            int actionNumber = Actions[Name];
+            int actionNumber = Actions[ActionName];
 
             _cells = new List<TCell>
             {
-                new TCell(CellType._enum, Name, actionNumber),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._floatSecond, timeSetpoint),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._floatSecond, timeSetpoint),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
         }
     }

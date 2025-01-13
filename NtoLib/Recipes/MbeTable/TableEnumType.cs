@@ -72,5 +72,12 @@ namespace NtoLib.Recipes.MbeTable
 
             return result;
         }
+
+        public int GetLowestNumber()
+        {
+            if (_items.Count == 0)
+                return 0;
+            return _items.Values.Min();
+        }
     }
 }

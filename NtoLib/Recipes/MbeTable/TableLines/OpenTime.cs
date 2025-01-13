@@ -4,23 +4,21 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 {
     internal class OpenTime : RecipeLine
     {
-        public const string Name = Commands.OPEN_TIME;
+        public const string ActionName = Commands.OPEN_TIME;
         public override ActionTime ActionTime => ActionTime.TimeSetpoint;
 
-        public OpenTime() : this(1, 1f, "") { }
-
-        public OpenTime(int number, float timeSetpoint, string comment) : base(Name)
+        public OpenTime(int number = 1, float timeSetpoint = 1f, string comment = "") : base(ActionName)
         {
-            int actionNumber = Actions[Name];
-
+            shutterName = GrowthList.ShutterNames.GetValueByIndex(number);
+            int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {
-                new TCell(CellType._enum, Name, actionNumber),
-                new TCell(CellType._int, number),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._floatSecond, timeSetpoint),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._enum, shutterName, number),
+                new(CellType._blocked, ""),
+                new(CellType._floatSecond, timeSetpoint),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
         }
     }

@@ -4,23 +4,21 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 {
     internal class For_Loop : RecipeLine
     {
-        public const string Name = Commands.FOR;
+        public const string ActionName = Commands.FOR;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public For_Loop() : this(5, "") { }
-
-        public For_Loop(int setpoint, string comment) : base(Name)
+        public For_Loop(int setpoint = 5, string comment = "") : base(ActionName)
         {
-            int actionNumber = Actions[Name];
+            int actionNumber = Actions[ActionName];
 
             _cells = new List<TCell>
             {
-                new TCell(CellType._enum, Name, actionNumber),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._float, (float)setpoint),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._blocked, ""),
+                new(CellType._float, (float)setpoint),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
 
             MinSetpoint = 1;

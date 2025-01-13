@@ -18,7 +18,7 @@ namespace NtoLib.Recipes.MbeTable
 
             List<string> cellStrings = new List<string>();
 
-            for (int i = 0; i < RecipeLine.ColumnCount; i++)
+            for (int i = 0; i < Params.ColumnCount; i++)
             {
                 int length = parsedString.IndexOf(';');
                 string subString;
