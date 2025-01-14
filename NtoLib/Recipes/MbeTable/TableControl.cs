@@ -392,28 +392,32 @@ namespace NtoLib.Recipes.MbeTable
                 {
                     if (column.type == CellType._bool)
                     {
-                        DataGridViewComboBoxColumn viewComboBoxColumn = new DataGridViewComboBoxColumn();
-                        viewComboBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
-                        viewComboBoxColumn.Name = column.Name;
-                        viewComboBoxColumn.Tag = column;
-                        viewComboBoxColumn.Width = GetWidth(column);
-                        viewComboBoxColumn.MaxDropDownItems = 2;
-                        viewComboBoxColumn.Items.Add("Да");
-                        viewComboBoxColumn.Items.Add("Нет");
+                        DataGridViewComboBoxColumn viewComboBoxColumn = new()
+                        {
+                            SortMode = DataGridViewColumnSortMode.NotSortable,
+                            Name = column.Name,
+                            Tag = column,
+                            Width = GetWidth(column),
+                            MaxDropDownItems = 2
+                        };
+                        viewComboBoxColumn.Items.AddRange("Да", "Нет");
 
                         column.GridIndex = dataGridView1.Columns.Add(viewComboBoxColumn);
                     }
                     else if (column.type == CellType._enum)
                     {
-                        DataGridViewComboBoxColumn viewComboBoxColumn = new DataGridViewComboBoxColumn();
-                        viewComboBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
-                        viewComboBoxColumn.Name = column.Name;
-                        viewComboBoxColumn.Tag = column;
-                        viewComboBoxColumn.Width = GetWidth(column);
+                        DataGridViewComboBoxColumn viewComboBoxColumn = new()
+                        {
+                            SortMode = DataGridViewColumnSortMode.NotSortable,
+                            Name = column.Name,
+                            Tag = column,
+                            Width = GetWidth(column)
+                        };
 
                         if (!column.EnumType.IsEmpty)
                         {
                             viewComboBoxColumn.MaxDropDownItems = column.EnumType.EnumCount;
+                            
                             for (int ittr_num = 0; ittr_num < column.EnumType.EnumCount; ++ittr_num)
                             {
                                 viewComboBoxColumn.Items.Add(column.EnumType.GetValueByIndex(ittr_num));
@@ -421,6 +425,7 @@ namespace NtoLib.Recipes.MbeTable
                         }
                         else
                         {
+                            //todo: проверка на пустоту есть уже в нескольких местах
                             viewComboBoxColumn.MaxDropDownItems = 1;
                             viewComboBoxColumn.Items.Add("Нет элементов");
                         }
@@ -429,22 +434,26 @@ namespace NtoLib.Recipes.MbeTable
                     }
                     else
                     {
-                        DataGridViewTextBoxColumn viewTextBoxColumn = new DataGridViewTextBoxColumn();
-                        viewTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
-                        viewTextBoxColumn.Name = column.Name;
-                        viewTextBoxColumn.Tag = column;
-                        viewTextBoxColumn.Width = GetWidth(column);
+                        DataGridViewTextBoxColumn viewTextBoxColumn = new()
+                        {
+                            SortMode = DataGridViewColumnSortMode.NotSortable,
+                            Name = column.Name,
+                            Tag = column,
+                            Width = GetWidth(column)
+                        };
 
                         column.GridIndex = dataGridView1.Columns.Add(viewTextBoxColumn);
                     }
                 }
                 else
                 {
-                    DataGridViewTextBoxColumn viewTextBoxColumn = new DataGridViewTextBoxColumn();
-                    viewTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
-                    viewTextBoxColumn.Name = column.Name;
-                    viewTextBoxColumn.Tag = column;
-                    viewTextBoxColumn.Width = GetWidth(column);
+                    DataGridViewTextBoxColumn viewTextBoxColumn = new()
+                    {
+                        SortMode = DataGridViewColumnSortMode.NotSortable,
+                        Name = column.Name,
+                        Tag = column,
+                        Width = GetWidth(column)
+                    };
 
                     column.GridIndex = dataGridView1.Columns.Add(viewTextBoxColumn);
                 }
@@ -474,7 +483,7 @@ namespace NtoLib.Recipes.MbeTable
                 case "Время":
                     return 150;
                 default:
-                    return dataGridView1.Width - 780 - _rowHeadersWidth - 2;
+                    return dataGridView1.Width - 780 - _rowHeadersWidth - 2 - 80; // Комментарий
             }
         }
 
@@ -686,31 +695,43 @@ namespace NtoLib.Recipes.MbeTable
             int columnIndex = e.ColumnIndex;
             int rowIndex = e.RowIndex;
 
+            var currentCell = dataGridView1.Rows[rowIndex].Cells[columnIndex];
+
+            // Столбец номера
             if (columnIndex == Params.NumberIndex)
             {
-                bool isParseOk = Int32.TryParse(dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString(), out int currentNumber);
 
-                if (!isParseOk || !_tableData[rowIndex].ChangeNumber(currentNumber))
+                string currentAction = (string)dataGridView1.Rows[rowIndex].Cells[Params.CommandIndex].Value;
+
+                int actionNumber = RecipeLine.Actions[currentAction];
+                string actionTarget = Params.ActionTypes[actionNumber];
+
+                if (actionTarget == "shutter")
                 {
-                    MessageBoxIcon icon = MessageBoxIcon.Error;
-                    dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetNumber();
-                    MessageBox.Show($"Введите целое число: \n" +
-                                    $"минимальное значение: {_tableData[rowIndex].MinNumber}\n" +
-                                    $"максимальное значение: {_tableData[rowIndex].MaxNumber}\n",
-                                    $"Ошибка ввода данных:",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Error);
+                    int shutterNumber = GrowthList.ShutterNames[(string)currentCell.Value];
+                    //dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = shutterNumber;
+
+                }
+                else if (actionTarget == "heater")
+                {
+                    int heaterNumber = GrowthList.HeaterNames[(string)currentCell.Value];
+                    //dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = heaterNumber;
                 }
                 else
-                    dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = currentNumber;
+                {
+                    throw new Exception("Неизвестный тип действия");
+                }
+
+
             }
             else if (columnIndex == Params.SetpointIndex)
             {
-                bool isParseOk = float.TryParse(dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString(), out float newValue);
+                bool isParseOk = float.TryParse(currentCell.Value.ToString(), out float newValue);
 
                 if (!_tableData[rowIndex].ChangeSetpoint(newValue) || !isParseOk)
                 {
-                    dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetSetpoint();
+                    currentCell.Value = _tableData[rowIndex].GetSetpoint();
+
                     MessageBox.Show($"Введите число: \n" +
                                     $"минимальное значение: {_tableData[rowIndex].MinSetpoint}\n" +
                                     $"максимальное значение: {_tableData[rowIndex].MaxSetpoint}\n",
@@ -720,18 +741,18 @@ namespace NtoLib.Recipes.MbeTable
                 }
                 else
                 {
-                    dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetCells[columnIndex].GetValue();
+                    currentCell.Value = _tableData[rowIndex].GetCells[columnIndex].GetValue();
                     RefreshTable();
                 }
             }
             else if (columnIndex == Params.TimeSetpointIndex)
             {
-                string text = dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString();
+                string text = currentCell.Value.ToString();
                 bool isParseOk = DateTimeParser.TryParse(text, out var newValue) || newValue < _tableData[rowIndex].MinTimeSetpoint || newValue > _tableData[rowIndex].MaxTimeSetpoint;
 
                 if (!_tableData[rowIndex].ChangeSpeed(newValue) || !isParseOk)
                 {
-                    dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetTime();
+                    currentCell.Value = _tableData[rowIndex].GetTime();
                     MessageBox.Show($"Введите число: \n" +
                                     $"минимальное значение: {_tableData[rowIndex].MinTimeSetpoint} с\n" +
                                     $"максимальное значение: {_tableData[rowIndex].MaxTimeSetpoint} с\n",
@@ -741,13 +762,13 @@ namespace NtoLib.Recipes.MbeTable
                 }
                 else
                 {
-                    dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].GetCells[columnIndex].GetValue();
+                    currentCell.Value = _tableData[rowIndex].GetCells[columnIndex].GetValue();
                     RefreshTable();
                 }
             }
             else if (columnIndex == Params.CommentIndex)
             {
-                string newValue = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
+                string newValue = (string)currentCell.Value;
                 _tableData[rowIndex].ChangeComment(newValue);
             }
         }
@@ -756,16 +777,19 @@ namespace NtoLib.Recipes.MbeTable
             if (dataGridView1.IsCurrentCellDirty)
                 dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
+
         private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            DataGridViewComboBoxCell comboBox = (DataGridViewComboBoxCell)dataGridView1.Rows[e.RowIndex].Cells[Params.CommandIndex];
+            int columnIndex = e.ColumnIndex;
+            int rowIndex = e.RowIndex;
 
-            if (comboBox.Value != null && e.ColumnIndex == Params.CommandIndex && !isLoadingActive)
+            DataGridViewComboBoxCell comboBox = (DataGridViewComboBoxCell)dataGridView1.Rows[rowIndex].Cells[Params.CommandIndex];
+
+            if (comboBox.Value != null && columnIndex == Params.CommandIndex && !isLoadingActive)
             {
-                string newCommand = (string)dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
-                int rowIndex = e.RowIndex;
+                string newCommand = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
 
-                if (e.ColumnIndex == Params.CommandIndex)
+                if (columnIndex == Params.CommandIndex)
                 {
                     RecipeLine newLine = factory.NewLine(newCommand);
 

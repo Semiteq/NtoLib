@@ -7,7 +7,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public const string ActionName = Commands.OPEN;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public Open(int number = 1, string comment = "") : base(ActionName)
+        public Open(int number = 0, string comment = "") : base(ActionName)
         {
             shutterName = GrowthList.ShutterNames.GetValueByIndex(number);
             int actionNumber = Actions[ActionName];

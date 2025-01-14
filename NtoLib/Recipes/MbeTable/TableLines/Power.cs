@@ -7,7 +7,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public const string ActionName = Commands.POWER;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public Power(int number = 1, float powerSetpoint = 10f, string comment = "") : base(ActionName)
+        public Power(int number = 0, float powerSetpoint = 10f, string comment = "") : base(ActionName)
         {
             heaterName = GrowthList.HeaterNames.GetValueByIndex(number);
             int actionNumber = Actions[ActionName];

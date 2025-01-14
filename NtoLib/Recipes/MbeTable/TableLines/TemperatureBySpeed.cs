@@ -7,7 +7,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public const string ActionName = Commands.TEMP_BY_SPEED;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public TemperatureBySpeed(int number = 1, float temperatureSetpoint = 500f, float temperatureSpeed = 1f, string comment = "") : base(ActionName)
+        public TemperatureBySpeed(int number = 0, float temperatureSetpoint = 500f, float temperatureSpeed = 1f, string comment = "") : base(ActionName)
         {
             heaterName = GrowthList.HeaterNames.GetValueByIndex(number);
             int actionNumber = Actions[ActionName];

@@ -145,7 +145,7 @@ namespace NtoLib.Recipes.MbeTable
             if (this.FBConnector.DesignMode || _tableType == TableMode.View)
                 return;
 
-            AddLineToRecipe(factory.NewLine("CLOSE", 1, 0f, 0f, ""), false);
+            AddLineToRecipe(factory.NewLine("CLOSE", 0, 0f, 0f, ""), false);
             RefreshTable();
         }
         private void ClickButton_AddLineAfter(object sender, EventArgs e)
@@ -153,7 +153,7 @@ namespace NtoLib.Recipes.MbeTable
             if (this.FBConnector.DesignMode || _tableType == TableMode.View)
                 return;
 
-            AddLineToRecipe(factory.NewLine("CLOSE", 1, 0f, 0f, ""), true);
+            AddLineToRecipe(factory.NewLine("CLOSE", 0, 0f, 0f, ""), true);
             RefreshTable();
         }
     }

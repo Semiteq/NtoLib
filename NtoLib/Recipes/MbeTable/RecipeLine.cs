@@ -33,7 +33,7 @@ namespace NtoLib.Recipes.MbeTable
         protected string heaterName;
         protected int heaterNumber;
 
-        protected GrowthList GrowthList = new();
+        protected GrowthList GrowthList = new(); //todo: static?
 
         protected RecipeLine(string name)
         {
@@ -75,9 +75,9 @@ namespace NtoLib.Recipes.MbeTable
                 { Commands.FOR,              140 },
                 { Commands.END_FOR,          150 },
                 { Commands.PAUSE,            160 },
-                { Commands.NH3_OPEN,         170 },
-                { Commands.NH3_CLOSE,        180 },
-                { Commands.NH3_PURGE,        190 }
+                { Commands.NH3_OPEN,         170 },//not implemented
+                { Commands.NH3_CLOSE,        180 },//not implemented
+                { Commands.NH3_PURGE,        190 } //not implemented
             };
 
         public static List<TableColumn> ColumnHeaders
@@ -89,7 +89,7 @@ namespace NtoLib.Recipes.MbeTable
                 return new List<TableColumn>()
                     {
                         new("Действие", Actions),
-                        new("Номер", CellType._enum), //todo: переделать. привязка к числу элементов?
+                        new("Номер", GrowthList.HeaterNames + GrowthList.ShutterNames), //todo: переделать. привязка к числу элементов для max drop down items
                         new("Задание", CellType._float),
                         new("Скорость/Время", CellType._float),
                         new("Время", CellType._float),
@@ -103,7 +103,7 @@ namespace NtoLib.Recipes.MbeTable
             {
                 var column = new TableColumn("Действие", Actions);
 
-                DataGridViewComboBoxCell viewComboBoxCell = new DataGridViewComboBoxCell();
+                DataGridViewComboBoxCell viewComboBoxCell = new();
                 viewComboBoxCell.MaxDropDownItems = column.EnumType.EnumCount;
 
                 for (int ittr_num = 0; ittr_num < column.EnumType.EnumCount; ++ittr_num)
@@ -118,7 +118,7 @@ namespace NtoLib.Recipes.MbeTable
             {
                 int ListItemsCount = GrowthList.ShutterNames.EnumCount;
 
-                var viewComboBoxCell = new DataGridViewComboBoxCell();
+                DataGridViewComboBoxCell viewComboBoxCell = new();
 
                 for (int i = 0; i < ListItemsCount; i++)
                     viewComboBoxCell.Items.Add(GrowthList.ShutterNames.GetValueByIndex(i));
