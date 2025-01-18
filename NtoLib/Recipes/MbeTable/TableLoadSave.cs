@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -14,7 +15,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             SettingsReader settingsReader = new SettingsReader(FBConnector);
 
-            if(!settingsReader.CheckQuality())
+            if (!settingsReader.CheckQuality())
             {
                 this.WriteStatusMessage("Ошибка чтения настроек. Нет связи, продолжение загрузки рецепта не возможно", true);
             }
@@ -23,25 +24,25 @@ namespace NtoLib.Recipes.MbeTable
                 CommunicationSettings settings = settingsReader.ReadTableSettings();
 
                 int num = -1;
-                if(settings._float_colum_num > 0)
+                if (settings._float_colum_num > 0)
                     num = (int)settings._FloatAreaSize / 2 / settings._float_colum_num;
-                if(settings._int_colum_num > 0)
+                if (settings._int_colum_num > 0)
                 {
-                    if(num < 0)
+                    if (num < 0)
                         num = (int)settings._IntAreaSize / settings._int_colum_num;
-                    else if((int)settings._IntAreaSize / settings._int_colum_num < num)
+                    else if ((int)settings._IntAreaSize / settings._int_colum_num < num)
                         num = (int)settings._IntAreaSize / settings._int_colum_num;
                 }
-                if(settings._bool_colum_num > 0)
+                if (settings._bool_colum_num > 0)
                 {
-                    if(num < 0)
+                    if (num < 0)
                         num = (int)settings._BoolAreaSize * 16 / settings._bool_colum_num;
-                    else if((int)settings._BoolAreaSize * 16 / settings._bool_colum_num < num)
+                    else if ((int)settings._BoolAreaSize * 16 / settings._bool_colum_num < num)
                         num = (int)settings._BoolAreaSize * 16 / settings._bool_colum_num;
                 }
-                if(num < 0)
+                if (num < 0)
                     this.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
-                else if(num == 0)
+                else if (num == 0)
                 {
                     this.WriteStatusMessage("Не выделены отдельные области памяти", true);
                 }
@@ -53,13 +54,13 @@ namespace NtoLib.Recipes.MbeTable
                     {
                         recipe = ReadRecipeFromFile();
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         this.WriteStatusMessage(ex.Message, true);
                         return;
                     }
 
-                    if(num < recipe.Count)
+                    if (num < recipe.Count)
                     {
                         this.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
                         recipeLineList = (List<RecipeLine>)null;
@@ -76,20 +77,20 @@ namespace NtoLib.Recipes.MbeTable
                         _tableData.Clear();
 
                         var recipeFromPlc = plcCommunication.LoadRecipeFromPlc(settings);
-                        if(recipeFromPlc == null)
+                        if (recipeFromPlc == null)
                         {
                             WriteStatusMessage("Рецепт не удалось загрузить в контроллер", true);
                             return;
                         }
                         else
                         {
-                            if(CompareRecipes(recipe, recipeFromPlc))
+                            if (CompareRecipes(recipe, recipeFromPlc))
                                 WriteStatusMessage("Рецепт успешно загружен в контроллер", false);
                             else
                                 WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!", true);
                         }
 
-                        foreach(RecipeLine line in recipe)
+                        foreach (RecipeLine line in recipe)
                             AddLineToRecipe(line, true);
 
                         RefreshTable();
@@ -108,13 +109,13 @@ namespace NtoLib.Recipes.MbeTable
             PLC_Communication plcCommunication = new PLC_Communication();
             List<RecipeLine> recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
 
-            if(recipe == null)
+            if (recipe == null)
                 return false;
 
             dataGridView1.Rows.Clear();
             _tableData.Clear();
 
-            foreach(RecipeLine line in recipe)
+            foreach (RecipeLine line in recipe)
                 AddLineToRecipe(line, true);
 
             RefreshTable();
@@ -123,21 +124,21 @@ namespace NtoLib.Recipes.MbeTable
 
         private bool CompareRecipes(List<RecipeLine> recipe1, List<RecipeLine> recipe2)
         {
-            if(recipe1.Count != recipe2.Count)
+            if (recipe1.Count != recipe2.Count)
                 return false;
 
-            for(int i = 0; i < recipe1.Count; i++)
+            for (int i = 0; i < recipe1.Count; i++)
             {
-                if(recipe1[i].GetCells[0].GetValue() != recipe2[i].GetCells[0].GetValue())
+                if (recipe1[i].GetCells[0].GetValue() != recipe2[i].GetCells[0].GetValue())
                     return false;
 
-                if(recipe1[i].GetNumber() != recipe2[i].GetNumber())
+                if (recipe1[i].GetNumber() != recipe2[i].GetNumber())
                     return false;
 
-                if(recipe1[i].GetSetpoint() != recipe2[i].GetSetpoint())
+                if (recipe1[i].GetSetpoint() != recipe2[i].GetSetpoint())
                     return false;
 
-                if(recipe1[i].GetTime() != recipe2[i].GetTime())
+                if (recipe1[i].GetTime() != recipe2[i].GetTime())
                     return false;
             }
             return true;
@@ -154,7 +155,7 @@ namespace NtoLib.Recipes.MbeTable
                 _tableData = ReadRecipeFromFile();
                 FillCells(_tableData);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 WriteStatusMessage(ex.Message, true);
                 _tableData = reserveTableData;
@@ -166,13 +167,13 @@ namespace NtoLib.Recipes.MbeTable
         {
             isLoadingActive = true;
             this.dataGridView1.Rows.Clear();
-            foreach(RecipeLine recipeLine in data)
+            foreach (RecipeLine recipeLine in data)
             {
                 int index = this.dataGridView1.Rows.Add(new DataGridViewRow());
                 dataGridView1.Rows[index].HeaderCell.Value = (object)(index + 1).ToString();
                 dataGridView1.Rows[index].Height = ROW_HEIGHT;
 
-                for(int i = 0; i < Params.ColumnCount; i++)
+                for (int i = 0; i < Params.ColumnCount; i++)
                 {
                     object value = (object)recipeLine.GetCells[i].StringValue;
                     dataGridView1.Rows[index].Cells[i].Value = value;
@@ -185,96 +186,108 @@ namespace NtoLib.Recipes.MbeTable
 
         private List<RecipeLine> ReadRecipeFromFile()
         {
-            RecipeLineParser parser = new RecipeLineParser();
-            List<RecipeLine> recipeLineList = new List<RecipeLine>();
+            var parser = new RecipeLineParser();
+            var recipeLineList = new List<RecipeLine>();
 
-            using(Stream stream = (Stream)new FileStream(this.openFileDialog1.FileName, FileMode.OpenOrCreate))
+            try
             {
-                using(StreamReader streamReader = new StreamReader(stream))
+                using var stream = new FileStream(openFileDialog1.FileName, FileMode.OpenOrCreate);
+                using var streamReader = new StreamReader(stream);
+
+                bool isHeader = true;
+                string line;
+
+                while ((line = streamReader.ReadLine()) != null)
                 {
-                    bool flag = true;
-                    string fileline;
-                    while((fileline = streamReader.ReadLine()) != null)
+                    if (isHeader)
                     {
-                        if(flag)
-                        {
-                            flag = false;
-                        }
-                        else
-                        {
-                            try
-                            {
-                                RecipeLine recipeLine = parser.Parse(fileline); ;
-                                recipeLineList.Add(recipeLine);
-                            }
-                            catch(Exception ex)
-                            {
-                                throw new Exception("Ошибка при разборе строки " + (recipeLineList.Count + 1).ToString() + " : " + ex.Message);
-                            }
-                        }
+                        isHeader = false;
+                        continue;
+                    }
+
+                    try
+                    {
+                        var recipeLine = parser.Parse(line);
+                        recipeLineList.Add(recipeLine);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Ошибка при разборе строки {recipeLineList.Count + 1}: {ex.Message}");
                     }
                 }
             }
-            this.WriteStatusMessage("Данные загружены из файла " + this.openFileDialog1.FileName, false);
+            catch (Exception ex)
+            {
+                WriteStatusMessage($"Ошибка при загрузке файла: {ex.Message}", true);
+                throw;
+            }
+
+            WriteStatusMessage($"Данные загружены из файла {openFileDialog1.FileName}", false);
             return recipeLineList;
         }
 
+
         private void ClickButton_Open(object sender, EventArgs e)
         {
-            if(this.FBConnector.DesignMode || openFileDialog1.ShowDialog() != DialogResult.OK)
+            if (this.FBConnector.DesignMode || openFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
             saveFileDialog1.InitialDirectory = openFileDialog1.InitialDirectory;
 
-            if(_tableType == TableMode.View)
+            if (_tableType == TableMode.View)
                 LoadRecipeToView();
             else
                 LoadRecipeToEdit();
         }
         private void ClickButton_Save(object sender, EventArgs e)
         {
-            if(this.FBConnector.DesignMode)
-                return;
-            if(saveFileDialog1.ShowDialog() != DialogResult.OK)
-                return;
+            if (FBConnector.DesignMode) return;
+            if (saveFileDialog1.ShowDialog() != DialogResult.OK) return;
 
             try
             {
-                using(Stream stream = (Stream)new FileStream(saveFileDialog1.FileName, FileMode.Create))
+                using (var stream = new FileStream(saveFileDialog1.FileName, FileMode.Create))
+                using (var streamWriter = new StreamWriter(stream))
                 {
-                    using(StreamWriter streamWriter = new StreamWriter(stream))
+                    // Записываем заголовки
+                    var columnHeaders = string.Join(";", columns.Select(column => column.Name));
+                    streamWriter.WriteLine(columnHeaders);
+
+                    // Записываем строки
+                    foreach (var recipeLine in _tableData)
                     {
-                        string str1 = "";
-                        bool flag1 = true;
-                        foreach(TableColumn colum in columns)
+                        var cells = recipeLine.GetCells.ToList();
+                        var rowData = new List<string>();
+                        string currentCommand = cells[Params.CommandIndex].StringValue;
+
+                        for (int i = 0; i < cells.Count; i++)
                         {
-                            if(!flag1)
-                                str1 += ";";
-                            flag1 = false;
-                            str1 += colum.Name;
-                        }
-                        streamWriter.WriteLine(str1);
-                        foreach(RecipeLine recipeLine in _tableData)
-                        {
-                            bool flag2 = true;
-                            string str2 = "";
-                            foreach(TCell cell in recipeLine.GetCells)
+                            var cellValue = cells[i].StringValue;
+
+                            if (i == Params.NumberIndex)
                             {
-                                if(!flag2)
-                                    str2 += ";";
-                                flag2 = false;
-                                str2 += cell.StringValue;
+                                try
+                                {
+                                    cellValue = GrowthList.NameToIntConvert(cellValue, currentCommand).ToString();
+                                }
+                                catch (KeyNotFoundException)
+                                {
+                                    cellValue = "";
+                                }
                             }
-                            streamWriter.WriteLine(str2);
+
+                            rowData.Add(cellValue);
                         }
+
+                        streamWriter.WriteLine(string.Join(";", rowData));
                     }
                 }
+
+                WriteStatusMessage($"Данные сохранены в файл {saveFileDialog1.FileName}", false);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                WriteStatusMessage(ex.Message, true);
-                return;
+                WriteStatusMessage($"Ошибка при сохранении: {ex.Message}", true);
             }
-            this.WriteStatusMessage("Данные сохранены в файл " + this.saveFileDialog1.FileName, false);
         }
     }
 }

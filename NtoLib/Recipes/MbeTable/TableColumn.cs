@@ -1,4 +1,6 @@
-﻿namespace NtoLib.Recipes.MbeTable
+﻿using System;
+
+namespace NtoLib.Recipes.MbeTable
 {
     internal class TableColumn
     {
@@ -30,6 +32,17 @@
         {
             get => _gridIndex;
             set => _gridIndex = value;
+        }
+        public void UpdateEnumType(TableEnumType newEnumType)
+        {
+            if (_type == CellType._enum)
+            {
+                _enumType = newEnumType;
+            }
+            else
+            {
+                throw new InvalidOperationException("Нельзя обновить тип enum для не enum полей");
+            }
         }
     }
 }

@@ -42,6 +42,8 @@ namespace NtoLib.Recipes.MbeTable
         // Обращение по индексу вместо GetActionNumber
         public int this[string key] => _items.ContainsKey(key) ? _items[key] : 0;
 
+        public string this[int value] => _items.FirstOrDefault(x => x.Value == value).Key;
+
         public string GetValueByIndex(int index)
         {
             if (index < 0 || index >= _items.Count)

@@ -9,12 +9,13 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public TemperatureByTime(int number = 0, float temperatureSetpoint = 500f, float timeSetpoint = 60f, string comment = "") : base(ActionName)
         {
-            heaterName = GrowthList.HeaterNames.GetValueByIndex(number);
+            UpdateHeaderToHeat();
+            heaterName = GrowthList.HeaterNames[number];
             int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),
-                new(CellType._int, heaterName, number),
+                new(CellType._enum, heaterName, number),
                 new(CellType._floatTemp, temperatureSetpoint),
                 new(CellType._floatSecond, timeSetpoint),
                 new(CellType._blocked, ""),

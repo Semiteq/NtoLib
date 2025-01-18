@@ -9,6 +9,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public CloseAll(string comment = "") : base(ActionName)
         {
+            UpdateHeaderToShut();
             int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {

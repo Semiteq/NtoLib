@@ -9,7 +9,8 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public Power(int number = 0, float powerSetpoint = 10f, string comment = "") : base(ActionName)
         {
-            heaterName = GrowthList.HeaterNames.GetValueByIndex(number);
+            UpdateHeaderToHeat();
+            heaterName = GrowthList.HeaterNames[number];
             int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {

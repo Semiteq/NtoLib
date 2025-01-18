@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using InSAT.Library.Linq;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -37,14 +38,37 @@ namespace NtoLib.Recipes.MbeTable
                 cellStrings.Add(subString);
             }
 
-            string command = cellStrings[0];
-            Int32.TryParse(cellStrings[1], out int number);
-            float.TryParse(cellStrings[2], out float setpoint);
-            float.TryParse(cellStrings[3], out float timeSetpoint);
-            string cycleTime = cellStrings[4];
-            string comment = cellStrings[5];
+            string command = cellStrings[Params.CommandIndex] ?? throw new InvalidOperationException("Не удалось распарсить поле 'Действие'.");
 
-            return factory.NewLine(command,number, setpoint, timeSetpoint, comment);
+            int number = 0;
+            float setpoint = 0, timeSetpoint = 0;
+
+            //Далее проверки на недействительные значения в файле рецепта.
+            //Если сторока НЕ пустая и НЕ парсится - выбрасываем исключение.
+
+            if (!string.IsNullOrEmpty(cellStrings[Params.NumberIndex]) && 
+                !Int32.TryParse(cellStrings[Params.NumberIndex], out number))
+            {
+                throw new FormatException("Не удалось распарсить поле 'Номер'.");
+            }
+
+            if (!string.IsNullOrEmpty(cellStrings[Params.SetpointIndex]) &&
+                !float.TryParse(cellStrings[Params.SetpointIndex], out setpoint))
+            {
+                throw new FormatException("Не удалось распарсить поле 'Задание'.");
+            }
+
+            if (!string.IsNullOrEmpty(cellStrings[Params.TimeSetpointIndex]) &&
+                !float.TryParse(cellStrings[Params.TimeSetpointIndex], out timeSetpoint))
+            {
+                throw new FormatException("Не удалось распарсить поле 'Cкорость/Время'.");
+            }
+
+            //string cycleTime = cellStrings[Params.RecipeTimeIndex] ?? string.Empty; //wtf??
+            
+            string comment = cellStrings[Params.CommentIndex] ?? string.Empty;
+
+            return factory.NewLine(command, number, setpoint, timeSetpoint, comment);
         }
     }
 }

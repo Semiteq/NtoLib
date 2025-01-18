@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -21,20 +22,36 @@ namespace NtoLib.Recipes.MbeTable
 
             HeaterNames = new()
             {
-                { "Heat1", 1 },
-                { "Heat2", 2 }
+                { "Heat1", 3 },
+                { "Heat2", 4 }
             };
             //HeaterNames = FillDictNames(table, Params.FirstPinHeaterName, Params.HeaterNameQuantity);
         }
 
-        public string GetShutterName(int number)
+        public static string GetTargetAction(string currentAction)
         {
-            return ShutterNames.GetValueByIndex(number);
+            // Проверка, заслонкам или нагревателям предназначена команда
+            return Params.ActionTypes[RecipeLine.Actions[currentAction]];
         }
 
-        public string GetHeaterName(int number)
+        public static int NameToIntConvert(string growthValue, string action)
         {
-            return HeaterNames.GetValueByIndex(number);
+            //Конвертация названия заслонки/нагревателя в номер для записи в файл рецепта
+            string targetAction = GetTargetAction(action);
+            
+            if (targetAction == "shutter")
+                return ShutterNames[growthValue];
+            
+            else if (targetAction == "heater")
+                return HeaterNames[growthValue];
+
+            else
+                throw new KeyNotFoundException("Неизвестный тип действия");
+        }
+
+        public static int GetMinShutter()
+        {
+            return ShutterNames.GetLowestNumber();
         }
 
         private TableEnumType FillDictNames(MbeTableFB table, int startBit, int quantity)

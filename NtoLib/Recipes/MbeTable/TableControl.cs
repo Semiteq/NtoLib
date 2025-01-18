@@ -89,7 +89,7 @@ namespace NtoLib.Recipes.MbeTable
 
         RecipeLineFactory factory = new RecipeLineFactory();
 
-        private List<RecipeLine> _tableData = new List<RecipeLine>();
+        private List<RecipeLine> _tableData = new List<RecipeLine>(); //хранит состояние таблицы отдельно от dataGridView
         #endregion
 
         #region Properties
@@ -336,7 +336,6 @@ namespace NtoLib.Recipes.MbeTable
         }
         #endregion
 
-
         #region TableView
         private void ChangeRowFont()
         {
@@ -414,7 +413,7 @@ namespace NtoLib.Recipes.MbeTable
                             Width = GetWidth(column)
                         };
 
-                        if (!column.EnumType.IsEmpty)
+                        if (!column.EnumType.IsEmpty) 
                         {
                             viewComboBoxColumn.MaxDropDownItems = column.EnumType.EnumCount;
                             
@@ -422,12 +421,6 @@ namespace NtoLib.Recipes.MbeTable
                             {
                                 viewComboBoxColumn.Items.Add(column.EnumType.GetValueByIndex(ittr_num));
                             }
-                        }
-                        else
-                        {
-                            //todo: проверка на пустоту есть уже в нескольких местах
-                            viewComboBoxColumn.MaxDropDownItems = 1;
-                            viewComboBoxColumn.Items.Add("Нет элементов");
                         }
 
                         column.GridIndex = dataGridView1.Columns.Add(viewComboBoxColumn);
@@ -692,37 +685,32 @@ namespace NtoLib.Recipes.MbeTable
         #region CellChange
         private void EndCellEdit(object sender, DataGridViewCellEventArgs e)
         {
+            //Проверка данных по окончании редактирования таблицы
+
             int columnIndex = e.ColumnIndex;
             int rowIndex = e.RowIndex;
 
             var currentCell = dataGridView1.Rows[rowIndex].Cells[columnIndex];
 
-            // Столбец номера
             if (columnIndex == Params.NumberIndex)
             {
-
                 string currentAction = (string)dataGridView1.Rows[rowIndex].Cells[Params.CommandIndex].Value;
 
-                int actionNumber = RecipeLine.Actions[currentAction];
-                string actionTarget = Params.ActionTypes[actionNumber];
-
-                if (actionTarget == "shutter")
+                if (GrowthList.GetTargetAction(currentAction) == "shutter")
                 {
-                    int shutterNumber = GrowthList.ShutterNames[(string)currentCell.Value];
-                    //dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = shutterNumber;
-
+                    //int shutterNumber = GrowthList.ShutterNames[(string)currentCell.Value];
+                    _tableData[rowIndex].ChangeNumber(currentCell.Value.ToString());
                 }
-                else if (actionTarget == "heater")
+                else if (GrowthList.GetTargetAction(currentAction) == "heater")
                 {
-                    int heaterNumber = GrowthList.HeaterNames[(string)currentCell.Value];
-                    //dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = heaterNumber;
+                    //int heaterNumber = GrowthList.HeaterNames[(string)currentCell.Value];
+                    _tableData[rowIndex].ChangeNumber(currentCell.Value.ToString());
                 }
                 else
                 {
-                    throw new Exception("Неизвестный тип действия");
+                    _tableData[rowIndex].ChangeNumber("");
                 }
-
-
+                RefreshTable();
             }
             else if (columnIndex == Params.SetpointIndex)
             {
@@ -787,22 +775,15 @@ namespace NtoLib.Recipes.MbeTable
 
             if (comboBox.Value != null && columnIndex == Params.CommandIndex && !isLoadingActive)
             {
-                string newCommand = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
-
+                string command = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
+                
+                dataGridView1.Rows[rowIndex].HeaderCell.Value = (rowIndex + 1).ToString();
+                
                 if (columnIndex == Params.CommandIndex)
                 {
-                    RecipeLine newLine = factory.NewLine(newCommand);
-
-                    if (newLine != null)
-                    {
-                        _tableData.RemoveAt(rowIndex);
-                        _tableData.Insert(rowIndex, newLine);
-
-                        dataGridView1.Rows[rowIndex].HeaderCell.Value = (rowIndex + 1).ToString();
-                        BlockCells(rowIndex);
-                        RefreshTable();
-                    }
+                    ReplaceLineInRecipe(factory.NewLine(command, 0, 0f, 0f, ""));
                 }
+                RefreshTable();
                 dataGridView1.Invalidate();
             }
         }

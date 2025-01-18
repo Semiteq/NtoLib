@@ -40,20 +40,24 @@ namespace NtoLib.Recipes.MbeTable
             shutterNumber = GrowthList.ShutterNames.GetLowestNumber();
             heaterNumber = GrowthList.HeaterNames.GetLowestNumber();
 
+            // Заполненение новой строки данными слева направо
             Row = new DataGridViewRow();
-            DataGridViewCellCollection dataGridViewCellCollection = new DataGridViewCellCollection(Row);
 
             Row.Cells.Add(ActionCell);
-            Row.Cells.Add(GrowthListCell);
-            Row.Cells.Add(new DataGridViewTextBoxCell());
-            Row.Cells.Add(new DataGridViewTextBoxCell());
-            Row.Cells.Add(new DataGridViewTextBoxCell());
-            Row.Cells.Add(new DataGridViewTextBoxCell());
+            Row.Cells[Params.CommandIndex].Value = name;
 
-            Row.Cells[0].Value = name;
+            if (GrowthList.GetTargetAction(name) == "shutter")
+                Row.Cells.Add(ShutterListCell);
+            if (GrowthList.GetTargetAction(name) == "heater")
+                Row.Cells.Add(HeaterListCell);
+
+            Row.Cells.Add(new DataGridViewTextBoxCell());
+            Row.Cells.Add(new DataGridViewTextBoxCell());
+            Row.Cells.Add(new DataGridViewTextBoxCell());
+            Row.Cells.Add(new DataGridViewTextBoxCell()); 
         }
 
-        public static TableEnumType Actions = new()
+        public static readonly TableEnumType Actions = new()
             {
                 // TODO: переделать! Убрать постоянную реинициализацию!
 
@@ -80,23 +84,43 @@ namespace NtoLib.Recipes.MbeTable
                 { Commands.NH3_PURGE,        190 } //not implemented
             };
 
+        private static List<TableColumn> _columnHeaders;
+
         public static List<TableColumn> ColumnHeaders
         {
-            // TODO: переделать! Убрать постоянную реинициализацию!
             get
             {
-                var growthList = new GrowthList();
-                return new List<TableColumn>()
-                    {
-                        new("Действие", Actions),
-                        new("Номер", GrowthList.HeaterNames + GrowthList.ShutterNames), //todo: переделать. привязка к числу элементов для max drop down items
-                        new("Задание", CellType._float),
-                        new("Скорость/Время", CellType._float),
-                        new("Время", CellType._float),
-                        new("Комментарий", CellType._string)
-                    };
+                if (_columnHeaders == null)
+                {
+                    var growthList = new GrowthList();
+
+                    _columnHeaders = new List<TableColumn>()
+            {
+                new("Действие", Actions),
+                new("Номер", GrowthList.ShutterNames+GrowthList.HeaterNames),
+                new("Задание", CellType._float),
+                new("Скорость/Время", CellType._float),
+                new("Время", CellType._float),
+                new("Комментарий", CellType._string)
+            };
+                }
+
+                return _columnHeaders;
             }
         }
+
+        public void UpdateHeaderToHeat()
+        {
+            
+        }
+
+        public void UpdateHeaderToShut()
+        {
+         
+        }
+
+
+
         private DataGridViewComboBoxCell ActionCell
         {
             get
@@ -112,7 +136,7 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        private static DataGridViewComboBoxCell GrowthListCell
+        private static DataGridViewComboBoxCell ShutterListCell
         {
             get
             {
@@ -127,15 +151,33 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        public bool ChangeNumber(int number)
+        private static DataGridViewComboBoxCell HeaterListCell
         {
-            if (number >= MinNumber && number <= MaxNumber)
+            get
+            {
+                int ListItemsCount = GrowthList.HeaterNames.EnumCount;
+
+                DataGridViewComboBoxCell viewComboBoxCell = new();
+
+                for (int i = 0; i < ListItemsCount; i++)
+                    viewComboBoxCell.Items.Add(GrowthList.HeaterNames.GetValueByIndex(i));
+
+                return viewComboBoxCell;
+            }
+        }
+
+        public bool ChangeNumber(string number)
+        {
+            try
             {
                 _cells[Params.NumberIndex].ParseValue(number);
                 Row.Cells[Params.NumberIndex].Value = number;
                 return true;
             }
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
         }
         public bool ChangeSetpoint(float value)
         {
