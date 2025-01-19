@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using MasterSCADA;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -166,23 +167,40 @@ namespace NtoLib.Recipes.MbeTable
         private void FillCells(List<RecipeLine> data)
         {
             isLoadingActive = true;
-            this.dataGridView1.Rows.Clear();
-            foreach (RecipeLine recipeLine in data)
-            {
-                int index = this.dataGridView1.Rows.Add(new DataGridViewRow());
-                dataGridView1.Rows[index].HeaderCell.Value = (object)(index + 1).ToString();
-                dataGridView1.Rows[index].Height = ROW_HEIGHT;
+            dataGridView1.Rows.Clear();
 
-                for (int i = 0; i < Params.ColumnCount; i++)
+            foreach (var recipeLine in data)
+            {
+                int rowIndex = dataGridView1.Rows.Add(new DataGridViewRow());
+                var row = dataGridView1.Rows[rowIndex];
+
+                // Установка заголовка строки и её высоты
+                row.HeaderCell.Value = (rowIndex + 1).ToString();
+                row.Height = ROW_HEIGHT;
+
+                for (int colIndex = 0; colIndex < Params.ColumnCount; colIndex++)
                 {
-                    object value = (object)recipeLine.GetCells[i].StringValue;
-                    dataGridView1.Rows[index].Cells[i].Value = value;
+                    // Получение значения ячейки
+                    var cellValue = recipeLine.GetCells[colIndex].StringValue;
+                    var cell = row.Cells[colIndex];
+
+                    // Установка значения ячейки
+                    cell.Value = cellValue;
+
+                    // Обновление комбобокса для определённого столбца
+                    if (colIndex == Params.NumberIndex && cell is DataGridViewComboBoxCell comboBoxCell && cellValue != null)
+                    {
+                        UpdateEnumDropDown(comboBoxCell, cellValue);
+                    }
                 }
-                BlockCells(index);
+
+                BlockCells(rowIndex);
             }
+
             RefreshTable();
             isLoadingActive = false;
         }
+
 
         private List<RecipeLine> ReadRecipeFromFile()
         {

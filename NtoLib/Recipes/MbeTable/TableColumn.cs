@@ -33,16 +33,5 @@ namespace NtoLib.Recipes.MbeTable
             get => _gridIndex;
             set => _gridIndex = value;
         }
-        public void UpdateEnumType(TableEnumType newEnumType)
-        {
-            if (_type == CellType._enum)
-            {
-                _enumType = newEnumType;
-            }
-            else
-            {
-                throw new InvalidOperationException("Нельзя обновить тип enum для не enum полей");
-            }
-        }
     }
 }

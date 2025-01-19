@@ -4,6 +4,7 @@ using InSAT.OPC;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -332,7 +333,13 @@ namespace NtoLib.Recipes.MbeTable
             InitializeComponent();
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
-            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;//todo: check later
+            //dataGridView1.Columns[Params.CommandIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            //dataGridView1.Columns[Params.NumberIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            //dataGridView1.Columns[Params.SetpointIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            //dataGridView1.Columns[Params.TimeSetpointIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            //dataGridView1.Columns[Params.RecipeTimeIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            //dataGridView1.Columns[Params.CommentIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         }
         #endregion
 
@@ -413,10 +420,10 @@ namespace NtoLib.Recipes.MbeTable
                             Width = GetWidth(column)
                         };
 
-                        if (!column.EnumType.IsEmpty) 
+                        if (!column.EnumType.IsEmpty && column.GridIndex == Params.CommandIndex)
                         {
                             viewComboBoxColumn.MaxDropDownItems = column.EnumType.EnumCount;
-                            
+
                             for (int ittr_num = 0; ittr_num < column.EnumType.EnumCount; ++ittr_num)
                             {
                                 viewComboBoxColumn.Items.Add(column.EnumType.GetValueByIndex(ittr_num));
@@ -507,7 +514,7 @@ namespace NtoLib.Recipes.MbeTable
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].ReadOnly = false;
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].Style.BackColor = Color.White;
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].Value = _tableData[rowIndex].GetCells[cellIndex].GetValue();
-                } 
+                }
             }
         }
 
@@ -675,11 +682,52 @@ namespace NtoLib.Recipes.MbeTable
         #endregion
 
 
-
         private void MainTable_Click(object sender, EventArgs e)
         {
             int num = this.FBConnector.DesignMode ? 1 : 0;
         }
+
+
+        private void UpdateEnumDropDown(DataGridViewComboBoxCell cell, object cellValue)
+        {
+            string actionType = GrowthList.GetActionType(cellValue.ToString());
+
+            // Очищаем старый список
+            cell.Items.Clear();
+
+            // Заполняем комбобокс в зависимости от типа действия
+            if (actionType == "shutter")
+            {
+                cell.MaxDropDownItems = GrowthList.ShutterNames.EnumCount;
+                for (int ittr_num = 0; ittr_num < GrowthList.ShutterNames.EnumCount; ++ittr_num)
+                {
+                    cell.Items.Add(GrowthList.ShutterNames.GetValueByIndex(ittr_num));
+                }
+            }
+            else if (actionType == "heater")
+            {
+                cell.MaxDropDownItems = GrowthList.HeaterNames.EnumCount;
+                for (int ittr_num = 0; ittr_num < GrowthList.HeaterNames.EnumCount; ++ittr_num)
+                {
+                    cell.Items.Add(GrowthList.HeaterNames.GetValueByIndex(ittr_num));
+                }
+            }
+            else
+            {
+                cell.MaxDropDownItems = 1;
+                cell.Items.Add(cellValue);
+            }
+
+            if (cell.Items.Contains(cellValue))
+            {
+                cell.Value = cellValue;
+            }
+            else
+            {
+                cell.Value = cell.Items.Count > 0 ? cell.Items[0] : null;
+            }
+        }
+
 
 
         #region CellChange
@@ -698,12 +746,10 @@ namespace NtoLib.Recipes.MbeTable
 
                 if (GrowthList.GetTargetAction(currentAction) == "shutter")
                 {
-                    //int shutterNumber = GrowthList.ShutterNames[(string)currentCell.Value];
                     _tableData[rowIndex].ChangeNumber(currentCell.Value.ToString());
                 }
                 else if (GrowthList.GetTargetAction(currentAction) == "heater")
                 {
-                    //int heaterNumber = GrowthList.HeaterNames[(string)currentCell.Value];
                     _tableData[rowIndex].ChangeNumber(currentCell.Value.ToString());
                 }
                 else
@@ -776,12 +822,13 @@ namespace NtoLib.Recipes.MbeTable
             if (comboBox.Value != null && columnIndex == Params.CommandIndex && !isLoadingActive)
             {
                 string command = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
-                
+                int minNumber = GrowthList.GetMinNumber(command);
+
                 dataGridView1.Rows[rowIndex].HeaderCell.Value = (rowIndex + 1).ToString();
-                
+
                 if (columnIndex == Params.CommandIndex)
                 {
-                    ReplaceLineInRecipe(factory.NewLine(command, 0, 0f, 0f, ""));
+                    ReplaceLineInRecipe(factory.NewLine(command, minNumber, 0f, 0f, ""));
                 }
                 RefreshTable();
                 dataGridView1.Invalidate();

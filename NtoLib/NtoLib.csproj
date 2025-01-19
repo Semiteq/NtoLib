@@ -126,7 +126,6 @@
       <DependentUpon>TableControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Recipes\MbeTable\TableEnumType.cs" />
-    <Compile Include="Recipes\MbeTable\TableFactory.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\Close.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\CloseAll.cs" />
     <Compile Include="Recipes\MbeTable\TableLines\End.cs" />
