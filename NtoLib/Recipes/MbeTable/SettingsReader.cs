@@ -1,27 +1,26 @@
 ﻿using FB;
 using FB.VisualFB;
 using InSAT.OPC;
+using MasterSCADALib;
 using System;
-
-// todo: use constants for pin numbers
 
 namespace NtoLib.Recipes.MbeTable
 {
     internal class SettingsReader
     {
-        private VisualFBConnector connector;
+        private VisualFBConnector FBConnector;
 
         public SettingsReader(VisualFBConnector visualFBConnector)
         {
-            connector = visualFBConnector;
+            FBConnector = visualFBConnector;
         }
 
 
 
         public bool CheckQuality()
         {
-            for (int id = 1001; id < 1016; id++)
-                if (((FBBase)connector).GetPinQuality(1001) != OpcQuality.Good)
+            for (int id = Params.ID_HMI_CommProtocol; id < Params.ID_HMI_ActualLine; id++)
+                if (GetPinQuality(Params.ID_HMI_CommProtocol) != OpcQuality.Good)
                     return false;
 
             return true;
@@ -32,8 +31,8 @@ namespace NtoLib.Recipes.MbeTable
             CommunicationSettings settings = new CommunicationSettings();
 
             bool settingOk = false;
-            uint pinValue1 = ((FBBase)connector).GetPinValue<uint>(1001);
-            if (((FBBase)connector).GetPinQuality(1001) != OpcQuality.Good)
+            uint pinValue1 = GetPinValue<uint>(Params.ID_HMI_CommProtocol);
+            if (GetPinQuality(1001) != OpcQuality.Good)
             {
                 settingOk = false;
             }
@@ -43,8 +42,8 @@ namespace NtoLib.Recipes.MbeTable
                 {
                     case 1:
                         settings._protocol = MbeTableFB.ControllerProtocol.Modbus;
-                        uint pinValue2 = ((FBBase)connector).GetPinValue<uint>(1002);
-                        if (((FBBase)connector).GetPinQuality(1002) != OpcQuality.Good)
+                        uint pinValue2 = GetPinValue<uint>(Params.ID_HMI_AddrArea);
+                        if (GetPinQuality(Params.ID_HMI_AddrArea) != OpcQuality.Good)
                             break;
                         switch (pinValue2)
                         {
@@ -55,70 +54,45 @@ namespace NtoLib.Recipes.MbeTable
                                 settings._SLMP_Area = MbeTableFB.SLMP_area.R;
                                 break;
                         }
-                        uint pinValue3 = ((FBBase)connector).GetPinValue<uint>(1003);
-                        if (((FBBase)connector).GetPinQuality(1003) != OpcQuality.Good)
-                            break;
-                        settings._FloatBaseAddr = pinValue3;
 
-                        uint pinValue4 = ((FBBase)connector).GetPinValue<uint>(1004);
-                        if (((FBBase)connector).GetPinQuality(1004) != OpcQuality.Good)
-                            break;
-                        settings._FloatAreaSize = pinValue4;
+                        if (GetPinQuality(Params.ID_HMI_FloatBaseAddr) != OpcQuality.Good) break;
+                        settings._FloatBaseAddr = GetPinValue<uint>(Params.ID_HMI_FloatBaseAddr);
 
-                        uint pinValue5 = ((FBBase)connector).GetPinValue<uint>(1005);
-                        if (((FBBase)connector).GetPinQuality(1005) != OpcQuality.Good)
-                            break;
-                        settings._IntBaseAddr = pinValue5;
+                        if (GetPinQuality(Params.ID_HMI_FloatAreaSize) != OpcQuality.Good) break;
+                        settings._FloatAreaSize = GetPinValue<uint>(Params.ID_HMI_FloatAreaSize);
 
-                        uint pinValue6 = ((FBBase)connector).GetPinValue<uint>(1006);
-                        if (((FBBase)connector).GetPinQuality(1006) != OpcQuality.Good)
-                            break;
-                        settings._IntAreaSize = pinValue6;
+                        if (GetPinQuality(Params.ID_HMI_IntBaseAddr) != OpcQuality.Good) break;
+                        settings._IntBaseAddr = GetPinValue<uint>(Params.ID_HMI_IntBaseAddr);
 
-                        uint pinValue7 = ((FBBase)connector).GetPinValue<uint>(1007);
-                        if (((FBBase)connector).GetPinQuality(1007) != OpcQuality.Good)
-                            break;
-                        settings._BoolBaseAddr = pinValue7;
+                        if (GetPinQuality(Params.ID_HMI_IntAreaSize) != OpcQuality.Good) break;
+                        settings._IntAreaSize = GetPinValue<uint>(Params.ID_HMI_IntAreaSize);
 
-                        uint pinValue8 = ((FBBase)connector).GetPinValue<uint>(1008);
-                        if (((FBBase)connector).GetPinQuality(1008) != OpcQuality.Good)
-                            break;
-                        settings._BoolAreaSize = pinValue8;
+                        if (GetPinQuality(Params.ID_HMI_BoolBaseAddr) != OpcQuality.Good) break;
+                        settings._BoolBaseAddr = GetPinValue<uint>(Params.ID_HMI_BoolBaseAddr);
 
-                        uint pinValue9 = ((FBBase)connector).GetPinValue<uint>(1009);
-                        if (((FBBase)connector).GetPinQuality(1009) != OpcQuality.Good)
-                            break;
-                        settings._ControlBaseAddr = pinValue9;
+                        if (GetPinQuality(Params.ID_HMI_BoolAreaSize) != OpcQuality.Good) break;
+                        settings._BoolAreaSize = GetPinValue<uint>(Params.ID_HMI_BoolAreaSize);
 
-                        uint pinValue10 = ((FBBase)connector).GetPinValue<uint>(1010);
-                        if (((FBBase)connector).GetPinQuality(1010) != OpcQuality.Good)
-                            break;
-                        settings._IP1 = pinValue10;
+                        if (GetPinQuality(Params.ID_HMI_ControlBaseAddr) != OpcQuality.Good) break;
+                        settings._ControlBaseAddr = GetPinValue<uint>(Params.ID_HMI_ControlBaseAddr);
 
-                        uint pinValue11 = ((FBBase)connector).GetPinValue<uint>(1011);
-                        if (((FBBase)connector).GetPinQuality(1011) != OpcQuality.Good)
-                            break;
-                        settings._IP2 = pinValue11;
+                        if (GetPinQuality(Params.ID_HMI_IP1) != OpcQuality.Good) break;
+                        settings._IP1 = GetPinValue<uint>(Params.ID_HMI_IP1);
 
-                        uint pinValue12 = ((FBBase)connector).GetPinValue<uint>(1012);
-                        if (((FBBase)connector).GetPinQuality(1012) != OpcQuality.Good)
-                            break;
-                        settings._IP3 = pinValue12;
+                        if (GetPinQuality(Params.ID_HMI_IP2) != OpcQuality.Good) break;
+                        settings._IP2 = GetPinValue<uint>(Params.ID_HMI_IP2);
 
-                        uint pinValue13 = ((FBBase)connector).GetPinValue<uint>(1013);
-                        if (((FBBase)connector).GetPinQuality(1013) != OpcQuality.Good)
-                            break;
-                        settings._IP4 = pinValue13;
+                        if (GetPinQuality(Params.ID_HMI_IP3) != OpcQuality.Good) break;
+                        settings._IP3 = GetPinValue<uint>(Params.ID_HMI_IP3); ;
 
-                        uint pinValue14 = ((FBBase)connector).GetPinValue<uint>(1014);
-                        if (((FBBase)connector).GetPinQuality(1014) != OpcQuality.Good)
-                            break;
-                        settings._Port = pinValue14;
+                        if (GetPinQuality(Params.ID_HMI_IP4) != OpcQuality.Good) break;
+                        settings._IP4 = GetPinValue<uint>(Params.ID_HMI_IP4);
 
-                        uint pinValue15 = ((FBBase)connector).GetPinValue<uint>(1015);
-                        if (((FBBase)connector).GetPinQuality(1015) != OpcQuality.Good)
-                            break;
-                        settings._Timeout = pinValue15;
+                        if (GetPinQuality(Params.ID_HMI_Port) != OpcQuality.Good) break;
+                        settings._Port = GetPinValue<uint>(Params.ID_HMI_Port);
+
+                        if (GetPinQuality(Params.ID_HMI_Timeout) != OpcQuality.Good) break;
+                        settings._Timeout = GetPinValue<uint>(Params.ID_HMI_Timeout);
 
                         settingOk = true;
                         break;
@@ -134,6 +108,16 @@ namespace NtoLib.Recipes.MbeTable
                 settings._float_colum_num = 2;
             }
             return settings;
+        }
+
+        private T GetPinValue<T>(int id)
+        {
+            return FBConnector.GetPinValue<T>(id);
+        }
+
+        private OpcQuality GetPinQuality(int id)
+        {
+            return FBConnector.GetPinQuality(id);
         }
     }
 }

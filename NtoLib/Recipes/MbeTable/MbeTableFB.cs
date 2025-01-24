@@ -165,8 +165,11 @@ namespace NtoLib.Recipes.MbeTable
 
         protected override void UpdateData()
         {
-            VisualPins.SetPinValue(Params.ID_HMI_CommProtocol, _enumProtocol == ControllerProtocol.Modbus ? 1 : (_enumProtocol == ControllerProtocol.SLMP_not_implimated ? 2 : 0));
-            VisualPins.SetPinValue(Params.ID_HMI_AddrArea, _enumSLMP_area == SLMP_area.D ? 1 : (_enumSLMP_area == SLMP_area.R ? 2 : 0));
+            // Update communication protocol and address area values
+            VisualPins.SetPinValue(Params.ID_HMI_CommProtocol, GetProtocolValue());
+            VisualPins.SetPinValue(Params.ID_HMI_AddrArea, GetAddressAreaValue());
+
+            // Update HMI values
             VisualPins.SetPinValue(Params.ID_HMI_FloatBaseAddr, Params.UFloatBaseAddr);
             VisualPins.SetPinValue(Params.ID_HMI_FloatAreaSize, Params.UFloatAreaSize);
             VisualPins.SetPinValue(Params.ID_HMI_IntBaseAddr, Params.UIntBaseAddr);
@@ -174,43 +177,64 @@ namespace NtoLib.Recipes.MbeTable
             VisualPins.SetPinValue(Params.ID_HMI_BoolBaseAddr, Params.UBoolBaseAddr);
             VisualPins.SetPinValue(Params.ID_HMI_BoolAreaSize, Params.UBoolAreaSize);
             VisualPins.SetPinValue(Params.ID_HMI_ControlBaseAddr, Params.UControlBaseAddr);
+
+            // Update controller IP and port values
             VisualPins.SetPinValue(Params.ID_HMI_IP1, Params.ConntrollerIP1);
             VisualPins.SetPinValue(Params.ID_HMI_IP2, Params.ConntrollerIP2);
             VisualPins.SetPinValue(Params.ID_HMI_IP3, Params.ConntrollerIP3);
             VisualPins.SetPinValue(Params.ID_HMI_IP4, Params.ConntrollerIP4);
             VisualPins.SetPinValue(Params.ID_HMI_Port, Params.ConntrollerTCPPort);
+
+            // Update timeout value
             VisualPins.SetPinValue(Params.ID_HMI_Timeout, Params.Timeout);
-            
-            //todo: naming
-            int num1 = GetPinInt(Params.ID_ActualLine);
-            
-            bool flag1 = GetPinQuality(Params.ID_ActualLine) == OpcQuality.Good;
-            bool pinBool = GetPinBool(Params.ID_EnaLoad);
-            bool flag2 = GetPinQuality(Params.ID_EnaLoad) == OpcQuality.Good;
-            
-            if (!flag1)
-                num1 = -1;
-            uint num2 = (uint)(0 + (pinBool ? 1 : 0) + (flag2 ? 2 : 0) + (flag1 ? 4 : 0));
 
-            VisualPins.SetPinValue(Params.ID_HMI_ActualLine, Params.UBoolAreaSize);
-            VisualPins.SetPinValue(Params.ID_HMI_Status, Params.UBoolAreaSize);
+            // Process actual line and enable load status
+            int actualLine = GetActualLineValue();
+            uint statusFlags = CalculateStatusFlags(actualLine);
 
-            SendPinsToVFB();
+            // Update status values
+            VisualPins.SetPinValue(Params.ID_HMI_ActualLine, actualLine);
+            VisualPins.SetPinValue(Params.ID_HMI_Status, statusFlags);
         }
 
-        private void SendPinsToVFB()
+        private int GetProtocolValue()
         {
-            UpdatePins(Params.ShutterNameQuantity, Params.FirstPinShutterName, Params.GroupID_ShutterNames);
-            UpdatePins(Params.HeaterNameQuantity, Params.FirstPinHeaterName, Params.GroupID_HeaterNames);
-        }
-
-        private void UpdatePins(int quantity, int firstBit, int groupID)
-        {
-            for (int i = 0; i < quantity; i++)
+            return _enumProtocol switch
             {
-                var value = GetPinValue(PinDef.CreateID(i, groupID));
-                VisualPins.SetPinValue(firstBit + i, value);
-            }
+                ControllerProtocol.Modbus => 1,
+                ControllerProtocol.SLMP_not_implimated => 2,
+                _ => 0
+            };
+        }
+
+        private int GetAddressAreaValue()
+        {
+            return _enumSLMP_area switch
+            {
+                SLMP_area.D => 1,
+                SLMP_area.R => 2,
+                _ => 0
+            };
+        }
+
+        private int GetActualLineValue()
+        {
+            int actualLine = GetPinInt(Params.ID_ActualLine);
+            return GetPinQuality(Params.ID_ActualLine) == OpcQuality.Good ? actualLine : -1;
+        }
+
+        private uint CalculateStatusFlags(int actualLine)
+        {
+            bool enaLoad = GetPinBool(Params.ID_EnaLoad);
+            bool enaLoadQualityGood = GetPinQuality(Params.ID_EnaLoad) == OpcQuality.Good;
+            bool actualLineQualityGood = actualLine != -1;
+
+            uint flags = 0;
+            if (enaLoad) flags += 1;
+            if (enaLoadQualityGood) flags += 2;
+            if (actualLineQualityGood) flags += 4;
+
+            return flags;
         }
 
         public enum ControllerProtocol

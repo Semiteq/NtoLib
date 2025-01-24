@@ -9,8 +9,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public OpenTime(int number = 0, float timeSetpoint = 1f, string comment = "") : base(ActionName)
         {
-            UpdateHeaderToShut();
-            shutterName = GrowthList.ShutterNames[number];
+            shutterName = GrowthList.Instance.ShutterNames[number];
             int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {

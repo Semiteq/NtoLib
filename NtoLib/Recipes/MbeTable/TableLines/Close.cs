@@ -10,8 +10,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public Close(int number = 0, string comment = "") : base(ActionName)
         {
-            UpdateHeaderToShut();
-            shutterName = GrowthList.ShutterNames[number];
+            shutterName = GrowthList.Instance.ShutterNames[number];
             int actionNumber = Actions[ActionName];
             _cells = new List<TCell>
             {

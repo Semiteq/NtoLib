@@ -15,10 +15,13 @@ namespace NtoLib.Recipes.MbeTable
         public const uint UBoolBaseAddr = 200;
         public const uint UBoolAreaSize = 100;
         public const uint UControlBaseAddr = 200;
+        
+        // todo: дублируют CommunicationSettings.cs
         public const uint ConntrollerIP1 = 192;
         public const uint ConntrollerIP2 = 168;
         public const uint ConntrollerIP3 = 0;
         public const uint ConntrollerIP4 = 1;
+        
         public const uint ConntrollerTCPPort = 502;
         public const uint Timeout = 1000;
 

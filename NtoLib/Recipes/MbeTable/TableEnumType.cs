@@ -5,60 +5,130 @@ using System.Linq;
 
 namespace NtoLib.Recipes.MbeTable
 {
-    internal class TableEnumType : IEnumerable<KeyValuePair<string, int>>
+    public class TableEnumType : IEnumerable<KeyValuePair<string, int>>
     {
         /// <summary>
-        /// Расширение стандартного enum до таблицы которая связывает строки с числами. 
-        /// Позволяет добавлять, обновлять и получать значения по ключу или значению, 
-        /// а также поддерживает перебор элементов с помощью foreach.
+        /// Представляет расширение стандартного перечисления (enum) в виде таблицы, 
+        /// которая связывает строки с числами. Поддерживает добавление, обновление 
+        /// и получение значений по ключу или значению, а также перебор элементов 
+        /// с использованием foreach.
         /// </summary>
-
         private readonly Dictionary<string, int> _items;
+
+        /// <summary>
+        /// Возвращает количество элементов в таблице.
+        /// </summary>
         public int EnumCount => _items.Count;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр класса <see cref="TableEnumType"/>.
+        /// </summary>
         public TableEnumType()
         {
             _items = new Dictionary<string, int>();
         }
 
-        // Реализуем метод Add для Collection Initializer, вместо AddEnum
+        /// <summary>
+        /// Добавляет новый элемент в таблицу.
+        /// </summary>
+        /// <param name="key">Ключ элемента.</param>
+        /// <param name="value">Значение элемента.</param>
+        /// <exception cref="ArgumentException">Выбрасывается, если ключ уже существует в таблице.</exception>
         public void Add(string key, int value)
         {
             if (_items.ContainsKey(key))
-                throw new ArgumentException($"Key '{key}' already exists.");
+                throw new ArgumentException($"Ключ '{key}' уже существует.");
             _items[key] = value;
         }
 
+        /// <summary>
+        /// Добавляет коллекцию элементов в таблицу.
+        /// </summary>
+        /// <param name="items">Коллекция элементов в формате пар ключ-значение.</param>
         public void AddRange(IEnumerable<KeyValuePair<string, int>> items)
         {
-            // Проверка на пустую коллекцию
             if (items == null || !items.Any()) return;
+
             foreach (var item in items)
                 Add(item.Key, item.Value);
         }
 
-        public bool IsEmpty => (_items.Count == 0);
+        /// <summary>
+        /// Проверяет, является ли таблица пустой.
+        /// </summary>
+        public bool IsEmpty => _items.Count == 0;
 
-        // Обращение по индексу вместо GetActionNumber
-        public int this[string key] => _items.ContainsKey(key) ? _items[key] : 0;
+        /// <summary>
+        /// Возвращает значение, связанное с указанным ключом.
+        /// </summary>
+        /// <param name="key">Ключ элемента.</param>
+        /// <returns>Значение элемента. Выбрасывает исключение, если ключ не найден.</returns>
+        /// <exception cref="KeyNotFoundException">Если указанный ключ отсутствует.</exception>
+        public int this[string key]
+        {
+            get
+            {
+                if (!_items.ContainsKey(key))
+                {
+                    throw new KeyNotFoundException($"Ключ \"{key}\" отсутствует в словаре.");
+                }
+                return _items[key];
+            }
+        }
 
-        public string this[int value] => _items.FirstOrDefault(x => x.Value == value).Key;
+        /// <summary>
+        /// Возвращает ключ, связанный с указанным значением.
+        /// </summary>
+        /// <param name="value">Значение элемента.</param>
+        /// <returns>Ключ элемента. Выбрасывает исключение, если значение не найдено.</returns>
+        /// <exception cref="KeyNotFoundException">Если указанное значение отсутствует.</exception>
+        public string this[int value]
+        {
+            get
+            {
+                var item = _items.FirstOrDefault(x => x.Value == value);
 
+                if (item.Equals(default(KeyValuePair<string, int>)))
+                {
+                    throw new KeyNotFoundException($"Отсутствует элемент с значением \"{value}\" в словаре.");
+                }
+
+                return item.Key;
+            }
+        }
+
+
+        /// <summary>
+        /// Возвращает ключ элемента по индексу в таблице.
+        /// </summary>
+        /// <param name="index">Индекс элемента.</param>
+        /// <returns>Ключ элемента.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Выбрасывается, если индекс находится за пределами диапазона.</exception>
         public string GetValueByIndex(int index)
         {
             if (index < 0 || index >= _items.Count)
-                //return string.Empty;
-                throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+                throw new ArgumentOutOfRangeException(nameof(index), "Индекс за пределами диапазона.");
             return _items.ElementAt(index).Key;
         }
 
-        // Реализация IEnumerable для поддержки foreach и collection initializer
+        /// <summary>
+        /// Реализует перечисление элементов таблицы для использования в foreach.
+        /// </summary>
+        /// <returns>Перечислитель элементов таблицы.</returns>
         public IEnumerator<KeyValuePair<string, int>> GetEnumerator() => _items.GetEnumerator();
 
-        // Поддержка IEnumerator для не-генерик версии
+        /// <summary>
+        /// Реализует перечисление элементов таблицы для не-обобщенной коллекции.
+        /// </summary>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        // Аддитивность 
+        /// <summary>
+        /// Оператор сложения для объединения двух экземпляров <see cref="TableEnumType"/>.
+        /// </summary>
+        /// <param name="left">Левая таблица.</param>
+        /// <param name="right">Правая таблица.</param>
+        /// <returns>Новая таблица, содержащая элементы из обеих таблиц.</returns>
+        /// <exception cref="ArgumentException">Выбрасывается, если обнаружены дублирующиеся ключи.</exception>
         public static TableEnumType operator +(TableEnumType left, TableEnumType right)
         {
             var result = new TableEnumType();
@@ -69,17 +139,20 @@ namespace NtoLib.Recipes.MbeTable
                 if (!result._items.ContainsKey(item.Key))
                     result.Add(item.Key, item.Value);
                 else
-                    throw new ArgumentException($"Duplicate key detected: {item.Key}");
+                    throw new ArgumentException($"Найден дубликат ключа: {item.Key}.");
             }
 
             return result;
         }
 
+        /// <summary>
+        /// Возвращает наименьшее значение из таблицы.
+        /// Если таблица пуста, возвращает -1.
+        /// </summary>
+        /// <returns>Наименьшее значение.</returns>
         public int GetLowestNumber()
         {
-            if (_items.Count == 0)
-                return 0;
-            return _items.Values.Min();
+            return _items.Count != 0 ? _items.Values.Min() : -1;
         }
     }
 }

@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using MasterSCADA;
+using FB;
+using InSAT.OPC;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -187,7 +188,7 @@ namespace NtoLib.Recipes.MbeTable
                     // Установка значения ячейки
                     cell.Value = cellValue;
 
-                    // Обновление комбобокса для определённого столбца
+                    // Обновление комбобокса для столбца номера
                     if (colIndex == Params.NumberIndex && cell is DataGridViewComboBoxCell comboBoxCell && cellValue != null)
                     {
                         UpdateEnumDropDown(comboBoxCell, cellValue);
@@ -256,6 +257,7 @@ namespace NtoLib.Recipes.MbeTable
             else
                 LoadRecipeToEdit();
         }
+
         private void ClickButton_Save(object sender, EventArgs e)
         {
             if (FBConnector.DesignMode) return;
@@ -285,7 +287,7 @@ namespace NtoLib.Recipes.MbeTable
                             {
                                 try
                                 {
-                                    cellValue = GrowthList.NameToIntConvert(cellValue, currentCommand).ToString();
+                                    cellValue = GrowthList.Instance.NameToIntConvert(cellValue, currentCommand).ToString();
                                 }
                                 catch (KeyNotFoundException)
                                 {

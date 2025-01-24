@@ -122,16 +122,34 @@ namespace NtoLib.Recipes.MbeTable
         {
             if (FBConnector.DesignMode || _tableType == TableMode.View) return;
 
-            AddLineToRecipe(factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, ""), false);
-            RefreshTable();
+            GrowthList.Instance.UpdateNames();
+
+            try
+            {
+                AddLineToRecipe(factory.NewLine("CLOSE", GrowthList.Instance.GetMinShutter(), 0f, 0f, ""), false);
+                RefreshTable();
+            }
+            catch (InvalidOperationException ex) 
+            { 
+                WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true); 
+            }
         }
 
         private void ClickButton_AddLineAfter(object sender, EventArgs e)
         {
             if (FBConnector.DesignMode || _tableType == TableMode.View) return;
 
-            AddLineToRecipe(factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, ""), true);
-            RefreshTable();
+            GrowthList.Instance.UpdateNames();
+
+            try
+            {
+                AddLineToRecipe(factory.NewLine("CLOSE", GrowthList.Instance.GetMinShutter(), 0f, 0f, ""), true);
+                RefreshTable();
+            }
+            catch (InvalidOperationException ex)
+            {
+                WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
+            }
         }
     }
 }

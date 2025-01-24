@@ -420,7 +420,7 @@ namespace NtoLib.Recipes.MbeTable
                             Width = GetWidth(column)
                         };
 
-                        if (!column.EnumType.IsEmpty && column.GridIndex == Params.CommandIndex)
+                        if (column.EnumType != null && column.GridIndex == Params.CommandIndex)
                         {
                             viewComboBoxColumn.MaxDropDownItems = column.EnumType.EnumCount;
 
@@ -563,8 +563,23 @@ namespace NtoLib.Recipes.MbeTable
             if (this.FBConnector.DesignMode)
                 return;
 
-            if (ReadPinGroupQuality(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity))
-                actLoopCount = ReadIntPinGroup(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity);
+            if (!FBConnector.DesignMode)
+            {
+                GrowthList.Instance.ShutterNames.AddRange(ReadShutterNames());
+                if (ReadPinGroupQuality(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity))
+                    actLoopCount = ReadPinGroup<int>(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity);
+
+                if (ReadPinGroupQuality(Params.FirstPinShutterName, Params.ShutterNameQuantity))
+                {
+                    GrowthList.Instance.ShutterNames.AddRange(ReadShutterNames());
+                }
+
+
+                if (ReadPinGroupQuality(Params.FirstPinHeaterName, Params.HeaterNameQuantity))
+                {
+                    GrowthList.Instance.HeaterNames.AddRange(ReadHeaterNames());
+                }
+            }
 
             uint pinValue1 = ((FBBase)this.FBConnector).GetPinValue<uint>(Params.ID_HMI_Status);
             OpcQuality pinQuality1 = ((FBBase)this.FBConnector).GetPinQuality(Params.ID_HMI_Status);
@@ -588,30 +603,69 @@ namespace NtoLib.Recipes.MbeTable
         {
             for (int i = 0; i < count; i++)
             {
-                if (((FBBase)this.FBConnector).GetPinQuality(startPinIndex + i) != OpcQuality.Good)
+                if (FBConnector.GetPinQuality(startPinIndex + i) != OpcQuality.Good)
                     return false;
             }
             return true;
         }
 
-        private float[] ReadFloatPinGroup(int startPinIndex, int count)
+        private T[] ReadPinGroup<T>(int startPinIndex, int count)
         {
-            float[] pinValues = new float[count];
+            T[] pinValues = new T[count];
 
             for (int i = 0; i < count; i++)
-                pinValues[i] = ((FBBase)this.FBConnector).GetPinValue<float>(startPinIndex);
+                pinValues[i] = GetPinValue<T>(startPinIndex + i);
 
             return pinValues;
         }
 
-        private int[] ReadIntPinGroup(int startPinIndex, int count)
+        private T GetPinValue<T>(int id)
         {
-            int[] pinValues = new int[count];
+            return (T)FBConnector.GetPinValue<T>(id);
+        }
 
-            for (int i = 0; i < count; i++)
-                pinValues[i] = ((FBBase)this.FBConnector).GetPinValue<int>(startPinIndex);
+        public TableEnumType ReadShutterNames()
+        {
+            TableEnumType shutterNames = new();
 
-            return pinValues;
+            int startPin = Params.FirstPinShutterName;
+            int quantity = Params.ShutterNameQuantity;
+
+            for (int i = 0; i < quantity; i++)
+            {
+                string pinString = GetPinValue<string>(i + startPin);
+                if (pinString is not null)
+                {
+                    shutterNames.Add(pinString, i);
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            return shutterNames;
+        }
+
+        public TableEnumType ReadHeaterNames()
+        {
+            TableEnumType heaterNames = new();
+
+            int startPin = Params.FirstPinHeaterName;
+            int quantity = Params.HeaterNameQuantity;
+
+            for (int i = 0; i < quantity; i++)
+            {
+                string pinString = GetPinValue<string>(i + startPin);
+                if (pinString is not null)
+                {
+                    heaterNames.Add(pinString, i);
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            return heaterNames;
         }
 
         private void ChangeToViewMode()
@@ -690,41 +744,49 @@ namespace NtoLib.Recipes.MbeTable
 
         private void UpdateEnumDropDown(DataGridViewComboBoxCell cell, object cellValue)
         {
-            string actionType = GrowthList.GetActionType(cellValue.ToString());
-
-            // Очищаем старый список
-            cell.Items.Clear();
-
-            // Заполняем комбобокс в зависимости от типа действия
-            if (actionType == "shutter")
+            try
             {
-                cell.MaxDropDownItems = GrowthList.ShutterNames.EnumCount;
-                for (int ittr_num = 0; ittr_num < GrowthList.ShutterNames.EnumCount; ++ittr_num)
+                string actionType = GrowthList.Instance.GetActionType(cellValue.ToString());
+
+                GrowthList.Instance.UpdateNames();
+
+                cell.Items.Clear();
+
+                // Заполняем комбобокс в зависимости от типа действия
+                if (actionType == "shutter")
                 {
-                    cell.Items.Add(GrowthList.ShutterNames.GetValueByIndex(ittr_num));
+                    cell.MaxDropDownItems = GrowthList.Instance.ShutterNames.EnumCount;
+                    for (int ittr_num = 0; ittr_num < GrowthList.Instance.ShutterNames.EnumCount; ++ittr_num)
+                    {
+                        cell.Items.Add(GrowthList.Instance.ShutterNames.GetValueByIndex(ittr_num));
+                    }
+                }
+                else if (actionType == "heater")
+                {
+                    cell.MaxDropDownItems = GrowthList.Instance.HeaterNames.EnumCount;
+                    for (int ittr_num = 0; ittr_num < GrowthList.Instance.HeaterNames.EnumCount; ++ittr_num)
+                    {
+                        cell.Items.Add(GrowthList.Instance.HeaterNames.GetValueByIndex(ittr_num));
+                    }
+                }
+                else
+                {
+                    cell.MaxDropDownItems = 1;
+                    cell.Items.Add(cellValue);
+                }
+
+                if (cell.Items.Contains(cellValue))
+                {
+                    cell.Value = cellValue;
+                }
+                else
+                {
+                    cell.Value = cell.Items.Count > 0 ? cell.Items[0] : null;
                 }
             }
-            else if (actionType == "heater")
+            catch (Exception ex)
             {
-                cell.MaxDropDownItems = GrowthList.HeaterNames.EnumCount;
-                for (int ittr_num = 0; ittr_num < GrowthList.HeaterNames.EnumCount; ++ittr_num)
-                {
-                    cell.Items.Add(GrowthList.HeaterNames.GetValueByIndex(ittr_num));
-                }
-            }
-            else
-            {
-                cell.MaxDropDownItems = 1;
-                cell.Items.Add(cellValue);
-            }
-
-            if (cell.Items.Contains(cellValue))
-            {
-                cell.Value = cellValue;
-            }
-            else
-            {
-                cell.Value = cell.Items.Count > 0 ? cell.Items[0] : null;
+                MessageBox.Show($"Ошибка при обновлении комбобокса: {ex.Message}");
             }
         }
 
@@ -744,11 +806,11 @@ namespace NtoLib.Recipes.MbeTable
             {
                 string currentAction = (string)dataGridView1.Rows[rowIndex].Cells[Params.CommandIndex].Value;
 
-                if (GrowthList.GetTargetAction(currentAction) == "shutter")
+                if (GrowthList.Instance.GetTargetAction(currentAction) == "shutter")
                 {
                     _tableData[rowIndex].ChangeNumber(currentCell.Value.ToString());
                 }
-                else if (GrowthList.GetTargetAction(currentAction) == "heater")
+                else if (GrowthList.Instance.GetTargetAction(currentAction) == "heater")
                 {
                     _tableData[rowIndex].ChangeNumber(currentCell.Value.ToString());
                 }
@@ -821,13 +883,13 @@ namespace NtoLib.Recipes.MbeTable
 
             if (comboBox.Value != null && columnIndex == Params.CommandIndex && !isLoadingActive)
             {
-                string command = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
-                int minNumber = GrowthList.GetMinNumber(command);
-
                 dataGridView1.Rows[rowIndex].HeaderCell.Value = (rowIndex + 1).ToString();
 
                 if (columnIndex == Params.CommandIndex)
                 {
+                    string command = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
+                    int minNumber = GrowthList.Instance.GetMinNumber(command);
+
                     ReplaceLineInRecipe(factory.NewLine(command, minNumber, 0f, 0f, ""));
                 }
                 RefreshTable();

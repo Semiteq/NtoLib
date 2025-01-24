@@ -26,8 +26,5 @@
         public uint _IP4;
         public uint _Port;
         public uint _Timeout;
-
-
-        
     }
 }

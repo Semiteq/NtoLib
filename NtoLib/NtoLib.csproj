@@ -108,7 +108,9 @@
     <Compile Include="Recipes\MbeTable\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Params.cs" />
     <Compile Include="Recipes\MbeTable\DateTimeParser.cs" />
-    <Compile Include="Recipes\MbeTable\GrowthList.cs" />
+    <Compile Include="Recipes\MbeTable\GrowthList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Recipes\MbeTable\PLC_Communication.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLineFactory.cs" />

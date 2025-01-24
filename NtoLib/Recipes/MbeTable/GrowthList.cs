@@ -1,34 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using FB.VisualFB;
 
 namespace NtoLib.Recipes.MbeTable
 {
-    internal class GrowthList
+    internal sealed class GrowthList : VisualControlBase
     {
-        //todo: static?
-        public static TableEnumType ShutterNames { get; private set; }
-        public static TableEnumType HeaterNames { get; private set; }
+        private static readonly GrowthList instance = new();
+        TableControl tableControl = new();
+        private GrowthList()
+        {   
+           // // debug
+           // ShutterNames = new()
+           //{
+           //     { "Shut1", 1 },
+           //     { "Shut2", 2 }
+           //};
 
-        public GrowthList()
-        {
-            MbeTableFB table = new();
-
-            //ShutterNames = FillDictNames(table, Params.FirstPinShutterName, Params.ShutterNameQuantity);
-            ShutterNames = new()
-            {
-                { "Shut1", 1 },
-                { "Shut2", 2 }
-            };
-
-            HeaterNames = new()
-            {
-                { "Heat1", 3 },
-                { "Heat2", 4 }
-            };
-            //HeaterNames = FillDictNames(table, Params.FirstPinHeaterName, Params.HeaterNameQuantity);
+           // HeaterNames = new()
+           // {
+           //     { "Heat1", 3 },
+           //     { "Heat2", 4 }
+           // };
         }
 
-        public static string GetTargetAction(string currentAction)
+        public static GrowthList Instance => instance;
+
+        public TableEnumType ShutterNames { get; set; }
+        public TableEnumType HeaterNames { get; set; }
+
+        public string GetTargetAction(string currentAction)
         {
             /// <summary>
             /// Проверка, заслонкам или нагревателям предназначена команда.
@@ -37,7 +38,7 @@ namespace NtoLib.Recipes.MbeTable
             return Params.ActionTypes[RecipeLine.Actions[currentAction]];
         }
 
-        public static int NameToIntConvert(string growthValue, string action)
+        public int NameToIntConvert(string growthValue, string action)
         {
             /// <summary>
             /// Конвертация названия заслонки/нагревателя в номер для записи в файл рецепта
@@ -54,7 +55,7 @@ namespace NtoLib.Recipes.MbeTable
                 throw new KeyNotFoundException("Неизвестный тип действия");
         }
 
-        public static string GetActionType(string number)
+        public string GetActionType(string number)
         {
 
             /// <summary>
@@ -67,27 +68,42 @@ namespace NtoLib.Recipes.MbeTable
             return string.Empty;
         }
 
-        public static int GetMinShutter()
+        public int GetMinShutter()
         {
             /// <summary>
             /// Возвращает минимальный номер заслонки
             /// </summary>
-            return ShutterNames.GetLowestNumber();
+            /// <exception cref="InvalidOperationException">Выбрасывается, если в список заслонок пуст.</exception>
+
+            int lowestShutter = ShutterNames.GetLowestNumber();
+            
+            if (lowestShutter == -1)
+            { 
+                throw new InvalidOperationException("Список заслонок пуст"); 
+            }
+            return lowestShutter;
         }
 
-        public static int GetMinHeater()
+        public int GetMinHeater()
         {
             /// <summary>
             /// Возвращает минимальный номер нагревателя
             /// </summary>
-            return HeaterNames.GetLowestNumber();
+            /// <exception cref="InvalidOperationException">Выбрасывается, если в список нагревателей пуст.</exception>
+            int lowestHeater = HeaterNames.GetLowestNumber();
+
+            if (lowestHeater == -1)
+            {
+                throw new InvalidOperationException("Список нагревателей пуст");
+            }
+            return lowestHeater;
         }
 
-        public static int GetMinNumber(string action)
+        public int GetMinNumber(string action)
         {
             /// <summary> 
             /// Возвращает минимальный номер заслонки/нагревателя в зависимости от типа действия. 
-            /// Принимает на вход действие.
+            /// Принимает на вход действие. Если не shutter и не heater, то возвращает 0.
             /// </summary>
             string targetAction = GetTargetAction(action);
             if (targetAction == "shutter")
@@ -95,26 +111,16 @@ namespace NtoLib.Recipes.MbeTable
             else if (targetAction == "heater")
                 return GetMinHeater();
             else
-                throw new KeyNotFoundException("Неизвестный тип действия");
+                return 0;
         }
 
-        private TableEnumType FillDictNames(MbeTableFB table, int startBit, int quantity)
+        public void UpdateNames()
         {
-            TableEnumType names = new();
-
-            for (int i = 0; i < quantity; i++)
-            {
-                var pinString = table.GetPinString(i + startBit);
-                if (pinString is not null)
-                {
-                    names.Add(pinString.ToString(), i);
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            return names;
+            /// <summary>
+            /// Обновляет списки заслонок и нагревателей, используя NamesReader.
+            /// </summary>
+            ShutterNames = tableControl.ReadShutterNames();
+            HeaterNames = tableControl.ReadHeaterNames();
         }
     }
 }

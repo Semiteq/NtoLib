@@ -28,39 +28,29 @@ namespace NtoLib.Recipes.MbeTable
         public DataGridViewRow Row;
 
         protected string shutterName;
-        protected int shutterNumber;
-
         protected string heaterName;
-        protected int heaterNumber;
-
-        protected GrowthList GrowthList = new(); //todo: static?
 
         protected RecipeLine(string name)
         {
-            shutterNumber = GrowthList.ShutterNames.GetLowestNumber();
-            heaterNumber = GrowthList.HeaterNames.GetLowestNumber();
-
             // Заполненение новой строки данными слева направо
             Row = new DataGridViewRow();
 
             Row.Cells.Add(ActionCell);
             Row.Cells[Params.CommandIndex].Value = name;
 
-            if (GrowthList.GetTargetAction(name) == "shutter")
+            if (GrowthList.Instance.GetTargetAction(name) == "shutter")
                 Row.Cells.Add(ShutterListCell);
-            if (GrowthList.GetTargetAction(name) == "heater")
+            if (GrowthList.Instance.GetTargetAction(name) == "heater")
                 Row.Cells.Add(HeaterListCell);
 
             Row.Cells.Add(new DataGridViewTextBoxCell());
             Row.Cells.Add(new DataGridViewTextBoxCell());
             Row.Cells.Add(new DataGridViewTextBoxCell());
-            Row.Cells.Add(new DataGridViewTextBoxCell()); 
+            Row.Cells.Add(new DataGridViewTextBoxCell());
         }
 
         public static readonly TableEnumType Actions = new()
             {
-                // TODO: переделать! Убрать постоянную реинициализацию!
-
                 { Commands.CLOSE,            10 }, //shutter
                 { Commands.OPEN,             20 }, //shutter
                 { Commands.OPEN_TIME,        30 }, //shutter
@@ -92,33 +82,19 @@ namespace NtoLib.Recipes.MbeTable
             {
                 if (_columnHeaders == null)
                 {
-                    var growthList = new GrowthList();
-
                     _columnHeaders = new List<TableColumn>()
             {
                 new("Действие", Actions),
-                new("Номер", GrowthList.ShutterNames+GrowthList.HeaterNames),
+                new("Номер", CellType._enum),
                 new("Задание", CellType._float),
                 new("Скорость/Время", CellType._float),
                 new("Время", CellType._float),
                 new("Комментарий", CellType._string)
             };
                 }
-
                 return _columnHeaders;
             }
         }
-
-        public void UpdateHeaderToHeat()
-        {
-            
-        }
-
-        public void UpdateHeaderToShut()
-        {
-         
-        }
-
 
 
         private DataGridViewComboBoxCell ActionCell
@@ -140,12 +116,12 @@ namespace NtoLib.Recipes.MbeTable
         {
             get
             {
-                int ListItemsCount = GrowthList.ShutterNames.EnumCount;
+                int ListItemsCount = GrowthList.Instance.ShutterNames.EnumCount;
 
                 DataGridViewComboBoxCell viewComboBoxCell = new();
 
                 for (int i = 0; i < ListItemsCount; i++)
-                    viewComboBoxCell.Items.Add(GrowthList.ShutterNames.GetValueByIndex(i));
+                    viewComboBoxCell.Items.Add(GrowthList.Instance.ShutterNames.GetValueByIndex(i));
 
                 return viewComboBoxCell;
             }
@@ -155,12 +131,12 @@ namespace NtoLib.Recipes.MbeTable
         {
             get
             {
-                int ListItemsCount = GrowthList.HeaterNames.EnumCount;
+                int ListItemsCount = GrowthList.Instance.HeaterNames.EnumCount;
 
                 DataGridViewComboBoxCell viewComboBoxCell = new();
 
                 for (int i = 0; i < ListItemsCount; i++)
-                    viewComboBoxCell.Items.Add(GrowthList.HeaterNames.GetValueByIndex(i));
+                    viewComboBoxCell.Items.Add(GrowthList.Instance.HeaterNames.GetValueByIndex(i));
 
                 return viewComboBoxCell;
             }
