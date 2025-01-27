@@ -154,5 +154,11 @@ namespace NtoLib.Recipes.MbeTable
         {
             return _items.Count != 0 ? _items.Values.Min() : -1;
         }
+
+        // Новый конструктор для инициализации из коллекции
+        public TableEnumType(IEnumerable<KeyValuePair<string, int>> items)
+        {
+            _items = items.ToDictionary(item => item.Key, item => item.Value);
+        }
     }
 }

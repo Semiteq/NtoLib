@@ -563,24 +563,6 @@ namespace NtoLib.Recipes.MbeTable
             if (this.FBConnector.DesignMode)
                 return;
 
-            if (!FBConnector.DesignMode)
-            {
-                GrowthList.Instance.ShutterNames.AddRange(ReadShutterNames());
-                if (ReadPinGroupQuality(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity))
-                    actLoopCount = ReadPinGroup<int>(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity);
-
-                if (ReadPinGroupQuality(Params.FirstPinShutterName, Params.ShutterNameQuantity))
-                {
-                    GrowthList.Instance.ShutterNames.AddRange(ReadShutterNames());
-                }
-
-
-                if (ReadPinGroupQuality(Params.FirstPinHeaterName, Params.HeaterNameQuantity))
-                {
-                    GrowthList.Instance.HeaterNames.AddRange(ReadHeaterNames());
-                }
-            }
-
             uint pinValue1 = ((FBBase)this.FBConnector).GetPinValue<uint>(Params.ID_HMI_Status);
             OpcQuality pinQuality1 = ((FBBase)this.FBConnector).GetPinQuality(Params.ID_HMI_Status);
             int pinValue2 = ((FBBase)this.FBConnector).GetPinValue<int>(Params.ID_HMI_ActualLine);
@@ -598,74 +580,9 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-
-        private bool ReadPinGroupQuality(int startPinIndex, int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                if (FBConnector.GetPinQuality(startPinIndex + i) != OpcQuality.Good)
-                    return false;
-            }
-            return true;
-        }
-
-        private T[] ReadPinGroup<T>(int startPinIndex, int count)
-        {
-            T[] pinValues = new T[count];
-
-            for (int i = 0; i < count; i++)
-                pinValues[i] = GetPinValue<T>(startPinIndex + i);
-
-            return pinValues;
-        }
-
         private T GetPinValue<T>(int id)
         {
             return (T)FBConnector.GetPinValue<T>(id);
-        }
-
-        public TableEnumType ReadShutterNames()
-        {
-            TableEnumType shutterNames = new();
-
-            int startPin = Params.FirstPinShutterName;
-            int quantity = Params.ShutterNameQuantity;
-
-            for (int i = 0; i < quantity; i++)
-            {
-                string pinString = GetPinValue<string>(i + startPin);
-                if (pinString is not null)
-                {
-                    shutterNames.Add(pinString, i);
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            return shutterNames;
-        }
-
-        public TableEnumType ReadHeaterNames()
-        {
-            TableEnumType heaterNames = new();
-
-            int startPin = Params.FirstPinHeaterName;
-            int quantity = Params.HeaterNameQuantity;
-
-            for (int i = 0; i < quantity; i++)
-            {
-                string pinString = GetPinValue<string>(i + startPin);
-                if (pinString is not null)
-                {
-                    heaterNames.Add(pinString, i);
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            return heaterNames;
         }
 
         private void ChangeToViewMode()
@@ -747,8 +664,6 @@ namespace NtoLib.Recipes.MbeTable
             try
             {
                 string actionType = GrowthList.Instance.GetActionType(cellValue.ToString());
-
-                GrowthList.Instance.UpdateNames();
 
                 cell.Items.Clear();
 

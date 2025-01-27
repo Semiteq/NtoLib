@@ -10,7 +10,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public Temperature(int number = 0, float temperatureSetpoint = 500f, string comment = "") : base(ActionName)
         {
             heaterName = GrowthList.Instance.HeaterNames[number];
-            int actionNumber = Actions[ActionName];
+            int actionNumber = Actions.Names[ActionName];
             _cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),

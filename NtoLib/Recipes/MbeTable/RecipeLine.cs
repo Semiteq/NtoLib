@@ -49,30 +49,7 @@ namespace NtoLib.Recipes.MbeTable
             Row.Cells.Add(new DataGridViewTextBoxCell());
         }
 
-        public static readonly TableEnumType Actions = new()
-            {
-                { Commands.CLOSE,            10 }, //shutter
-                { Commands.OPEN,             20 }, //shutter
-                { Commands.OPEN_TIME,        30 }, //shutter
-                { Commands.CLOSE_ALL,        40 }, //shutter
-
-                { Commands.TEMP,             50 }, //heater
-                { Commands.TEMP_WAIT,        60 }, //heater
-                { Commands.TEMP_BY_SPEED,    70 }, //heater
-                { Commands.TEMP_BY_TIME,     80 }, //heater
-                { Commands.POWER,            90 }, //heater
-                { Commands.POWER_WAIT,       100 },//heater
-                { Commands.POWER_BY_SPEED,   110 },//heater
-                { Commands.POWER_BY_TIME,    120 },//heater
-
-                { Commands.WAIT,             130 },
-                { Commands.FOR,              140 },
-                { Commands.END_FOR,          150 },
-                { Commands.PAUSE,            160 },
-                { Commands.NH3_OPEN,         170 },//not implemented
-                { Commands.NH3_CLOSE,        180 },//not implemented
-                { Commands.NH3_PURGE,        190 } //not implemented
-            };
+        
 
         private static List<TableColumn> _columnHeaders;
 
@@ -84,7 +61,7 @@ namespace NtoLib.Recipes.MbeTable
                 {
                     _columnHeaders = new List<TableColumn>()
             {
-                new("Действие", Actions),
+                new("Действие", Actions.Names),
                 new("Номер", CellType._enum),
                 new("Задание", CellType._float),
                 new("Скорость/Время", CellType._float),
@@ -101,7 +78,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             get
             {
-                var column = new TableColumn("Действие", Actions);
+                var column = new TableColumn("Действие", Actions.Names);
 
                 DataGridViewComboBoxCell viewComboBoxCell = new();
                 viewComboBoxCell.MaxDropDownItems = column.EnumType.EnumCount;

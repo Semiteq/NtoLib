@@ -6,16 +6,6 @@
 			<Pin ID="1" Name="ActualLine" Type="Целый"/>
 			<Pin ID="2" Name="EnaLoad" Type="Логический" DefaultValue="true"/>
 
-			<Group Name="ActLoopCount" ID="1300">
-				<Items>
-					<Pin ID="1301" Name="Loop1"		Type="Целый"/>
-					<Pin ID="1302" Name="Loop2"		Type="Целый"/>
-					<Pin ID="1303" Name="Loop3"		Type="Целый"/>
-					<Pin ID="1304" Name="Loop4"		Type="Целый"/>
-					<Pin ID="1305" Name="Loop5"		Type="Целый"/>
-				</Items>
-			</Group>
-
 			<Group Name="ShutterNames" ID="1400">
 				<Items>
 					<Pin ID="1401" Name="Shutter1"	Type="Строковый" DefaultValue="Sh1"/>
@@ -111,6 +101,8 @@
 			<Pout ID="1015" Name="Timeout"			Type="БеззнаковыйЦелый"/>
 			<Pout ID="1016" Name="HMIActualLine"	Type="Целый"/>
 			<Pout ID="1017" Name="HMIStatus"		Type="БеззнаковыйЦелый"/>
+
+			
 		</Items>
 	</VisualMap>
 </FBConfig>

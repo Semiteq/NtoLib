@@ -195,6 +195,94 @@ namespace NtoLib.Recipes.MbeTable
             // Update status values
             VisualPins.SetPinValue(Params.ID_HMI_ActualLine, actualLine);
             VisualPins.SetPinValue(Params.ID_HMI_Status, statusFlags);
+
+            ReadPins();
+        }
+
+        private void ReadPins()
+        {
+            //if (ReadPinGroupQuality(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity))
+            //{
+            //    actLoopCount = ReadPinGroup<int>(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity);
+            //}
+
+            if (ReadPinGroupQuality(Params.FirstPinShutterName, Params.ShutterNameQuantity))
+            {
+                TableEnumType shutterNames = ReadShutterNames();
+                GrowthList.Instance.SetShutterNames(shutterNames);
+            }
+
+
+            if (ReadPinGroupQuality(Params.FirstPinHeaterName, Params.HeaterNameQuantity))
+            {
+                TableEnumType heaterNames = ReadHeaterNames();
+                GrowthList.Instance.SetHeaterNames(heaterNames);
+            }
+            
+        }
+
+        public TableEnumType ReadShutterNames()
+        {
+            TableEnumType shutterNames = new();
+
+            int startPin = Params.FirstPinShutterName;
+            int quantity = Params.ShutterNameQuantity;
+
+            for (int i = 0; i < quantity; i++)
+            {
+                string pinString = GetPinValue<string>(i + startPin);
+                if (!string.IsNullOrEmpty(pinString))
+                {
+                    shutterNames.Add(pinString, i + startPin);
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            return shutterNames;
+        }
+
+        public TableEnumType ReadHeaterNames()
+        {
+            TableEnumType heaterNames = new();
+
+            int startPin = Params.FirstPinHeaterName;
+            int quantity = Params.HeaterNameQuantity;
+
+            for (int i = 0; i < quantity; i++)
+            {
+                string pinString = GetPinValue<string>(i + startPin);
+                if (!string.IsNullOrEmpty(pinString))
+                {
+                    heaterNames.Add(pinString, i + startPin);
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            return heaterNames;
+        }
+
+        private bool ReadPinGroupQuality(int startPinIndex, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (GetPinQuality(startPinIndex + i) != OpcQuality.Good)
+                    return false;
+            }
+            return true;
+        }
+
+        private T[] ReadPinGroup<T>(int startPinIndex, int count)
+        {
+            T[] pinValues = new T[count];
+
+            for (int i = 0; i < count; i++)
+                pinValues[i] = GetPinValue<T>(startPinIndex + i);
+
+            return pinValues;
         }
 
         private int GetProtocolValue()

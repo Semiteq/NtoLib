@@ -9,7 +9,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
 
         public Wait(float timeSetpoint = 10f, string comment = "") : base(ActionName)
         {
-            int actionNumber = Actions[ActionName];
+            int actionNumber = Actions.Names[ActionName];
 
             _cells = new List<TCell>
             {

@@ -9,7 +9,7 @@ namespace NtoLib.Recipes.MbeTable
         private static readonly GrowthList instance = new();
         TableControl tableControl = new();
         private GrowthList()
-        {   
+        {
            // // debug
            // ShutterNames = new()
            //{
@@ -26,8 +26,21 @@ namespace NtoLib.Recipes.MbeTable
 
         public static GrowthList Instance => instance;
 
-        public TableEnumType ShutterNames { get; set; }
-        public TableEnumType HeaterNames { get; set; }
+        public TableEnumType ShutterNames { get; private set; }
+        public TableEnumType HeaterNames { get; private set; }
+
+        public void SetShutterNames(TableEnumType shutterNames) 
+        {
+            if (shutterNames == null)
+                throw new ArgumentNullException(nameof(shutterNames));
+            ShutterNames = shutterNames;    
+        }
+        public void SetHeaterNames(TableEnumType heaterNames)
+        {
+            if (heaterNames == null)
+                throw new ArgumentNullException(nameof(heaterNames));
+            HeaterNames = heaterNames;
+        }
 
         public string GetTargetAction(string currentAction)
         {
@@ -35,7 +48,7 @@ namespace NtoLib.Recipes.MbeTable
             /// Проверка, заслонкам или нагревателям предназначена команда.
             /// Принимает на вход название команды, возвращает тип действия shutter или heater.
             /// </summary>
-            return Params.ActionTypes[RecipeLine.Actions[currentAction]];
+            return Actions.Types[Actions.Names[currentAction]];
         }
 
         public int NameToIntConvert(string growthValue, string action)
@@ -112,15 +125,6 @@ namespace NtoLib.Recipes.MbeTable
                 return GetMinHeater();
             else
                 return 0;
-        }
-
-        public void UpdateNames()
-        {
-            /// <summary>
-            /// Обновляет списки заслонок и нагревателей, используя NamesReader.
-            /// </summary>
-            ShutterNames = tableControl.ReadShutterNames();
-            HeaterNames = tableControl.ReadHeaterNames();
         }
     }
 }

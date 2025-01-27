@@ -10,7 +10,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public PowerByTime(int number = 0, float powerSetpoint = 10f, float timeSetpoint = 60f, string comment = "") : base(ActionName)
         {
             heaterName = GrowthList.Instance.HeaterNames[number];
-            int actionNumber = Actions[ActionName];
+            int actionNumber = Actions.Names[ActionName];
             _cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),

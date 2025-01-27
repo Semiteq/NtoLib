@@ -73,32 +73,5 @@ namespace NtoLib.Recipes.MbeTable
 
         //Общее число столбцов в таблице
         public const int ColumnCount = 6;
-
-        public static readonly Dictionary<int, string> ActionTypes = new()
-        {
-            //Типы Actions с привязкой действия к заслонкам или к нагревателям
-            //todo: привязать к RecipeLine.Actions()
-            { 10, "shutter" },
-            { 20, "shutter" },
-            { 30, "shutter" },
-            { 40, "shutter" },
-
-            { 50, "heater" },
-            { 60, "heater" },
-            { 70, "heater" },
-            { 80, "heater" },
-            { 90, "heater" },
-            { 100, "heater" },
-            { 110, "heater" },
-            { 120, "heater" },
-
-            { 130, "" },
-            { 140, "" },
-            { 150, "" },
-            { 160, "" },
-            { 170, "" },
-            { 180, "" },
-            { 190, "" }
-        };
     }
 }

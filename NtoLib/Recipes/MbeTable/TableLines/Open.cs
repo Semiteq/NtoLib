@@ -10,7 +10,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public Open(int number = 0, string comment = "") : base(ActionName)
         {
             shutterName = GrowthList.Instance.ShutterNames[number];
-            int actionNumber = Actions[ActionName];
+            int actionNumber = Actions.Names[ActionName];
             _cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),
