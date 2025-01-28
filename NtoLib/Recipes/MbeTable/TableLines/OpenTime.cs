@@ -5,7 +5,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
     internal class OpenTime : RecipeLine
     {
         public const string ActionName = Commands.OPEN_TIME;
-        public override ActionTime ActionTime => ActionTime.TimeSetpoint;
+        public override ActionTime ActionTime => ActionTime.Immediately;
 
         public OpenTime(int number = 0, float timeSetpoint = 1f, string comment = "") : base(ActionName)
         {

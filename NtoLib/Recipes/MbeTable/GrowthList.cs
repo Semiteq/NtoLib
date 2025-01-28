@@ -7,22 +7,7 @@ namespace NtoLib.Recipes.MbeTable
     internal sealed class GrowthList : VisualControlBase
     {
         private static readonly GrowthList instance = new();
-        TableControl tableControl = new();
-        private GrowthList()
-        {
-           // // debug
-           // ShutterNames = new()
-           //{
-           //     { "Shut1", 1 },
-           //     { "Shut2", 2 }
-           //};
-
-           // HeaterNames = new()
-           // {
-           //     { "Heat1", 3 },
-           //     { "Heat2", 4 }
-           // };
-        }
+        private GrowthList() { }
 
         public static GrowthList Instance => instance;
 

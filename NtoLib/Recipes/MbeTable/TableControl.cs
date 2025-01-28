@@ -1,6 +1,7 @@
 ﻿using FB;
 using FB.VisualFB;
 using InSAT.OPC;
+using NtoLib.Devices.Pumps;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -563,6 +564,22 @@ namespace NtoLib.Recipes.MbeTable
             if (this.FBConnector.DesignMode)
                 return;
 
+            var shutterPins = new ReadPins(Params.FirstPinShutterName, Params.ShutterNameQuantity, FBConnector.Fb as MbeTableFB);
+            if (shutterPins.IsPinGroupQualityGood())
+            {
+                TableEnumType shutterNames = shutterPins.ReadPinNames();
+                GrowthList.Instance.SetShutterNames(shutterNames);
+            }
+
+            var heaterPins = new ReadPins(Params.FirstPinHeaterName, Params.HeaterNameQuantity, FBConnector.Fb as MbeTableFB);
+            if (heaterPins.IsPinGroupQualityGood())
+            {
+                TableEnumType heaterNames = heaterPins.ReadPinNames();
+                GrowthList.Instance.SetHeaterNames(heaterNames);
+            }
+
+            actLoopCount = ReadPinGroup<int>(Params.FirstPinActLoopAcount, Params.ActLoopAcountQuantity);
+
             uint pinValue1 = ((FBBase)this.FBConnector).GetPinValue<uint>(Params.ID_HMI_Status);
             OpcQuality pinQuality1 = ((FBBase)this.FBConnector).GetPinQuality(Params.ID_HMI_Status);
             int pinValue2 = ((FBBase)this.FBConnector).GetPinValue<int>(Params.ID_HMI_ActualLine);
@@ -578,6 +595,16 @@ namespace NtoLib.Recipes.MbeTable
                 ChangeRowFont();
                 prevCurrentRecipeLine = currentRecipeLine;
             }
+        }
+
+        private T[] ReadPinGroup<T>(int startPinIndex, int count)
+        {
+            T[] pinValues = new T[count];
+
+            for (int i = 0; i < count; i++)
+                pinValues[i] = GetPinValue<T>(startPinIndex + i);
+
+            return pinValues;
         }
 
         private T GetPinValue<T>(int id)
@@ -657,7 +684,6 @@ namespace NtoLib.Recipes.MbeTable
         {
             int num = this.FBConnector.DesignMode ? 1 : 0;
         }
-
 
         private void UpdateEnumDropDown(DataGridViewComboBoxCell cell, object cellValue)
         {
@@ -758,7 +784,8 @@ namespace NtoLib.Recipes.MbeTable
             }
             else if (columnIndex == Params.TimeSetpointIndex)
             {
-                string text = currentCell.Value.ToString();
+                string text = currentCell?.Value?.ToString() ?? "0";
+
                 bool isParseOk = DateTimeParser.TryParse(text, out var newValue) || newValue < _tableData[rowIndex].MinTimeSetpoint || newValue > _tableData[rowIndex].MaxTimeSetpoint;
 
                 if (!_tableData[rowIndex].ChangeSpeed(newValue) || !isParseOk)

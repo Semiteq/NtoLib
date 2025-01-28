@@ -6,77 +6,87 @@
 			<Pin ID="1" Name="ActualLine" Type="Целый"/>
 			<Pin ID="2" Name="EnaLoad" Type="Логический" DefaultValue="true"/>
 
-			<Group Name="ShutterNames" ID="1400">
+			<Group Name="ActLoopCount" ID="1100">
 				<Items>
-					<Pin ID="1401" Name="Shutter1"	Type="Строковый" DefaultValue="Sh1"/>
-					<Pin ID="1402" Name="Shutter2"	Type="Строковый" DefaultValue="Sh2"/>
-					<Pin ID="1403" Name="Shutter3"	Type="Строковый"/>
-					<Pin ID="1404" Name="Shutter4"	Type="Строковый"/>
-					<Pin ID="1405" Name="Shutter5"	Type="Строковый"/>
-					<Pin ID="1406" Name="Shutter6"	Type="Строковый"/>
-					<Pin ID="1407" Name="Shutter7"	Type="Строковый"/>
-					<Pin ID="1408" Name="Shutter8"	Type="Строковый"/>
-					<Pin ID="1409" Name="Shutter9"	Type="Строковый"/>
-					<Pin ID="1410" Name="Shutter10" Type="Строковый"/>
-					<Pin ID="1411" Name="Shutter11" Type="Строковый"/>
-					<Pin ID="1412" Name="Shutter12" Type="Строковый"/>
-					<Pin ID="1413" Name="Shutter13" Type="Строковый"/>
-					<Pin ID="1414" Name="Shutter14" Type="Строковый"/>
-					<Pin ID="1415" Name="Shutter15" Type="Строковый"/>
-					<Pin ID="1416" Name="Shutter16" Type="Строковый"/>
-					<Pin ID="1417" Name="Shutter17" Type="Строковый"/>
-					<Pin ID="1418" Name="Shutter18" Type="Строковый"/>
-					<Pin ID="1419" Name="Shutter19" Type="Строковый"/>
-					<Pin ID="1420" Name="Shutter20" Type="Строковый"/>
-					<Pin ID="1421" Name="Shutter21" Type="Строковый"/>
-					<Pin ID="1422" Name="Shutter22" Type="Строковый"/>
-					<Pin ID="1423" Name="Shutter23" Type="Строковый"/>
-					<Pin ID="1424" Name="Shutter24" Type="Строковый"/>
-					<Pin ID="1425" Name="Shutter25" Type="Строковый"/>
-					<Pin ID="1426" Name="Shutter26" Type="Строковый"/>
-					<Pin ID="1427" Name="Shutter27" Type="Строковый"/>
-					<Pin ID="1428" Name="Shutter28" Type="Строковый"/>
-					<Pin ID="1429" Name="Shutter29" Type="Строковый"/>
-					<Pin ID="1430" Name="Shutter30" Type="Строковый"/>
-					<Pin ID="1431" Name="Shutter31" Type="Строковый"/>
-					<Pin ID="1432" Name="Shutter32" Type="Строковый"/>
+					<Pin ID="1101" Name="Loop1"		Type="Целый"/>
+					<Pin ID="1102" Name="Loop2"		Type="Целый"/>
+					<Pin ID="1103" Name="Loop3"		Type="Целый"/>
+					<Pin ID="1104" Name="Loop4"		Type="Целый"/>
+					<Pin ID="1105" Name="Loop5"		Type="Целый"/>
 				</Items>
 			</Group>
 
-			<Group Name="HeaterNames" ID="1500">
+			<Group Name="ShutterNames" ID="1200">
 				<Items>
-					<Pin ID="1501" Name="Heater1"	Type="Строковый" DefaultValue="He1"/>
-					<Pin ID="1502" Name="Heater2"	Type="Строковый" DefaultValue="He2"/>
-					<Pin ID="1503" Name="Heater3"	Type="Строковый"/>
-					<Pin ID="1504" Name="Heater4"	Type="Строковый"/>
-					<Pin ID="1505" Name="Heater5"	Type="Строковый"/>
-					<Pin ID="1506" Name="Heater6"	Type="Строковый"/>
-					<Pin ID="1507" Name="Heater7"	Type="Строковый"/>
-					<Pin ID="1508" Name="Heater8"	Type="Строковый"/>
-					<Pin ID="1509" Name="Heater9"	Type="Строковый"/>
-					<Pin ID="1510" Name="Heater10"	Type="Строковый"/>
-					<Pin ID="1511" Name="Heater11"	Type="Строковый"/>
-					<Pin ID="1512" Name="Heater12"	Type="Строковый"/>
-					<Pin ID="1513" Name="Heater13"	Type="Строковый"/>
-					<Pin ID="1514" Name="Heater15"	Type="Строковый"/>
-					<Pin ID="1515" Name="Heater15"	Type="Строковый"/>
-					<Pin ID="1516" Name="Heater16"	Type="Строковый"/>
-					<Pin ID="1517" Name="Heater17"	Type="Строковый"/>
-					<Pin ID="1518" Name="Heater18"	Type="Строковый"/>
-					<Pin ID="1519" Name="Heater19"	Type="Строковый"/>
-					<Pin ID="1520" Name="Heater20"	Type="Строковый"/>
-					<Pin ID="1521" Name="Heater21"	Type="Строковый"/>
-					<Pin ID="1522" Name="Heater22"	Type="Строковый"/>
-					<Pin ID="1523" Name="Heater23"	Type="Строковый"/>
-					<Pin ID="1524" Name="Heater24"	Type="Строковый"/>
-					<Pin ID="1525" Name="Heater25"	Type="Строковый"/>
-					<Pin ID="1526" Name="Heater26"	Type="Строковый"/>
-					<Pin ID="1527" Name="Heater27"	Type="Строковый"/>
-					<Pin ID="1528" Name="Heater28"	Type="Строковый"/>
-					<Pin ID="1529" Name="Heater29"	Type="Строковый"/>
-					<Pin ID="1530" Name="Heater30"	Type="Строковый"/>
-					<Pin ID="1531" Name="Heater31"	Type="Строковый"/>
-					<Pin ID="1532" Name="Heater32"	Type="Строковый"/>
+					<Pin ID="1201" Name="Shutter1"	Type="Строковый" DefaultValue="Sh1"/>
+					<Pin ID="1202" Name="Shutter2"	Type="Строковый" DefaultValue="Sh2"/>
+					<Pin ID="1203" Name="Shutter3"	Type="Строковый"/>
+					<Pin ID="1204" Name="Shutter4"	Type="Строковый"/>
+					<Pin ID="1205" Name="Shutter5"	Type="Строковый"/>
+					<Pin ID="1206" Name="Shutter6"	Type="Строковый"/>
+					<Pin ID="1207" Name="Shutter7"	Type="Строковый"/>
+					<Pin ID="1208" Name="Shutter8"	Type="Строковый"/>
+					<Pin ID="1209" Name="Shutter9"	Type="Строковый"/>
+					<Pin ID="1210" Name="Shutter10" Type="Строковый"/>
+					<Pin ID="1211" Name="Shutter11" Type="Строковый"/>
+					<Pin ID="1212" Name="Shutter12" Type="Строковый"/>
+					<Pin ID="1213" Name="Shutter13" Type="Строковый"/>
+					<Pin ID="1214" Name="Shutter14" Type="Строковый"/>
+					<Pin ID="1215" Name="Shutter15" Type="Строковый"/>
+					<Pin ID="1216" Name="Shutter16" Type="Строковый"/>
+					<Pin ID="1217" Name="Shutter17" Type="Строковый"/>
+					<Pin ID="1218" Name="Shutter18" Type="Строковый"/>
+					<Pin ID="1219" Name="Shutter19" Type="Строковый"/>
+					<Pin ID="1220" Name="Shutter20" Type="Строковый"/>
+					<Pin ID="1221" Name="Shutter21" Type="Строковый"/>
+					<Pin ID="1222" Name="Shutter22" Type="Строковый"/>
+					<Pin ID="1223" Name="Shutter23" Type="Строковый"/>
+					<Pin ID="1224" Name="Shutter24" Type="Строковый"/>
+					<Pin ID="1225" Name="Shutter25" Type="Строковый"/>
+					<Pin ID="1226" Name="Shutter26" Type="Строковый"/>
+					<Pin ID="1227" Name="Shutter27" Type="Строковый"/>
+					<Pin ID="1228" Name="Shutter28" Type="Строковый"/>
+					<Pin ID="1229" Name="Shutter29" Type="Строковый"/>
+					<Pin ID="1230" Name="Shutter30" Type="Строковый"/>
+					<Pin ID="1231" Name="Shutter31" Type="Строковый"/>
+					<Pin ID="1232" Name="Shutter32" Type="Строковый"/>
+				</Items>
+			</Group>
+
+			<Group Name="HeaterNames" ID="1300">
+				<Items>
+					<Pin ID="1301" Name="Heater1"	Type="Строковый" DefaultValue="He1"/>
+					<Pin ID="1302" Name="Heater2"	Type="Строковый" DefaultValue="He2"/>
+					<Pin ID="1303" Name="Heater3"	Type="Строковый"/>
+					<Pin ID="1304" Name="Heater4"	Type="Строковый"/>
+					<Pin ID="1305" Name="Heater5"	Type="Строковый"/>
+					<Pin ID="1306" Name="Heater6"	Type="Строковый"/>
+					<Pin ID="1307" Name="Heater7"	Type="Строковый"/>
+					<Pin ID="1308" Name="Heater8"	Type="Строковый"/>
+					<Pin ID="1309" Name="Heater9"	Type="Строковый"/>
+					<Pin ID="1310" Name="Heater10"	Type="Строковый"/>
+					<Pin ID="1311" Name="Heater11"	Type="Строковый"/>
+					<Pin ID="1312" Name="Heater12"	Type="Строковый"/>
+					<Pin ID="1313" Name="Heater13"	Type="Строковый"/>
+					<Pin ID="1314" Name="Heater14"	Type="Строковый"/>
+					<Pin ID="1315" Name="Heater15"	Type="Строковый"/>
+					<Pin ID="1316" Name="Heater16"	Type="Строковый"/>
+					<Pin ID="1317" Name="Heater17"	Type="Строковый"/>
+					<Pin ID="1318" Name="Heater18"	Type="Строковый"/>
+					<Pin ID="1319" Name="Heater19"	Type="Строковый"/>
+					<Pin ID="1320" Name="Heater20"	Type="Строковый"/>
+					<Pin ID="1321" Name="Heater21"	Type="Строковый"/>
+					<Pin ID="1322" Name="Heater22"	Type="Строковый"/>
+					<Pin ID="1323" Name="Heater23"	Type="Строковый"/>
+					<Pin ID="1324" Name="Heater24"	Type="Строковый"/>
+					<Pin ID="1325" Name="Heater25"	Type="Строковый"/>
+					<Pin ID="1326" Name="Heater26"	Type="Строковый"/>
+					<Pin ID="1327" Name="Heater27"	Type="Строковый"/>
+					<Pin ID="1328" Name="Heater28"	Type="Строковый"/>
+					<Pin ID="1329" Name="Heater29"	Type="Строковый"/>
+					<Pin ID="1330" Name="Heater30"	Type="Строковый"/>
+					<Pin ID="1331" Name="Heater31"	Type="Строковый"/>
+					<Pin ID="1332" Name="Heater32"	Type="Строковый"/>
 				</Items>
 			</Group>
 		</Items>

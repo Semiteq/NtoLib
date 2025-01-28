@@ -115,6 +115,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Recipes\MbeTable\PLC_Communication.cs" />
+    <Compile Include="Recipes\MbeTable\ReadPins.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLineFactory.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLineParser.cs" />

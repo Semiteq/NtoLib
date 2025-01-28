@@ -60,14 +60,14 @@ namespace NtoLib.Recipes.MbeTable
                 if (_columnHeaders == null)
                 {
                     _columnHeaders = new List<TableColumn>()
-            {
-                new("Действие", Actions.Names),
-                new("Номер", CellType._enum),
-                new("Задание", CellType._float),
-                new("Скорость/Время", CellType._float),
-                new("Время", CellType._float),
-                new("Комментарий", CellType._string)
-            };
+                    {
+                        new("Действие", Actions.Names),
+                        new("Номер", CellType._enum),
+                        new("Задание", CellType._float),
+                        new("Скорость/Время", CellType._float),
+                        new("Время", CellType._float),
+                        new("Комментарий", CellType._string)
+                    };
                 }
                 return _columnHeaders;
             }

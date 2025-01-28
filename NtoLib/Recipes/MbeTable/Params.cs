@@ -51,13 +51,13 @@ namespace NtoLib.Recipes.MbeTable
         public const int ID_HMI_Status = 1017;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о количестве циклов включения в MasterSCADA
-        public const int FirstPinActLoopAcount = 1301;
+        public const int FirstPinActLoopAcount = 1101;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях заслонок в MasterSCADA
-        public const int FirstPinShutterName = 1401;
+        public const int FirstPinShutterName = 1201;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях нагревателей в MasterSCADA
-        public const int FirstPinHeaterName = 1501;
+        public const int FirstPinHeaterName = 1301;
 
         public const int ActLoopAcountQuantity = 5;
         public const int ShutterNameQuantity = 32;
