@@ -89,6 +89,11 @@
 					<Pin ID="1332" Name="Heater32"	Type="Строковый"/>
 				</Items>
 			</Group>
+			
+			<Pin ID="1401" Name="TotalTimeLeft" Type="БеззнаковыйЦелый"/>
+			<Pin ID="1402" Name="LineTimeLeft" Type="БеззнаковыйЦелый"/>
+			
+			<Pin ID="1501" Name="RecipeStarted" Type="Логический"/>
 		</Items>
 	</Map>
 
@@ -111,8 +116,6 @@
 			<Pout ID="1015" Name="Timeout"			Type="БеззнаковыйЦелый"/>
 			<Pout ID="1016" Name="HMIActualLine"	Type="Целый"/>
 			<Pout ID="1017" Name="HMIStatus"		Type="БеззнаковыйЦелый"/>
-
-			
 		</Items>
 	</VisualMap>
 </FBConfig>

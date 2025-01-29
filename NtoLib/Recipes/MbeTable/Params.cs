@@ -64,7 +64,7 @@ namespace NtoLib.Recipes.MbeTable
         public const int HeaterNameQuantity = 32;
 
         //Номера столбцов соответствующих параметров в таблице
-        public const int CommandIndex = 0; //todo: унифицировать action и command
+        public const int CommandIndex = 0;
         public const int NumberIndex = 1;
         public const int SetpointIndex = 2;
         public const int TimeSetpointIndex = 3;
