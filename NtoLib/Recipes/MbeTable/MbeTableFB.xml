@@ -18,8 +18,8 @@
 
 			<Group Name="ShutterNames" ID="1200">
 				<Items>
-					<Pin ID="1201" Name="Shutter1"	Type="Строковый" DefaultValue="Sh1"/>
-					<Pin ID="1202" Name="Shutter2"	Type="Строковый" DefaultValue="Sh2"/>
+					<Pin ID="1201" Name="Shutter1"	Type="Строковый"/>
+					<Pin ID="1202" Name="Shutter2"	Type="Строковый"/>
 					<Pin ID="1203" Name="Shutter3"	Type="Строковый"/>
 					<Pin ID="1204" Name="Shutter4"	Type="Строковый"/>
 					<Pin ID="1205" Name="Shutter5"	Type="Строковый"/>
@@ -55,8 +55,8 @@
 
 			<Group Name="HeaterNames" ID="1300">
 				<Items>
-					<Pin ID="1301" Name="Heater1"	Type="Строковый" DefaultValue="He1"/>
-					<Pin ID="1302" Name="Heater2"	Type="Строковый" DefaultValue="He2"/>
+					<Pin ID="1301" Name="Heater1"	Type="Строковый"/>
+					<Pin ID="1302" Name="Heater2"	Type="Строковый"/>
 					<Pin ID="1303" Name="Heater3"	Type="Строковый"/>
 					<Pin ID="1304" Name="Heater4"	Type="Строковый"/>
 					<Pin ID="1305" Name="Heater5"	Type="Строковый"/>

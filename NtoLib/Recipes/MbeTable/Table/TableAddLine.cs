@@ -1,6 +1,5 @@
 ﻿using System.Windows.Forms;
 using System;
-using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.TableLines;
 
 namespace NtoLib.Recipes.MbeTable

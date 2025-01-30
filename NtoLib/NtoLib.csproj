@@ -121,7 +121,7 @@
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineFactory.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineParser.cs" />
-    <Compile Include="Recipes\MbeTable\Table\RecipeTimeLeft.cs" />
+    <Compile Include="Recipes\MbeTable\Table\RecipeTime.cs" />
     <Compile Include="Recipes\MbeTable\PLC\SettingsReader.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableAddLine.cs">
