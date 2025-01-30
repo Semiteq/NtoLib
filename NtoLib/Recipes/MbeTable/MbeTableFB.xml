@@ -3,16 +3,19 @@
 
 	<Map>
 		<Items>
-			<Pin ID="1" Name="ActualLine" Type="Целый"/>
-			<Pin ID="2" Name="EnaLoad" Type="Логический" DefaultValue="true"/>
+			<Pin ID="1" Name="ActualLine"			Type="Целый"/>
+			<Pin ID="2" Name="EnaLoad"				Type="Логический" DefaultValue="true"/>
+
+			<Pin ID="3" Name="RecipeActive"			Type="Логический"/>
+			<Pin ID="4" Name="StepCurrentTime"		Type="БеззнаковыйЦелый"/>
 
 			<Group Name="ActLoopCount" ID="1100">
 				<Items>
-					<Pin ID="1101" Name="Loop1"		Type="Целый"/>
-					<Pin ID="1102" Name="Loop2"		Type="Целый"/>
-					<Pin ID="1103" Name="Loop3"		Type="Целый"/>
-					<Pin ID="1104" Name="Loop4"		Type="Целый"/>
-					<Pin ID="1105" Name="Loop5"		Type="Целый"/>
+					<Pin ID="1101" Name="Loop1"		Type="БеззнаковыйЦелый"/>
+					<Pin ID="1102" Name="Loop2"		Type="БеззнаковыйЦелый"/>
+					<Pin ID="1103" Name="Loop3"		Type="БеззнаковыйЦелый"/>
+					<Pin ID="1104" Name="Loop4"		Type="БеззнаковыйЦелый"/>
+					<Pin ID="1105" Name="Loop5"		Type="БеззнаковыйЦелый"/>
 				</Items>
 			</Group>
 
@@ -89,11 +92,10 @@
 					<Pin ID="1332" Name="Heater32"	Type="Строковый"/>
 				</Items>
 			</Group>
-			
-			<Pin ID="1401" Name="TotalTimeLeft" Type="БеззнаковыйЦелый"/>
-			<Pin ID="1402" Name="LineTimeLeft" Type="БеззнаковыйЦелый"/>
-			
-			<Pin ID="1501" Name="RecipeStarted" Type="Логический"/>
+
+			<Pout ID="101" Name="TotalTimeLeft"		Type="БеззнаковыйЦелый"/>
+			<Pout ID="102" Name="LineTimeLeft"		Type="БеззнаковыйЦелый"/>
+
 		</Items>
 	</Map>
 
