@@ -24,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <RegisterForComInterop>true</RegisterForComInterop>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FB">
@@ -101,57 +103,65 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
-    <Compile Include="Recipes\MbeTable\ActionTime.cs" />
-    <Compile Include="Recipes\MbeTable\BufferActions.cs" />
-    <Compile Include="Recipes\MbeTable\CellType.cs" />
-    <Compile Include="Recipes\MbeTable\Commands.cs" />
-    <Compile Include="Recipes\MbeTable\CommunicationSettings.cs" />
-    <Compile Include="Recipes\MbeTable\DateTimeParser.cs" />
-    <Compile Include="Recipes\MbeTable\PLC_Communication.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLine.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLineFactory.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLineParser.cs" />
-    <Compile Include="Recipes\MbeTable\SettingsReader.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\ActionEntry.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\ActionManager.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\ActionTime.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\ActionType.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\Commands.cs" />
+    <Compile Include="Recipes\MbeTable\PLC\BufferActions.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\CellType.cs" />
+    <Compile Include="Recipes\MbeTable\PLC\CommunicationSettings.cs" />
+    <Compile Include="Recipes\MbeTable\Params.cs" />
+    <Compile Include="Recipes\MbeTable\Utils\DateTimeParser.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\GrowthList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\PLC\PLC_Communication.cs" />
+    <Compile Include="Recipes\MbeTable\Table\ReadPins.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLine.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineFactory.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineParser.cs" />
+    <Compile Include="Recipes\MbeTable\Table\RecipeTime.cs" />
+    <Compile Include="Recipes\MbeTable\PLC\SettingsReader.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
-    <Compile Include="Recipes\MbeTable\TableAddLine.cs">
+    <Compile Include="Recipes\MbeTable\Table\TableAddLine.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Recipes\MbeTable\TableColumn.cs" />
-    <Compile Include="Recipes\MbeTable\TableControl.cs">
+    <Compile Include="Recipes\MbeTable\Table\TableColumn.cs" />
+    <Compile Include="Recipes\MbeTable\Table\TableControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Recipes\MbeTable\TableControl.Designer.cs">
+    <Compile Include="Recipes\MbeTable\Table\TableControl.Designer.cs">
       <DependentUpon>TableControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Recipes\MbeTable\TableEnumType.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\Close.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\CloseAll.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\End.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\EndFor_Loop.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\For_Loop.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\NH3_Close.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\NH3_Open.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\NH3_Purge.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\Open.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\OpenTime.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\Pause.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\Power.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\PowerByTime.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\PowerBySpeed.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\PowerWait.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\Temperature.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\TemperatureByTime.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\TemperatureBySpeed.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\TemperatureWait.cs" />
-    <Compile Include="Recipes\MbeTable\TableLines\Wait.cs" />
-    <Compile Include="Recipes\MbeTable\TableLoadSave.cs">
+    <Compile Include="Recipes\MbeTable\Table\TableEnumType.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\Close.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\CloseAll.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\EndFor_Loop.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\For_Loop.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\NH3_Close.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\NH3_Open.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\NH3_Purge.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\Open.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\OpenTime.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\Pause.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\Power.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\PowerByTime.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\PowerBySpeed.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\PowerWait.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\Temperature.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\TemperatureByTime.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\TemperatureBySpeed.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\TemperatureWait.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\Wait.cs" />
+    <Compile Include="Recipes\MbeTable\Table\TableLoadSave.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Recipes\MbeTable\TableLoops.cs">
+    <Compile Include="Recipes\MbeTable\Table\TableLoops.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Recipes\MbeTable\TableMode.cs" />
-    <Compile Include="Recipes\MbeTable\TCell.cs" />
+    <Compile Include="Recipes\MbeTable\Table\TableMode.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\TCell.cs" />
     <Compile Include="Recipes\MbeTable\Utils\Enumeration.cs" />
     <Compile Include="Utils\ReadResult.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
@@ -242,7 +252,7 @@
     <EmbeddedResource Include="Devices\Pumps\Settings\PumpSettingForm.resx">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Recipes\MbeTable\TableControl.resx">
+    <EmbeddedResource Include="Recipes\MbeTable\Table\TableControl.resx">
       <DependentUpon>TableControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntControl.resx">
@@ -271,6 +281,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Directory.Build.props" />
     <None Include="NtoLib_reg.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
