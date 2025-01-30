@@ -20,7 +20,10 @@
         public bool BlockStop;
         public bool Use;
 
-        public bool AnimationNeeded => Accelerating || Decelerating;
+
+        public bool AnyError => MainError || !ConnectionOk || !(WorkOnNominalSpeed || Stopped || Accelerating || Decelerating);
+
+        public bool AnimationNeeded => Accelerating || Decelerating || AnyError;
 
 
         public float Temperature;

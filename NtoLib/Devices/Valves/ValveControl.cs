@@ -394,11 +394,10 @@ namespace NtoLib.Devices.Valves
                 UpdateLayout();
             _previousSmoothValve = _isSmoothValve;
 
-
-            bool animationNeeded = Status.OpeningClosing || Status.UnknownState || (Status.Collision & !Status.OpenedSmoothly);
-            if(!_animationTimer.Enabled && animationNeeded)
+            
+            if(!_animationTimer.Enabled && Status.AnimationNeeded)
                 _animationTimer.Start();
-            if(_animationTimer.Enabled && !animationNeeded)
+            if(_animationTimer.Enabled && !Status.AnimationNeeded)
                 _animationTimer.Stop();
 
             _settingsForm?.Invalidate();

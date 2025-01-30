@@ -55,12 +55,12 @@ namespace NtoLib.Render.Pumps
                 graphics.DrawClosedCurve(pen, trianglePoints, 0, FillMode.Alternate);
             }
 
-
             if(status.Use)
-            {
-                if(status.MainError || !status.ConnectionOk)
-                    DrawErrorRectangle(graphics, errorBounds);
-                else if(status.Warning)
+            {                
+                if(status.AnyError)
+                    DrawErrorRectangle(graphics, errorBounds, isLight);
+                
+                if(status.Warning)
                     DrawWarningRectangle(graphics, errorBounds);
             }
 

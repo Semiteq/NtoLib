@@ -30,7 +30,7 @@ namespace NtoLib.Render.Valves
             DrawValve(graphics, valveBounds, status, isLight);
 
             if(status.AnyError)
-                DrawErrorRectangle(graphics, errorBounds);
+                DrawErrorRectangle(graphics, errorBounds, isLight);
 
             return graphicsBounds;
         }
