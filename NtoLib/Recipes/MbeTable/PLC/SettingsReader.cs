@@ -32,7 +32,7 @@ namespace NtoLib.Recipes.MbeTable
 
             bool settingOk = false;
             uint pinValue1 = GetPinValue<uint>(Params.ID_HMI_CommProtocol);
-            if (GetPinQuality(1001) != OpcQuality.Good)
+            if (GetPinQuality(Params.ID_HMI_CommProtocol) != OpcQuality.Good)
             {
                 settingOk = false;
             }
