@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+	<Map>
+		<Items>
+			<Pout ID="1" Name="ConnectionOk"	Type="Логический"	DefaultValue="false"/>
+
+			<Pin ID="10" Name="WaveLength"		Type="Целый"		DefaultValue="660"/>
+			<Pin ID="11" Name="Width"			Type="Целый"		DefaultValue="200"/>
+			
+			<Pin ID="12" Name="IntegrationTime" Type="Целый"		DefaultValue="10"/>
+			<Pin ID="13" Name="Interval"		Type="Целый"		DefaultValue="0"/>
+			<Pin ID="14" Name="Average"			Type="Целый"		DefaultValue="1"/>
+			
+			<Pin ID="15" Name="ComPortNumber"	Type="Целый"		DefaultValue="1"/>
+			<Pin ID="16" Name="SN"				Type="Строковый"	DefaultValue="none"/>
+			<Pin ID="17" Name="PN"				Type="Строковый"	DefaultValue="none"/>
+
+
+			<Pout ID="20" Name="Intensity"		Type="Вещественный"	DefaultValue="1"/>
+		</Items>
+	</Map>
+</FBConfig>
