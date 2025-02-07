@@ -5,14 +5,8 @@ using NtoLib.Recipes.MbeTable.Actions;
 
 namespace NtoLib.Recipes.MbeTable
 {
-    
     internal sealed class GrowthList : VisualControlBase
     {
-        private static readonly GrowthList instance = new();
-        private GrowthList() { }
-
-        public static GrowthList Instance => instance;
-
         public static TableEnumType ShutterNames { get; private set; }
         public static TableEnumType HeaterNames { get; private set; }
 

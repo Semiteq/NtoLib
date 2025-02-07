@@ -8,6 +8,9 @@ namespace NtoLib.Recipes.MbeTable
         public const int ID_ActualLine = 1;
         public const int ID_EnaLoad = 2;
 
+        public const int RecipeActive = 3;
+        public const int StepCurrentTime = 4;
+
         public const uint UFloatBaseAddr = 0;
         public const uint UFloatAreaSize = 100;
         public const uint UIntBaseAddr = 100;
@@ -21,15 +24,12 @@ namespace NtoLib.Recipes.MbeTable
         public const uint ConntrollerIP2 = 168;
         public const uint ConntrollerIP3 = 0;
         public const uint ConntrollerIP4 = 1;
-        
+
+        public const int TotalTimeLeft = 101;
+        public const int LineTimeLeft = 102;
+
         public const uint ConntrollerTCPPort = 502;
         public const uint Timeout = 1000;
-
-        public const int GroupID_ActTemperaure = 100;
-        public const int GroupID_ActPower = 200;
-        public const int GroupID_ActLoopCount = 300;
-        public const int GroupID_ShutterNames = 400;
-        public const int GroupID_HeaterNames = 500;
 
         public const int ID_HMI_CommProtocol = 1001;
         public const int ID_HMI_AddrArea = 1002;

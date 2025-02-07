@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 using System;
-using NtoLib.Recipes.MbeTable.TableLines;
+using FB.VisualFB;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -50,39 +50,12 @@ namespace NtoLib.Recipes.MbeTable
                 WriteStatusMessage("Редактирование рецепта: рецепт корректный", false);
             }
 
-            RecalculateTime();
-        }
+            RecipeTime.SetData(_tableData, dataGridView1);
+            RecipeTime.Recalculate();
 
-        private void RecalculateTime()
-        {
-            if (_tableData.Count == 0) return;
+            VisualFBBase fb = FBConnector.Fb as MbeTableFB;
 
-            _tableData[0].CycleTime = 0f;
-            dataGridView1.Rows[0].Cells[Params.RecipeTimeIndex].Value = TimeSpan.Zero.ToString("hh\\:mm\\:ss\\.ff");
-
-            TimeSpan time = TimeSpan.Zero;
-
-            for (int rowIndex = 0; rowIndex < _tableData.Count; rowIndex++)
-            {
-                RecipeLine recipeLine = _tableData[rowIndex];
-
-                if (recipeLine is EndFor_Loop)
-                {
-                    int cycleStartIndex = FindCycleStart(rowIndex);
-                    float cycleTime = (recipeLine.CycleTime - _tableData[cycleStartIndex].CycleTime) * (_tableData[cycleStartIndex].GetSetpoint() - 1);
-                    time += TimeSpan.FromSeconds(cycleTime);
-                }
-                else if (recipeLine.ActionTime == ActionTime.TimeSetpoint)
-                {
-                    time += TimeSpan.FromSeconds(recipeLine.GetTime());
-                }
-
-                if (rowIndex < _tableData.Count - 1)
-                {
-                    _tableData[rowIndex + 1].CycleTime = (float)time.TotalSeconds;
-                    dataGridView1.Rows[rowIndex + 1].Cells[Params.RecipeTimeIndex].Value = time.ToString("hh\\:mm\\:ss\\.ff");
-                }
-            }
+            fb.SetPinValue(Params.TotalTimeLeft, RecipeTime.TotalTime);
         }
 
         private void InsertRow(DataGridViewRow row, int index)

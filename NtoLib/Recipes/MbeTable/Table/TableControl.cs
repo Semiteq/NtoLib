@@ -85,7 +85,10 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (value != actLoopCount)
-                    RecalculateTime();
+                {
+                    RecipeTime.SetData(_tableData, dataGridView1);
+                    RecipeTime.Recalculate();
+                }
 
                 actLoopCount = value;
             }
