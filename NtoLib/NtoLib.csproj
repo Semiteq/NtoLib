@@ -36,6 +36,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="COMDeviceSDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ATPComSDKDemo\COMDeviceSDK.dll</HintPath>
+    </Reference>
     <Reference Include="FB">
       <HintPath>..\..\..\Program Files\MSCada\FB.dll</HintPath>
     </Reference>
@@ -163,6 +167,7 @@
     <Compile Include="Recipes\MbeTable\Table\TableMode.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\TCell.cs" />
     <Compile Include="Recipes\MbeTable\Utils\Enumeration.cs" />
+    <Compile Include="Spectrometer\SpectrometerFB.cs" />
     <Compile Include="Utils\ReadResult.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
@@ -311,6 +316,10 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatFB.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Spectrometer\SpectrometerFB.bmp" />
+    <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
