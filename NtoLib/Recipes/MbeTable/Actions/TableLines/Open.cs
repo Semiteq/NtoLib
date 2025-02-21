@@ -11,7 +11,7 @@ namespace NtoLib.Recipes.MbeTable.TableLines
         public Open(int number = 0, string comment = "") : base(ActionName)
         {
             shutterName = GrowthList.ShutterNames[number];
-            int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
+            var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             _cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),

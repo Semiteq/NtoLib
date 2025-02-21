@@ -3,9 +3,8 @@ using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace NtoLib.Recipes.MbeTable
@@ -21,6 +20,25 @@ namespace NtoLib.Recipes.MbeTable
     {
         private ControllerProtocol _enumProtocol;
         private SLMP_area _enumSLMP_area = SLMP_area.R;
+
+        private const int ID_RecipeActive = 1;
+        private const int ID_RecipePaused = 2;
+        private const int ID_ActualLineNumber = 3;
+        private const int ID_StepCurrentTime = 4;
+        private const int ID_ForLoopCount1 = 5;
+        private const int ID_ForLoopCount2 = 6;
+        private const int ID_ForLoopCount3 = 7;
+
+        private const int ID_EnaLoad = 8;
+
+        private const int ID_TotalTimeLeft = 101;
+        private const int ID_LineTimeLeft = 102;
+
+        private CountdownTimer _countdownTimer;
+        private TimeSpan _lastRecipeTimeLeft;
+        private int _previousLineNumber = -1;
+        private bool _isRecipeRunning;
+        private bool _isTimerPaused;
 
         #region VisualProperties
 
@@ -195,8 +213,87 @@ namespace NtoLib.Recipes.MbeTable
             // Update status values
             VisualPins.SetPinValue(Params.ID_HMI_ActualLine, actualLine);
             VisualPins.SetPinValue(Params.ID_HMI_Status, statusFlags);
+
+            RecipeRunControl(); 
+            UpdateRecipeTime();
         }
 
+        private void UpdateRecipeTime()
+        {
+            var currentLine = GetPinValue<int>(ID_ActualLineNumber);
+            var plcLineTime = GetPinValue<double>(ID_StepCurrentTime);
+            var lineTimeLeft = RecipeTime.GetRowTime(currentLine) - TimeSpan.FromSeconds(plcLineTime);
+            var recipeTimeLeft = _countdownTimer?.GetRemainingTime() ?? TimeSpan.Zero;
+
+            // Фиксируем остаток общего времени при смене строки
+            if (currentLine != _previousLineNumber)
+            {
+                _lastRecipeTimeLeft = recipeTimeLeft;
+                _previousLineNumber = currentLine;
+            }
+
+            SetPinValue(ID_TotalTimeLeft, recipeTimeLeft.TotalSeconds);
+            SetPinValue(ID_LineTimeLeft, lineTimeLeft.TotalSeconds);
+
+            Debug.WriteLine($"Recipe time left: {recipeTimeLeft.TotalSeconds}");
+            Debug.WriteLine($"Line time left: {lineTimeLeft.TotalSeconds}");
+        }
+        
+        private void RecipeRunControl()
+        {
+            if (RecipeTime.TotalTime == TimeSpan.Zero) return;
+
+            var isRecipeActive = GetPinValue<bool>(ID_RecipeActive);
+            var isRecipePaused = GetPinValue<bool>(ID_RecipePaused);
+            var currentLine = GetPinValue<int>(ID_ActualLineNumber);
+            var plcLineTime = GetPinValue<double>(ID_StepCurrentTime);
+
+            if (isRecipeActive && !_isRecipeRunning)
+            {
+                _countdownTimer ??= new CountdownTimer(RecipeTime.TotalTime);
+                _isRecipeRunning = true;
+                _countdownTimer.Start();
+            }
+
+            if (_isRecipeRunning)
+            {
+                if (isRecipePaused && !_isTimerPaused)
+                {
+                    _isTimerPaused = true;
+                    _countdownTimer.Pause();
+                }
+                else if (!isRecipePaused && _isTimerPaused)
+                {
+                    _isTimerPaused = false;
+                    _countdownTimer.Resume();
+                }
+
+                if (plcLineTime == 0 && _lastRecipeTimeLeft != TimeSpan.Zero)
+                {
+                    var actualTimePassed = _lastRecipeTimeLeft - _countdownTimer.GetRemainingTime();
+                    var expectedTimePassed = RecipeTime.GetRowTime(currentLine);
+                    var timeError = expectedTimePassed - actualTimePassed;
+
+                    if (Math.Abs(timeError.TotalSeconds) > 1)
+                    {
+                        _countdownTimer.SetRemainingTime(_countdownTimer.GetRemainingTime() + timeError);
+                    }
+
+                    _lastRecipeTimeLeft = TimeSpan.Zero;
+                }
+
+                if (_countdownTimer.GetRemainingTime() == TimeSpan.Zero)
+                {
+                    _countdownTimer.Stop();
+                    _isRecipeRunning = false;
+                }
+            }
+            else
+            {
+                _countdownTimer?.Stop();
+            }
+        }
+        
         private int GetProtocolValue()
         {
             return _enumProtocol switch
@@ -217,24 +314,26 @@ namespace NtoLib.Recipes.MbeTable
             };
         }
 
+        /// <summary>
+        /// Check quality and return line number.
+        /// </summary>
+        /// <returns>Line number if pin quality good, otherwise -1.</returns>
         private int GetActualLineValue()
         {
-            int actualLine = GetPinInt(Params.ID_ActualLine);
-            return GetPinQuality(Params.ID_ActualLine) == OpcQuality.Good ? actualLine : -1;
+            int actualLine = GetPinInt(ID_ActualLineNumber);
+            return GetPinQuality(ID_ActualLineNumber) == OpcQuality.Good ? actualLine : -1;
         }
 
+        /// <summary>
+        /// Calculates bit mask status.
+        /// </summary>
+        /// <returns>Bit mask depending on status of ID_EnaLoad, 
+        /// ID_EnaLoad pin quality and actualLine number.</returns>
         private uint CalculateStatusFlags(int actualLine)
         {
-            bool enaLoad = GetPinBool(Params.ID_EnaLoad);
-            bool enaLoadQualityGood = GetPinQuality(Params.ID_EnaLoad) == OpcQuality.Good;
-            bool actualLineQualityGood = actualLine != -1;
-
-            uint flags = 0;
-            if (enaLoad) flags += 1;
-            if (enaLoadQualityGood) flags += 2;
-            if (actualLineQualityGood) flags += 4;
-
-            return flags;
+            return (GetPinBool(ID_EnaLoad) ? 1u : 0) |
+                   (GetPinQuality(ID_EnaLoad) == OpcQuality.Good ? 2u : 0) |
+                   (actualLine != -1 ? 4u : 0);
         }
 
         public enum ControllerProtocol

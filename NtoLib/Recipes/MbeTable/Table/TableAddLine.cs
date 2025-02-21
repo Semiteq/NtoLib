@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 using System;
-using NtoLib.Recipes.MbeTable.TableLines;
+using FB.VisualFB;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -8,8 +8,8 @@ namespace NtoLib.Recipes.MbeTable
     {
         private void AddLineToRecipe(RecipeLine recipeLine, bool addAfter)
         {
-            int rowIndex = dataGridView1?.CurrentRow?.Index ?? 0;
-            int insertIndex = addAfter ? rowIndex + 1 : rowIndex;
+            var rowIndex = dataGridView1?.CurrentRow?.Index ?? 0;
+            var insertIndex = addAfter ? rowIndex + 1 : rowIndex;
             if (dataGridView1.RowCount == 0) insertIndex = 0;
 
             recipeLine.Row.Height = ROW_HEIGHT;
@@ -22,7 +22,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ReplaceLineInRecipe(RecipeLine recipeLine)
         {
-            int rowIndex = dataGridView1.CurrentRow?.Index ?? 0;
+            var rowIndex = dataGridView1.CurrentRow?.Index ?? 0;
             recipeLine.Row.Height = ROW_HEIGHT;
 
             _tableData[rowIndex] = recipeLine;
@@ -39,7 +39,7 @@ namespace NtoLib.Recipes.MbeTable
             if (!CheckRecipeCycles())
             {
                 button_save.Enabled = false;
-                WriteStatusMessage("Ошибка составления рецепта: Несоответствие команд FOR и END_FOR", true);
+                StatusManager.WriteStatusMessage("Ошибка составления рецепта: Несоответствие команд FOR и END_FOR", true);
                 return;
             }
 
@@ -47,42 +47,17 @@ namespace NtoLib.Recipes.MbeTable
 
             if (_tableType == TableMode.Edit)
             {
-                WriteStatusMessage("Редактирование рецепта: рецепт корректный", false);
+                StatusManager.WriteStatusMessage("Редактирование рецепта: рецепт корректный", false);
             }
 
-            RecalculateTime();
-        }
+            RecipeTime.SetData(_tableData, dataGridView1);
+            RecipeTime.Recalculate();
 
-        private void RecalculateTime()
-        {
-            if (_tableData.Count == 0) return;
+            VisualFBBase fb = FBConnector.Fb as MbeTableFB;
 
-            _tableData[0].CycleTime = 0f;
-            dataGridView1.Rows[0].Cells[Params.RecipeTimeIndex].Value = TimeSpan.Zero.ToString("hh\\:mm\\:ss\\.ff");
+            fb.SetPinValue(Params.TotalTimeLeft, RecipeTime.TotalTime);
 
-            TimeSpan time = TimeSpan.Zero;
-
-            for (int rowIndex = 0; rowIndex < _tableData.Count; rowIndex++)
-            {
-                RecipeLine recipeLine = _tableData[rowIndex];
-
-                if (recipeLine is EndFor_Loop)
-                {
-                    int cycleStartIndex = FindCycleStart(rowIndex);
-                    float cycleTime = (recipeLine.CycleTime - _tableData[cycleStartIndex].CycleTime) * (_tableData[cycleStartIndex].GetSetpoint() - 1);
-                    time += TimeSpan.FromSeconds(cycleTime);
-                }
-                else if (recipeLine.ActionTime == ActionTime.TimeSetpoint)
-                {
-                    time += TimeSpan.FromSeconds(recipeLine.GetTime());
-                }
-
-                if (rowIndex < _tableData.Count - 1)
-                {
-                    _tableData[rowIndex + 1].CycleTime = (float)time.TotalSeconds;
-                    dataGridView1.Rows[rowIndex + 1].Cells[Params.RecipeTimeIndex].Value = time.ToString("hh\\:mm\\:ss\\.ff");
-                }
-            }
+            dataGridView1.Refresh();
         }
 
         private void InsertRow(DataGridViewRow row, int index)
@@ -101,7 +76,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             if (FBConnector.DesignMode || _tableType == TableMode.View || dataGridView1.CurrentRow == null) return;
 
-            int currentIndex = dataGridView1.CurrentRow.Index;
+            var currentIndex = dataGridView1.CurrentRow.Index;
             _tableData.RemoveAt(currentIndex);
             dataGridView1.Rows.RemoveAt(currentIndex);
 
@@ -111,7 +86,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void RefreshRowHeaders()
         {
-            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            for (var i = 0; i < dataGridView1.Rows.Count; i++)
             {
                 dataGridView1.Rows[i].HeaderCell.Value = (i + 1).ToString();
             }
@@ -123,12 +98,12 @@ namespace NtoLib.Recipes.MbeTable
 
             try
             {
-                AddLineToRecipe(factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, string.Empty), false);
+                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, string.Empty), false);
                 RefreshTable();
             }
             catch (InvalidOperationException ex)
             {
-                WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
+                StatusManager.WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
             }
         }
 
@@ -138,12 +113,12 @@ namespace NtoLib.Recipes.MbeTable
 
             try
             {
-                AddLineToRecipe(factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, string.Empty), true);
+                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, string.Empty), true);
                 RefreshTable();
             }
             catch (InvalidOperationException ex)
             {
-                WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
+                StatusManager.WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
             }
         }
     }

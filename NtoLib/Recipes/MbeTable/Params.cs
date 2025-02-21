@@ -1,13 +1,7 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-
-namespace NtoLib.Recipes.MbeTable
+﻿namespace NtoLib.Recipes.MbeTable
 {
     internal static class Params
     {
-        public const int ID_ActualLine = 1;
-        public const int ID_EnaLoad = 2;
-
         public const uint UFloatBaseAddr = 0;
         public const uint UFloatAreaSize = 100;
         public const uint UIntBaseAddr = 100;
@@ -21,15 +15,12 @@ namespace NtoLib.Recipes.MbeTable
         public const uint ConntrollerIP2 = 168;
         public const uint ConntrollerIP3 = 0;
         public const uint ConntrollerIP4 = 1;
-        
+
+        public const int TotalTimeLeft = 101;
+        public const int LineTimeLeft = 102;
+
         public const uint ConntrollerTCPPort = 502;
         public const uint Timeout = 1000;
-
-        public const int GroupID_ActTemperaure = 100;
-        public const int GroupID_ActPower = 200;
-        public const int GroupID_ActLoopCount = 300;
-        public const int GroupID_ShutterNames = 400;
-        public const int GroupID_HeaterNames = 500;
 
         public const int ID_HMI_CommProtocol = 1001;
         public const int ID_HMI_AddrArea = 1002;
@@ -50,18 +41,18 @@ namespace NtoLib.Recipes.MbeTable
         public const int ID_HMI_ActualLine = 1016;
         public const int ID_HMI_Status = 1017;
 
-        //Номер пина, с которого начинается нумерация пинов с информацией о количестве циклов включения в MasterSCADA
-        public const int FirstPinActLoopAcount = 1101;
-
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях заслонок в MasterSCADA
-        public const int FirstPinShutterName = 1201;
+        public const int FirstPinShutterName = 201;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях нагревателей в MasterSCADA
-        public const int FirstPinHeaterName = 1301;
+        public const int FirstPinHeaterName = 301;
+        
+        //Номер пина, с которого начинается нумерация пинов с информацией о названиях линий NH3 в MasterSCADA
+        public const int FirstPinNitrogenSourceName = 401;
 
-        public const int ActLoopAcountQuantity = 5;
         public const int ShutterNameQuantity = 32;
         public const int HeaterNameQuantity = 32;
+        public const int NitrogenSourceNameQuantity = 3;
 
         //Номера столбцов соответствующих параметров в таблице
         public const int CommandIndex = 0;

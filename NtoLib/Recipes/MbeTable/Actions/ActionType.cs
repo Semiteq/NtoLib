@@ -4,6 +4,7 @@
     {
         Shutter,
         Heater,
+        NitrogenSource,
         Unspecified
     }
 }

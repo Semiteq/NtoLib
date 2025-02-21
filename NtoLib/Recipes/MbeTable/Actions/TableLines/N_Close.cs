@@ -3,14 +3,12 @@ using NtoLib.Recipes.MbeTable.Actions;
 
 namespace NtoLib.Recipes.MbeTable.TableLines
 {
-    internal class NH3_Close : RecipeLine
+    internal class N_Close : RecipeLine
     {
-        public const string ActionName = Commands.NH3_CLOSE;
+        public const string ActionName = Commands.N_CLOSE;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public NH3_Close() : this("") { }
-
-        public NH3_Close(string comment) : base(ActionName)
+        public N_Close(string comment) : base(ActionName)
         {
             int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
 

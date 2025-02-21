@@ -2,121 +2,172 @@
 <FBConfig>
 
 	<Map>
+		<!-- Non visual pins start with 1 -->
 		<Items>
-			<Pin ID="1" Name="ActualLine"			Type="Целый"/>
-			<Pin ID="2" Name="EnaLoad"				Type="Логический" DefaultValue="true"/>
+			<!-- Flag if recipe is curently running.  -->
+			<Pin ID="1" Name="RecipeActive"			Type="Логический" DefaultValue="false"/>
+			
+			<!-- Flag if recipe is paused.  -->
+			<Pin ID="2" Name="RecipePaused"			Type="Логический" DefaultValue="false"/>
+			
+			<!-- Current recipe line number in opertation mode. -->
+			<Pin ID="3" Name="ActualLineNumber"		Type="Целый"/>
 
-			<Pin ID="3" Name="RecipeActive"			Type="Логический"/>
-			<Pin ID="4" Name="StepCurrentTime"		Type="БеззнаковыйЦелый"/>
+			<!-- Current recipe execution time.  -->
+			<Pin ID="4" Name="StepCurrentTime"		Type="Вещественный"/>
 
-			<Group Name="ActLoopCount" ID="1100">
+			<!-- Number of the current FOR loop by the nesting level.  -->
+			<Pin ID="5" Name="ForLoopCount1"		Type="Целый"/>
+			<Pin ID="6" Name="ForLoopCount2"		Type="Целый"/>
+			<Pin ID="7" Name="ForLoopCount3"		Type="Целый"/>
+
+			<!-- Permission to open new recipe. -->
+			<Pin ID="8" Name="EnaLoad"				Type="Логический" DefaultValue="true"/>
+
+			<!-- Group of shutter names -->
+			<Group Name="ShutterNames" ID="200">
 				<Items>
-					<Pin ID="1101" Name="Loop1"		Type="БеззнаковыйЦелый"/>
-					<Pin ID="1102" Name="Loop2"		Type="БеззнаковыйЦелый"/>
-					<Pin ID="1103" Name="Loop3"		Type="БеззнаковыйЦелый"/>
-					<Pin ID="1104" Name="Loop4"		Type="БеззнаковыйЦелый"/>
-					<Pin ID="1105" Name="Loop5"		Type="БеззнаковыйЦелый"/>
+					<Pin ID="201" Name="Shutter1"	Type="Строковый" DefaultValue="Sh1"/>
+					<Pin ID="202" Name="Shutter2"	Type="Строковый" DefaultValue="Sh2"/>
+					<Pin ID="203" Name="Shutter3"	Type="Строковый"/>
+					<Pin ID="204" Name="Shutter4"	Type="Строковый"/>
+					<Pin ID="205" Name="Shutter5"	Type="Строковый"/>
+					<Pin ID="206" Name="Shutter6"	Type="Строковый"/>
+					<Pin ID="207" Name="Shutter7"	Type="Строковый"/>
+					<Pin ID="208" Name="Shutter8"	Type="Строковый"/>
+					<Pin ID="209" Name="Shutter9"	Type="Строковый"/>
+					<Pin ID="210" Name="Shutter10" Type="Строковый"/>
+					<Pin ID="211" Name="Shutter11" Type="Строковый"/>
+					<Pin ID="212" Name="Shutter12" Type="Строковый"/>
+					<Pin ID="213" Name="Shutter13" Type="Строковый"/>
+					<Pin ID="214" Name="Shutter14" Type="Строковый"/>
+					<Pin ID="215" Name="Shutter15" Type="Строковый"/>
+					<Pin ID="216" Name="Shutter16" Type="Строковый"/>
+					<Pin ID="217" Name="Shutter17" Type="Строковый"/>
+					<Pin ID="218" Name="Shutter18" Type="Строковый"/>
+					<Pin ID="219" Name="Shutter19" Type="Строковый"/>
+					<Pin ID="220" Name="Shutter20" Type="Строковый"/>
+					<Pin ID="221" Name="Shutter21" Type="Строковый"/>
+					<Pin ID="222" Name="Shutter22" Type="Строковый"/>
+					<Pin ID="223" Name="Shutter23" Type="Строковый"/>
+					<Pin ID="224" Name="Shutter24" Type="Строковый"/>
+					<Pin ID="225" Name="Shutter25" Type="Строковый"/>
+					<Pin ID="226" Name="Shutter26" Type="Строковый"/>
+					<Pin ID="227" Name="Shutter27" Type="Строковый"/>
+					<Pin ID="228" Name="Shutter28" Type="Строковый"/>
+					<Pin ID="229" Name="Shutter29" Type="Строковый"/>
+					<Pin ID="230" Name="Shutter30" Type="Строковый"/>
+					<Pin ID="231" Name="Shutter31" Type="Строковый"/>
+					<Pin ID="232" Name="Shutter32" Type="Строковый"/>
 				</Items>
 			</Group>
 
-			<Group Name="ShutterNames" ID="1200">
+			<!-- Group of heater names -->
+			<Group Name="HeaterNames" ID="300">
 				<Items>
-					<Pin ID="1201" Name="Shutter1"	Type="Строковый"/>
-					<Pin ID="1202" Name="Shutter2"	Type="Строковый"/>
-					<Pin ID="1203" Name="Shutter3"	Type="Строковый"/>
-					<Pin ID="1204" Name="Shutter4"	Type="Строковый"/>
-					<Pin ID="1205" Name="Shutter5"	Type="Строковый"/>
-					<Pin ID="1206" Name="Shutter6"	Type="Строковый"/>
-					<Pin ID="1207" Name="Shutter7"	Type="Строковый"/>
-					<Pin ID="1208" Name="Shutter8"	Type="Строковый"/>
-					<Pin ID="1209" Name="Shutter9"	Type="Строковый"/>
-					<Pin ID="1210" Name="Shutter10" Type="Строковый"/>
-					<Pin ID="1211" Name="Shutter11" Type="Строковый"/>
-					<Pin ID="1212" Name="Shutter12" Type="Строковый"/>
-					<Pin ID="1213" Name="Shutter13" Type="Строковый"/>
-					<Pin ID="1214" Name="Shutter14" Type="Строковый"/>
-					<Pin ID="1215" Name="Shutter15" Type="Строковый"/>
-					<Pin ID="1216" Name="Shutter16" Type="Строковый"/>
-					<Pin ID="1217" Name="Shutter17" Type="Строковый"/>
-					<Pin ID="1218" Name="Shutter18" Type="Строковый"/>
-					<Pin ID="1219" Name="Shutter19" Type="Строковый"/>
-					<Pin ID="1220" Name="Shutter20" Type="Строковый"/>
-					<Pin ID="1221" Name="Shutter21" Type="Строковый"/>
-					<Pin ID="1222" Name="Shutter22" Type="Строковый"/>
-					<Pin ID="1223" Name="Shutter23" Type="Строковый"/>
-					<Pin ID="1224" Name="Shutter24" Type="Строковый"/>
-					<Pin ID="1225" Name="Shutter25" Type="Строковый"/>
-					<Pin ID="1226" Name="Shutter26" Type="Строковый"/>
-					<Pin ID="1227" Name="Shutter27" Type="Строковый"/>
-					<Pin ID="1228" Name="Shutter28" Type="Строковый"/>
-					<Pin ID="1229" Name="Shutter29" Type="Строковый"/>
-					<Pin ID="1230" Name="Shutter30" Type="Строковый"/>
-					<Pin ID="1231" Name="Shutter31" Type="Строковый"/>
-					<Pin ID="1232" Name="Shutter32" Type="Строковый"/>
+					<Pin ID="301" Name="Heater1"	Type="Строковый" DefaultValue="He1"/>
+					<Pin ID="302" Name="Heater2"	Type="Строковый" DefaultValue="He2"/>
+					<Pin ID="303" Name="Heater3"	Type="Строковый"/>
+					<Pin ID="304" Name="Heater4"	Type="Строковый"/>
+					<Pin ID="305" Name="Heater5"	Type="Строковый"/>
+					<Pin ID="306" Name="Heater6"	Type="Строковый"/>
+					<Pin ID="307" Name="Heater7"	Type="Строковый"/>
+					<Pin ID="308" Name="Heater8"	Type="Строковый"/>
+					<Pin ID="309" Name="Heater9"	Type="Строковый"/>
+					<Pin ID="310" Name="Heater10"	Type="Строковый"/>
+					<Pin ID="311" Name="Heater11"	Type="Строковый"/>
+					<Pin ID="312" Name="Heater12"	Type="Строковый"/>
+					<Pin ID="313" Name="Heater13"	Type="Строковый"/>
+					<Pin ID="314" Name="Heater14"	Type="Строковый"/>
+					<Pin ID="315" Name="Heater15"	Type="Строковый"/>
+					<Pin ID="316" Name="Heater16"	Type="Строковый"/>
+					<Pin ID="317" Name="Heater17"	Type="Строковый"/>
+					<Pin ID="318" Name="Heater18"	Type="Строковый"/>
+					<Pin ID="319" Name="Heater19"	Type="Строковый"/>
+					<Pin ID="320" Name="Heater20"	Type="Строковый"/>
+					<Pin ID="321" Name="Heater21"	Type="Строковый"/>
+					<Pin ID="322" Name="Heater22"	Type="Строковый"/>
+					<Pin ID="323" Name="Heater23"	Type="Строковый"/>
+					<Pin ID="324" Name="Heater24"	Type="Строковый"/>
+					<Pin ID="325" Name="Heater25"	Type="Строковый"/>
+					<Pin ID="326" Name="Heater26"	Type="Строковый"/>
+					<Pin ID="327" Name="Heater27"	Type="Строковый"/>
+					<Pin ID="328" Name="Heater28"	Type="Строковый"/>
+					<Pin ID="329" Name="Heater29"	Type="Строковый"/>
+					<Pin ID="330" Name="Heater30"	Type="Строковый"/>
+					<Pin ID="331" Name="Heater31"	Type="Строковый"/>
+					<Pin ID="332" Name="Heater32"	Type="Строковый"/>
 				</Items>
 			</Group>
 
-			<Group Name="HeaterNames" ID="1300">
+			<!-- Group of nitrogen sources names. -->
+			<Group Name="NitrogenSourcesNames" ID="400">
 				<Items>
-					<Pin ID="1301" Name="Heater1"	Type="Строковый"/>
-					<Pin ID="1302" Name="Heater2"	Type="Строковый"/>
-					<Pin ID="1303" Name="Heater3"	Type="Строковый"/>
-					<Pin ID="1304" Name="Heater4"	Type="Строковый"/>
-					<Pin ID="1305" Name="Heater5"	Type="Строковый"/>
-					<Pin ID="1306" Name="Heater6"	Type="Строковый"/>
-					<Pin ID="1307" Name="Heater7"	Type="Строковый"/>
-					<Pin ID="1308" Name="Heater8"	Type="Строковый"/>
-					<Pin ID="1309" Name="Heater9"	Type="Строковый"/>
-					<Pin ID="1310" Name="Heater10"	Type="Строковый"/>
-					<Pin ID="1311" Name="Heater11"	Type="Строковый"/>
-					<Pin ID="1312" Name="Heater12"	Type="Строковый"/>
-					<Pin ID="1313" Name="Heater13"	Type="Строковый"/>
-					<Pin ID="1314" Name="Heater14"	Type="Строковый"/>
-					<Pin ID="1315" Name="Heater15"	Type="Строковый"/>
-					<Pin ID="1316" Name="Heater16"	Type="Строковый"/>
-					<Pin ID="1317" Name="Heater17"	Type="Строковый"/>
-					<Pin ID="1318" Name="Heater18"	Type="Строковый"/>
-					<Pin ID="1319" Name="Heater19"	Type="Строковый"/>
-					<Pin ID="1320" Name="Heater20"	Type="Строковый"/>
-					<Pin ID="1321" Name="Heater21"	Type="Строковый"/>
-					<Pin ID="1322" Name="Heater22"	Type="Строковый"/>
-					<Pin ID="1323" Name="Heater23"	Type="Строковый"/>
-					<Pin ID="1324" Name="Heater24"	Type="Строковый"/>
-					<Pin ID="1325" Name="Heater25"	Type="Строковый"/>
-					<Pin ID="1326" Name="Heater26"	Type="Строковый"/>
-					<Pin ID="1327" Name="Heater27"	Type="Строковый"/>
-					<Pin ID="1328" Name="Heater28"	Type="Строковый"/>
-					<Pin ID="1329" Name="Heater29"	Type="Строковый"/>
-					<Pin ID="1330" Name="Heater30"	Type="Строковый"/>
-					<Pin ID="1331" Name="Heater31"	Type="Строковый"/>
-					<Pin ID="1332" Name="Heater32"	Type="Строковый"/>
+					<Pin ID="401" Name="NitrogenSource1"	Type="Строковый" DefaultValue="NH3"/>
+					<Pin ID="402" Name="NitrogenSource2"	Type="Строковый" DefaultValue="N2"/>
+					<Pin ID="403" Name="NitrogenSource3"	Type="Строковый" />
 				</Items>
 			</Group>
 
-			<Pout ID="101" Name="TotalTimeLeft"		Type="БеззнаковыйЦелый"/>
-			<Pout ID="102" Name="LineTimeLeft"		Type="БеззнаковыйЦелый"/>
+			<!-- Total time left till the end of recipe. -->
+			<Pout ID="101" Name="TotalTimeLeft"		Type="Вещественный"/>
+			
+			<!-- Total time left till the end of the line. -->
+			<Pout ID="102" Name="LineTimeLeft"		Type="Вещественный"/>
 
 		</Items>
 	</Map>
 
 	<VisualMap>
+		<!-- Visual pins start with 1001 -->
 		<Items>
+			<!-- Protocol for exchanging data transfer to the controller -->
 			<Pout ID="1001" Name="CommProtocol"		Type="БеззнаковыйЦелый"/>
+			
+			<!-- Data Storage Area for SLMP -->
 			<Pout ID="1002" Name="AddrArea"			Type="БеззнаковыйЦелый"/>
+			
+			<!-- Base Address for Real (Float) Data Storage -->
 			<Pout ID="1003" Name="FloatBaseAddr"	Type="БеззнаковыйЦелый"/>
+			
+			<!-- Size of Real (Float) Data Storage Area -->
 			<Pout ID="1004" Name="FloatAreaSize"	Type="БеззнаковыйЦелый"/>
+			
+			<!-- Base Address for Int Data Storage -->
 			<Pout ID="1005" Name="IntBaseAddr"		Type="БеззнаковыйЦелый"/>
+			
+			<!-- Size of Int Data Storage Area -->
 			<Pout ID="1006" Name="IntAreaSize"		Type="БеззнаковыйЦелый"/>
+			
+			<!-- Base Address for Boolean Data Storage -->
 			<Pout ID="1007" Name="BoolBaseAddr"		Type="БеззнаковыйЦелый"/>
+			
+			<!-- Size of Boolean Data Storage Area -->
 			<Pout ID="1008" Name="BoolAreaSize"		Type="БеззнаковыйЦелый"/>
+			
+			<!-- Base Address of Control Area -->
 			<Pout ID="1009" Name="ControlBaseAddr"	Type="БеззнаковыйЦелый"/>
+			
+			<!-- Controller IP Address Byte 1 -->
 			<Pout ID="1010" Name="IP1"				Type="БеззнаковыйЦелый"/>
+			
+			<!-- Controller IP Address Byte 2 -->
 			<Pout ID="1011" Name="IP2"				Type="БеззнаковыйЦелый"/>
+			
+			<!-- Controller IP Address Byte 3 -->
 			<Pout ID="1012" Name="IP3"				Type="БеззнаковыйЦелый"/>
+			
+			<!-- Controller IP Address Byte 4 -->
 			<Pout ID="1013" Name="IP4"				Type="БеззнаковыйЦелый"/>
+			
+			<!-- TCP Port -->
 			<Pout ID="1014" Name="Port"				Type="БеззнаковыйЦелый"/>
+			
+			<!-- Timeout -->
 			<Pout ID="1015" Name="Timeout"			Type="БеззнаковыйЦелый"/>
+			
 			<Pout ID="1016" Name="HMIActualLine"	Type="Целый"/>
+			
 			<Pout ID="1017" Name="HMIStatus"		Type="БеззнаковыйЦелый"/>
 		</Items>
 	</VisualMap>

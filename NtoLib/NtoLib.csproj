@@ -112,10 +112,12 @@
     <Compile Include="Recipes\MbeTable\Actions\ActionTime.cs" />
     <Compile Include="Recipes\MbeTable\Actions\ActionType.cs" />
     <Compile Include="Recipes\MbeTable\Actions\Commands.cs" />
+    <Compile Include="Recipes\MbeTable\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\PLC\BufferActions.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\CellType.cs" />
     <Compile Include="Recipes\MbeTable\PLC\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Params.cs" />
+    <Compile Include="Recipes\MbeTable\Table\CountdownTimer.cs" />
     <Compile Include="Recipes\MbeTable\Utils\DateTimeParser.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\GrowthList.cs">
       <SubType>UserControl</SubType>
@@ -143,9 +145,9 @@
     <Compile Include="Recipes\MbeTable\Actions\TableLines\CloseAll.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\EndFor_Loop.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\For_Loop.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\NH3_Close.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\NH3_Open.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\NH3_Purge.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\N_Close.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\N_Run.cs" />
+    <Compile Include="Recipes\MbeTable\Actions\TableLines\N_Vent.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\Open.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\OpenTime.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\Pause.cs" />
