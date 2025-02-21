@@ -8,7 +8,7 @@ namespace NtoLib.Recipes.MbeTable
         private int StartPin { get; }
         private int Quantity { get; }
 
-        // Необходимо передавать стейт в ФБ, без него ошибка Null reference 
+        // Necessary to pass state into FB, otherwise Null-reference error
         private VisualFBBase FB { get; }
 
         public ReadPins(int startPin, int quantity, VisualFBBase fb)
@@ -22,7 +22,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             TableEnumType names = new();
 
-            for (int i = 0; i < Quantity; i++)
+            for (var i = 0; i < Quantity; i++)
             {
                 string pinString = FB.GetPinValue<string>(i + StartPin);
                 if (!string.IsNullOrEmpty(pinString))
@@ -36,7 +36,7 @@ namespace NtoLib.Recipes.MbeTable
 
         public bool IsPinGroupQualityGood()
         {
-            for (int i = 0; i < Quantity; i++)
+            for (var i = 0; i < Quantity; i++)
             {
                 if (FB.GetPinQuality(StartPin + i) != OpcQuality.Good)
                     return false;

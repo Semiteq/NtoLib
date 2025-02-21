@@ -7,7 +7,7 @@ namespace NtoLib.Recipes.MbeTable
 {
     internal class RecipeLineFactory
     {
-        private readonly Dictionary<string, Func<int, float, float, string, RecipeLine>> creators = new()
+        private readonly Dictionary<string, Func<int, float, float, string, RecipeLine>> _creators = new()
         {
             { Close.ActionName,              (n, _, _, c) => new Close              (n, c) },
             { Open.ActionName,               (n, _, _, c) => new Open               (n, c) },
@@ -28,24 +28,24 @@ namespace NtoLib.Recipes.MbeTable
             { EndFor_Loop.ActionName,        (_, _, _, c) => new EndFor_Loop        (c) },
             { Pause.ActionName,              (_, _, _, c) => new Pause              (c) },
 
-            { NH3_Open.ActionName,           (_, _, _, c) => new NH3_Open           (c) },
-            { NH3_Close.ActionName,          (_, _, _, c) => new NH3_Close          (c) },
-            { NH3_Purge.ActionName,          (_, _, _, c) => new NH3_Purge          (c) }
+            { N_Run.ActionName,           (n, s, _, c) => new N_Run           (n, s > 0f ? s : 10f, c) },
+            { N_Close.ActionName,          (_, _, _, c) => new N_Close          (c) },
+            { N_Vent.ActionName,          (n, s, _, c) => new N_Vent          (n, s > 0f ? s : 10f, c) }
         };
 
         public RecipeLine NewLine(string command, int number, float setpoint, float timeSetpoint, string comment)
         {
-            return creators.TryGetValue(command, out var creator) ?
+            return _creators.TryGetValue(command, out var creator) ?
                    creator(number, setpoint, timeSetpoint, comment) : null;
         }
 
-        public RecipeLine NewLine(ushort[] int_data, ushort[] float_data, ushort[] bool_data, int index)
+        public RecipeLine NewLine(ushort[] intData, ushort[] floatData, ushort[] boolData, int index)
         {
-            string command = ActionManager.Names.GetValueByIndex((int)int_data[index * 2]).ToString();
-            int number = (int)int_data[index * 2 + 1];
+            string command = ActionManager.Names.GetValueByIndex((int)intData[index * 2]).ToString();
+            int number = (int)intData[index * 2 + 1];
 
-            float setpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)float_data[index * 4] + ((uint)float_data[index * 4 + 1] << 16)), 0);
-            float timeSetpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)float_data[index * 4 + 2] + ((uint)float_data[index * 4 + 3] << 16)), 0);
+            float setpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)floatData[index * 4] + ((uint)floatData[index * 4 + 1] << 16)), 0);
+            float timeSetpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)floatData[index * 4 + 2] + ((uint)floatData[index * 4 + 3] << 16)), 0);
 
             return NewLine(command, number, setpoint, timeSetpoint, string.Empty);
         }

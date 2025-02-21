@@ -5,106 +5,102 @@ using NtoLib.Recipes.MbeTable.Actions;
 
 namespace NtoLib.Recipes.MbeTable
 {
-    internal sealed class GrowthList : VisualControlBase
+    internal abstract class GrowthList : VisualControlBase
     {
         public static TableEnumType ShutterNames { get; private set; }
         public static TableEnumType HeaterNames { get; private set; }
+        public static TableEnumType NitrogenSourceNames { get; private set; }
 
         public static void SetShutterNames(TableEnumType shutterNames)
         {
-            if (shutterNames == null)
-                throw new ArgumentNullException(nameof(shutterNames));
-            ShutterNames = shutterNames;
+            ShutterNames = shutterNames ?? throw new ArgumentNullException(nameof(shutterNames));
         }
+
         public static void SetHeaterNames(TableEnumType heaterNames)
         {
-            if (heaterNames == null)
-                throw new ArgumentNullException(nameof(heaterNames));
-            HeaterNames = heaterNames;
+            HeaterNames = heaterNames ?? throw new ArgumentNullException(nameof(heaterNames));
         }
 
+        public static void SetNitrogenSourceNames(TableEnumType nitrogenSourceNames)
+        {
+            NitrogenSourceNames = nitrogenSourceNames ?? throw new ArgumentNullException(nameof(nitrogenSourceNames));
+        }
+
+        /// <summary>
+        /// Converts an action name to its corresponding number for writing into a recipe file.
+        /// </summary>
         public static int NameToIntConvert(string growthValue, string action)
         {
-            /// <summary>
-            /// Конвертация названия заслонки/нагревателя в номер для записи в файл рецепта
-            /// </summary>
-            if (ActionManager.GetTargetAction(action) == ActionType.Shutter)
-                return ShutterNames[growthValue];
-
-            else if (ActionManager.GetTargetAction(action) == ActionType.Heater)
-                return HeaterNames[growthValue];
-
-            else
-                throw new KeyNotFoundException("Неизвестный тип действия");
+            var actionType = ActionManager.GetTargetAction(action);
+            
+            if (actionType == ActionType.Shutter) return ShutterNames[growthValue];
+            if (actionType == ActionType.Heater) return HeaterNames[growthValue];
+            if (actionType == ActionType.NitrogenSource) return NitrogenSourceNames[growthValue];
+            
+            throw new KeyNotFoundException("Unknown action type");
         }
 
-        public static string GetActionType(string number)
+        /// <summary>
+        /// Returns the action type based on the given number. If not found, returns an empty string.
+        /// </summary>
+        public static ActionType GetActionType(string number)
         {
-
-            /// <summary>
-            /// Возвращает тип действия по номеру заслонки/нагревателя. В случае отсутствия возвращает пустую строку.
-            /// </summary>
-
-            try
-            {
-                if (ShutterNames[number] != 0)
-                    return "shutter";
-            }
-            catch (KeyNotFoundException) { }
-
-            try
-            {
-                if (HeaterNames[number] != 0)
-                    return "heater";
-            }
-            catch (KeyNotFoundException) { }
-
-            return string.Empty;
+            if (ShutterNames.TryGetValue(number, out var value) && value != 0) return ActionType.Shutter;
+            if (HeaterNames.TryGetValue(number, out value) && value != 0) return ActionType.Heater;
+            if (NitrogenSourceNames.TryGetValue(number, out value) && value != 0) return ActionType.NitrogenSource;
+            return ActionType.Unspecified;
         }
 
+        /// <summary>
+        /// Returns the lowest shutter number.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the shutter list is empty.</exception>
         public static int GetMinShutter()
         {
-            /// <summary>
-            /// Возвращает минимальный номер заслонки
-            /// </summary>
-            /// <exception cref="InvalidOperationException">Выбрасывается, если в список заслонок пуст.</exception>
-
-            int lowestShutter = ShutterNames.GetLowestNumber();
-
+            var lowestShutter = ShutterNames.GetLowestNumber();
             if (lowestShutter == -1)
-            {
-                throw new InvalidOperationException("Список заслонок пуст");
-            }
+                throw new InvalidOperationException("Shutter list is empty");
             return lowestShutter;
         }
 
+        /// <summary>
+        /// Returns the lowest heater number.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the heater list is empty.</exception>
         public static int GetMinHeater()
         {
-            /// <summary>
-            /// Возвращает минимальный номер нагревателя
-            /// </summary>
-            /// <exception cref="InvalidOperationException">Выбрасывается, если в список нагревателей пуст.</exception>
-            int lowestHeater = HeaterNames.GetLowestNumber();
-
+            var lowestHeater = HeaterNames.GetLowestNumber();
             if (lowestHeater == -1)
-            {
-                throw new InvalidOperationException("Список нагревателей пуст");
-            }
+                throw new InvalidOperationException("Heater list is empty");
             return lowestHeater;
         }
 
+        /// <summary>
+        /// Returns the lowest nitrogen source number.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the nitrogen source list is empty.</exception>
+        public static int GetMinNitrogenSource()
+        {
+            var lowestAmmonia = NitrogenSourceNames.GetLowestNumber();
+            if (lowestAmmonia == -1)
+                throw new InvalidOperationException("N+ source list is empty");
+            return lowestAmmonia;
+        }
+
+        /// <summary>
+        /// Returns the lowest number based on the action type.
+        /// If the action is not shutter, heater, or nitrogen source, returns 0.
+        /// </summary>
         public static int GetMinNumber(string action)
         {
-            /// <summary> 
-            /// Возвращает минимальный номер заслонки/нагревателя в зависимости от типа действия. 
-            /// Принимает на вход действие. Если не shutter и не heater, то возвращает 0.
-            /// </summary>
-            if (ActionManager.GetTargetAction(action) == ActionType.Shutter)
-                return GetMinShutter();
-            else if (ActionManager.GetTargetAction(action) == ActionType.Heater)
-                return GetMinHeater();
-            else
-                return 0;
+            var actionType = ActionManager.GetTargetAction(action);
+            return actionType switch
+            {
+                ActionType.Shutter => GetMinShutter(),
+                ActionType.Heater => GetMinHeater(),
+                ActionType.NitrogenSource => GetMinNitrogenSource(),
+                _ => 0
+            };
         }
     }
 }

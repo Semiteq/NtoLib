@@ -3,21 +3,20 @@ using NtoLib.Recipes.MbeTable.Actions;
 
 namespace NtoLib.Recipes.MbeTable.TableLines
 {
-    internal class NH3_Purge : RecipeLine
+    internal class N_Vent : RecipeLine
     {
-        public const string ActionName = Commands.NH3_PURGE;
+        public const string ActionName = Commands.N_VENT;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public NH3_Purge() : this("") { }
-        public NH3_Purge(string comment) : base(ActionName)
+        public N_Vent(int number, float setpoint, string comment) : base(ActionName)
         {
-            int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
-
+            nitrogenSourceName = GrowthList.NitrogenSourceNames[number];
+            var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             _cells = new List<TCell>
             {
                 new TCell(CellType._enum, ActionName, actionNumber),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
+                new TCell(CellType._enum, nitrogenSourceName, number),
+                new TCell(CellType._float, setpoint),
                 new TCell(CellType._blocked, ""),
                 new TCell(CellType._blocked, ""),
                 new TCell(CellType._string, comment)

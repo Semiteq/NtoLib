@@ -12,7 +12,7 @@ namespace NtoLib.Recipes.MbeTable
         public static TimeSpan TotalTime { get; private set; }
 
         /// <summary>
-        /// Устанавливает данные для расчетов.
+        /// Sets the data for calculations.
         /// </summary>
         public static void SetData(List<RecipeLine> tableData, DataGridView dataGridView)
         {
@@ -21,9 +21,9 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         /// <summary>
-        /// Пересчитывает время выполнения рецепта и обновляет DataGridView.
+        /// Recalculates the recipe execution time and updates the DataGridView.
         /// </summary>
-        /// <returns>Общее время выполнения.</returns>
+        /// <returns>Total execution time.</returns>
         public static void Recalculate()
         {
             if (_tableData == null || _tableData.Count == 0)
@@ -36,9 +36,9 @@ namespace NtoLib.Recipes.MbeTable
             _tableData[0].CycleTime = 0f;
             UpdateDataGridView(0, TimeSpan.Zero);
 
-            for (int rowIndex = 0; rowIndex < _tableData.Count; rowIndex++)
+            for (var rowIndex = 0; rowIndex < _tableData.Count; rowIndex++)
             {
-                RecipeLine recipeLine = _tableData[rowIndex];
+                var recipeLine = _tableData[rowIndex];
 
                 time += recipeLine switch
                 {
@@ -52,14 +52,27 @@ namespace NtoLib.Recipes.MbeTable
                     _tableData[rowIndex + 1].CycleTime = (float)time.TotalSeconds;
                     UpdateDataGridView(rowIndex + 1, time);
                 }
-                
             }
 
             TotalTime = time;
         }
+        
+        /// <summary>
+        /// Gets the process time for the current row.
+        /// </summary>
+        /// <returns>Process time for current row</returns>
+        public static TimeSpan GetRowTime(int rowIndex)
+        {
+            if (_tableData == null || rowIndex < 0 || rowIndex >= _tableData.Count)
+                return TimeSpan.Zero;
+
+            return _tableData[rowIndex].ActionTime == ActionTime.TimeSetpoint
+                ? TimeSpan.FromSeconds(_tableData[rowIndex].GetTime())
+                : TimeSpan.Zero;
+        }
 
         /// <summary>
-        /// Рассчитывает время цикла для EndFor_Loop.
+        /// Calculates the cycle time for EndFor_Loop.
         /// </summary>
         private static float CalculateCycleTime(EndFor_Loop endLoop, int rowIndex)
         {
@@ -70,7 +83,7 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         /// <summary>
-        /// Обновляет DataGridView с рассчитанными значениями.
+        /// Updates the DataGridView with calculated values.
         /// </summary>
         private static void UpdateDataGridView(int rowIndex, TimeSpan time)
         {
@@ -79,7 +92,7 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         /// <summary>
-        /// Находит индекс начала цикла For_Loop по его окончанию EndFor_Loop.
+        /// Finds the index of the start of the For_Loop loop given its end EndFor_Loop.
         /// </summary>
         private static int FindCycleStart(int endIndex)
         {

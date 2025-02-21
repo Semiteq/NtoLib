@@ -3,50 +3,57 @@ using System.Linq;
 
 namespace NtoLib.Recipes.MbeTable.Actions
 {
-    internal class ActionManager
+    internal static class ActionManager
     {
-        public static TableEnumType Names => new TableEnumType(ActionEntries
-            /// <summary>
-            /// Возвращает словарь всех команд, где ключ - название команды, значение - id.
-            /// </summary>
-            .ToDictionary(entry => entry.Command, entry => entry.Id));
+        /// <summary>
+        /// Returns a dictionary of all commands where the key is the command name and the value is the ID.
+        /// </summary>
+        public static TableEnumType Names => new TableEnumType(ActionEntries.ToDictionary(entry => entry.Command, entry => entry.Id));
 
-        public static Dictionary<int, ActionType> ActionTypes => ActionEntries
-            /// <summary>
-            /// Возвращает словарь всех типов действий, где ключ - id, значение - тип действия.
-            /// </summary>
-            .ToDictionary(entry => entry.Id, entry => entry.Type);
+        /// <summary>
+        /// Returns a dictionary of all action types where the key is the ID and the value is the action type.
+        /// </summary>
+        public static Dictionary<int, ActionType> ActionTypes => ActionEntries.ToDictionary(entry => entry.Id, entry => entry.Type);
 
-        public static string[] CommandNames => ActionEntries
-            /// <summary>
-            /// Возвращает список всех коммнад.
-            /// </summary>
-            .Select(entry => entry.Command)
-            .ToArray();
+        /// <summary>
+        /// Returns a list of all command names.
+        /// </summary>
+        public static string[] CommandNames => ActionEntries.Select(entry => entry.Command).ToArray();
 
+        /// <summary>
+        /// Determines whether the command is intended for .
+        /// Takes a command name as input and returns the action type.
+        /// </summary>
         public static ActionType GetTargetAction(string commandName)
         {
-            /// <summary>
-            /// Проверка, заслонкам или нагревателям предназначена команда.
-            /// Принимает на вход название команды, возвращает тип действия shutter или heater.
-            /// </summary>
             var actionEntry = ActionEntries.FirstOrDefault(entry => entry.Command == commandName);
             return actionEntry?.Type ?? ActionType.Unspecified;
         }
 
+        /// <summary>
+        /// Returns the action ID based on the command name.
+        /// </summary>
         public static int GetActionIdByCommand(string commandName)
         {
-            /// <summary>
-            /// Возвращает id действия по названию команды.
-            /// </summary>
             return ActionEntries.FirstOrDefault(entry => entry.Command == commandName)?.Id
                    ?? throw new KeyNotFoundException($"Command '{commandName}' not found.");
         }
 
-
-        public static IEnumerable<ActionEntry> ActionEntries => new[]
+        /// <summary>
+        /// Returns the command name based on the action ID.
+        /// </summary>
+        public static string GetActionNameById(int id)
         {
-            //              command                 | id |      type
+            return ActionEntries.FirstOrDefault(entry => entry.Id == id)?.Command
+                   ?? throw new KeyNotFoundException($"ID '{id}' not found.");
+        }
+        
+        /// <summary>
+        /// Returns a collection of predefined action entries.
+        /// </summary>
+        private static IEnumerable<ActionEntry> ActionEntries => new[]
+        {
+            //              Command                 | ID  |      Type
             //----------------------------------------------------------
             new ActionEntry(Commands.CLOSE,           10, ActionType.Shutter),
             new ActionEntry(Commands.OPEN,            20, ActionType.Shutter),
@@ -68,9 +75,9 @@ namespace NtoLib.Recipes.MbeTable.Actions
             new ActionEntry(Commands.END_FOR,        150, ActionType.Unspecified),
             new ActionEntry(Commands.PAUSE,          160, ActionType.Unspecified),
             
-            new ActionEntry(Commands.NH3_OPEN,       170, ActionType.Unspecified),
-            new ActionEntry(Commands.NH3_CLOSE,      180, ActionType.Unspecified),
-            new ActionEntry(Commands.NH3_PURGE,      190, ActionType.Unspecified)
+            new ActionEntry(Commands.N_RUN,          170, ActionType.NitrogenSource),
+            new ActionEntry(Commands.N_CLOSE,        180, ActionType.NitrogenSource),
+            new ActionEntry(Commands.N_VENT,         190, ActionType.NitrogenSource)
         };
     }
 }
