@@ -16,7 +16,7 @@
 			<!-- Current recipe execution time.  -->
 			<Pin ID="4" Name="StepCurrentTime"		Type="Вещественный"/>
 
-			<!-- Number of the current FOR loop by the nesting level.  -->
+			<!-- Current step inside FOR loop by nesting level.  -->
 			<Pin ID="5" Name="ForLoopCount1"		Type="Целый"/>
 			<Pin ID="6" Name="ForLoopCount2"		Type="Целый"/>
 			<Pin ID="7" Name="ForLoopCount3"		Type="Целый"/>

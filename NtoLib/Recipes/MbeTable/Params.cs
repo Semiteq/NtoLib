@@ -53,6 +53,7 @@
         public const int ShutterNameQuantity = 32;
         public const int HeaterNameQuantity = 32;
         public const int NitrogenSourceNameQuantity = 3;
+        public const int MaxLoopCount = 3;
 
         //Номера столбцов соответствующих параметров в таблице
         public const int CommandIndex = 0;

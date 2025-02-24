@@ -1,5 +1,6 @@
 ﻿using FB.VisualFB;
 using InSAT.OPC;
+using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
 {

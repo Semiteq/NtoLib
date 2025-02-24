@@ -1,6 +1,6 @@
 ﻿using NtoLib.Recipes.MbeTable.Utils;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     public class CellType : Enumeration
     {

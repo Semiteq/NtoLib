@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.RecipeLines;
+using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -365,7 +367,7 @@ namespace NtoLib.Recipes.MbeTable
             {
                 if (editMode)
                 {
-                    if (column.type == CellType._bool)
+                    if (column.Type == CellType._bool)
                     {
                         DataGridViewComboBoxColumn viewComboBoxColumn = new()
                         {
@@ -379,7 +381,7 @@ namespace NtoLib.Recipes.MbeTable
 
                         column.GridIndex = dataGridView1.Columns.Add(viewComboBoxColumn);
                     }
-                    else if (column.type == CellType._enum)
+                    else if (column.Type == CellType._enum)
                     {
                         DataGridViewComboBoxColumn viewComboBoxColumn = new()
                         {

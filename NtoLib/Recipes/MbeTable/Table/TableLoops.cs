@@ -1,6 +1,6 @@
-﻿using NtoLib.Recipes.MbeTable.TableLines;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -11,23 +11,27 @@ namespace NtoLib.Recipes.MbeTable
             var cycleDepth = 0;
             foreach (var recipeLine in _tableData)
             {
-                if (recipeLine is For_Loop)
+                if (cycleDepth > Params.MaxLoopCount)
+                    return false;
+                switch (recipeLine)
                 {
-                    recipeLine.tabulateLevel = cycleDepth;
-                    cycleDepth++;
-                }
-                else if (recipeLine is EndFor_Loop)
-                {
-                    cycleDepth--;
+                    case For_Loop:
+                        recipeLine.tabulateLevel = cycleDepth;
+                        cycleDepth++;
+                        break;
+                    case EndFor_Loop:
+                    {
+                        cycleDepth--;
 
-                    if (cycleDepth < 0)
-                        return false;
+                        if (cycleDepth < 0)
+                            return false;
 
-                    recipeLine.tabulateLevel = cycleDepth;
-                }
-                else
-                {
-                    recipeLine.tabulateLevel = cycleDepth;
+                        recipeLine.tabulateLevel = cycleDepth;
+                        break;
+                    }
+                    default:
+                        recipeLine.tabulateLevel = cycleDepth;
+                        break;
                 }
             }
 

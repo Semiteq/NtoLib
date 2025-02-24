@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.Table
 {
     public class TableEnumType : IEnumerable<KeyValuePair<string, int>>
     {

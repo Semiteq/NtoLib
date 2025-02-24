@@ -1,37 +1,28 @@
-﻿using System;
+﻿using NtoLib.Recipes.MbeTable.RecipeLines;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.Table
 {
     internal class TableColumn
     {
-        private string _name;
-        private CellType _type;
-        private TableEnumType _enumType;
-        private int _gridIndex;
-
-        public TableColumn(string Name, CellType type)
+        public TableColumn(string name, CellType type)
         {
-            this._name = Name;
-            this._type = type;
+            Name = name;
+            Type = type;
         }
 
-        public TableColumn(string Name, TableEnumType enum_type)
+        public TableColumn(string name, TableEnumType enumType)
         {
-            this._name = Name;
-            this._type = CellType._enum;
-            this._enumType = enum_type;
+            Name = name;
+            Type = CellType._enum;
+            EnumType = enumType;
         }
 
-        public string Name => this._name;
+        public string Name { get; }
 
-        public CellType type => this._type;
+        public CellType Type { get; }
 
-        public TableEnumType EnumType => this._enumType;
+        public TableEnumType EnumType { get; }
 
-        public int GridIndex
-        {
-            get => _gridIndex;
-            set => _gridIndex = value;
-        }
+        public int GridIndex { get; set; }
     }
 }

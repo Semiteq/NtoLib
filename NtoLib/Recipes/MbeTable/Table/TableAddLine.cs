@@ -1,6 +1,9 @@
 ﻿using System.Windows.Forms;
 using System;
 using FB.VisualFB;
+using NtoLib.Recipes.MbeTable.RecipeLines;
+using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
+using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -50,12 +53,12 @@ namespace NtoLib.Recipes.MbeTable
                 StatusManager.WriteStatusMessage("Редактирование рецепта: рецепт корректный", false);
             }
 
-            RecipeTime.SetData(_tableData, dataGridView1);
-            RecipeTime.Recalculate();
+            RecipeTimeManager.SetData(_tableData, dataGridView1);
+            RecipeTimeManager.Recalculate();
 
             VisualFBBase fb = FBConnector.Fb as MbeTableFB;
 
-            fb.SetPinValue(Params.TotalTimeLeft, RecipeTime.TotalTime);
+            fb.SetPinValue(Params.TotalTimeLeft, RecipeTimeManager.TotalTime);
 
             dataGridView1.Refresh();
         }

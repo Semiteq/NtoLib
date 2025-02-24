@@ -1,9 +1,9 @@
-﻿using NtoLib.Recipes.MbeTable.Actions;
-using NtoLib.Recipes.MbeTable.TableLines;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     internal class RecipeLineFactory
     {

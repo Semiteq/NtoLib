@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.RecipeLines;
 
-namespace NtoLib.Recipes.MbeTable.TableLines
+namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 {
     internal class EndFor_Loop : RecipeLine
     {
