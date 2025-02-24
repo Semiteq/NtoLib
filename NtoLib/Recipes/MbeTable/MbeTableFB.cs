@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -35,8 +36,11 @@ namespace NtoLib.Recipes.MbeTable
         private const int ID_LineTimeLeft = 102;
 
         private CountdownTimer _countdownTimer;
+        
         private TimeSpan _lastRecipeTimeLeft;
+        
         private int _previousLineNumber = -1;
+        
         private bool _isRecipeRunning;
         private bool _isTimerPaused;
 
@@ -207,55 +211,62 @@ namespace NtoLib.Recipes.MbeTable
             VisualPins.SetPinValue(Params.ID_HMI_Timeout, Params.Timeout);
 
             // Process actual line and enable load status
-            int actualLine = GetActualLineValue();
-            uint statusFlags = CalculateStatusFlags(actualLine);
+            var actualLine = GetActualLineValue();
+            var statusFlags = CalculateStatusFlags(actualLine);
 
             // Update status values
             VisualPins.SetPinValue(Params.ID_HMI_ActualLine, actualLine);
             VisualPins.SetPinValue(Params.ID_HMI_Status, statusFlags);
+            
+            // Current step inside FOR loop of first nesting level
+            var forLoopCount1 = GetPinValue<int>(ID_ForLoopCount1);
+            var forLoopCount2 = GetPinValue<int>(ID_ForLoopCount2);
+            var forLoopCount3 = GetPinValue<int>(ID_ForLoopCount3);
 
-            RecipeRunControl(); 
-            UpdateRecipeTime();
-        }
-
-        private void UpdateRecipeTime()
-        {
             var currentLine = GetPinValue<int>(ID_ActualLineNumber);
             var plcLineTime = GetPinValue<double>(ID_StepCurrentTime);
-            var lineTimeLeft = RecipeTime.GetRowTime(currentLine) - TimeSpan.FromSeconds(plcLineTime);
-            var recipeTimeLeft = _countdownTimer?.GetRemainingTime() ?? TimeSpan.Zero;
+            
+            var isRecipeActive = GetPinValue<bool>(ID_RecipeActive);
+            var isRecipePaused = GetPinValue<bool>(ID_RecipePaused);
+            
+            // Get expected time for current line from flattened recipe data
+            var currentLineTime = RecipeTimeManager.GetRowTime(currentLine, forLoopCount1, forLoopCount2, forLoopCount3);
 
-            // Фиксируем остаток общего времени при смене строки
+            // Update timer info
+            RecipeRunControl(isRecipeActive, isRecipePaused, plcLineTime, currentLineTime);
+            
+            // Update recipe time
+            UpdateRecipeTime(currentLine, plcLineTime, currentLineTime);
+        }
+
+        private void UpdateRecipeTime(int currentLine, double plcLineTime, TimeSpan currentLineTime)
+        {
+            var recipeTimeLeft = _countdownTimer?.GetRemainingTime() ?? TimeSpan.Zero;
+            var lineTimeLeft = currentLineTime - TimeSpan.FromSeconds(plcLineTime);
+            
+            // Update recipe time left if line number has changed
             if (currentLine != _previousLineNumber)
             {
                 _lastRecipeTimeLeft = recipeTimeLeft;
                 _previousLineNumber = currentLine;
             }
-
+            
             SetPinValue(ID_TotalTimeLeft, recipeTimeLeft.TotalSeconds);
             SetPinValue(ID_LineTimeLeft, lineTimeLeft.TotalSeconds);
-
-            Debug.WriteLine($"Recipe time left: {recipeTimeLeft.TotalSeconds}");
-            Debug.WriteLine($"Line time left: {lineTimeLeft.TotalSeconds}");
         }
         
-        private void RecipeRunControl()
+        private void RecipeRunControl(bool isRecipeActive, bool isRecipePaused, double plcLineTime, TimeSpan expectedTimePassed)
         {
-            if (RecipeTime.TotalTime == TimeSpan.Zero) return;
-
-            var isRecipeActive = GetPinValue<bool>(ID_RecipeActive);
-            var isRecipePaused = GetPinValue<bool>(ID_RecipePaused);
-            var currentLine = GetPinValue<int>(ID_ActualLineNumber);
-            var plcLineTime = GetPinValue<double>(ID_StepCurrentTime);
+            if (RecipeTimeManager.TotalTime == TimeSpan.Zero) return;
 
             if (isRecipeActive && !_isRecipeRunning)
             {
-                _countdownTimer ??= new CountdownTimer(RecipeTime.TotalTime);
+                _countdownTimer ??= new CountdownTimer(RecipeTimeManager.TotalTime);
                 _isRecipeRunning = true;
                 _countdownTimer.Start();
             }
 
-            if (_isRecipeRunning)
+            if (isRecipeActive)
             {
                 if (isRecipePaused && !_isTimerPaused)
                 {
@@ -268,10 +279,12 @@ namespace NtoLib.Recipes.MbeTable
                     _countdownTimer.Resume();
                 }
 
-                if (plcLineTime == 0 && _lastRecipeTimeLeft != TimeSpan.Zero)
+                // Time correction between PLC and HMI
+                // Delta time in seconds to consider when correction is applied
+                var delta = 0.5f;
+                if (plcLineTime < delta && _lastRecipeTimeLeft < TimeSpan.FromSeconds(delta))
                 {
                     var actualTimePassed = _lastRecipeTimeLeft - _countdownTimer.GetRemainingTime();
-                    var expectedTimePassed = RecipeTime.GetRowTime(currentLine);
                     var timeError = expectedTimePassed - actualTimePassed;
 
                     if (Math.Abs(timeError.TotalSeconds) > 1)
@@ -291,6 +304,7 @@ namespace NtoLib.Recipes.MbeTable
             else
             {
                 _countdownTimer?.Stop();
+                _isRecipeRunning = false;
             }
         }
         

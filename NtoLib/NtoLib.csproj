@@ -112,12 +112,13 @@
     <Compile Include="Recipes\MbeTable\Actions\ActionTime.cs" />
     <Compile Include="Recipes\MbeTable\Actions\ActionType.cs" />
     <Compile Include="Recipes\MbeTable\Actions\Commands.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\FlattenedRecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\PLC\BufferActions.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\CellType.cs" />
     <Compile Include="Recipes\MbeTable\PLC\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Params.cs" />
-    <Compile Include="Recipes\MbeTable\Table\CountdownTimer.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\CountdownTimer.cs" />
     <Compile Include="Recipes\MbeTable\Utils\DateTimeParser.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\GrowthList.cs">
       <SubType>UserControl</SubType>
@@ -127,7 +128,7 @@
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineFactory.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineParser.cs" />
-    <Compile Include="Recipes\MbeTable\Table\RecipeTime.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\RecipeTimeManager.cs" />
     <Compile Include="Recipes\MbeTable\PLC\SettingsReader.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableAddLine.cs">
@@ -323,5 +324,6 @@
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.bmp" />
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

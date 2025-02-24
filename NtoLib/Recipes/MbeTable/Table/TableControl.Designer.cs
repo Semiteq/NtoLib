@@ -154,7 +154,7 @@ namespace NtoLib.Recipes.MbeTable
             this.DbgMsg.Name = "DbgMsg";
             this.DbgMsg.Size = new System.Drawing.Size(719, 40);
             this.DbgMsg.TabIndex = 14;
-            this.DbgMsg.Text = "Сообщения";
+            this.DbgMsg.Text = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ";
             this.DbgMsg.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // TableControl

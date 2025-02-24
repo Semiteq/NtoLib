@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using FB.VisualFB;
 using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.Table;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     internal abstract class GrowthList : VisualControlBase
     {

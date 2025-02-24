@@ -2,16 +2,11 @@
 using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Actions;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     internal class RecipeLineParser
     {
-        private readonly RecipeLineFactory _factory;
-
-        public RecipeLineParser()
-        {
-            _factory = new RecipeLineFactory();
-        }
+        private readonly RecipeLineFactory _factory = new();
 
         public RecipeLine Parse(string stringToParse)
         {

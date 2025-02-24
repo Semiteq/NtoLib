@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.RecipeLines;
+using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
 {
