@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Recipes.MbeTable
+﻿namespace NtoLib.Recipes.MbeTable.Table
 {
     public enum TableMode
     {

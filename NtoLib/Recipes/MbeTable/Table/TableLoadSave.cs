@@ -4,6 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.RecipeLines;
+using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -17,7 +20,7 @@ namespace NtoLib.Recipes.MbeTable
 
             if (!settingsReader.CheckQuality())
             {
-                this.WriteStatusMessage("Ошибка чтения настроек. Нет связи, продолжение загрузки рецепта не возможно", true);
+                StatusManager.WriteStatusMessage("Ошибка чтения настроек. Нет связи, продолжение загрузки рецепта не возможно", true);
             }
             else
             {
@@ -41,10 +44,10 @@ namespace NtoLib.Recipes.MbeTable
                         num = (int)settings._BoolAreaSize * 16 / settings._bool_colum_num;
                 }
                 if (num < 0)
-                    this.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
+                    StatusManager.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
                 else if (num == 0)
                 {
-                    this.WriteStatusMessage("Не выделены отдельные области памяти", true);
+                    StatusManager.WriteStatusMessage("Не выделены отдельные области памяти", true);
                 }
                 else
                 {
@@ -56,13 +59,13 @@ namespace NtoLib.Recipes.MbeTable
                     }
                     catch (Exception ex)
                     {
-                        this.WriteStatusMessage(ex.Message, true);
+                        StatusManager.WriteStatusMessage(ex.Message, true);
                         return;
                     }
 
                     if (num < recipe.Count)
                     {
-                        this.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
+                        StatusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
                         recipeLineList = (List<RecipeLine>)null;
                     }
                     else
@@ -79,15 +82,15 @@ namespace NtoLib.Recipes.MbeTable
                         var recipeFromPlc = plcCommunication.LoadRecipeFromPlc(settings);
                         if (recipeFromPlc == null)
                         {
-                            WriteStatusMessage("Рецепт не удалось загрузить в контроллер", true);
+                            StatusManager.WriteStatusMessage("Рецепт не удалось загрузить в контроллер", true);
                             return;
                         }
                         else
                         {
                             if (CompareRecipes(recipe, recipeFromPlc))
-                                WriteStatusMessage("Рецепт успешно загружен в контроллер", false);
+                                StatusManager.WriteStatusMessage("Рецепт успешно загружен в контроллер", false);
                             else
-                                WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!", true);
+                                StatusManager.WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!", true);
                         }
 
                         foreach (RecipeLine line in recipe)
@@ -100,7 +103,7 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         /// <summary>
-        /// Загружает рецепт из ПЛК и отображает его в таблице
+        /// Loads the recipe from the PLC and displays it in the table.
         /// </summary>
         private bool TryLoadRecipeFromPlc()
         {
@@ -157,7 +160,7 @@ namespace NtoLib.Recipes.MbeTable
             }
             catch (Exception ex)
             {
-                WriteStatusMessage(ex.Message, true);
+                StatusManager.WriteStatusMessage(ex.Message, true);
                 _tableData = reserveTableData;
                 return;
             }
@@ -170,23 +173,22 @@ namespace NtoLib.Recipes.MbeTable
 
             foreach (var recipeLine in data)
             {
-                int rowIndex = dataGridView1.Rows.Add(new DataGridViewRow());
+                var rowIndex = dataGridView1.Rows.Add(new DataGridViewRow());
                 var row = dataGridView1.Rows[rowIndex];
 
-                // Установка заголовка строки и её высоты
                 row.HeaderCell.Value = (rowIndex + 1).ToString();
                 row.Height = ROW_HEIGHT;
-
-                for (int colIndex = 0; colIndex < Params.ColumnCount; colIndex++)
+                
+                var action =  recipeLine.GetCells[Params.CommandIndex].StringValue;
+                
+                for (var colIndex = 0; colIndex < Params.ColumnCount; colIndex++)
                 {
-                    // Получение значения ячейки
                     var cellValue = recipeLine.GetCells[colIndex].StringValue;
                     var cell = row.Cells[colIndex];
-
-                    // Установка значения ячейки
+                    
                     cell.Value = cellValue;
-
-                    // Обновление комбобокса для столбца номера
+                    
+                    // Number column combo box update
                     if (colIndex == Params.NumberIndex && cell is DataGridViewComboBoxCell comboBoxCell && cellValue != null)
                     {
                         UpdateEnumDropDown(comboBoxCell, cellValue);
@@ -211,10 +213,9 @@ namespace NtoLib.Recipes.MbeTable
                 using var stream = new FileStream(openFileDialog1.FileName, FileMode.OpenOrCreate);
                 using var streamReader = new StreamReader(stream);
 
-                bool isHeader = true;
-                string line;
+                var isHeader = true;
 
-                while ((line = streamReader.ReadLine()) != null)
+                while (streamReader.ReadLine() is { } line)
                 {
                     if (isHeader)
                     {
@@ -235,11 +236,11 @@ namespace NtoLib.Recipes.MbeTable
             }
             catch (Exception ex)
             {
-                WriteStatusMessage($"Ошибка при загрузке файла: {ex.Message}", true);
+                StatusManager.WriteStatusMessage($"Ошибка при загрузке файла: {ex.Message}", true);
                 throw;
             }
 
-            WriteStatusMessage($"Данные загружены из файла {openFileDialog1.FileName}", false);
+            StatusManager.WriteStatusMessage($"Данные загружены из файла {openFileDialog1.FileName}", false);
             return recipeLineList;
         }
 
@@ -266,22 +267,29 @@ namespace NtoLib.Recipes.MbeTable
                 using (var stream = new FileStream(saveFileDialog1.FileName, FileMode.Create))
                 using (var streamWriter = new StreamWriter(stream))
                 {
-                    // Записываем заголовки
+                    // Writing headers
                     var columnHeaders = string.Join(";", columns.Select(column => column.Name));
                     streamWriter.WriteLine(columnHeaders);
 
-                    // Записываем строки
+                    // Writing lines
                     foreach (var recipeLine in _tableData)
                     {
                         var cells = recipeLine.GetCells.ToList();
                         var rowData = new List<string>();
-                        string currentCommand = cells[Params.CommandIndex].StringValue;
-
-                        for (int i = 0; i < cells.Count; i++)
+                        var currentCommand = cells[Params.CommandIndex].StringValue;
+                        var action = GrowthList.GetActionType(cells[Params.NumberIndex].StringValue);
+                        
+                        for (var i = 0; i < cells.Count; i++)
                         {
+                            
                             var cellValue = cells[i].StringValue;
 
-                            if (i == Params.NumberIndex)
+                            if (i == Params.CommandIndex)
+                            {
+                                cellValue = ActionManager.GetActionIdByCommand(cellValue).ToString();
+                            }
+                            
+                            if (i == Params.NumberIndex && action != ActionType.Unspecified)
                             {
                                 try
                                 {
@@ -300,11 +308,11 @@ namespace NtoLib.Recipes.MbeTable
                     }
                 }
 
-                WriteStatusMessage($"Данные сохранены в файл {saveFileDialog1.FileName}", false);
+                StatusManager.WriteStatusMessage($"Данные сохранены в файл {saveFileDialog1.FileName}", false);
             }
             catch (Exception ex)
             {
-                WriteStatusMessage($"Ошибка при сохранении: {ex.Message}", true);
+                StatusManager.WriteStatusMessage($"Ошибка при сохранении: {ex.Message}", true);
             }
         }
     }

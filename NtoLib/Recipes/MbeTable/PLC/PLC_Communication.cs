@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading;
+using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -142,9 +143,8 @@ namespace NtoLib.Recipes.MbeTable
                 SendRecipeLength(settings, stream, (ushort)recipe.Count);
                 SendWritingRequest(settings, stream, CMD_WRITING_NOT_ACTIVE);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                //this.WriteStatusMessage("Ошибка при записи рецепта в контреллер: " + ex.Message);
                 return false;
             }
             finally
@@ -183,13 +183,13 @@ namespace NtoLib.Recipes.MbeTable
 
                 List<RecipeLine> data = ReadDataFromPlc(settings, tcpClient);
 
-                //this.Message("Успешная выгрузка рецепта");
+                
 
                 return data;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                //this.Message("Load from PLC error: " + ex.Message);
+                
                 return null;
             }
             finally

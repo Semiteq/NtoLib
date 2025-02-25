@@ -1,16 +1,14 @@
 ﻿using System.Collections.Generic;
-using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.RecipeLines;
 
-namespace NtoLib.Recipes.MbeTable.TableLines
+namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 {
-    internal class NH3_Open : RecipeLine
+    internal class N_Close : RecipeLine
     {
-        public const string ActionName = Commands.NH3_OPEN;
+        public const string ActionName = Commands.N_CLOSE;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public NH3_Open() : this("") { }
-
-        public NH3_Open(string comment) : base(ActionName)
+        public N_Close(string comment) : base(ActionName)
         {
             int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
 

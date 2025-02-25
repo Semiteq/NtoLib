@@ -1,6 +1,6 @@
 ﻿using NtoLib.Recipes.MbeTable.Utils;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     public class CellType : Enumeration
     {
@@ -23,8 +23,5 @@ namespace NtoLib.Recipes.MbeTable
 
         private CellType() { }
         private CellType(int value, string displayName) : base(value, displayName) { }
-
-        public static bool operator ==(CellType left, CellType right) => Equals(left, right);
-        public static bool operator !=(CellType left, CellType right) => !Equals(left, right);
     }
 }

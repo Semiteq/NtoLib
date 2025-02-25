@@ -1,6 +1,6 @@
-﻿using NtoLib.Recipes.MbeTable.TableLines;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -8,26 +8,30 @@ namespace NtoLib.Recipes.MbeTable
     {
         private bool CheckRecipeCycles()
         {
-            int cycleDepth = 0;
+            var cycleDepth = 0;
             foreach (var recipeLine in _tableData)
             {
-                if (recipeLine is For_Loop)
+                if (cycleDepth > Params.MaxLoopCount)
+                    return false;
+                switch (recipeLine)
                 {
-                    recipeLine.tabulateLevel = cycleDepth;
-                    cycleDepth++;
-                }
-                else if (recipeLine is EndFor_Loop)
-                {
-                    cycleDepth--;
+                    case For_Loop:
+                        recipeLine.tabulateLevel = cycleDepth;
+                        cycleDepth++;
+                        break;
+                    case EndFor_Loop:
+                    {
+                        cycleDepth--;
 
-                    if (cycleDepth < 0)
-                        return false;
+                        if (cycleDepth < 0)
+                            return false;
 
-                    recipeLine.tabulateLevel = cycleDepth;
-                }
-                else
-                {
-                    recipeLine.tabulateLevel = cycleDepth;
+                        recipeLine.tabulateLevel = cycleDepth;
+                        break;
+                    }
+                    default:
+                        recipeLine.tabulateLevel = cycleDepth;
+                        break;
                 }
             }
 
@@ -37,29 +41,31 @@ namespace NtoLib.Recipes.MbeTable
 
         private void Tabulate()
         {
-            DataGridViewCellStyle cellStyle = new DataGridViewCellStyle();
-            cellStyle.BackColor = Color.Coral;
-            cellStyle.ForeColor = Color.Black;
-            cellStyle.SelectionBackColor = Color.Chocolate;
-
-            for (int i = 0; i < _tableData.Count; i++)
+            var cellStyle = new DataGridViewCellStyle
             {
-                string tabulatorString = string.Empty;
+                BackColor = Color.Coral,
+                ForeColor = Color.Black,
+                SelectionBackColor = Color.Chocolate
+            };
 
-                int tabulatorLevel = 0;
+            for (var i = 0; i < _tableData.Count; i++)
+            {
+                var tabulatorString = string.Empty;
+
+                var tabulatorLevel = 0;
                 for (tabulatorLevel = 0; tabulatorLevel < _tableData[i].tabulateLevel; tabulatorLevel++)
                     tabulatorString += "\t";
 
                 dataGridView1.Rows[i].HeaderCell.Value = tabulatorString + (i + 1).ToString();
 
-                if (tabulatorLevel == 0)
-                    dataGridView1.Rows[i].Cells[0].Style.BackColor = Color.White;
-                else if (tabulatorLevel == 1)
-                    dataGridView1.Rows[i].Cells[0].Style.BackColor = Color.LightBlue;
-                else if (tabulatorLevel == 2)
-                    dataGridView1.Rows[i].Cells[0].Style.BackColor = Color.LightSkyBlue;
-                else if (tabulatorLevel == 3)
-                    dataGridView1.Rows[i].Cells[0].Style.BackColor = Color.DodgerBlue;
+                dataGridView1.Rows[i].Cells[0].Style.BackColor = tabulatorLevel switch
+                {
+                    0 => Color.White,
+                    1 => Color.LightBlue,
+                    2 => Color.LightSkyBlue,
+                    3 => Color.DodgerBlue,
+                    _ => dataGridView1.Rows[i].Cells[0].Style.BackColor
+                };
             }
         }
 
@@ -67,8 +73,8 @@ namespace NtoLib.Recipes.MbeTable
         {
             if (_tableData[e.RowIndex] is For_Loop)
             {
-                int startIndex = e.RowIndex + 1;
-                int endIndex = FindCycleEnd(startIndex);
+                var startIndex = e.RowIndex + 1;
+                var endIndex = FindCycleEnd(startIndex);
 
                 if (dataGridView1.Rows[startIndex].Height != ROW_HEIGHT)
                     ExpandRows(startIndex, endIndex);
@@ -81,7 +87,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             dataGridView1.Rows[startIndex - 1].HeaderCell.Value = startIndex + " (+)";
 
-            for (int i = startIndex; i <= endIndex; i++)
+            for (var i = startIndex; i <= endIndex; i++)
             {
                 dataGridView1.Rows[i].Height = 1;
             }
@@ -89,7 +95,7 @@ namespace NtoLib.Recipes.MbeTable
         private void ExpandRows(int startIndex, int endIndex)
         {
             dataGridView1.Rows[startIndex - 1].HeaderCell.Value = startIndex + " (-)";
-            for (int i = startIndex; i <= endIndex; i++)
+            for (var i = startIndex; i <= endIndex; i++)
             {
                 dataGridView1.Rows[i].Height = ROW_HEIGHT;
             }
@@ -97,13 +103,18 @@ namespace NtoLib.Recipes.MbeTable
 
         private int FindCycleStart(int endIndex)
         {
-            int tabulateLevel = 1;
-            for (int i = endIndex - 1; i >= 0; i--)
+            var tabulateLevel = 1;
+            for (var i = endIndex - 1; i >= 0; i--)
             {
-                if (_tableData[i] is EndFor_Loop)
-                    tabulateLevel++;
-                else if (_tableData[i] is For_Loop)
-                    tabulateLevel--;
+                switch (_tableData[i])
+                {
+                    case EndFor_Loop:
+                        tabulateLevel++;
+                        break;
+                    case For_Loop:
+                        tabulateLevel--;
+                        break;
+                }
 
                 if (tabulateLevel == 0)
                     return i;
@@ -112,13 +123,18 @@ namespace NtoLib.Recipes.MbeTable
         }
         private int FindCycleEnd(int startIndex)
         {
-            int tabulateLevel = 1;
-            for (int i = startIndex; i < _tableData.Count; i++)
+            var tabulateLevel = 1;
+            for (var i = startIndex; i < _tableData.Count; i++)
             {
-                if (_tableData[i] is For_Loop)
-                    tabulateLevel++;
-                else if (_tableData[i] is EndFor_Loop)
-                    tabulateLevel--;
+                switch (_tableData[i])
+                {
+                    case For_Loop:
+                        tabulateLevel++;
+                        break;
+                    case EndFor_Loop:
+                        tabulateLevel--;
+                        break;
+                }
 
                 if (tabulateLevel == 0)
                     return i - 1;
