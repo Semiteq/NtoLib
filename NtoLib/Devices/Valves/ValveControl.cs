@@ -18,68 +18,60 @@ namespace NtoLib.Devices.Valves
     public partial class ValveControl : VisualControlBase
     {
         private bool _noButtons;
+
         [DisplayName("Скрыть кнопки")]
         public bool NoButtons
         {
-            get
-            {
-                return _noButtons;
-            }
+            get { return _noButtons; }
             set
             {
                 bool updateRequired = _noButtons != value;
                 _noButtons = value;
-                if(updateRequired)
+                if (updateRequired)
                     UpdateLayout();
             }
         }
 
         private Render.Orientation _orientation;
+
         [DisplayName("Ориентация клапана")]
         public Render.Orientation Orientation
         {
-            get
-            {
-                return _orientation;
-            }
+            get { return _orientation; }
             set
             {
-                if(Math.Abs((int)_orientation - (int)value) % 180 == 90)
+                if (Math.Abs((int)_orientation - (int)value) % 180 == 90)
                     (Width, Height) = (Height, Width);
 
                 bool updateRequired = _orientation != value;
                 _orientation = value;
-                if(updateRequired)
+                if (updateRequired)
                     UpdateLayout();
             }
         }
 
         private ButtonOrientation _buttonOrientation;
+
         [DisplayName("Ориентация кнопок")]
         public ButtonOrientation ButtonOrientation
         {
-            get
-            {
-                return _buttonOrientation;
-            }
+            get { return _buttonOrientation; }
             set
             {
                 bool updateRequired = _buttonOrientation != value;
                 _buttonOrientation = value;
-                if(updateRequired)
+                if (updateRequired)
                     UpdateLayout();
             }
         }
 
         private bool _isSlideGate;
+
         [DisplayName("Шибер")]
         [Description("Изменяет отображение на шибер. Имеет приоретет над плавным клапаном.")]
         public bool IsSlideGate
         {
-            get
-            {
-                return _isSlideGate;
-            }
+            get { return _isSlideGate; }
             set
             {
                 _isSlideGate = value;
@@ -89,14 +81,13 @@ namespace NtoLib.Devices.Valves
         }
 
         private bool _smoothValvePreview;
+
         [DisplayName("Предпросмотр плавного клапана")]
-        [Description("Изменяет отображение на плавный клапан в DesignMode. В Runtime тип будет определятся из StatusWord.")]
+        [Description(
+            "Изменяет отображение на плавный клапан в DesignMode. В Runtime тип будет определятся из StatusWord.")]
         public bool SmoothValvePreview
         {
-            get
-            {
-                return _smoothValvePreview;
-            }
+            get { return _smoothValvePreview; }
             set
             {
                 _smoothValvePreview = value;
@@ -122,7 +113,7 @@ namespace NtoLib.Devices.Valves
         private Timer _animationTimer;
         private bool _animationClocker;
 
-
+        private Timer _redrawTimer;
 
         public ValveControl()
         {
@@ -135,6 +126,7 @@ namespace NtoLib.Devices.Valves
 
             _renderer = new CommonValveRenderer(this);
         }
+
 
         protected override void ToRuntime()
         {
@@ -152,6 +144,13 @@ namespace NtoLib.Devices.Valves
             _mouseHoldTimer = new Timer();
             _mouseHoldTimer.Interval = 200;
             _mouseHoldTimer.Tick += HandleMouseHoldDown;
+
+            // Windows may suppress OnPaint event if the control is not visible
+            // or not in focus. This timer will force the control to redraw.
+            _redrawTimer = new Timer();
+            _redrawTimer.Interval = 50;
+            _redrawTimer.Tick += (s, e) => Invalidate();
+            _redrawTimer.Start();
         }
 
         protected override void ToDesign()
@@ -164,6 +163,7 @@ namespace NtoLib.Devices.Valves
             _impulseTimer?.Dispose();
             _animationTimer?.Dispose();
             _mouseHoldTimer?.Dispose();
+            _redrawTimer?.Dispose();
         }
 
         private void HandleResize(object sender, EventArgs e)
@@ -171,33 +171,29 @@ namespace NtoLib.Devices.Valves
             UpdateLayout();
         }
 
-
-
         private void HandleOpenClick(object sender, EventArgs e)
         {
-            if(!Status.UsedByAutoMode && !Status.BlockOpening)
+            if (!Status.UsedByAutoMode && !Status.BlockOpening)
                 SendCommand(ValveFB.OpenCmdId);
         }
 
         private void HandleOpenSmoothlyClick(object sender, EventArgs e)
         {
-            if(!Status.UsedByAutoMode && !Status.BlockOpening)
+            if (!Status.UsedByAutoMode && !Status.BlockOpening)
                 SendCommand(ValveFB.OpenSmoothlyCmdId);
         }
 
         private void HandleCloseClick(object sender, EventArgs e)
         {
-            if(!Status.UsedByAutoMode && !Status.BlockClosing)
+            if (!Status.UsedByAutoMode && !Status.BlockClosing)
                 SendCommand(ValveFB.CloseCmdId);
         }
 
 
-
         protected override void OnPaint(PaintEventArgs e)
         {
-            if(!FBConnector.DesignMode)
+            if (!FBConnector.DesignMode)
                 UpdateStatus();
-
             UpdateSprite();
         }
 
@@ -220,13 +216,17 @@ namespace NtoLib.Devices.Valves
         private void UpdateButtonTable()
         {
             Render.Orientation buttonsOrientation;
-            if(IsHorizontal())
-                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Top : Render.Orientation.Bottom;
+            if (IsHorizontal())
+                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop
+                    ? Render.Orientation.Top
+                    : Render.Orientation.Bottom;
             else
-                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
+                buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop
+                    ? Render.Orientation.Left
+                    : Render.Orientation.Right;
 
             Button[] buttons;
-            if(NoButtons)
+            if (NoButtons)
             {
                 buttonOpen.Visible = false;
                 buttonOpenSmoothly.Visible = false;
@@ -238,7 +238,7 @@ namespace NtoLib.Devices.Valves
                 buttonOpen.Visible = true;
                 buttonClose.Visible = true;
 
-                if(_isSlideGate || !(_isSmoothValve || (DesignMode && SmoothValvePreview)))
+                if (_isSlideGate || !(_isSmoothValve || (DesignMode && SmoothValvePreview)))
                 {
                     buttonOpenSmoothly.Visible = false;
                     buttons = new Button[] { buttonOpen, buttonClose };
@@ -257,13 +257,15 @@ namespace NtoLib.Devices.Valves
         {
             spriteBox.Image = new Bitmap(Math.Max(1, spriteBox.Width), Math.Max(1, spriteBox.Height));
 
-            using(var g = Graphics.FromImage(spriteBox.Image))
+            using (var g = Graphics.FromImage(spriteBox.Image))
             {
                 g.Clear(BackColor);
 
                 GraphicsUnit unit = GraphicsUnit.Point;
                 _renderer.Draw(g, spriteBox.Image.GetBounds(ref unit), Orientation, _animationClocker);
             }
+
+            spriteBox.Refresh();
         }
 
         private bool IsHorizontal()
@@ -272,10 +274,9 @@ namespace NtoLib.Devices.Valves
         }
 
 
-
         private void HandleMouseDown(object sender, MouseEventArgs e)
         {
-            if(e.Button != MouseButtons.Right)
+            if (e.Button != MouseButtons.Right)
             {
                 _mouseHoldTimer.Stop();
                 _settingsForm?.Close();
@@ -293,7 +294,7 @@ namespace NtoLib.Devices.Valves
 
         private void HandleMouseUp(object sender, MouseEventArgs e)
         {
-            if(e.Button != MouseButtons.Right)
+            if (e.Button != MouseButtons.Right)
                 return;
 
             _mouseHoldTimer.Stop();
@@ -306,10 +307,9 @@ namespace NtoLib.Devices.Valves
         }
 
 
-
         private void HandleVisibleChanged(object sender, EventArgs e)
         {
-            if(!Visible)
+            if (!Visible)
                 _settingsForm?.Close();
         }
 
@@ -320,10 +320,9 @@ namespace NtoLib.Devices.Valves
         }
 
 
-
         private void SendCommand(int commandId)
         {
-            if(_impulseTimer.Enabled)
+            if (_impulseTimer.Enabled)
             {
                 DisableCommandImpulse(this, null);
                 _impulseTimer.Stop();
@@ -339,9 +338,9 @@ namespace NtoLib.Devices.Valves
             _settingsForm = new SettingsForm(this);
             Point formLocation = MousePosition;
             Rectangle area = Screen.GetWorkingArea(formLocation);
-            if(formLocation.X + _settingsForm.Width > area.Right)
+            if (formLocation.X + _settingsForm.Width > area.Right)
                 formLocation.X -= _settingsForm.Width;
-            if(formLocation.Y + _settingsForm.Height > area.Bottom)
+            if (formLocation.Y + _settingsForm.Height > area.Bottom)
                 formLocation.Y -= _settingsForm.Height;
 
             _settingsForm.Location = formLocation;
@@ -358,11 +357,11 @@ namespace NtoLib.Devices.Valves
 
 
         private void UpdateStatus()
-        {   
+        {
             Status.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
             Status.NotOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
             Status.NotClosed = GetPinValue<bool>(ValveFB.NotClosedId);
-            if(Status.NotOpened && Status.NotClosed)
+            if (Status.NotOpened && Status.NotClosed)
             {
                 Status.NotOpened = false;
                 Status.NotClosed = false;
@@ -372,6 +371,7 @@ namespace NtoLib.Devices.Valves
             {
                 Status.UnknownState = false;
             }
+
             Status.Collision = GetPinValue<bool>(ValveFB.CollisionId);
             Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
             Status.Opened = GetPinValue<bool>(ValveFB.OpenedId);
@@ -390,14 +390,14 @@ namespace NtoLib.Devices.Valves
             _isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
             UpdateRenderer();
 
-            if(_isSmoothValve != _previousSmoothValve)
+            if (_isSmoothValve != _previousSmoothValve)
                 UpdateLayout();
             _previousSmoothValve = _isSmoothValve;
 
-            
-            if(!_animationTimer.Enabled && Status.AnimationNeeded)
+
+            if (!_animationTimer.Enabled && Status.AnimationNeeded)
                 _animationTimer.Start();
-            if(_animationTimer.Enabled && !Status.AnimationNeeded)
+            if (_animationTimer.Enabled && !Status.AnimationNeeded)
                 _animationTimer.Stop();
 
             _settingsForm?.Invalidate();
@@ -405,19 +405,19 @@ namespace NtoLib.Devices.Valves
 
         private void UpdateRenderer()
         {
-            if(IsSlideGate)
+            if (IsSlideGate)
             {
-                if(_renderer.GetType() != typeof(SlideGateRenderer))
+                if (_renderer.GetType() != typeof(SlideGateRenderer))
                     _renderer = new SlideGateRenderer(this);
             }
-            else if(_isSmoothValve || (DesignMode && SmoothValvePreview))
+            else if (_isSmoothValve || (DesignMode && SmoothValvePreview))
             {
-                if(_renderer.GetType() != typeof(SmoothValveRenderer))
+                if (_renderer.GetType() != typeof(SmoothValveRenderer))
                     _renderer = new SmoothValveRenderer(this);
             }
             else
             {
-                if(_renderer.GetType() != typeof(CommonValveRenderer))
+                if (_renderer.GetType() != typeof(CommonValveRenderer))
                     _renderer = new CommonValveRenderer(this);
             }
         }
