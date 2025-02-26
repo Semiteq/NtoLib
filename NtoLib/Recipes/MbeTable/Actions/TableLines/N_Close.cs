@@ -10,9 +10,8 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public N_Close(string comment) : base(ActionName)
         {
-            int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
-
-            _cells = new List<TCell>
+            var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
+            Cells = new List<TCell>
             {
                 new TCell(CellType._enum, ActionName, actionNumber),
                 new TCell(CellType._blocked, ""),

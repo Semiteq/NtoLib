@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable.Actions.TableLines
@@ -10,12 +11,12 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public Close(int number, string comment) : base(ActionName)
         {
-            shutterName = GrowthList.ShutterNames[number];
-            int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
-            _cells = new List<TCell>
+            ShutterName = GrowthList.ShutterNames.FirstOrDefault(x => x.Key == number).Value;
+            var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
+            Cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, shutterName, number),
+                new(CellType._enum, ShutterName, number),
                 new(CellType._blocked, ""),
                 new(CellType._blocked, ""),
                 new(CellType._blocked, ""),

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable.Actions.TableLines
@@ -8,14 +9,15 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
         public const string ActionName = Commands.TEMP_BY_SPEED;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public TemperatureBySpeed(int number, float temperatureSetpoint, float temperatureSpeed, string comment) : base(ActionName)
+        public TemperatureBySpeed(int number, float temperatureSetpoint, float temperatureSpeed, string comment) :
+            base(ActionName)
         {
-            heaterName = GrowthList.HeaterNames[number];
-            int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
-            _cells = new List<TCell>
+            HeaterName = GrowthList.HeaterNames.FirstOrDefault(x => x.Key == number).Value;
+            var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
+            Cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, heaterName, number),
+                new(CellType._enum, HeaterName, number),
                 new(CellType._floatTemp, temperatureSetpoint),
                 new(CellType._floatTempSpeed, temperatureSpeed),
                 new(CellType._blocked, ""),

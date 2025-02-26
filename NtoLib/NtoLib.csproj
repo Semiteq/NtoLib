@@ -141,7 +141,6 @@
     <Compile Include="Recipes\MbeTable\Table\TableControl.Designer.cs">
       <DependentUpon>TableControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Recipes\MbeTable\Table\TableEnumType.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\Close.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\CloseAll.cs" />
     <Compile Include="Recipes\MbeTable\Actions\TableLines\EndFor_Loop.cs" />

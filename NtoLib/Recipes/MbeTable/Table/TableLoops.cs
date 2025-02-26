@@ -16,7 +16,7 @@ namespace NtoLib.Recipes.MbeTable
                 switch (recipeLine)
                 {
                     case For_Loop:
-                        recipeLine.tabulateLevel = cycleDepth;
+                        recipeLine.TabulateLevel = cycleDepth;
                         cycleDepth++;
                         break;
                     case EndFor_Loop:
@@ -26,11 +26,11 @@ namespace NtoLib.Recipes.MbeTable
                         if (cycleDepth < 0)
                             return false;
 
-                        recipeLine.tabulateLevel = cycleDepth;
+                        recipeLine.TabulateLevel = cycleDepth;
                         break;
                     }
                     default:
-                        recipeLine.tabulateLevel = cycleDepth;
+                        recipeLine.TabulateLevel = cycleDepth;
                         break;
                 }
             }
@@ -53,7 +53,7 @@ namespace NtoLib.Recipes.MbeTable
                 var tabulatorString = string.Empty;
 
                 var tabulatorLevel = 0;
-                for (tabulatorLevel = 0; tabulatorLevel < _tableData[i].tabulateLevel; tabulatorLevel++)
+                for (tabulatorLevel = 0; tabulatorLevel < _tableData[i].TabulateLevel; tabulatorLevel++)
                     tabulatorString += "\t";
 
                 dataGridView1.Rows[i].HeaderCell.Value = tabulatorString + (i + 1).ToString();

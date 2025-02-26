@@ -5,7 +5,6 @@ using NtoLib.Recipes.MbeTable.Actions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -21,11 +20,9 @@ namespace NtoLib.Recipes.MbeTable
     {
         #region Private fields
 
-
         private const int _rowHeadersWidth = 75;
 
         private const int ROW_HEIGHT = 32;
-        //private const int _max_data_lenght_modbus = 100;
 
         private DataGridView dataGridView1;
 
@@ -47,7 +44,7 @@ namespace NtoLib.Recipes.MbeTable
         private bool _headerTextColorChanged = true;
         private Color _header_bg_color = Color.DarkGray;
         private bool _header_bg_color_changed = true;
-        
+
         private Font _line_font = new Font("Arial", 14f);
         private Font _selected_line_font = new Font("Arial", 14f);
         private Font _passed_line_font = new Font("Arial", 14f);
@@ -70,12 +67,14 @@ namespace NtoLib.Recipes.MbeTable
         private List<TableColumn> columns = new();
 
         private string make_table_msg = "_ ";
+
         //private DateTime starttime = DateTime.Now;
         private int make_upload;
 
         private RecipeLineFactory _factory = new();
 
         private List<RecipeLine> _tableData = new();
+
         #endregion
 
         #region Properties
@@ -307,9 +306,11 @@ namespace NtoLib.Recipes.MbeTable
                 StatusManager.WriteStatusMessage("Описание таблицы изменено", false);
             }
         }
+
         #endregion
 
         #region Constructor
+
         public TableControl() : base(true)
         {
             InitializeComponent();
@@ -318,10 +319,11 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
             StatusManager.DbgMsg = DbgMsg;
         }
+
         #endregion
 
         #region TableView
-        
+
         /// <summary>
         /// Table formating for execution mode. Lines before current line are yellow, 
         /// current line is green, after current line is white.
@@ -391,13 +393,11 @@ namespace NtoLib.Recipes.MbeTable
                             Width = GetWidth(column)
                         };
 
-                        if (column.EnumType != null && column.GridIndex == Params.CommandIndex)
+                        if (column.IntStringMap != null && column.GridIndex == Params.CommandIndex)
                         {
-                            viewComboBoxColumn.MaxDropDownItems = column.EnumType.EnumCount;
-
-                            for (var i = 0; i < column.EnumType.EnumCount; i++)
+                            foreach (var item in column.IntStringMap.Values)
                             {
-                                viewComboBoxColumn.Items.Add(column.EnumType.GetValueByIndex(i));
+                                viewComboBoxColumn.Items.Add(item);
                             }
                         }
 
@@ -431,7 +431,7 @@ namespace NtoLib.Recipes.MbeTable
             }
 
             ChangeCellAlignment();
-           
+
             StatusManager.WriteStatusMessage("Таблица подготовлена. ");
         }
 
@@ -478,7 +478,8 @@ namespace NtoLib.Recipes.MbeTable
                 {
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].ReadOnly = false;
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].Style.BackColor = Color.White;
-                    dataGridView1.Rows[rowIndex].Cells[cellIndex].Value = _tableData[rowIndex].GetCells[cellIndex].GetValue();
+                    dataGridView1.Rows[rowIndex].Cells[cellIndex].Value =
+                        _tableData[rowIndex].GetCells[cellIndex].GetValue();
                 }
             }
         }
@@ -486,6 +487,7 @@ namespace NtoLib.Recipes.MbeTable
         #endregion
 
         #region OnPaint
+
         protected override void OnPaint(PaintEventArgs e)
         {
             UpdateFlags();
@@ -524,12 +526,14 @@ namespace NtoLib.Recipes.MbeTable
                 colStyle.Font = _headerFont;
                 _headerFontChanged = false;
             }
+
             if (_headerTextColorChanged)
             {
                 rowStyle.ForeColor = _headerTextColor;
                 colStyle.ForeColor = _headerTextColor;
                 _headerTextColorChanged = false;
             }
+
             if (_header_bg_color_changed)
             {
                 rowStyle.BackColor = _header_bg_color;
@@ -549,17 +553,21 @@ namespace NtoLib.Recipes.MbeTable
 
         private void UpdateGrowthList()
         {
-            var shutterPins = new ReadPins(Params.FirstPinShutterName, Params.ShutterNameQuantity, FBConnector.Fb as MbeTableFB);
+            var shutterPins = new ReadPins(Params.FirstPinShutterName, Params.ShutterNameQuantity,
+                FBConnector.Fb as MbeTableFB);
             if (shutterPins.IsPinGroupQualityGood())
-                GrowthList.SetShutterNames(shutterPins.ReadPinNames());
+                GrowthList.SetNames(ActionType.Shutter, shutterPins.ReadPinNames());
 
-            var heaterPins = new ReadPins(Params.FirstPinHeaterName, Params.HeaterNameQuantity, FBConnector.Fb as MbeTableFB);
+
+            var heaterPins = new ReadPins(Params.FirstPinHeaterName, Params.HeaterNameQuantity,
+                FBConnector.Fb as MbeTableFB);
             if (heaterPins.IsPinGroupQualityGood())
-                GrowthList.SetHeaterNames(heaterPins.ReadPinNames());
-            
-            var ammoniaPins = new ReadPins(Params.FirstPinNitrogenSourceName, Params.NitrogenSourceNameQuantity, FBConnector.Fb as MbeTableFB);
-            if (ammoniaPins.IsPinGroupQualityGood())
-                GrowthList.SetNitrogenSourceNames(ammoniaPins.ReadPinNames());
+                GrowthList.SetNames(ActionType.Heater, heaterPins.ReadPinNames());
+
+            var nitrogenSource = new ReadPins(Params.FirstPinNitrogenSourceName, Params.NitrogenSourceNameQuantity,
+                FBConnector.Fb as MbeTableFB);
+            if (nitrogenSource.IsPinGroupQualityGood())
+                GrowthList.SetNames(ActionType.NitrogenSource, nitrogenSource.ReadPinNames());
         }
 
         private void UpdatePinValues()
@@ -578,7 +586,7 @@ namespace NtoLib.Recipes.MbeTable
             currentRecipeLine = pinValue2;
             UpdateRowFont();
         }
-        
+
         private void ChangeToViewMode()
         {
             button_open.Enabled = true;
@@ -593,9 +601,11 @@ namespace NtoLib.Recipes.MbeTable
             button_add_after.Visible = true;
             button_add_before.Visible = true;
         }
+
         #endregion
 
         #region MasterScada methods override
+
         protected override void ToDesign()
         {
             ConfigureColumns(false);
@@ -604,6 +614,7 @@ namespace NtoLib.Recipes.MbeTable
             StatusManager.WriteStatusMessage(make_table_msg, false);
             make_upload = 0;
         }
+
         protected override void ToRuntime()
         {
             _to_runtime = true;
@@ -613,6 +624,7 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.ReadOnly = _tableType == TableMode.View;
             _tableData.Clear();
         }
+
         #endregion
 
         private void UpdateEnumDropDown(DataGridViewComboBoxCell cell, object cellValue)
@@ -622,35 +634,43 @@ namespace NtoLib.Recipes.MbeTable
                 cell.Items.Clear();
 
                 // Fill combobox depending on the action type
-                switch (GrowthList.GetActionType(cellValue.ToString()))
+                switch (ActionManager.GetTargetAction(cellValue.ToString()))
                 {
                     case ActionType.Shutter:
-                        cell.MaxDropDownItems = GrowthList.ShutterNames.EnumCount;
-                        for (var ittrNum = 0; ittrNum < GrowthList.ShutterNames.EnumCount; ++ittrNum)
+                        var shutterNames = GrowthList.ShutterNames.Values;
+                        cell.MaxDropDownItems = shutterNames.Count;
+                        foreach (var name in shutterNames)
                         {
-                            cell.Items.Add(GrowthList.ShutterNames.GetValueByIndex(ittrNum));
-                        }
-                        break;
-                    
-                    case ActionType.Heater:
-                        cell.MaxDropDownItems = GrowthList.HeaterNames.EnumCount;
-                        for (var ittrNum = 0; ittrNum < GrowthList.HeaterNames.EnumCount; ++ittrNum)
-                        {
-                            cell.Items.Add(GrowthList.HeaterNames.GetValueByIndex(ittrNum));
-                        }
-                        break;
-                    case ActionType.NitrogenSource:
-                        cell.MaxDropDownItems = GrowthList.NitrogenSourceNames.EnumCount;
-                        for (var ittrNum = 0; ittrNum < GrowthList.NitrogenSourceNames.EnumCount; ++ittrNum)
-                        {
-                            cell.Items.Add(GrowthList.NitrogenSourceNames.GetValueByIndex(ittrNum));
+                            cell.Items.Add(name);
                         }
 
                         break;
+
+                    case ActionType.Heater:
+                        var heaterNames = GrowthList.HeaterNames.Values;
+                        cell.MaxDropDownItems = heaterNames.Count;
+                        foreach (var name in heaterNames)
+                        {
+                            cell.Items.Add(name);
+                        }
+
+                        break;
+
+                    case ActionType.NitrogenSource:
+                        var nitrogenSourceNames = GrowthList.NitrogenSourceNames.Values;
+                        cell.MaxDropDownItems = nitrogenSourceNames.Count;
+                        foreach (var name in nitrogenSourceNames)
+                        {
+                            cell.Items.Add(name);
+                        }
+
+                        break;
+
                     case ActionType.Unspecified:
                         cell.MaxDropDownItems = 1;
                         cell.Items.Add(cellValue);
                         break;
+
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -658,7 +678,7 @@ namespace NtoLib.Recipes.MbeTable
                 if (cell.Items.Contains(cellValue))
                     cell.Value = cellValue;
                 else
-                    cell.Value = cell.Items.Count > 0 ? cell.Items[0] : null; 
+                    cell.Value = cell.Items.Count > 0 ? cell.Items[0] : null;
             }
             catch (Exception ex)
             {
@@ -667,6 +687,7 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         #region CellChange
+
         private void EndCellEdit(object sender, DataGridViewCellEventArgs e)
         {
             var columnIndex = e.ColumnIndex;
@@ -698,7 +719,8 @@ namespace NtoLib.Recipes.MbeTable
             string currentAction = dataGridView1.Rows[rowIndex].Cells[Params.CommandIndex].Value.ToString();
             var actionType = ActionManager.GetTargetAction(currentAction);
 
-            var validActions = new HashSet<ActionType> { ActionType.Shutter, ActionType.Heater, ActionType.NitrogenSource };
+            var validActions = new HashSet<ActionType>
+                { ActionType.Shutter, ActionType.Heater, ActionType.NitrogenSource };
             _tableData[rowIndex].ChangeNumber(validActions.Contains(actionType) ? currentCell.Value.ToString() : "");
 
             RefreshTable();
@@ -706,7 +728,8 @@ namespace NtoLib.Recipes.MbeTable
 
         private void HandleSetpointEdit(int rowIndex, DataGridViewCell currentCell, int columnIndex)
         {
-            if (float.TryParse(currentCell.Value.ToString(), out var newValue) && _tableData[rowIndex].ChangeSetpoint(newValue))
+            if (float.TryParse(currentCell.Value.ToString(), out var newValue) &&
+                _tableData[rowIndex].ChangeSetpoint(newValue))
             {
                 currentCell.Value = _tableData[rowIndex].GetCells[columnIndex].GetValue();
                 RefreshTable();
@@ -757,11 +780,12 @@ namespace NtoLib.Recipes.MbeTable
 
             var comboBox = (DataGridViewComboBoxCell)dataGridView1.Rows[rowIndex].Cells[Params.CommandIndex];
 
-            if (comboBox.Value != null && columnIndex == Params.CommandIndex && !isLoadingActive)
+            if (comboBox.Value != null && columnIndex == Params.CommandIndex && !_isLoadingActive)
             {
                 dataGridView1.Rows[rowIndex].HeaderCell.Value = (rowIndex + 1).ToString();
 
                 var command = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
+
                 var minNumber = GrowthList.GetMinNumber(command);
 
                 ReplaceLineInRecipe(_factory.NewLine(command, minNumber, 0f, 0f, ""));
@@ -770,8 +794,9 @@ namespace NtoLib.Recipes.MbeTable
                 dataGridView1.Invalidate();
             }
         }
+
         #endregion
-        
+
         /// <summary> Таймер для автоматической подгрузки рецепта из ПЛК </summary>
         private Timer _loadDelay;
 

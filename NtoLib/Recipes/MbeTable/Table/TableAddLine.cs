@@ -1,5 +1,6 @@
 ﻿using System.Windows.Forms;
 using System;
+using System.Linq;
 using FB.VisualFB;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
@@ -101,7 +102,7 @@ namespace NtoLib.Recipes.MbeTable
 
             try
             {
-                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, string.Empty), false);
+                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.ShutterNames.FirstOrDefault().Key, 0f, 0f, string.Empty), false);
                 RefreshTable();
             }
             catch (InvalidOperationException ex)
@@ -116,7 +117,7 @@ namespace NtoLib.Recipes.MbeTable
 
             try
             {
-                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.GetMinShutter(), 0f, 0f, string.Empty), true);
+                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.ShutterNames.FirstOrDefault().Key, 0f, 0f, string.Empty), true);
                 RefreshTable();
             }
             catch (InvalidOperationException ex)

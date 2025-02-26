@@ -12,7 +12,7 @@ namespace NtoLib.Recipes.MbeTable
 {
     public partial class TableControl
     {
-        bool isLoadingActive = false;
+        private bool _isLoadingActive = false;
 
         private void LoadRecipeToView()
         {
@@ -51,7 +51,6 @@ namespace NtoLib.Recipes.MbeTable
                 }
                 else
                 {
-                    List<RecipeLine> recipeLineList = new List<RecipeLine>();
                     List<RecipeLine> recipe;
                     try
                     {
@@ -66,7 +65,7 @@ namespace NtoLib.Recipes.MbeTable
                     if (num < recipe.Count)
                     {
                         StatusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
-                        recipeLineList = (List<RecipeLine>)null;
+
                     }
                     else
                     {
@@ -88,7 +87,7 @@ namespace NtoLib.Recipes.MbeTable
                         else
                         {
                             if (CompareRecipes(recipe, recipeFromPlc))
-                                StatusManager.WriteStatusMessage("Рецепт успешно загружен в контроллер", false);
+                                StatusManager.WriteStatusMessage("Рецепт успешно загружен в контроллер");
                             else
                                 StatusManager.WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!", true);
                         }
@@ -107,10 +106,10 @@ namespace NtoLib.Recipes.MbeTable
         /// </summary>
         private bool TryLoadRecipeFromPlc()
         {
-            SettingsReader settingsReader = new SettingsReader(FBConnector);
-            CommunicationSettings commSettings = settingsReader.ReadTableSettings();
-            PLC_Communication plcCommunication = new PLC_Communication();
-            List<RecipeLine> recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
+            var settingsReader = new SettingsReader(FBConnector);
+            var commSettings = settingsReader.ReadTableSettings();
+            var plcCommunication = new PLC_Communication();
+            var recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
 
             if (recipe == null)
                 return false;
@@ -150,7 +149,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void LoadRecipeToEdit()
         {
-            List<RecipeLine> reserveTableData = _tableData;
+            var reserveTableData = _tableData;
 
             try
             {
@@ -162,13 +161,12 @@ namespace NtoLib.Recipes.MbeTable
             {
                 StatusManager.WriteStatusMessage(ex.Message, true);
                 _tableData = reserveTableData;
-                return;
             }
         }
 
         private void FillCells(List<RecipeLine> data)
         {
-            isLoadingActive = true;
+            _isLoadingActive = true;
             dataGridView1.Rows.Clear();
 
             foreach (var recipeLine in data)
@@ -178,16 +176,14 @@ namespace NtoLib.Recipes.MbeTable
 
                 row.HeaderCell.Value = (rowIndex + 1).ToString();
                 row.Height = ROW_HEIGHT;
-                
-                var action =  recipeLine.GetCells[Params.CommandIndex].StringValue;
-                
+
                 for (var colIndex = 0; colIndex < Params.ColumnCount; colIndex++)
                 {
                     var cellValue = recipeLine.GetCells[colIndex].StringValue;
                     var cell = row.Cells[colIndex];
-                    
+
                     cell.Value = cellValue;
-                    
+
                     // Number column combo box update
                     if (colIndex == Params.NumberIndex && cell is DataGridViewComboBoxCell comboBoxCell && cellValue != null)
                     {
@@ -199,7 +195,7 @@ namespace NtoLib.Recipes.MbeTable
             }
 
             RefreshTable();
-            isLoadingActive = false;
+            _isLoadingActive = false;
         }
 
 
@@ -277,23 +273,24 @@ namespace NtoLib.Recipes.MbeTable
                         var cells = recipeLine.GetCells.ToList();
                         var rowData = new List<string>();
                         var currentCommand = cells[Params.CommandIndex].StringValue;
-                        var action = GrowthList.GetActionType(cells[Params.NumberIndex].StringValue);
-                        
+
+                        var action = ActionManager.GetTargetAction(currentCommand);
+
                         for (var i = 0; i < cells.Count; i++)
                         {
-                            
+
                             var cellValue = cells[i].StringValue;
 
                             if (i == Params.CommandIndex)
                             {
                                 cellValue = ActionManager.GetActionIdByCommand(cellValue).ToString();
                             }
-                            
+
                             if (i == Params.NumberIndex && action != ActionType.Unspecified)
                             {
                                 try
                                 {
-                                    cellValue = GrowthList.NameToIntConvert(cellValue, currentCommand).ToString();
+                                    cellValue = GrowthList.GetActionTypeByName(cellValue, currentCommand).ToString();
                                 }
                                 catch (KeyNotFoundException)
                                 {

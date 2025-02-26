@@ -1,4 +1,5 @@
-﻿using NtoLib.Recipes.MbeTable.RecipeLines;
+﻿using System.Collections.Generic;
+using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable.Table
 {
@@ -10,18 +11,18 @@ namespace NtoLib.Recipes.MbeTable.Table
             Type = type;
         }
 
-        public TableColumn(string name, TableEnumType enumType)
+        public TableColumn(string name, Dictionary<int, string> intStringMap)
         {
             Name = name;
             Type = CellType._enum;
-            EnumType = enumType;
+            IntStringMap = intStringMap;
         }
 
         public string Name { get; }
 
         public CellType Type { get; }
 
-        public TableEnumType EnumType { get; }
+        public Dictionary<int, string> IntStringMap { get; }
 
         public int GridIndex { get; set; }
     }

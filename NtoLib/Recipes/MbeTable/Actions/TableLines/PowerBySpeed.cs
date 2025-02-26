@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable.Actions.TableLines
@@ -10,12 +11,12 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public PowerBySpeed(int number, float powerSetpoint, float speedSetpoint, string comment) : base(ActionName)
         {
-            heaterName = GrowthList.HeaterNames[number];
-            int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
-            _cells = new List<TCell>
+            HeaterName = GrowthList.HeaterNames.FirstOrDefault(x => x.Key == number).Value;
+            var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
+            Cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, heaterName, number),
+                new(CellType._enum, HeaterName, number),
                 new(CellType._floatPercent, powerSetpoint),
                 new(CellType._floatPowerSpeed, speedSetpoint),
                 new(CellType._blocked, ""),

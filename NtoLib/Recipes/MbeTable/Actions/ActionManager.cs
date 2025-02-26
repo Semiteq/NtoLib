@@ -9,7 +9,7 @@ namespace NtoLib.Recipes.MbeTable.Actions
         /// <summary>
         /// Returns a dictionary of all commands where the key is the command name and the value is the ID.
         /// </summary>
-        public static TableEnumType Names => new TableEnumType(ActionEntries.ToDictionary(entry => entry.Command, entry => entry.Id));
+        public static Dictionary<int, string> Names => new Dictionary<int, string>(ActionEntries.ToDictionary(entry => entry.Id, entry => entry.Command));
 
         /// <summary>
         /// Returns a dictionary of all action types where the key is the ID and the value is the action type.

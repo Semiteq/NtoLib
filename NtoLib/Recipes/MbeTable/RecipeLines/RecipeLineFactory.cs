@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
@@ -41,11 +42,11 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
         public RecipeLine NewLine(ushort[] intData, ushort[] floatData, ushort[] boolData, int index)
         {
-            string command = ActionManager.Names.GetValueByIndex((int)intData[index * 2]).ToString();
-            int number = (int)intData[index * 2 + 1];
-
-            float setpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)floatData[index * 4] + ((uint)floatData[index * 4 + 1] << 16)), 0);
-            float timeSetpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)floatData[index * 4 + 2] + ((uint)floatData[index * 4 + 3] << 16)), 0);
+            var number = (int)intData[index * 2 + 1];
+            var command = ActionManager.Names.FirstOrDefault(x => x.Key == number).Value.ToString();
+            
+            var setpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)floatData[index * 4] + ((uint)floatData[index * 4 + 1] << 16)), 0);
+            var timeSetpoint = BitConverter.ToSingle(BitConverter.GetBytes((uint)floatData[index * 4 + 2] + ((uint)floatData[index * 4 + 3] << 16)), 0);
 
             return NewLine(command, number, setpoint, timeSetpoint, string.Empty);
         }

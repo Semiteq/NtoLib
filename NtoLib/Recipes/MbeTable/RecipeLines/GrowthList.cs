@@ -1,91 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using FB.VisualFB;
 using NtoLib.Recipes.MbeTable.Actions;
-using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     internal abstract class GrowthList : VisualControlBase
     {
-        public static TableEnumType ShutterNames { get; private set; }
-        public static TableEnumType HeaterNames { get; private set; }
-        public static TableEnumType NitrogenSourceNames { get; private set; }
+        public static Dictionary<int, string> ShutterNames { get; private set; } = new();
+        public static Dictionary<int, string> HeaterNames { get; private set; } = new();
+        public static Dictionary<int, string> NitrogenSourceNames { get; private set; } = new();
 
-        public static void SetShutterNames(TableEnumType shutterNames)
+        /// <summary>
+        /// Sets the names for the given action type.
+        /// </summary>
+        public static void SetNames(ActionType type, Dictionary<int, string> names)
         {
-            ShutterNames = shutterNames ?? throw new ArgumentNullException(nameof(shutterNames));
-        }
+            if (names == null) throw new ArgumentNullException(nameof(names));
 
-        public static void SetHeaterNames(TableEnumType heaterNames)
-        {
-            HeaterNames = heaterNames ?? throw new ArgumentNullException(nameof(heaterNames));
-        }
-
-        public static void SetNitrogenSourceNames(TableEnumType nitrogenSourceNames)
-        {
-            NitrogenSourceNames = nitrogenSourceNames ?? throw new ArgumentNullException(nameof(nitrogenSourceNames));
+            switch (type)
+            {
+                case ActionType.Shutter:
+                    ShutterNames = new Dictionary<int, string>(names);
+                    break;
+                case ActionType.Heater:
+                    HeaterNames = new Dictionary<int, string>(names);
+                    break;
+                case ActionType.NitrogenSource:
+                    NitrogenSourceNames = new Dictionary<int, string>(names);
+                    break;
+                default:
+                    throw new ArgumentException($"Unsupported action type: {type}", nameof(type));
+            }
         }
 
         /// <summary>
         /// Converts an action name to its corresponding number for writing into a recipe file.
         /// </summary>
-        public static int NameToIntConvert(string growthValue, string action)
+        public static int GetActionTypeByName(string growthValue, string action)
         {
             var actionType = ActionManager.GetTargetAction(action);
-            
-            if (actionType == ActionType.Shutter) return ShutterNames[growthValue];
-            if (actionType == ActionType.Heater) return HeaterNames[growthValue];
-            if (actionType == ActionType.NitrogenSource) return NitrogenSourceNames[growthValue];
-            
-            throw new KeyNotFoundException("Unknown action type");
-        }
 
-        /// <summary>
-        /// Returns the action type based on the given number. If not found, returns an empty string.
-        /// </summary>
-        public static ActionType GetActionType(string number)
-        {
-            if (ShutterNames.TryGetValue(number, out var value) && value != 0) return ActionType.Shutter;
-            if (HeaterNames.TryGetValue(number, out value) && value != 0) return ActionType.Heater;
-            if (NitrogenSourceNames.TryGetValue(number, out value) && value != 0) return ActionType.NitrogenSource;
-            return ActionType.Unspecified;
-        }
-
-        /// <summary>
-        /// Returns the lowest shutter number.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if the shutter list is empty.</exception>
-        public static int GetMinShutter()
-        {
-            var lowestShutter = ShutterNames.GetLowestNumber();
-            if (lowestShutter == -1)
-                throw new InvalidOperationException("Shutter list is empty");
-            return lowestShutter;
-        }
-
-        /// <summary>
-        /// Returns the lowest heater number.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if the heater list is empty.</exception>
-        public static int GetMinHeater()
-        {
-            var lowestHeater = HeaterNames.GetLowestNumber();
-            if (lowestHeater == -1)
-                throw new InvalidOperationException("Heater list is empty");
-            return lowestHeater;
-        }
-
-        /// <summary>
-        /// Returns the lowest nitrogen source number.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if the nitrogen source list is empty.</exception>
-        public static int GetMinNitrogenSource()
-        {
-            var lowestAmmonia = NitrogenSourceNames.GetLowestNumber();
-            if (lowestAmmonia == -1)
-                throw new InvalidOperationException("N+ source list is empty");
-            return lowestAmmonia;
+            return actionType switch
+            {
+                ActionType.Shutter => ShutterNames.FirstOrDefault(x => x.Value == growthValue).Key,
+                ActionType.Heater => HeaterNames.FirstOrDefault(x => x.Value == growthValue).Key,
+                ActionType.NitrogenSource => NitrogenSourceNames.FirstOrDefault(x => x.Value == growthValue).Key,
+                _ => throw new KeyNotFoundException("Unknown action type")
+            };
         }
 
         /// <summary>
@@ -97,9 +60,9 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             var actionType = ActionManager.GetTargetAction(action);
             return actionType switch
             {
-                ActionType.Shutter => GetMinShutter(),
-                ActionType.Heater => GetMinHeater(),
-                ActionType.NitrogenSource => GetMinNitrogenSource(),
+                ActionType.Shutter => ShutterNames.Keys.DefaultIfEmpty(0).Min(),
+                ActionType.Heater => HeaterNames.Keys.DefaultIfEmpty(0).Min(),
+                ActionType.NitrogenSource => NitrogenSourceNames.Keys.DefaultIfEmpty(0).Min(),
                 _ => 0
             };
         }

@@ -1,4 +1,5 @@
-﻿using FB.VisualFB;
+﻿using System.Collections.Generic;
+using FB.VisualFB;
 using InSAT.OPC;
 using NtoLib.Recipes.MbeTable.Table;
 
@@ -19,16 +20,16 @@ namespace NtoLib.Recipes.MbeTable
             FB = fb;
         }
 
-        public TableEnumType ReadPinNames()
+        public Dictionary<int,string> ReadPinNames()
         {
-            TableEnumType names = new();
+            Dictionary<int,string> names = new();
 
             for (var i = 0; i < Quantity; i++)
             {
                 string pinString = FB.GetPinValue<string>(i + StartPin);
                 if (!string.IsNullOrEmpty(pinString))
                 {
-                    names.Add(pinString, i + 1);
+                    names.Add(i + 1, pinString);
                 }
             }
 

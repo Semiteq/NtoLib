@@ -12,13 +12,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             var cellStrings = SplitLine(stringToParse, Params.ColumnCount);
 
-            string command = ParseCommand(cellStrings[Params.CommandIndex]);
+            var command = ParseCommand(cellStrings[Params.CommandIndex]);
 
-            int number = ParseIntOrThrow(cellStrings[Params.NumberIndex], "Номер");
-            float setpoint = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Задание");
-            float timeSetpoint = ParseFloatOrThrow(cellStrings[Params.TimeSetpointIndex], "Скорость/Время");
+            var number = ParseIntOrThrow(cellStrings[Params.NumberIndex], "Номер");
+            var setpoint = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Задание");
+            var timeSetpoint = ParseFloatOrThrow(cellStrings[Params.TimeSetpointIndex], "Скорость/Время");
 
-            string comment = cellStrings[Params.CommentIndex] ?? string.Empty;
+            var comment = cellStrings[Params.CommentIndex] ?? string.Empty;
 
             return _factory.NewLine(command, number, setpoint, timeSetpoint, comment);
         }

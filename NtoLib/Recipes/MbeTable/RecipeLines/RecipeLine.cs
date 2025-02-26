@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.Table;
@@ -8,12 +9,12 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     internal abstract class RecipeLine
     {
-        public List<TCell> GetCells => _cells;
+        public List<TCell> GetCells => Cells;
 
-        protected List<TCell> _cells = new();
+        protected List<TCell> Cells = new();
 
         // Number of nested cycle todo: убрать в TableLoops
-        public int tabulateLevel = 0;
+        public int TabulateLevel = 0;
 
         public int MinNumber { get; private set; } = 1;
         public int MaxNumber { get; private set; } = 16;
@@ -26,11 +27,11 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
         public abstract ActionTime ActionTime { get; }
 
-        public DataGridViewRow Row;
+        public readonly DataGridViewRow Row;
 
-        protected string shutterName;
-        protected string heaterName;
-        protected string nitrogenSourceName;
+        protected string ShutterName;
+        protected string HeaterName;
+        protected string NitrogenSourceName;
 
         protected RecipeLine(string name)
         {
@@ -40,12 +41,18 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             Row.Cells.Add(ActionCell);
             Row.Cells[Params.CommandIndex].Value = name;
 
-            if (ActionManager.GetTargetAction(name) == ActionType.Shutter)
-                Row.Cells.Add(ShutterListCell);
-            if (ActionManager.GetTargetAction(name) == ActionType.Heater)
-                Row.Cells.Add(HeaterListCell);
-            if (ActionManager.GetTargetAction(name) == ActionType.NitrogenSource)
-                Row.Cells.Add(NitrogenSourceListCell);
+            switch (ActionManager.GetTargetAction(name))
+            {
+                case ActionType.Shutter:
+                    Row.Cells.Add(ShutterListCell);
+                    break;
+                case ActionType.Heater:
+                    Row.Cells.Add(HeaterListCell);
+                    break;
+                case ActionType.NitrogenSource:
+                    Row.Cells.Add(NitrogenSourceListCell);
+                    break;
+            }
 
             Row.Cells.Add(new DataGridViewTextBoxCell());
             Row.Cells.Add(new DataGridViewTextBoxCell());
@@ -76,13 +83,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             get
             {
-                var column = new TableColumn("Действие", ActionManager.Names);
-
                 DataGridViewComboBoxCell viewComboBoxCell = new();
-                viewComboBoxCell.MaxDropDownItems = column.EnumType.EnumCount;
-
-                for (var ittrNum = 0; ittrNum < column.EnumType.EnumCount; ++ittrNum)
-                    viewComboBoxCell.Items.Add((object)column.EnumType.GetValueByIndex(ittrNum));
+                viewComboBoxCell.MaxDropDownItems = ActionManager.Names.Count();
+                foreach (var action in ActionManager.Names.Values)
+                {
+                    viewComboBoxCell.Items.Add(action);
+                }
+                
                 return viewComboBoxCell;
             }
         }
@@ -91,13 +98,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             get
             {
-                var listItemsCount = GrowthList.ShutterNames.EnumCount;
-
                 DataGridViewComboBoxCell viewComboBoxCell = new();
-
-                for (var i = 0; i < listItemsCount; i++)
-                    viewComboBoxCell.Items.Add(GrowthList.ShutterNames.GetValueByIndex(i));
-
+                
+                foreach (var shutter in GrowthList.ShutterNames.Values)
+                {
+                    viewComboBoxCell.Items.Add(shutter);
+                }
+                
                 return viewComboBoxCell;
             }
         }
@@ -106,13 +113,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             get
             {
-                var listItemsCount = GrowthList.HeaterNames.EnumCount;
-
                 DataGridViewComboBoxCell viewComboBoxCell = new();
-
-                for (var i = 0; i < listItemsCount; i++)
-                    viewComboBoxCell.Items.Add(GrowthList.HeaterNames.GetValueByIndex(i));
-
+                
+                foreach (var heater in GrowthList.HeaterNames.Values)
+                {
+                    viewComboBoxCell.Items.Add(heater);
+                }
+                
                 return viewComboBoxCell;
             }
         }
@@ -121,13 +128,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             get
             {
-                var listItemsCount = GrowthList.NitrogenSourceNames.EnumCount;
-
                 DataGridViewComboBoxCell viewComboBoxCell = new();
-
-                for (var i = 0; i < listItemsCount; i++)
-                    viewComboBoxCell.Items.Add(GrowthList.NitrogenSourceNames.GetValueByIndex(i));
-
+                
+                foreach (var source in GrowthList.NitrogenSourceNames.Values)
+                {
+                    viewComboBoxCell.Items.Add(source);
+                }
+                
                 return viewComboBoxCell;
             }
         }
@@ -136,7 +143,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             try
             {
-                _cells[Params.NumberIndex].ParseValue(number);
+                Cells[Params.NumberIndex].ParseValue(number);
                 Row.Cells[Params.NumberIndex].Value = number;
                 return true;
             }
@@ -149,7 +156,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             if (value >= MinSetpoint && value <= MaxSetpoint)
             {
-                _cells[Params.SetpointIndex].ParseValue(value);
+                Cells[Params.SetpointIndex].ParseValue(value);
                 Row.Cells[Params.SetpointIndex].Value = value;
                 return true;
             }
@@ -159,7 +166,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             if (value >= MinTimeSetpoint && value <= MaxTimeSetpoint)
             {
-                _cells[Params.TimeSetpointIndex].ParseValue(value);
+                Cells[Params.TimeSetpointIndex].ParseValue(value);
                 Row.Cells[Params.TimeSetpointIndex].Value = value;
                 return true;
             }
@@ -168,35 +175,35 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
         public float CycleTime
         {
-            get => (float)_cells[Params.RecipeTimeIndex].FloatValue;
+            get => (float)Cells[Params.RecipeTimeIndex].FloatValue;
 
             set
             {
-                _cells[Params.RecipeTimeIndex].ParseValue(value);
-                _cells[Params.RecipeTimeIndex].ParseValue(TimeSpan.FromSeconds(value).ToString(@"hh\:mm\:ss\.ff"));
+                Cells[Params.RecipeTimeIndex].ParseValue(value);
+                Cells[Params.RecipeTimeIndex].ParseValue(TimeSpan.FromSeconds(value).ToString(@"hh\:mm\:ss\.ff"));
                 Row.Cells[Params.RecipeTimeIndex].Value = value;
             }
         }
 
         public void ChangeComment(string comment)
         {
-            _cells[Params.CommentIndex].ParseValue(comment);
+            Cells[Params.CommentIndex].ParseValue(comment);
             Row.Cells[Params.CommentIndex].Value = comment;
         }
 
         public int GetNumber()
         {
-            return _cells[Params.NumberIndex].IntValue;
+            return Cells[Params.NumberIndex].IntValue;
         }
 
         public float GetSetpoint()
         {
-            return (float)_cells[Params.SetpointIndex].FloatValue;
+            return (float)Cells[Params.SetpointIndex].FloatValue;
         }
 
         public float GetTime()
         {
-            return (float)_cells[Params.TimeSetpointIndex].FloatValue;
+            return (float)Cells[Params.TimeSetpointIndex].FloatValue;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable.Actions.TableLines
@@ -10,12 +11,12 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public N_Run(int number, float setpoint, string comment) : base(ActionName)
         {
-            nitrogenSourceName = GrowthList.NitrogenSourceNames[number];
+            NitrogenSourceName = GrowthList.NitrogenSourceNames.FirstOrDefault(x => x.Key == number).Value;
             var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
-            _cells = new List<TCell>
+            Cells = new List<TCell>
             {
                 new TCell(CellType._enum, ActionName, actionNumber),
-                new TCell(CellType._enum, nitrogenSourceName, number),
+                new TCell(CellType._enum, NitrogenSourceName, number),
                 new TCell(CellType._float, setpoint),
                 new TCell(CellType._blocked, ""),
                 new TCell(CellType._blocked, ""),
