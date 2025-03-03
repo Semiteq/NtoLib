@@ -9,15 +9,16 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
         public const string ActionName = Commands.TEMP;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public Temperature(int number, float temperatureSetpoint, string comment) : base(ActionName)
+        public Temperature(int actionTarget, float temperatureSetpoint, string comment) : base(ActionName)
         {
-            HeaterName = GrowthList.HeaterNames.FirstOrDefault(x => x.Key == number).Value;
+            HeaterName = GrowthList.HeaterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
             var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             Cells = new List<TCell>
             {
                 new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, HeaterName, number),
+                new(CellType._enum, HeaterName, actionTarget),
                 new(CellType._floatTemp, temperatureSetpoint),
+                new(CellType._blocked, ""),
                 new(CellType._blocked, ""),
                 new(CellType._blocked, ""),
                 new(CellType._string, comment)

@@ -9,13 +9,11 @@
 
         public const string TEMP = "TEMP";
         public const string TEMP_WAIT = "TEMP + WAIT";
-        public const string TEMP_BY_SPEED = "TEMP BY SPEED";
-        public const string TEMP_BY_TIME = "TEMP BY TIME";
+        public const string TEMP_SMOOTH = "TEMP SMOOTH";
 
         public const string POWER = "POWER";
         public const string POWER_WAIT = "POWER + WAIT";
-        public const string POWER_BY_SPEED = "POWER BY SPEED";
-        public const string POWER_BY_TIME = "POWER BY TIME";
+        public const string POWER_SMOOTH = "POWER SMOOTH";
 
         public const string WAIT = "WAIT";
         public const string FOR = "FOR";

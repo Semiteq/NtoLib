@@ -12,15 +12,17 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             var cellStrings = SplitLine(stringToParse, Params.ColumnCount);
 
-            var command = ParseCommand(cellStrings[Params.CommandIndex]);
+            string command = ParseCommand(cellStrings[Params.ActionIndex]);
 
-            var number = ParseIntOrThrow(cellStrings[Params.NumberIndex], "Номер");
-            var setpoint = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Задание");
-            var timeSetpoint = ParseFloatOrThrow(cellStrings[Params.TimeSetpointIndex], "Скорость/Время");
+            int number = ParseIntOrThrow(cellStrings[Params.ActionTargetIndex], "Объект");
+            float setpoint = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Задание");
+            float initialValue = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Нач.значение");
+            float speed = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Скорость");
+            float timeSetpoint = ParseFloatOrThrow(cellStrings[Params.TimeSetpointIndex], "Длительность");
 
             var comment = cellStrings[Params.CommentIndex] ?? string.Empty;
 
-            return _factory.NewLine(command, number, setpoint, timeSetpoint, comment);
+            return _factory.NewLine(command, number, setpoint, initialValue, speed, timeSetpoint, comment);
         }
 
         /// <summary>
@@ -52,13 +54,10 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         /// </summary>
         private static string ParseCommand(string commandCell)
         {
-            if (int.TryParse(commandCell, out int commandId) &&
-                ActionManager.GetActionNameById(commandId) is string command)
-            {
-                return command;
-            }
-
-            throw new InvalidOperationException("Не удалось распарсить поле 'Действие'.");
+            return int.TryParse(commandCell, out int commandId) &&
+                ActionManager.GetActionNameById(commandId) is string command
+                ? command
+                : throw new InvalidOperationException("Не удалось распарсить поле 'Действие'.");
         }
 
         /// <summary>
@@ -66,13 +65,9 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         /// </summary>
         private static int ParseIntOrThrow(string input, string fieldName)
         {
-            if (string.IsNullOrEmpty(input))
-                return 0;
-
-            if (int.TryParse(input, out int value))
-                return value;
-
-            throw new FormatException($"Не удалось распарсить поле '{fieldName}'.");
+            return string.IsNullOrEmpty(input)
+                ? 0
+                : int.TryParse(input, out int value) ? value : throw new FormatException($"Не удалось распарсить поле '{fieldName}'.");
         }
 
         /// <summary>
@@ -80,13 +75,9 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         /// </summary>
         private static float ParseFloatOrThrow(string input, string fieldName)
         {
-            if (string.IsNullOrEmpty(input))
-                return 0f;
-
-            if (float.TryParse(input, out float value))
-                return value;
-
-            throw new FormatException($"Не удалось распарсить поле '{fieldName}'.");
+            return string.IsNullOrEmpty(input)
+                ? 0f
+                : float.TryParse(input, out float value) ? value : throw new FormatException($"Не удалось распарсить поле '{fieldName}'.");
         }
     }
 }

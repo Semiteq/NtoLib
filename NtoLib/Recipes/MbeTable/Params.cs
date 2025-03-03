@@ -9,7 +9,7 @@
         public const uint UBoolBaseAddr = 200;
         public const uint UBoolAreaSize = 100;
         public const uint UControlBaseAddr = 200;
-        
+
         // todo: дублируют CommunicationSettings.cs
         public const uint ConntrollerIP1 = 192;
         public const uint ConntrollerIP2 = 168;
@@ -46,7 +46,7 @@
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях нагревателей в MasterSCADA
         public const int FirstPinHeaterName = 301;
-        
+
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях линий NH3 в MasterSCADA
         public const int FirstPinNitrogenSourceName = 401;
 
@@ -56,14 +56,16 @@
         public const int MaxLoopCount = 3;
 
         //Номера столбцов соответствующих параметров в таблице
-        public const int CommandIndex = 0;
-        public const int NumberIndex = 1;
+        public const int ActionIndex = 0;
+        public const int ActionTargetIndex = 1;
         public const int SetpointIndex = 2;
-        public const int TimeSetpointIndex = 3;
-        public const int RecipeTimeIndex = 4;
-        public const int CommentIndex = 5;
+        public const int InitialValueIndex = 3;
+        public const int SpeedIndex = 4;
+        public const int TimeSetpointIndex = 5;
+        public const int RecipeTimeIndex = 6;
+        public const int CommentIndex = 7;
 
         //Общее число столбцов в таблице
-        public const int ColumnCount = 6;
+        public const int ColumnCount = 8;
     }
 }

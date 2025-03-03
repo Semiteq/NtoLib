@@ -57,7 +57,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         /// </summary>
         public static int GetMinNumber(string action)
         {
-            var actionType = ActionManager.GetTargetAction(action);
+            ActionType actionType = ActionManager.GetTargetAction(action);
             return actionType switch
             {
                 ActionType.Shutter => ShutterNames.Keys.DefaultIfEmpty(0).Min(),

@@ -18,6 +18,7 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType._int, setpoint),
                 new(CellType._blocked, ""),
                 new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
                 new(CellType._string, comment)
             };
 

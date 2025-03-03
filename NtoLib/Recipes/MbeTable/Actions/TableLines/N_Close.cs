@@ -13,12 +13,13 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
             var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             Cells = new List<TCell>
             {
-                new TCell(CellType._enum, ActionName, actionNumber),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
         }
     }

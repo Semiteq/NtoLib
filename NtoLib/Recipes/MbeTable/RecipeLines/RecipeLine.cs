@@ -24,6 +24,8 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
         public float MinTimeSetpoint { get; protected set; } = 0.1f;
         public float MaxTimeSetpoint { get; protected set; } = 10800;
+        public float MinSpeed { get; protected set; } = 0.1f;
+        public float MaxSpeed { get; protected set; } = 1000;
 
         public abstract ActionTime ActionTime { get; }
 
@@ -39,7 +41,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             Row = new DataGridViewRow();
 
             Row.Cells.Add(ActionCell);
-            Row.Cells[Params.CommandIndex].Value = name;
+            Row.Cells[Params.ActionIndex].Value = name;
 
             switch (ActionManager.GetTargetAction(name))
             {
@@ -58,6 +60,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             Row.Cells.Add(new DataGridViewTextBoxCell());
             Row.Cells.Add(new DataGridViewTextBoxCell());
             Row.Cells.Add(new DataGridViewTextBoxCell());
+            Row.Cells.Add(new DataGridViewTextBoxCell());
         }
 
         private static List<TableColumn> _columnHeaders;
@@ -69,9 +72,11 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                 return _columnHeaders ??= new List<TableColumn>()
                 {
                     new("Действие", ActionManager.Names),
-                    new("Номер", CellType._enum),
+                    new("Объект", CellType._enum),
                     new("Задание", CellType._float),
-                    new("Скорость/Время", CellType._float),
+                    new("Нач.значение", CellType._float),
+                    new("Скорость", CellType._float),
+                    new("Длительность", CellType._float),
                     new("Время", CellType._float),
                     new("Комментарий", CellType._string)
                 };
@@ -83,13 +88,12 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             get
             {
-                DataGridViewComboBoxCell viewComboBoxCell = new();
-                viewComboBoxCell.MaxDropDownItems = ActionManager.Names.Count();
-                foreach (var action in ActionManager.Names.Values)
+                DataGridViewComboBoxCell viewComboBoxCell = new()
                 {
+                    MaxDropDownItems = ActionManager.Names.Count()
+                };
+                foreach (var action in ActionManager.Names.Values)
                     viewComboBoxCell.Items.Add(action);
-                }
-                
                 return viewComboBoxCell;
             }
         }
@@ -99,12 +103,8 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             get
             {
                 DataGridViewComboBoxCell viewComboBoxCell = new();
-                
                 foreach (var shutter in GrowthList.ShutterNames.Values)
-                {
                     viewComboBoxCell.Items.Add(shutter);
-                }
-                
                 return viewComboBoxCell;
             }
         }
@@ -114,37 +114,29 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             get
             {
                 DataGridViewComboBoxCell viewComboBoxCell = new();
-                
                 foreach (var heater in GrowthList.HeaterNames.Values)
-                {
                     viewComboBoxCell.Items.Add(heater);
-                }
-                
                 return viewComboBoxCell;
             }
         }
-        
+
         private static DataGridViewComboBoxCell NitrogenSourceListCell
         {
             get
             {
                 DataGridViewComboBoxCell viewComboBoxCell = new();
-                
                 foreach (var source in GrowthList.NitrogenSourceNames.Values)
-                {
                     viewComboBoxCell.Items.Add(source);
-                }
-                
                 return viewComboBoxCell;
             }
         }
-        
-        public bool ChangeNumber(string number)
+
+        public bool ChangeTargetAction(string action)
         {
             try
             {
-                Cells[Params.NumberIndex].ParseValue(number);
-                Row.Cells[Params.NumberIndex].Value = number;
+                Cells[Params.ActionTargetIndex].ParseValue(action);
+                Row.Cells[Params.ActionTargetIndex].Value = action;
                 return true;
             }
             catch (Exception)
@@ -162,7 +154,30 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             }
             return false;
         }
+
+        public bool ChangeInitialValue(float value)
+        {
+            if (value >= MinSetpoint && value <= MaxSetpoint)
+            {
+                Cells[Params.InitialValueIndex].ParseValue(value);
+                Row.Cells[Params.InitialValueIndex].Value = value;
+                return true;
+            }
+            return false;
+        }
+
         public bool ChangeSpeed(float value)
+        {
+            if (value >= MinSpeed && value <= MaxSpeed)
+            {
+                Cells[Params.SpeedIndex].ParseValue(value);
+                Row.Cells[Params.SpeedIndex].Value = value;
+                return true;
+            }
+            return false;
+        }
+
+        public bool ChangeTime(float value)
         {
             if (value >= MinTimeSetpoint && value <= MaxTimeSetpoint)
             {
@@ -193,7 +208,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
         public int GetNumber()
         {
-            return Cells[Params.NumberIndex].IntValue;
+            return Cells[Params.ActionIndex].IntValue;
         }
 
         public float GetSetpoint()
@@ -201,9 +216,17 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             return (float)Cells[Params.SetpointIndex].FloatValue;
         }
 
+        public float GetInitialValue()
+        {
+            return (float)Cells[Params.InitialValueIndex].FloatValue;
+        }
         public float GetTime()
         {
             return (float)Cells[Params.TimeSetpointIndex].FloatValue;
+        }
+        public float GetSpeed()
+        {
+            return (float)Cells[Params.SpeedIndex].FloatValue;
         }
     }
 }

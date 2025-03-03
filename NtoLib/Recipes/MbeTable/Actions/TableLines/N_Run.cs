@@ -9,18 +9,19 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
         public const string ActionName = Commands.N_RUN;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public N_Run(int number, float setpoint, string comment) : base(ActionName)
+        public N_Run(int actionTarget, float setpoint, string comment) : base(ActionName)
         {
-            NitrogenSourceName = GrowthList.NitrogenSourceNames.FirstOrDefault(x => x.Key == number).Value;
+            NitrogenSourceName = GrowthList.NitrogenSourceNames.FirstOrDefault(x => x.Key == actionTarget).Value;
             var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             Cells = new List<TCell>
             {
-                new TCell(CellType._enum, ActionName, actionNumber),
-                new TCell(CellType._enum, NitrogenSourceName, number),
-                new TCell(CellType._float, setpoint),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._blocked, ""),
-                new TCell(CellType._string, comment)
+                new(CellType._enum, ActionName, actionNumber),
+                new(CellType._enum, NitrogenSourceName, actionTarget),
+                new(CellType._float, setpoint),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
+                new(CellType._string, comment)
             };
         }
     }

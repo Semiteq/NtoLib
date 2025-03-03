@@ -21,6 +21,7 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType._blocked, ""),
                 new(CellType._blocked, ""),
                 new(CellType._blocked, ""),
+                new(CellType._blocked, ""),
                 new(CellType._string, comment)
             };
             cycleTime = TimeSpan.Zero;

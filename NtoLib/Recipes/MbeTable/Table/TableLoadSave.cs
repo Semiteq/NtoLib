@@ -12,11 +12,11 @@ namespace NtoLib.Recipes.MbeTable
 {
     public partial class TableControl
     {
-        private bool _isLoadingActive = false;
+        private bool isLoadingActive = false;
 
         private void LoadRecipeToView()
         {
-            SettingsReader settingsReader = new SettingsReader(FBConnector);
+            SettingsReader settingsReader = new(FBConnector);
 
             if (!settingsReader.CheckQuality())
             {
@@ -51,6 +51,7 @@ namespace NtoLib.Recipes.MbeTable
                 }
                 else
                 {
+                    List<RecipeLine> recipeLineList = new();
                     List<RecipeLine> recipe;
                     try
                     {
@@ -69,7 +70,7 @@ namespace NtoLib.Recipes.MbeTable
                     }
                     else
                     {
-                        PLC_Communication plcCommunication = new PLC_Communication();
+                        PLC_Communication plcCommunication = new();
 
                         plcCommunication.WriteRecipeToPlc(recipe, settings);
 
@@ -106,9 +107,9 @@ namespace NtoLib.Recipes.MbeTable
         /// </summary>
         private bool TryLoadRecipeFromPlc()
         {
-            var settingsReader = new SettingsReader(FBConnector);
+            SettingsReader settingsReader = new(FBConnector);
             var commSettings = settingsReader.ReadTableSettings();
-            var plcCommunication = new PLC_Communication();
+            PLC_Communication plcCommunication = new();
             var recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
 
             if (recipe == null)
@@ -166,7 +167,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void FillCells(List<RecipeLine> data)
         {
-            _isLoadingActive = true;
+            isLoadingActive = true;
             dataGridView1.Rows.Clear();
 
             foreach (var recipeLine in data)
@@ -177,6 +178,8 @@ namespace NtoLib.Recipes.MbeTable
                 row.HeaderCell.Value = (rowIndex + 1).ToString();
                 row.Height = ROW_HEIGHT;
 
+                var action = recipeLine.GetCells[Params.ActionIndex].StringValue;
+
                 for (var colIndex = 0; colIndex < Params.ColumnCount; colIndex++)
                 {
                     var cellValue = recipeLine.GetCells[colIndex].StringValue;
@@ -185,7 +188,7 @@ namespace NtoLib.Recipes.MbeTable
                     cell.Value = cellValue;
 
                     // Number column combo box update
-                    if (colIndex == Params.NumberIndex && cell is DataGridViewComboBoxCell comboBoxCell && cellValue != null)
+                    if (colIndex == Params.ActionTargetIndex && cell is DataGridViewComboBoxCell comboBoxCell && cellValue != null)
                     {
                         UpdateEnumDropDown(comboBoxCell, cellValue);
                     }
@@ -195,7 +198,7 @@ namespace NtoLib.Recipes.MbeTable
             }
 
             RefreshTable();
-            _isLoadingActive = false;
+            isLoadingActive = false;
         }
 
 
@@ -272,8 +275,7 @@ namespace NtoLib.Recipes.MbeTable
                     {
                         var cells = recipeLine.GetCells.ToList();
                         var rowData = new List<string>();
-                        var currentCommand = cells[Params.CommandIndex].StringValue;
-
+                        var currentCommand = cells[Params.ActionIndex].StringValue;
                         var action = ActionManager.GetTargetAction(currentCommand);
 
                         for (var i = 0; i < cells.Count; i++)
@@ -281,12 +283,12 @@ namespace NtoLib.Recipes.MbeTable
 
                             var cellValue = cells[i].StringValue;
 
-                            if (i == Params.CommandIndex)
+                            if (i == Params.ActionIndex)
                             {
                                 cellValue = ActionManager.GetActionIdByCommand(cellValue).ToString();
                             }
 
-                            if (i == Params.NumberIndex && action != ActionType.Unspecified)
+                            if (i == Params.ActionTargetIndex && action != ActionType.Unspecified)
                             {
                                 try
                                 {
