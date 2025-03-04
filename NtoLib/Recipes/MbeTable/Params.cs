@@ -1,6 +1,6 @@
 ﻿namespace NtoLib.Recipes.MbeTable
 {
-    internal static class Params
+    internal readonly struct Params
     {
         public const uint UFloatBaseAddr = 0;
         public const uint UFloatAreaSize = 100;
@@ -10,45 +10,44 @@
         public const uint UBoolAreaSize = 100;
         public const uint UControlBaseAddr = 200;
 
-        // todo: дублируют CommunicationSettings.cs
-        public const uint ConntrollerIP1 = 192;
-        public const uint ConntrollerIP2 = 168;
-        public const uint ConntrollerIP3 = 0;
-        public const uint ConntrollerIP4 = 1;
+        public const uint ControllerIp1 = 192;
+        public const uint ControllerIp2 = 168;
+        public const uint ControllerIp3 = 0;
+        public const uint ControllerIp4 = 1;
 
         public const int TotalTimeLeft = 101;
         public const int LineTimeLeft = 102;
 
-        public const uint ConntrollerTCPPort = 502;
+        public const uint ControllerTcpPort = 502;
         public const uint Timeout = 1000;
 
-        public const int ID_HMI_CommProtocol = 1001;
-        public const int ID_HMI_AddrArea = 1002;
-        public const int ID_HMI_FloatBaseAddr = 1003;
-        public const int ID_HMI_FloatAreaSize = 1004;
-        public const int ID_HMI_IntBaseAddr = 1005;
-        public const int ID_HMI_IntAreaSize = 1006;
-        public const int ID_HMI_BoolBaseAddr = 1007;
-        public const int ID_HMI_BoolAreaSize = 1008;
-        public const int ID_HMI_ControlBaseAddr = 1009;
-        public const int ID_HMI_IP1 = 1010;
-        public const int ID_HMI_IP2 = 1011;
-        public const int ID_HMI_IP3 = 1012;
-        public const int ID_HMI_IP4 = 1013;
-        public const int ID_HMI_Port = 1014;
-        public const int ID_HMI_Timeout = 1015;
+        public const int IdHmiCommProtocol = 1001;
+        public const int IdHmiAddrArea = 1002;
+        public const int IdHmiFloatBaseAddr = 1003;
+        public const int IdHmiFloatAreaSize = 1004;
+        public const int IdHmiIntBaseAddr = 1005;
+        public const int IdHmiIntAreaSize = 1006;
+        public const int IdHmiBoolBaseAddr = 1007;
+        public const int IdHmiBoolAreaSize = 1008;
+        public const int IdHmiControlBaseAddr = 1009;
+        public const int IdHmiIp1 = 1010;
+        public const int IdHmiIp2 = 1011;
+        public const int IdHmiIp3 = 1012;
+        public const int IdHmiIp4 = 1013;
+        public const int IdHmiPort = 1014;
+        public const int IdHmiTimeout = 1015;
 
-        public const int ID_HMI_ActualLine = 1016;
-        public const int ID_HMI_Status = 1017;
+        public const int IdHmiActualLine = 1016;
+        public const int IdHmiStatus = 1017;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях заслонок в MasterSCADA
-        public const int FirstPinShutterName = 201;
+        public const int IdFirstShutterName = 201;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях нагревателей в MasterSCADA
-        public const int FirstPinHeaterName = 301;
+        public const int IdFirstHeaterName = 301;
 
         //Номер пина, с которого начинается нумерация пинов с информацией о названиях линий NH3 в MasterSCADA
-        public const int FirstPinNitrogenSourceName = 401;
+        public const int IdFirstNitrogenSourceName = 401;
 
         public const int ShutterNameQuantity = 32;
         public const int HeaterNameQuantity = 32;
@@ -64,6 +63,10 @@
         public const int TimeSetpointIndex = 5;
         public const int RecipeTimeIndex = 6;
         public const int CommentIndex = 7;
+        
+        // Количество столбцов в таблице соответствующих типов для передачи в PLC
+        public const int IntColumNum = 2;
+        public const int FloatColumNum = 4;
 
         //Общее число столбцов в таблице
         public const int ColumnCount = 8;

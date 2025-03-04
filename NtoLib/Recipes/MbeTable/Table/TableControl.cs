@@ -549,18 +549,18 @@ namespace NtoLib.Recipes.MbeTable
 
         private void UpdateGrowthList()
         {
-            var shutterPins = new ReadPins(Params.FirstPinShutterName, Params.ShutterNameQuantity,
+            var shutterPins = new ReadPins(Params.IdFirstShutterName, Params.ShutterNameQuantity,
                 FBConnector.Fb as MbeTableFB);
             if (shutterPins.IsPinGroupQualityGood())
                 GrowthList.SetNames(ActionType.Shutter, shutterPins.ReadPinNames());
 
 
-            var heaterPins = new ReadPins(Params.FirstPinHeaterName, Params.HeaterNameQuantity,
+            var heaterPins = new ReadPins(Params.IdFirstHeaterName, Params.HeaterNameQuantity,
                 FBConnector.Fb as MbeTableFB);
             if (heaterPins.IsPinGroupQualityGood())
                 GrowthList.SetNames(ActionType.Heater, heaterPins.ReadPinNames());
 
-            var nitrogenSource = new ReadPins(Params.FirstPinNitrogenSourceName, Params.NitrogenSourceNameQuantity,
+            var nitrogenSource = new ReadPins(Params.IdFirstNitrogenSourceName, Params.NitrogenSourceNameQuantity,
                             FBConnector.Fb as MbeTableFB);
             if (nitrogenSource.IsPinGroupQualityGood())
                 GrowthList.SetNames(ActionType.NitrogenSource, nitrogenSource.ReadPinNames());
@@ -569,10 +569,10 @@ namespace NtoLib.Recipes.MbeTable
         private void UpdatePinValues()
         {
             var fb = (FBBase)FBConnector;
-            uint pinValue1 = fb.GetPinValue<uint>(Params.ID_HMI_Status);
-            OpcQuality pinQuality1 = fb.GetPinQuality(Params.ID_HMI_Status);
-            int pinValue2 = fb.GetPinValue<int>(Params.ID_HMI_ActualLine);
-            OpcQuality pinQuality2 = fb.GetPinQuality(Params.ID_HMI_ActualLine);
+            uint pinValue1 = fb.GetPinValue<uint>(Params.IdHmiStatus);
+            OpcQuality pinQuality1 = fb.GetPinQuality(Params.IdHmiStatus);
+            int pinValue2 = fb.GetPinValue<int>(Params.IdHmiActualLine);
+            OpcQuality pinQuality2 = fb.GetPinQuality(Params.IdHmiActualLine);
 
             button_save.Visible = true;
 

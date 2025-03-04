@@ -154,7 +154,7 @@ namespace NtoLib.Recipes.MbeTable
             this.DbgMsg.Name = "DbgMsg";
             this.DbgMsg.Size = new System.Drawing.Size(719, 40);
             this.DbgMsg.TabIndex = 14;
-            this.DbgMsg.Text = "���������";
+            this.DbgMsg.Text = "DbgMsg";
             this.DbgMsg.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // TableControl
@@ -174,12 +174,6 @@ namespace NtoLib.Recipes.MbeTable
             this.ResumeLayout(false);
 
         }
-
-        private DataGridViewTextBoxColumn Column1;
-        private DataGridViewTextBoxColumn Column2;
-        private DataGridViewTextBoxColumn Column3;
-        private DataGridViewTextBoxColumn Column4;
-        private DataGridViewTextBoxColumn Column5;
         private Label DbgMsg;
     }
 }

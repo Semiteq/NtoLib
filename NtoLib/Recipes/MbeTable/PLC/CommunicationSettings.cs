@@ -1,30 +1,30 @@
-﻿namespace NtoLib.Recipes.MbeTable
+﻿namespace NtoLib.Recipes.MbeTable.PLC
 {
     internal class CommunicationSettings
     {
-        public MbeTableFB.ControllerProtocol _protocol;
-        public MbeTableFB.SLMP_area _SLMP_Area;
-        public ushort _modbus_transactionID;
+        public MbeTableFB.ControllerProtocol Protocol;
+        public MbeTableFB.SLMP_area SlmpArea;
+        public ushort ModbusTransactionId = 0;
 
-        public uint _FloatBaseAddr;
-        public uint _IntBaseAddr;
-        public uint _BoolBaseAddr;
+        public uint FloatBaseAddr;
+        public uint IntBaseAddr;
+        public uint BoolBaseAddr;
 
-        public uint _ControlBaseAddr;
+        public uint ControlBaseAddr;
 
-        public int _float_colum_num;
-        public int _int_colum_num;
-        public int _bool_colum_num;
+        public int FloatColumNum = Params.FloatColumNum;
+        public readonly int IntColumNum = Params.IntColumNum;
+        public readonly int BoolColumNum = 0;
 
-        public uint _FloatAreaSize;
-        public uint _IntAreaSize;
-        public uint _BoolAreaSize;
+        public uint FloatAreaSize;
+        public uint IntAreaSize;
+        public uint BoolAreaSize;
 
-        public uint _IP1;
-        public uint _IP2;
-        public uint _IP3;
-        public uint _IP4;
-        public uint _Port;
-        public uint _Timeout;
+        public uint Ip1;
+        public uint Ip2;
+        public uint Ip3;
+        public uint Ip4;
+        public uint Port;
+        public uint Timeout;
     }
 }

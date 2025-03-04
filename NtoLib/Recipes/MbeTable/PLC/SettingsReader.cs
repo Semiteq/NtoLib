@@ -1,123 +1,93 @@
-﻿using FB;
+﻿using System;
+using System.Reflection;
 using FB.VisualFB;
 using InSAT.OPC;
-using MasterSCADALib;
-using System;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.PLC
 {
     internal class SettingsReader
     {
-        private VisualFBConnector FBConnector;
+        private readonly VisualFBConnector _fbConnector;
 
-        public SettingsReader(VisualFBConnector visualFBConnector)
+        public SettingsReader(VisualFBConnector visualFbConnector)
         {
-            FBConnector = visualFBConnector;
+            _fbConnector = visualFbConnector;
         }
-
-
 
         public bool CheckQuality()
         {
-            for (int id = Params.ID_HMI_CommProtocol; id < Params.ID_HMI_ActualLine; id++)
-                if (GetPinQuality(Params.ID_HMI_CommProtocol) != OpcQuality.Good)
+            for (int id = Params.IdHmiCommProtocol; id < Params.IdHmiActualLine; id++)
+                if (GetPinQuality(id) != OpcQuality.Good)
                     return false;
-
             return true;
         }
 
         public CommunicationSettings ReadTableSettings()
         {
-            CommunicationSettings settings = new CommunicationSettings();
+            var settings = new CommunicationSettings();
 
-            bool settingOk = false;
-            uint pinValue1 = GetPinValue<uint>(Params.ID_HMI_CommProtocol);
-            if (GetPinQuality(Params.ID_HMI_CommProtocol) != OpcQuality.Good)
+            if (!IsQualityGood(Params.IdHmiCommProtocol))
+                return settings;
+
+            var protocol = GetPinValue<uint>(Params.IdHmiCommProtocol);
+            if (protocol != 1)
             {
-                settingOk = false;
+                settings.Protocol = protocol == 2 
+                    ? MbeTableFB.ControllerProtocol.SLMP_not_implimated 
+                    : settings.Protocol;
+                return settings;
             }
-            else
+
+            settings.Protocol = MbeTableFB.ControllerProtocol.Modbus;
+            if (!TrySetSlmpArea(settings))
+                return settings;
+
+            var settingsMap = new[]
             {
-                switch (pinValue1)
-                {
-                    case 1:
-                        settings._protocol = MbeTableFB.ControllerProtocol.Modbus;
-                        uint pinValue2 = GetPinValue<uint>(Params.ID_HMI_AddrArea);
-                        if (GetPinQuality(Params.ID_HMI_AddrArea) != OpcQuality.Good)
-                            break;
-                        switch (pinValue2)
-                        {
-                            case 1:
-                                settings._SLMP_Area = MbeTableFB.SLMP_area.D;
-                                break;
-                            case 2:
-                                settings._SLMP_Area = MbeTableFB.SLMP_area.R;
-                                break;
-                        }
+                (Params.IdHmiFloatBaseAddr,      (Action<uint>)(v => settings.FloatBaseAddr = v)),
+                (Params.IdHmiFloatAreaSize,      (Action<uint>)(v => settings.FloatAreaSize = v)),
+                (Params.IdHmiIntBaseAddr,        (Action<uint>)(v => settings.IntBaseAddr = v)),
+                (Params.IdHmiIntAreaSize,        (Action<uint>)(v => settings.IntAreaSize = v)),
+                (Params.IdHmiBoolBaseAddr,       (Action<uint>)(v => settings.BoolBaseAddr = v)),
+                (Params.IdHmiBoolAreaSize,       (Action<uint>)(v => settings.BoolAreaSize = v)),
+                (Params.IdHmiControlBaseAddr,    (Action<uint>)(v => settings.ControlBaseAddr = v)),
+                (Params.IdHmiIp1,                (Action<uint>)(v => settings.Ip1 = v)),
+                (Params.IdHmiIp2,                (Action<uint>)(v => settings.Ip2 = v)),
+                (Params.IdHmiIp3,                (Action<uint>)(v => settings.Ip3 = v)),
+                (Params.IdHmiIp4,                (Action<uint>)(v => settings.Ip4 = v)),
+                (Params.IdHmiPort,               (Action<uint>)(v => settings.Port = v)),
+                (Params.IdHmiTimeout,            (Action<uint>)(v => settings.Timeout = v))
+            };
 
-                        if (GetPinQuality(Params.ID_HMI_FloatBaseAddr) != OpcQuality.Good) break;
-                        settings._FloatBaseAddr = GetPinValue<uint>(Params.ID_HMI_FloatBaseAddr);
-
-                        if (GetPinQuality(Params.ID_HMI_FloatAreaSize) != OpcQuality.Good) break;
-                        settings._FloatAreaSize = GetPinValue<uint>(Params.ID_HMI_FloatAreaSize);
-
-                        if (GetPinQuality(Params.ID_HMI_IntBaseAddr) != OpcQuality.Good) break;
-                        settings._IntBaseAddr = GetPinValue<uint>(Params.ID_HMI_IntBaseAddr);
-
-                        if (GetPinQuality(Params.ID_HMI_IntAreaSize) != OpcQuality.Good) break;
-                        settings._IntAreaSize = GetPinValue<uint>(Params.ID_HMI_IntAreaSize);
-
-                        if (GetPinQuality(Params.ID_HMI_BoolBaseAddr) != OpcQuality.Good) break;
-                        settings._BoolBaseAddr = GetPinValue<uint>(Params.ID_HMI_BoolBaseAddr);
-
-                        if (GetPinQuality(Params.ID_HMI_BoolAreaSize) != OpcQuality.Good) break;
-                        settings._BoolAreaSize = GetPinValue<uint>(Params.ID_HMI_BoolAreaSize);
-
-                        if (GetPinQuality(Params.ID_HMI_ControlBaseAddr) != OpcQuality.Good) break;
-                        settings._ControlBaseAddr = GetPinValue<uint>(Params.ID_HMI_ControlBaseAddr);
-
-                        if (GetPinQuality(Params.ID_HMI_IP1) != OpcQuality.Good) break;
-                        settings._IP1 = GetPinValue<uint>(Params.ID_HMI_IP1);
-
-                        if (GetPinQuality(Params.ID_HMI_IP2) != OpcQuality.Good) break;
-                        settings._IP2 = GetPinValue<uint>(Params.ID_HMI_IP2);
-
-                        if (GetPinQuality(Params.ID_HMI_IP3) != OpcQuality.Good) break;
-                        settings._IP3 = GetPinValue<uint>(Params.ID_HMI_IP3); ;
-
-                        if (GetPinQuality(Params.ID_HMI_IP4) != OpcQuality.Good) break;
-                        settings._IP4 = GetPinValue<uint>(Params.ID_HMI_IP4);
-
-                        if (GetPinQuality(Params.ID_HMI_Port) != OpcQuality.Good) break;
-                        settings._Port = GetPinValue<uint>(Params.ID_HMI_Port);
-
-                        if (GetPinQuality(Params.ID_HMI_Timeout) != OpcQuality.Good) break;
-                        settings._Timeout = GetPinValue<uint>(Params.ID_HMI_Timeout);
-
-                        settingOk = true;
-                        break;
-                    case 2:
-                        settings._protocol = MbeTableFB.ControllerProtocol.SLMP_not_implimated;
-                        break;
-                    default:
-                        break;
-
-                }
-
-                settings._int_colum_num = 2;
-                settings._float_colum_num = 2;
+            foreach (var (id, setter) in settingsMap)
+            {
+                if (!IsQualityGood(id))
+                    return settings;
+                setter(GetPinValue<uint>(id));
             }
+
             return settings;
         }
 
-        private T GetPinValue<T>(int id)
+        private bool TrySetSlmpArea(CommunicationSettings settings)
         {
-            return FBConnector.GetPinValue<T>(id);
+            if (!IsQualityGood(Params.IdHmiAddrArea))
+                return false;
+
+            var areaValue = GetPinValue<uint>(Params.IdHmiAddrArea);
+            settings.SlmpArea = areaValue switch
+            {
+                1 => MbeTableFB.SLMP_area.D,
+                2 => MbeTableFB.SLMP_area.R,
+                _ => settings.SlmpArea
+            };
+            return true;
         }
 
-        private OpcQuality GetPinQuality(int id)
-        {
-            return FBConnector.GetPinQuality(id);
-        }
+        private bool IsQualityGood(int id) => GetPinQuality(id) == OpcQuality.Good;
+
+        private T GetPinValue<T>(int id) => _fbConnector.GetPinValue<T>(id);
+
+        private OpcQuality GetPinQuality(int id) => _fbConnector.GetPinQuality(id);
     }
 }

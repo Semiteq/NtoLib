@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 using NtoLib.Recipes.MbeTable.Table;
 
@@ -27,21 +28,21 @@ namespace NtoLib.Recipes.MbeTable
                 CommunicationSettings settings = settingsReader.ReadTableSettings();
 
                 int num = -1;
-                if (settings._float_colum_num > 0)
-                    num = (int)settings._FloatAreaSize / 2 / settings._float_colum_num;
-                if (settings._int_colum_num > 0)
+                if (settings.FloatColumNum > 0)
+                    num = (int)settings.FloatAreaSize / 2 / settings.FloatColumNum;
+                if (settings.IntColumNum > 0)
                 {
                     if (num < 0)
-                        num = (int)settings._IntAreaSize / settings._int_colum_num;
-                    else if ((int)settings._IntAreaSize / settings._int_colum_num < num)
-                        num = (int)settings._IntAreaSize / settings._int_colum_num;
+                        num = (int)settings.IntAreaSize / settings.IntColumNum;
+                    else if ((int)settings.IntAreaSize / settings.IntColumNum < num)
+                        num = (int)settings.IntAreaSize / settings.IntColumNum;
                 }
-                if (settings._bool_colum_num > 0)
+                if (settings.BoolColumNum > 0)
                 {
                     if (num < 0)
-                        num = (int)settings._BoolAreaSize * 16 / settings._bool_colum_num;
-                    else if ((int)settings._BoolAreaSize * 16 / settings._bool_colum_num < num)
-                        num = (int)settings._BoolAreaSize * 16 / settings._bool_colum_num;
+                        num = (int)settings.BoolAreaSize * 16 / settings.BoolColumNum;
+                    else if ((int)settings.BoolAreaSize * 16 / settings.BoolColumNum < num)
+                        num = (int)settings.BoolAreaSize * 16 / settings.BoolColumNum;
                 }
                 if (num < 0)
                     StatusManager.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
@@ -70,7 +71,7 @@ namespace NtoLib.Recipes.MbeTable
                     }
                     else
                     {
-                        PLC_Communication plcCommunication = new();
+                        PlcCommunication plcCommunication = new();
 
                         plcCommunication.WriteRecipeToPlc(recipe, settings);
 
@@ -109,7 +110,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             SettingsReader settingsReader = new(FBConnector);
             var commSettings = settingsReader.ReadTableSettings();
-            PLC_Communication plcCommunication = new();
+            PlcCommunication plcCommunication = new();
             var recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
 
             if (recipe == null)

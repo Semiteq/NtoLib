@@ -53,11 +53,11 @@ namespace NtoLib.Recipes.MbeTable
         private uint _uBoolBaseAddr         = Params.UBoolBaseAddr;
         private uint _uBoolAreaSize         = Params.UBoolAreaSize;
         private uint _uControlBaseAddr      = Params.UControlBaseAddr;
-        private uint _conntrollerIP1        = Params.ConntrollerIP1;
-        private uint _conntrollerIP2        = Params.ConntrollerIP2;
-        private uint _conntrollerIP3        = Params.ConntrollerIP3;
-        private uint _conntrollerIP4        = Params.ConntrollerIP4;
-        private uint _conntrollerTCPPort    = Params.ConntrollerTCPPort;
+        private uint _controllerIp1        = Params.ControllerIp1;
+        private uint _controllerIp2        = Params.ControllerIp2;
+        private uint _controllerIp3        = Params.ControllerIp3;
+        private uint _controllerIp4        = Params.ControllerIp4;
+        private uint _controllerTcpPort    = Params.ControllerTcpPort;
         private uint _timeout               = Params.Timeout;
 
         [DisplayName(" 1. Протокол обмена передачи данных в контроллер")]
@@ -136,40 +136,40 @@ namespace NtoLib.Recipes.MbeTable
         [DisplayName("10.  IP адрес контроллера байт 1")]
         public uint conntrollerIP1
         {
-            get => this._conntrollerIP1;
-            set => this._conntrollerIP1 = value;
+            get => this._controllerIp1;
+            set => this._controllerIp1 = value;
         }
 
         [DisplayName("11.  IP адрес контроллера байт 2")]
         [Description("IP адрес контроллера байт 2")]
         public uint conntrollerIP2
         {
-            get => this._conntrollerIP2;
-            set => this._conntrollerIP2 = value;
+            get => this._controllerIp2;
+            set => this._controllerIp2 = value;
         }
 
         [Description("IP адрес контроллера байт 3")]
         [DisplayName("12.  IP адрес контроллера байт 3")]
         public uint conntrollerIP3
         {
-            get => this._conntrollerIP3;
-            set => this._conntrollerIP3 = value;
+            get => this._controllerIp3;
+            set => this._controllerIp3 = value;
         }
 
         [Description("IP адрес контроллера байт 4")]
         [DisplayName("13.  IP адрес контроллера байт 4")]
         public uint conntrollerIP4
         {
-            get => this._conntrollerIP4;
-            set => this._conntrollerIP4 = value;
+            get => this._controllerIp4;
+            set => this._controllerIp4 = value;
         }
 
         [DisplayName("14.  TCP порт")]
         [Description("TCP порт")]
         public uint conntrollerTCPPort
         {
-            get => this._conntrollerTCPPort;
-            set => this._conntrollerTCPPort = value;
+            get => this._controllerTcpPort;
+            set => this._controllerTcpPort = value;
         }
 
         [DisplayName("15.  Timeout")]
@@ -188,35 +188,35 @@ namespace NtoLib.Recipes.MbeTable
         protected override void UpdateData()
         {
             // Update communication protocol and address area values
-            VisualPins.SetPinValue(Params.ID_HMI_CommProtocol, GetProtocolValue());
-            VisualPins.SetPinValue(Params.ID_HMI_AddrArea, GetAddressAreaValue());
+            VisualPins.SetPinValue(Params.IdHmiCommProtocol, GetProtocolValue());
+            VisualPins.SetPinValue(Params.IdHmiAddrArea, GetAddressAreaValue());
 
             // Update HMI values
-            VisualPins.SetPinValue(Params.ID_HMI_FloatBaseAddr, Params.UFloatBaseAddr);
-            VisualPins.SetPinValue(Params.ID_HMI_FloatAreaSize, Params.UFloatAreaSize);
-            VisualPins.SetPinValue(Params.ID_HMI_IntBaseAddr, Params.UIntBaseAddr);
-            VisualPins.SetPinValue(Params.ID_HMI_IntAreaSize, Params.UIntAreaSize);
-            VisualPins.SetPinValue(Params.ID_HMI_BoolBaseAddr, Params.UBoolBaseAddr);
-            VisualPins.SetPinValue(Params.ID_HMI_BoolAreaSize, Params.UBoolAreaSize);
-            VisualPins.SetPinValue(Params.ID_HMI_ControlBaseAddr, Params.UControlBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiFloatBaseAddr, Params.UFloatBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiFloatAreaSize, Params.UFloatAreaSize);
+            VisualPins.SetPinValue(Params.IdHmiIntBaseAddr, Params.UIntBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiIntAreaSize, Params.UIntAreaSize);
+            VisualPins.SetPinValue(Params.IdHmiBoolBaseAddr, Params.UBoolBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiBoolAreaSize, Params.UBoolAreaSize);
+            VisualPins.SetPinValue(Params.IdHmiControlBaseAddr, Params.UControlBaseAddr);
 
             // Update controller IP and port values
-            VisualPins.SetPinValue(Params.ID_HMI_IP1, Params.ConntrollerIP1);
-            VisualPins.SetPinValue(Params.ID_HMI_IP2, Params.ConntrollerIP2);
-            VisualPins.SetPinValue(Params.ID_HMI_IP3, Params.ConntrollerIP3);
-            VisualPins.SetPinValue(Params.ID_HMI_IP4, Params.ConntrollerIP4);
-            VisualPins.SetPinValue(Params.ID_HMI_Port, Params.ConntrollerTCPPort);
+            VisualPins.SetPinValue(Params.IdHmiIp1, Params.ControllerIp1);
+            VisualPins.SetPinValue(Params.IdHmiIp2, Params.ControllerIp2);
+            VisualPins.SetPinValue(Params.IdHmiIp3, Params.ControllerIp3);
+            VisualPins.SetPinValue(Params.IdHmiIp4, Params.ControllerIp4);
+            VisualPins.SetPinValue(Params.IdHmiPort, Params.ControllerTcpPort);
 
             // Update timeout value
-            VisualPins.SetPinValue(Params.ID_HMI_Timeout, Params.Timeout);
+            VisualPins.SetPinValue(Params.IdHmiTimeout, Params.Timeout);
 
             // Process actual line and enable load status
             var actualLine = GetActualLineValue();
             var statusFlags = CalculateStatusFlags(actualLine);
 
             // Update status values
-            VisualPins.SetPinValue(Params.ID_HMI_ActualLine, actualLine);
-            VisualPins.SetPinValue(Params.ID_HMI_Status, statusFlags);
+            VisualPins.SetPinValue(Params.IdHmiActualLine, actualLine);
+            VisualPins.SetPinValue(Params.IdHmiStatus, statusFlags);
             
             // Current step inside FOR loop of first nesting level
             var forLoopCount1 = GetPinValue<int>(ID_ForLoopCount1);

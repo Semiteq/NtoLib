@@ -60,8 +60,21 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.0\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -112,6 +125,7 @@
     <Compile Include="Recipes\MbeTable\Actions\ActionTime.cs" />
     <Compile Include="Recipes\MbeTable\Actions\ActionType.cs" />
     <Compile Include="Recipes\MbeTable\Actions\Commands.cs" />
+    <Compile Include="Recipes\MbeTable\PLC\PlcCommunication.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\GrowthList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -129,7 +143,6 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Recipes\MbeTable\Utils\DateTimeParser.cs" />
-    <Compile Include="Recipes\MbeTable\PLC\PLC_Communication.cs" />
     <Compile Include="Recipes\MbeTable\Table\ReadPins.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineFactory.cs" />
@@ -290,6 +303,7 @@
     <None Include="NtoLib_reg.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
