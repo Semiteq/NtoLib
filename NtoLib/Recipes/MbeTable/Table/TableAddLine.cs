@@ -16,7 +16,7 @@ namespace NtoLib.Recipes.MbeTable
             var insertIndex = addAfter ? rowIndex + 1 : rowIndex;
             if (dataGridView1.RowCount == 0) insertIndex = 0;
 
-            recipeLine.Row.Height = ROW_HEIGHT;
+            recipeLine.Row.Height = TableControl.ROW_HEIGHT;
 
             _tableData.Insert(insertIndex, recipeLine);
             InsertRow(recipeLine.Row, insertIndex);
@@ -27,7 +27,7 @@ namespace NtoLib.Recipes.MbeTable
         private void ReplaceLineInRecipe(RecipeLine recipeLine)
         {
             var rowIndex = dataGridView1.CurrentRow?.Index ?? 0;
-            recipeLine.Row.Height = ROW_HEIGHT;
+            recipeLine.Row.Height = TableControl.ROW_HEIGHT;
 
             _tableData[rowIndex] = recipeLine;
 
@@ -102,7 +102,7 @@ namespace NtoLib.Recipes.MbeTable
 
             try
             {
-                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.ShutterNames.FirstOrDefault().Key, 0f, 0f, 0f, 0f, string.Empty), true);
+                AddLineToRecipe(RecipeLineFactory.NewLine("CLOSE", ActionTarget.ShutterNames.FirstOrDefault().Key, 0f, 0f, 0f, 0f, string.Empty), true);
                 RefreshTable();
             }
             catch (InvalidOperationException ex)
@@ -117,7 +117,7 @@ namespace NtoLib.Recipes.MbeTable
 
             try
             {
-                AddLineToRecipe(_factory.NewLine("CLOSE", GrowthList.ShutterNames.FirstOrDefault().Key, 0f, 0f, 0f, 0f, string.Empty), true);
+                AddLineToRecipe(RecipeLineFactory.NewLine("CLOSE", ActionTarget.ShutterNames.FirstOrDefault().Key, 0f, 0f, 0f, 0f, string.Empty), true);
                 RefreshTable();
             }
             catch (InvalidOperationException ex)

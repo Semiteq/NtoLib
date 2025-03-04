@@ -11,17 +11,21 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public N_Run(int actionTarget, float setpoint, string comment) : base(ActionName)
         {
-            NitrogenSourceName = GrowthList.NitrogenSourceNames.FirstOrDefault(x => x.Key == actionTarget).Value;
+            NitrogenSourceName = ActionTarget.NitrogenSourceNames.FirstOrDefault(x => x.Key == actionTarget).Value;
             var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             Cells = new List<TCell>
             {
-                new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, NitrogenSourceName, actionTarget),
-                new(CellType._float, setpoint),
-                new(CellType._blocked, ""),
-                new(CellType._blocked, ""),
-                new(CellType._blocked, ""),
-                new(CellType._string, comment)
+                new(CellType.Enum, ActionName, actionNumber),
+                new(CellType.Enum, NitrogenSourceName, actionTarget),
+                
+                new(CellType.Float, setpoint),
+                new(CellType.Blocked, ""),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.Blocked, ""),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.String, comment)
             };
         }
     }

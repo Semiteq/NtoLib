@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using FB.VisualFB;
 using InSAT.OPC;
-using NtoLib.Recipes.MbeTable.Table;
 
-namespace NtoLib.Recipes.MbeTable
+namespace NtoLib.Recipes.MbeTable.Table
 {
     public class ReadPins : VisualFBBase
     {

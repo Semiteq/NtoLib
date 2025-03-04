@@ -63,12 +63,12 @@
         public const int TimeSetpointIndex = 5;
         public const int RecipeTimeIndex = 6;
         public const int CommentIndex = 7;
-        
+
         // Количество столбцов в таблице соответствующих типов для передачи в PLC
         public const int IntColumNum = 2;
         public const int FloatColumNum = 4;
 
-        //Общее число столбцов в таблице
+        //Общее число столбцов в UI таблице
         public const int ColumnCount = 8;
     }
 }

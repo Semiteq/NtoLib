@@ -93,13 +93,13 @@ namespace NtoLib.Recipes.MbeTable.PLC
             int floatIndex = 0, intIndex = 0;
             foreach (var line in recipe)
             {
-                intArray[intIndex++] = (ushort)line.GetCells[0].UIntValue;
-                intArray[intIndex++] = (ushort)line.GetCells[1].UIntValue;
+                intArray[intIndex++] = (ushort)line.Cells[0].UIntValue;
+                intArray[intIndex++] = (ushort)line.Cells[1].UIntValue;
 
-                floatArray[floatIndex++] = (ushort)(line.GetCells[2].UIntValue & ushort.MaxValue);
-                floatArray[floatIndex++] = (ushort)(line.GetCells[2].UIntValue >> 16);
-                floatArray[floatIndex++] = (ushort)(line.GetCells[3].UIntValue & ushort.MaxValue);
-                floatArray[floatIndex++] = (ushort)(line.GetCells[3].UIntValue >> 16);
+                floatArray[floatIndex++] = (ushort)(line.Cells[2].UIntValue & ushort.MaxValue);
+                floatArray[floatIndex++] = (ushort)(line.Cells[2].UIntValue >> 16);
+                floatArray[floatIndex++] = (ushort)(line.Cells[3].UIntValue & ushort.MaxValue);
+                floatArray[floatIndex++] = (ushort)(line.Cells[3].UIntValue >> 16);
             }
 
             return (intArray, floatArray, boolArray);
@@ -149,9 +149,9 @@ namespace NtoLib.Recipes.MbeTable.PLC
                                                                           ? 1
                                                                           : 0));
 
-            var factory = new RecipeLineFactory();
+
             for (var i = 0; i < capacity; i++)
-                data.Add(factory.NewLine(intData, floatData, boolData, i));
+                data.Add(RecipeLineFactory.NewLine(intData, floatData, boolData, i));
 
             return data;
         }

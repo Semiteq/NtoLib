@@ -133,17 +133,17 @@ namespace NtoLib.Recipes.MbeTable
 
             for (int i = 0; i < recipe1.Count; i++)
             {
-                if (recipe1[i].GetCells[0].GetValue() != recipe2[i].GetCells[0].GetValue())
+                var cells1 = recipe1[i].Cells;
+                var cells2 = recipe2[i].Cells;
+
+                if (cells1.Count != cells2.Count)
                     return false;
 
-                if (recipe1[i].GetNumber() != recipe2[i].GetNumber())
-                    return false;
-
-                if (recipe1[i].GetSetpoint() != recipe2[i].GetSetpoint())
-                    return false;
-
-                if (recipe1[i].GetTime() != recipe2[i].GetTime())
-                    return false;
+                for (int j = 0; j < cells1.Count; j++)
+                {
+                    if (cells1[j].GetValue() != cells2[j].GetValue())
+                        return false;
+                }
             }
             return true;
         }
@@ -179,11 +179,11 @@ namespace NtoLib.Recipes.MbeTable
                 row.HeaderCell.Value = (rowIndex + 1).ToString();
                 row.Height = ROW_HEIGHT;
 
-                var action = recipeLine.GetCells[Params.ActionIndex].StringValue;
+                var action = recipeLine.Cells[Params.ActionIndex].StringValue;
 
                 for (var colIndex = 0; colIndex < Params.ColumnCount; colIndex++)
                 {
-                    var cellValue = recipeLine.GetCells[colIndex].StringValue;
+                    var cellValue = recipeLine.Cells[colIndex].StringValue;
                     var cell = row.Cells[colIndex];
 
                     cell.Value = cellValue;
@@ -205,7 +205,6 @@ namespace NtoLib.Recipes.MbeTable
 
         private List<RecipeLine> ReadRecipeFromFile()
         {
-            var parser = new RecipeLineParser();
             var recipeLineList = new List<RecipeLine>();
 
             try
@@ -225,7 +224,7 @@ namespace NtoLib.Recipes.MbeTable
 
                     try
                     {
-                        var recipeLine = parser.Parse(line);
+                        var recipeLine = RecipeLineParser.Parse(line);
                         recipeLineList.Add(recipeLine);
                     }
                     catch (Exception ex)
@@ -274,7 +273,7 @@ namespace NtoLib.Recipes.MbeTable
                     // Writing lines
                     foreach (var recipeLine in _tableData)
                     {
-                        var cells = recipeLine.GetCells.ToList();
+                        var cells = recipeLine.Cells.ToList();
                         var rowData = new List<string>();
                         var currentCommand = cells[Params.ActionIndex].StringValue;
                         var action = ActionManager.GetTargetAction(currentCommand);
@@ -293,7 +292,7 @@ namespace NtoLib.Recipes.MbeTable
                             {
                                 try
                                 {
-                                    cellValue = GrowthList.GetActionTypeByName(cellValue, currentCommand).ToString();
+                                    cellValue = ActionTarget.GetActionTypeByName(cellValue, currentCommand).ToString();
                                 }
                                 catch (KeyNotFoundException)
                                 {

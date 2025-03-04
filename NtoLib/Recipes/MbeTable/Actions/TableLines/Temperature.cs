@@ -11,17 +11,21 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public Temperature(int actionTarget, float temperatureSetpoint, string comment) : base(ActionName)
         {
-            HeaterName = GrowthList.HeaterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
+            HeaterName = ActionTarget.HeaterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
             var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             Cells = new List<TCell>
             {
-                new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, HeaterName, actionTarget),
-                new(CellType._floatTemp, temperatureSetpoint),
-                new(CellType._blocked, ""),
-                new(CellType._blocked, ""),
-                new(CellType._blocked, ""),
-                new(CellType._string, comment)
+                new(CellType.Enum, ActionName, actionNumber),
+                new(CellType.Enum, HeaterName, actionTarget),
+                
+                new(CellType.FloatTemp, temperatureSetpoint),
+                new(CellType.Blocked, ""),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.Blocked, ""),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.String, comment)
             };
 
             MinSetpoint = 20f;

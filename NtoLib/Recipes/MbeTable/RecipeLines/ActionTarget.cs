@@ -6,7 +6,7 @@ using NtoLib.Recipes.MbeTable.Actions;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
-    internal abstract class GrowthList : VisualControlBase
+    internal abstract class ActionTarget : VisualControlBase
     {
         public static Dictionary<int, string> ShutterNames { get; private set; } = new();
         public static Dictionary<int, string> HeaterNames { get; private set; } = new();

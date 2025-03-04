@@ -11,7 +11,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         private static List<RecipeLine> _tableData;
         private static DataGridView _dataGridView;
         private static List<FlattenedRecipeLine> _flattenedData;
-        
+
         public static TimeSpan TotalTime { get; private set; }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             }
 
             var time = TimeSpan.Zero;
-            _tableData[0].CycleTime = 0f;
+            _tableData[0].Time = 0f;
             UpdateDataGridView(0, TimeSpan.Zero);
 
             for (var rowIndex = 0; rowIndex < _tableData.Count; rowIndex++)
@@ -47,20 +47,20 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
                 time += recipeLine switch
                 {
                     EndFor_Loop endLoop => TimeSpan.FromSeconds(CalculateCycleTime(endLoop, rowIndex)),
-                    _ when recipeLine.ActionTime == ActionTime.TimeSetpoint => TimeSpan.FromSeconds(recipeLine.GetTime()),
+                    _ when recipeLine.ActionTime == ActionTime.TimeSetpoint => TimeSpan.FromSeconds(recipeLine.Duration),
                     _ => TimeSpan.Zero
                 };
 
                 if (rowIndex != _tableData.Count - 1)
                 {
-                    _tableData[rowIndex + 1].CycleTime = (float)time.TotalSeconds;
+                    _tableData[rowIndex + 1].Time = (float)time.TotalSeconds;
                     UpdateDataGridView(rowIndex + 1, time);
                 }
             }
 
             TotalTime = time;
         }
-        
+
         /// <summary>
         /// Gets the process time for the current row.
         /// </summary>
@@ -68,7 +68,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         public static TimeSpan GetRowTime(int originalIndex, int depth1, int depth2, int depth3)
         {
             if (_flattenedData == null) return TimeSpan.Zero;
-            
+
             var row = _flattenedData.Find(r => r.OriginalIndex == originalIndex && r.Depth1 == depth1 && r.Depth2 == depth2 && r.Depth3 == depth3);
             return row?.ExecutionTime ?? TimeSpan.Zero;
         }
@@ -79,9 +79,9 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         private static float CalculateCycleTime(EndFor_Loop endLoop, int rowIndex)
         {
             var cycleStartIndex = FindCycleStart(rowIndex);
-            if (cycleStartIndex == -1) return 0;
-
-            return (endLoop.CycleTime - _tableData[cycleStartIndex].CycleTime) * (_tableData[cycleStartIndex].GetSetpoint() - 1);
+            return cycleStartIndex == -1
+                ? (float)0
+                : (endLoop.Time - _tableData[cycleStartIndex].Time) * (_tableData[cycleStartIndex].Setpoint - 1);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             }
             return -1;
         }
-        
+
         /// <summary>
         /// Processes a list of `RecipeLine` objects to create a flattened list of `FlattenedRecipeLine` objects.
         /// It iterates through the `RecipeLine` objects, maintaining depth counters for nested loops, and calculates
@@ -131,14 +131,14 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
 
                 if (line is For_Loop forLoop)
                 {
-                    loopStack.Push((i, (int)forLoop.GetSetpoint(), 1));
+                    loopStack.Push((i, (int)forLoop.Duration, 1));
                 }
-                
+
                 var depth1 = loopStack.Count > 0 ? loopStack.Peek().currentIteration : 0;
                 var depth2 = loopStack.Count > 1 ? loopStack.ToArray()[1].currentIteration : 0;
                 var depth3 = loopStack.Count > 2 ? loopStack.ToArray()[2].currentIteration : 0;
 
-                var executionTime = line.ActionTime == ActionTime.TimeSetpoint ? TimeSpan.FromSeconds(line.GetTime()) : TimeSpan.Zero;
+                var executionTime = line.ActionTime == ActionTime.TimeSetpoint ? TimeSpan.FromSeconds(line.Duration) : TimeSpan.Zero;
                 flattened.Add(new FlattenedRecipeLine(i, time, depth1, depth2, depth3, executionTime));
                 time += executionTime;
 

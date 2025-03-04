@@ -6,9 +6,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     internal class RecipeLineParser
     {
-        private readonly RecipeLineFactory _factory = new();
-
-        public RecipeLine Parse(string stringToParse)
+        public static RecipeLine Parse(string stringToParse)
         {
             var cellStrings = SplitLine(stringToParse, Params.ColumnCount);
 
@@ -16,13 +14,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
             int number = ParseIntOrThrow(cellStrings[Params.ActionTargetIndex], "Объект");
             float setpoint = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Задание");
-            float initialValue = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Нач.значение");
-            float speed = ParseFloatOrThrow(cellStrings[Params.SetpointIndex], "Скорость");
+            float initialValue = ParseFloatOrThrow(cellStrings[Params.InitialValueIndex], "Нач.значение");
+            float speed = ParseFloatOrThrow(cellStrings[Params.SpeedIndex], "Скорость");
             float timeSetpoint = ParseFloatOrThrow(cellStrings[Params.TimeSetpointIndex], "Длительность");
 
             var comment = cellStrings[Params.CommentIndex] ?? string.Empty;
 
-            return _factory.NewLine(command, number, setpoint, initialValue, speed, timeSetpoint, comment);
+            return RecipeLineFactory.NewLine(command, number, setpoint, initialValue, speed, timeSetpoint, comment);
         }
 
         /// <summary>

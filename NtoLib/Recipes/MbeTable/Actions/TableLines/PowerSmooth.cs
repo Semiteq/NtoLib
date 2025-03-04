@@ -11,17 +11,21 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public PowerSmooth(int actionTarget, float powerSetpoint, float initialValue, float speed, float timeSetpoint, string comment) : base(ActionName)
         {
-            HeaterName = GrowthList.HeaterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
+            HeaterName = ActionTarget.HeaterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
             int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             Cells = new List<TCell>
             {
-                new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, HeaterName, actionTarget),
-                new(CellType._floatPercent, powerSetpoint),
-                new(CellType._floatPercent, initialValue),
-                new(CellType._floatPowerSpeed, speed),
-                new(CellType._floatSecond, timeSetpoint),
-                new(CellType._string, comment)
+                new(CellType.Enum, ActionName, actionNumber),
+                new(CellType.Enum, HeaterName, actionTarget),
+                
+                new(CellType.FloatPercent, powerSetpoint),
+                new(CellType.FloatPercent, initialValue),
+                
+                new(CellType.FloatPowerSpeed, speed),
+                new(CellType.FloatSecond, timeSetpoint),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.String, comment)
             };
 
             MinSetpoint = 0f;

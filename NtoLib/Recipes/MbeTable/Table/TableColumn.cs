@@ -14,7 +14,7 @@ namespace NtoLib.Recipes.MbeTable.Table
         public TableColumn(string name, Dictionary<int, string> intStringMap)
         {
             Name = name;
-            Type = CellType._enum;
+            Type = CellType.Enum;
             IntStringMap = intStringMap;
         }
 

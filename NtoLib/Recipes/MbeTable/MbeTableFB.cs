@@ -1,11 +1,10 @@
-﻿using FB;
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
-using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
 namespace NtoLib.Recipes.MbeTable
@@ -36,29 +35,29 @@ namespace NtoLib.Recipes.MbeTable
         private const int ID_LineTimeLeft = 102;
 
         private CountdownTimer _countdownTimer;
-        
+
         private TimeSpan _lastRecipeTimeLeft;
-        
+
         private int _previousLineNumber = -1;
-        
+
         private bool _isRecipeRunning;
         private bool _isTimerPaused;
 
         #region VisualProperties
 
-        private uint _uFloatBaseAddr        = Params.UFloatBaseAddr;
-        private uint _uFloatAreaSize        = Params.UFloatAreaSize;
-        private uint _uIntBaseAddr          = Params.UIntBaseAddr;
-        private uint _uIntAreaSize          = Params.UIntAreaSize;
-        private uint _uBoolBaseAddr         = Params.UBoolBaseAddr;
-        private uint _uBoolAreaSize         = Params.UBoolAreaSize;
-        private uint _uControlBaseAddr      = Params.UControlBaseAddr;
-        private uint _controllerIp1        = Params.ControllerIp1;
-        private uint _controllerIp2        = Params.ControllerIp2;
-        private uint _controllerIp3        = Params.ControllerIp3;
-        private uint _controllerIp4        = Params.ControllerIp4;
-        private uint _controllerTcpPort    = Params.ControllerTcpPort;
-        private uint _timeout               = Params.Timeout;
+        private uint _uFloatBaseAddr = Params.UFloatBaseAddr;
+        private uint _uFloatAreaSize = Params.UFloatAreaSize;
+        private uint _uIntBaseAddr = Params.UIntBaseAddr;
+        private uint _uIntAreaSize = Params.UIntAreaSize;
+        private uint _uBoolBaseAddr = Params.UBoolBaseAddr;
+        private uint _uBoolAreaSize = Params.UBoolAreaSize;
+        private uint _uControlBaseAddr = Params.UControlBaseAddr;
+        private uint _controllerIp1 = Params.ControllerIp1;
+        private uint _controllerIp2 = Params.ControllerIp2;
+        private uint _controllerIp3 = Params.ControllerIp3;
+        private uint _controllerIp4 = Params.ControllerIp4;
+        private uint _controllerTcpPort = Params.ControllerTcpPort;
+        private uint _timeout = Params.Timeout;
 
         [DisplayName(" 1. Протокол обмена передачи данных в контроллер")]
         [Description("Определяет по какому протоколу передаются данные в контроллер")]
@@ -217,7 +216,7 @@ namespace NtoLib.Recipes.MbeTable
             // Update status values
             VisualPins.SetPinValue(Params.IdHmiActualLine, actualLine);
             VisualPins.SetPinValue(Params.IdHmiStatus, statusFlags);
-            
+
             // Current step inside FOR loop of first nesting level
             var forLoopCount1 = GetPinValue<int>(ID_ForLoopCount1);
             var forLoopCount2 = GetPinValue<int>(ID_ForLoopCount2);
@@ -225,16 +224,16 @@ namespace NtoLib.Recipes.MbeTable
 
             var currentLine = GetPinValue<int>(ID_ActualLineNumber);
             var plcLineTime = GetPinValue<double>(ID_StepCurrentTime);
-            
+
             var isRecipeActive = GetPinValue<bool>(ID_RecipeActive);
             var isRecipePaused = GetPinValue<bool>(ID_RecipePaused);
-            
+
             // Get expected time for current line from flattened recipe data
             var currentLineTime = RecipeTimeManager.GetRowTime(currentLine, forLoopCount1, forLoopCount2, forLoopCount3);
 
             // Update timer info
             RecipeRunControl(isRecipeActive, isRecipePaused, plcLineTime, currentLineTime);
-            
+
             // Update recipe time
             UpdateRecipeTime(currentLine, plcLineTime, currentLineTime);
         }
@@ -243,18 +242,18 @@ namespace NtoLib.Recipes.MbeTable
         {
             var recipeTimeLeft = _countdownTimer?.GetRemainingTime() ?? TimeSpan.Zero;
             var lineTimeLeft = currentLineTime - TimeSpan.FromSeconds(plcLineTime);
-            
+
             // Update recipe time left if line number has changed
             if (currentLine != _previousLineNumber)
             {
                 _lastRecipeTimeLeft = recipeTimeLeft;
                 _previousLineNumber = currentLine;
             }
-            
+
             SetPinValue(ID_TotalTimeLeft, recipeTimeLeft.TotalSeconds);
             SetPinValue(ID_LineTimeLeft, lineTimeLeft.TotalSeconds);
         }
-        
+
         private void RecipeRunControl(bool isRecipeActive, bool isRecipePaused, double plcLineTime, TimeSpan expectedTimePassed)
         {
             if (RecipeTimeManager.TotalTime == TimeSpan.Zero) return;
@@ -307,7 +306,7 @@ namespace NtoLib.Recipes.MbeTable
                 _isRecipeRunning = false;
             }
         }
-        
+
         private int GetProtocolValue()
         {
             return _enumProtocol switch

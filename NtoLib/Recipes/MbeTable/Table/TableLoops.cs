@@ -20,15 +20,15 @@ namespace NtoLib.Recipes.MbeTable
                         cycleDepth++;
                         break;
                     case EndFor_Loop:
-                    {
-                        cycleDepth--;
+                        {
+                            cycleDepth--;
 
-                        if (cycleDepth < 0)
-                            return false;
+                            if (cycleDepth < 0)
+                                return false;
 
-                        recipeLine.TabulateLevel = cycleDepth;
-                        break;
-                    }
+                            recipeLine.TabulateLevel = cycleDepth;
+                            break;
+                        }
                     default:
                         recipeLine.TabulateLevel = cycleDepth;
                         break;

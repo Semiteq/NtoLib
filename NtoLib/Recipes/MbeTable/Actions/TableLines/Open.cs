@@ -11,17 +11,21 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
 
         public Open(int actionTarget = 0, string comment = "") : base(ActionName)
         {
-            ShutterName = GrowthList.ShutterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
+            ShutterName = ActionTarget.ShutterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
             var actionNumber = ActionManager.GetActionIdByCommand(ActionName);
             Cells = new List<TCell>
             {
-                new(CellType._enum, ActionName, actionNumber),
-                new(CellType._enum, ShutterName, actionTarget),
-                new(CellType._blocked, ""),
-                new(CellType._blocked, ""),
-                new(CellType._blocked, ""),
-                new(CellType._blocked, ""),
-                new(CellType._string, comment)
+                new(CellType.Enum, ActionName, actionNumber),
+                new(CellType.Enum, ShutterName, actionTarget),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.Blocked, ""),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.Blocked, ""),
+                
+                new(CellType.Blocked, ""),
+                new(CellType.String, comment)
             };
         }
     }
