@@ -7,7 +7,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     internal static class RecipeLineFactory
     {
-        private static readonly Dictionary<string, Func<int, float, float, float, float, string, RecipeLine>> _creators = new()
+        private static readonly Dictionary<string, Func<int, float, float, float, float, string, RecipeLine>> Creators = new()
         {
             { Close.ActionName,             (n, _, _, _, _, c) => new Close             (n, c) },
             { Open.ActionName,              (n, _, _, _, _, c) => new Open              (n, c) },
@@ -20,7 +20,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
             { Power.ActionName,             (n, s, _, _, _, c) => new Power             (n, s > 0f ? s : 10f, c) },
             { PowerWait.ActionName,         (n, s, _, _, t, c) => new PowerWait         (n, s > 0f ? s : 10f, t > 0f ? t : 60f, c) },
-            { PowerSmooth.ActionName,       (n, s, i, v, t, c) => new PowerSmooth       (n, s > 0f ? s : 10f, i > 0f ? s : 20, v > 0f ? v : 1f, t > 0f ? t : 120f, c) },
+            { PowerSmooth.ActionName,       (n, s, i, v, t, c) => new PowerSmooth       (n, s > 0f ? s : 10f, i > 0f ? s : 20f, v > 0f ? v : 1f, t > 0f ? t : 600f, c) },
 
             { Wait.ActionName,              (_, _, _, _, t, c) => new Wait              (t > 0f ? t : 10f, c) },
             { For_Loop.ActionName,          (n, _, _, _, _, c) => new For_Loop          (n > 0 ? n : 5, c) },
@@ -34,20 +34,24 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
         public static RecipeLine NewLine(string actionName, int actionTarget, float setpoint, float initialValue, float speed, float timeSetpoint, string comment)
         {
-            return _creators.TryGetValue(actionName, out var creator) ?
+            return Creators.TryGetValue(actionName, out var creator) ?
                    creator(actionTarget, setpoint, initialValue, speed, timeSetpoint, comment) : null;
         }
 
-        public static RecipeLine NewLine(ushort[] intData, ushort[] floatData, ushort[] boolData, int index)
+        public static RecipeLine NewLine(int[] intData, int[] floatData, int[] boolData, int index)
         {
-            var actionName = ActionManager.GetActionNameById(intData[index * 2]).ToString();
+            var actionName = ActionManager.GetActionNameById(intData[index * 2]);
             var actionTarget = intData[index * 2 + 1];
-            var setpoint = BitConverter.ToSingle(BitConverter.GetBytes(floatData[index * 4] + ((uint)floatData[index * 4 + 1] << 16)), 0);
-            var initialValue = BitConverter.ToSingle(BitConverter.GetBytes(floatData[index * 4 + 2] + ((uint)floatData[index * 4 + 3] << 16)), 0);
-            var speed = BitConverter.ToSingle(BitConverter.GetBytes(floatData[index * 4 + 4] + ((uint)floatData[index * 4 + 5] << 16)), 0);
-            var timeSetpoint = BitConverter.ToSingle(BitConverter.GetBytes(floatData[index * 4 + 6] + ((uint)floatData[index * 4 + 7] << 16)), 0);
+            var floatValues = new float[4];
 
-            return NewLine(actionName, actionTarget, setpoint, initialValue, speed, timeSetpoint, string.Empty);
+            for (var i = 0; i < 4; i++)
+            {
+                var baseIndex = index * 4 + i * 2;
+                floatValues[i] = BitConverter.ToSingle(BitConverter.GetBytes(floatData[baseIndex] + ((uint)floatData[baseIndex + 1] << 16)), 0);
+            }
+
+            return NewLine(actionName, actionTarget, floatValues[0], floatValues[1], floatValues[2], floatValues[3], string.Empty);
         }
+
     }
 }

@@ -17,22 +17,19 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
             {
                 new(CellType.Enum, ActionName, actionNumber),
                 new(CellType.Enum, HeaterName, actionTarget),
-                
+
                 new(CellType.FloatPercent, powerSetpoint),
                 new(CellType.FloatPercent, initialValue),
-                
+
                 new(CellType.FloatPowerSpeed, speed),
                 new(CellType.FloatSecond, timeSetpoint),
-                
+
                 new(CellType.Blocked, ""),
                 new(CellType.String, comment)
             };
 
             MinSetpoint = 0f;
             MaxSetpoint = 100f;
-
-            MinTimeSetpoint = 0.1f;
-            MaxTimeSetpoint = 200.0f;
         }
     }
 }

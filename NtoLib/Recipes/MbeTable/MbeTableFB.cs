@@ -34,6 +34,7 @@ namespace NtoLib.Recipes.MbeTable
         private const int ID_TotalTimeLeft = 101;
         private const int ID_LineTimeLeft = 102;
 
+        [NonSerialized]
         private CountdownTimer _countdownTimer;
 
         private TimeSpan _lastRecipeTimeLeft;
@@ -191,20 +192,20 @@ namespace NtoLib.Recipes.MbeTable
             VisualPins.SetPinValue(Params.IdHmiAddrArea, GetAddressAreaValue());
 
             // Update HMI values
-            VisualPins.SetPinValue(Params.IdHmiFloatBaseAddr, Params.UFloatBaseAddr);
-            VisualPins.SetPinValue(Params.IdHmiFloatAreaSize, Params.UFloatAreaSize);
-            VisualPins.SetPinValue(Params.IdHmiIntBaseAddr, Params.UIntBaseAddr);
-            VisualPins.SetPinValue(Params.IdHmiIntAreaSize, Params.UIntAreaSize);
-            VisualPins.SetPinValue(Params.IdHmiBoolBaseAddr, Params.UBoolBaseAddr);
-            VisualPins.SetPinValue(Params.IdHmiBoolAreaSize, Params.UBoolAreaSize);
-            VisualPins.SetPinValue(Params.IdHmiControlBaseAddr, Params.UControlBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiFloatBaseAddr, _uFloatBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiFloatAreaSize, _uFloatAreaSize);
+            VisualPins.SetPinValue(Params.IdHmiIntBaseAddr, _uIntBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiIntAreaSize, _uIntAreaSize);
+            VisualPins.SetPinValue(Params.IdHmiBoolBaseAddr, _uBoolBaseAddr);
+            VisualPins.SetPinValue(Params.IdHmiBoolAreaSize, _uBoolAreaSize);
+            VisualPins.SetPinValue(Params.IdHmiControlBaseAddr, _uControlBaseAddr);
 
             // Update controller IP and port values
-            VisualPins.SetPinValue(Params.IdHmiIp1, Params.ControllerIp1);
-            VisualPins.SetPinValue(Params.IdHmiIp2, Params.ControllerIp2);
-            VisualPins.SetPinValue(Params.IdHmiIp3, Params.ControllerIp3);
-            VisualPins.SetPinValue(Params.IdHmiIp4, Params.ControllerIp4);
-            VisualPins.SetPinValue(Params.IdHmiPort, Params.ControllerTcpPort);
+            VisualPins.SetPinValue(Params.IdHmiIp1, _controllerIp1);
+            VisualPins.SetPinValue(Params.IdHmiIp2, _controllerIp2);
+            VisualPins.SetPinValue(Params.IdHmiIp3, _controllerIp3);
+            VisualPins.SetPinValue(Params.IdHmiIp4, _controllerIp4);
+            VisualPins.SetPinValue(Params.IdHmiPort, _controllerTcpPort);
 
             // Update timeout value
             VisualPins.SetPinValue(Params.IdHmiTimeout, Params.Timeout);

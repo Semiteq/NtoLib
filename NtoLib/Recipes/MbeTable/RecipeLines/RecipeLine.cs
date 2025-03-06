@@ -61,7 +61,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                 };
             }
         }
-        
+
         // In this case it is impossible to use link to private static object due to windows forms implementation
         // New lists should be created on each call
 
@@ -88,7 +88,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                     return new DataGridViewComboBoxCell();
             }
         }
-        
+
         private static DataGridViewComboBoxCell ShutterListCell()
         {
             var cell = new DataGridViewComboBoxCell();
@@ -96,7 +96,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             cell.MaxDropDownItems = ActionTarget.ShutterNames.Count;
             return cell;
         }
-        
+
         private static DataGridViewComboBoxCell HeaterListCell()
         {
             var cell = new DataGridViewComboBoxCell();
@@ -156,6 +156,8 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         }
 
         public bool ValidateSetpoint(float value) => value >= MinSetpoint && value <= MaxSetpoint;
+
+        public bool ValidateInitialValue(float value) => value >= MinSetpoint && value <= MaxSetpoint;
         public bool ValidateTimeSetpoint(float value) => value >= MinTimeSetpoint && value <= MaxTimeSetpoint;
         public bool ValidateSpeed(float value) => value >= MinSpeed && value <= MaxSpeed;
 

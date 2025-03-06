@@ -106,11 +106,10 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
             if (Type == CellType.Bool)
             {
-                if (upperValue == "TRUE" || upperValue == "ДА" || upperValue == "YES" || upperValue == "ON" || upperValue == "1")
-                    _boolValue = true;
-                else _boolValue = upperValue == "FALSE" || upperValue == "НЕТ" || upperValue == "NO" || upperValue == "OFF" || upperValue == "0"
+                _boolValue = upperValue == "TRUE" || upperValue == "ДА" || upperValue == "YES" || upperValue == "ON" || upperValue == "1"
+                        || (upperValue == "FALSE" || upperValue == "НЕТ" || upperValue == "NO" || upperValue == "OFF" || upperValue == "0"
                     ? false
-                    : throw new Exception($"Wrong value(BoolType): \"{value}\"");
+                    : throw new Exception($"Wrong value(BoolType): \"{value}\""));
             }
             else if (Type == CellType.FloatSecond)
             {
@@ -129,17 +128,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                 if (!int.TryParse(value, out this._intValue))
                     throw new Exception($"Wrong value(IntType): \"{value}\"");
             }
-            else if (Type == CellType.Enum)
-            {
-                _stringValue = !string.IsNullOrEmpty(value) ? value : throw new Exception($"Wrong value(EnumType): \"{value}\"");
-            }
-            else if (Type == CellType.String || Type == CellType.Blocked)
-            {
-                _stringValue = value != null ? value : throw new Exception($"Wrong value(StringType): \"{value}\"");
-            }
             else
             {
-                throw new Exception("Unknown cell type");
+                _stringValue = Type == CellType.Enum
+                    ? !string.IsNullOrEmpty(value) ? value : throw new Exception($"Wrong value(EnumType): \"{value}\"")
+                    : Type == CellType.String || Type == CellType.Blocked
+                                    ? value != null ? value : throw new Exception($"Wrong value(StringType): \"{value}\"")
+                                    : throw new Exception("Unknown cell type");
             }
         }
 
@@ -157,15 +152,21 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         // Получение строки с форматированным значением
         public string GetValue()
         {
-            if (Type == CellType.Bool) return _boolValue.ToString();
-            if (Type == CellType.Float) return _floatValue.ToString("F5");
-            if (Type == CellType.FloatTemp) return $"{_floatValue:F0} ⁰C";
-            if (Type == CellType.FloatPercent) return $"{_floatValue:F1} %";
-            if (Type == CellType.FloatSecond) return FormatTime(_floatValue);
-            if (Type == CellType.FloatTempSpeed) return $"{_floatValue:F1} ⁰C/мин";
-            if (Type == CellType.FloatPowerSpeed) return $"{_floatValue:F2} %/мин";
-            if (Type == CellType.Int) return _intValue.ToString();
-            return Type == CellType.String || Type == CellType.Enum ? _stringValue : string.Empty;
+            return Type == CellType.Bool
+                ? _boolValue.ToString()
+                : Type == CellType.Float
+                ? _floatValue.ToString("F2")
+                : Type == CellType.FloatTemp
+                ? $"{_floatValue:F0} ⁰C"
+                : Type == CellType.FloatPercent
+                ? $"{_floatValue:F1} %"
+                : Type == CellType.FloatSecond
+                ? FormatTime(_floatValue)
+                : Type == CellType.FloatTempSpeed
+                ? $"{_floatValue:F1} ⁰C/мин"
+                : Type == CellType.FloatPowerSpeed
+                ? $"{_floatValue:F2} %/мин"
+                : Type == CellType.Int ? _intValue.ToString() : Type == CellType.String || Type == CellType.Enum ? _stringValue : string.Empty;
         }
 
         private string FormatTime(double time)

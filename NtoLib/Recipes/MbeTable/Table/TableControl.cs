@@ -551,7 +551,6 @@ namespace NtoLib.Recipes.MbeTable
             if (shutterPins.IsPinGroupQualityGood())
                 ActionTarget.SetNames(ActionType.Shutter, shutterPins.ReadPinNames());
 
-
             var heaterPins = new ReadPins(Params.IdFirstHeaterName, Params.HeaterNameQuantity,
                 FBConnector.Fb as MbeTableFB);
             if (heaterPins.IsPinGroupQualityGood())
@@ -690,19 +689,19 @@ namespace NtoLib.Recipes.MbeTable
                     HandleActionTargetEdit(rowIndex, currentCell);
                     break;
                 case Params.SetpointIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, v => _tableData[rowIndex].Setpoint = v, _tableData[rowIndex].ValidateSetpoint);
+                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateSetpoint);
 
                     break;
                 case Params.InitialValueIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, v => _tableData[rowIndex].InitialValue = v, _tableData[rowIndex].ValidateSetpoint);
+                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateInitialValue);
 
                     break;
                 case Params.SpeedIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, v => _tableData[rowIndex].Speed = v, _tableData[rowIndex].ValidateSpeed);
+                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateSpeed);
 
                     break;
                 case Params.TimeSetpointIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, v => _tableData[rowIndex].Duration = v, _tableData[rowIndex].ValidateTimeSetpoint);
+                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateTimeSetpoint);
 
                     break;
                 case Params.CommentIndex:
@@ -711,19 +710,19 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        private void HandleNumericCellEdit(int rowIndex, int columnIndex, Action<float> setter, Func<float, bool> validator)
+        private void HandleNumericCellEdit(int rowIndex, int columnIndex, Func<float, bool> validator)
         {
             var currentCell = dataGridView1.Rows[rowIndex].Cells[columnIndex];
 
             if (float.TryParse(currentCell.Value?.ToString(), out float value) && validator(value))
             {
-                setter(value);
-
+                _tableData[rowIndex].Cells[columnIndex].ParseValue(value);
                 if (columnIndex == Params.TimeSetpointIndex)
                     ProcessSpeed(rowIndex);
                 else
                     ProcessTime(rowIndex);
-
+                // Update formating
+                dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].Cells[columnIndex].GetValue();
                 RefreshTable();
             }
             else
@@ -747,7 +746,7 @@ namespace NtoLib.Recipes.MbeTable
             var speed = _tableData[rowIndex].Cells[Params.SpeedIndex].FloatValue;
             try
             {
-                _tableData[rowIndex].Duration = (float)Math.Abs(setpoint - initial) / (float)speed;
+                _tableData[rowIndex].Duration = (float)Math.Abs(setpoint - initial) * 60 / (float)speed;
                 dataGridView1.Rows[rowIndex].Cells[Params.TimeSetpointIndex].Value = _tableData[rowIndex].Cells[Params.TimeSetpointIndex].GetValue();
             }
             catch (DivideByZeroException)
@@ -763,7 +762,7 @@ namespace NtoLib.Recipes.MbeTable
             var time = _tableData[rowIndex].Cells[Params.TimeSetpointIndex].FloatValue;
             try
             {
-                _tableData[rowIndex].Duration = (float)Math.Abs(setpoint - initial) / (float)time;
+                _tableData[rowIndex].Speed = (float)Math.Abs(setpoint - initial) * 60 / (float)time;
                 dataGridView1.Rows[rowIndex].Cells[Params.SpeedIndex].Value = _tableData[rowIndex].Cells[Params.SpeedIndex].GetValue();
             }
             catch (DivideByZeroException)

@@ -40,6 +40,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ATPComSDKDemo\COMDeviceSDK.dll</HintPath>
     </Reference>
+    <Reference Include="EasyModbus, Version=5.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\EasyModbusTCP.5.6.0\lib\net40\EasyModbus.dll</HintPath>
+    </Reference>
     <Reference Include="FB">
       <HintPath>..\..\..\Program Files\MSCada\FB.dll</HintPath>
     </Reference>
@@ -131,7 +134,6 @@
     </Compile>
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\FlattenedRecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\StatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\PLC\BufferActions.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\CellType.cs" />
     <Compile Include="Recipes\MbeTable\PLC\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Params.cs" />

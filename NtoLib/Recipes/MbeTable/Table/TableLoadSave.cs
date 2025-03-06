@@ -64,6 +64,13 @@ namespace NtoLib.Recipes.MbeTable
                         return;
                     }
 
+                    if (recipe.Count == 0)
+                    {
+                        StatusManager.WriteStatusMessage("Ошибка при чтении рецепта", true);
+                        return;
+                    }
+
+
                     if (num < recipe.Count)
                     {
                         StatusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
