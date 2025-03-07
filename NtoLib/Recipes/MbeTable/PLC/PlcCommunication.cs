@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using EasyModbus;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
@@ -39,10 +40,12 @@ namespace NtoLib.Recipes.MbeTable.PLC
 
         private void RequestWritePermission(CommunicationSettings settings, ModbusClient modbusClient)
         {
-            // todo: need testing
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingRequest);
             if (modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0] != StateWritingAllowed)
-                throw new Exception("Запись заблокирована контроллером");
+            {
+                Debug.WriteLine($"Controller is not ready for writing, state: {modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0]}");
+                StatusManager.WriteStatusMessage("Запись заблокирована контроллером", true);
+            }
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), 0);
         }
 
@@ -62,7 +65,6 @@ namespace NtoLib.Recipes.MbeTable.PLC
 
         private void CompleteWriteProcess(CommunicationSettings settings, ModbusClient modbusClient, int recipeCount)
         {
-            // todo: need testing
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), (ushort)recipeCount);
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingNotActive);
         }
@@ -77,13 +79,24 @@ namespace NtoLib.Recipes.MbeTable.PLC
             int floatIndex = 0, intIndex = 0;
             foreach (var line in recipe)
             {
-                intArray[intIndex++] = (ushort)line.Cells[0].UIntValue;
-                intArray[intIndex++] = (ushort)line.Cells[1].UIntValue;
+                intArray[intIndex++] = (ushort)line.Cells[0].IntValue;
+                intArray[intIndex++] = (ushort)line.Cells[1].IntValue;
 
-                floatArray[floatIndex++] = (ushort)(line.Cells[2].UIntValue & ushort.MaxValue);
-                floatArray[floatIndex++] = (ushort)(line.Cells[2].UIntValue >> 16);
-                floatArray[floatIndex++] = (ushort)(line.Cells[3].UIntValue & ushort.MaxValue);
-                floatArray[floatIndex++] = (ushort)(line.Cells[3].UIntValue >> 16);
+                var bytes2 = BitConverter.GetBytes(line.Cells[2].FloatValue);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 0);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 2);
+
+                var bytes3 = BitConverter.GetBytes(line.Cells[3].FloatValue);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 0);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 2);
+
+                var bytes4 = BitConverter.GetBytes(line.Cells[4].FloatValue);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 0);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 2);
+
+                var bytes5 = BitConverter.GetBytes(line.Cells[5].FloatValue);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 0);
+                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 2);
             }
             return (intArray, floatArray, boolArray);
         }
@@ -100,6 +113,7 @@ namespace NtoLib.Recipes.MbeTable.PLC
             }
             catch (Exception)
             {
+                Debug.WriteLine($"Error reading recipe from PLC {_ip}");
                 return null;
             }
             finally
@@ -112,7 +126,10 @@ namespace NtoLib.Recipes.MbeTable.PLC
         {
             var controlData = modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 3);
             if (controlData[0] != StateIdle && controlData[0] != StateWritingBlocked)
-                throw new Exception("Контроллер не готов к чтению");
+            {
+                Debug.WriteLine($"Controller is not ready for reading, state: {controlData[0]}");
+                StatusManager.WriteStatusMessage("Контроллер не готов к чтению", true);
+            }
 
             var capacity = controlData[2];
             var data = new List<RecipeLine>(capacity);
