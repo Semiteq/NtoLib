@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FB;
@@ -472,7 +473,8 @@ namespace NtoLib.Recipes.MbeTable
                 {
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].ReadOnly = false;
                     dataGridView1.Rows[rowIndex].Cells[cellIndex].Style.BackColor = Color.White;
-                    dataGridView1.Rows[rowIndex].Cells[cellIndex].Value = _tableData[rowIndex].Cells[cellIndex].GetValue();
+                    dataGridView1.Rows[rowIndex].Cells[cellIndex].Value =
+                        _tableData[rowIndex].Cells[cellIndex].GetValue();
                 }
             }
         }
@@ -557,7 +559,7 @@ namespace NtoLib.Recipes.MbeTable
                 ActionTarget.SetNames(ActionType.Heater, heaterPins.ReadPinNames());
 
             var nitrogenSource = new ReadPins(Params.IdFirstNitrogenSourceName, Params.NitrogenSourceNameQuantity,
-                            FBConnector.Fb as MbeTableFB);
+                FBConnector.Fb as MbeTableFB);
             if (nitrogenSource.IsPinGroupQualityGood())
                 ActionTarget.SetNames(ActionType.NitrogenSource, nitrogenSource.ReadPinNames());
         }
@@ -689,20 +691,10 @@ namespace NtoLib.Recipes.MbeTable
                     HandleActionTargetEdit(rowIndex, currentCell);
                     break;
                 case Params.SetpointIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateSetpoint);
-
-                    break;
                 case Params.InitialValueIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateInitialValue);
-
-                    break;
                 case Params.SpeedIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateSpeed);
-
-                    break;
                 case Params.TimeSetpointIndex:
-                    HandleNumericCellEdit(rowIndex, columnIndex, _tableData[rowIndex].ValidateTimeSetpoint);
-
+                    HandleNumericCellEdit(rowIndex, columnIndex);
                     break;
                 case Params.CommentIndex:
                     _tableData[rowIndex].Comment = currentCell.Value.ToString();
@@ -710,26 +702,75 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        private void HandleNumericCellEdit(int rowIndex, int columnIndex, Func<float, bool> validator)
+        private void HandleNumericCellEdit(int rowIndex, int columnIndex)
         {
             var currentCell = dataGridView1.Rows[rowIndex].Cells[columnIndex];
-
-            if (float.TryParse(currentCell.Value?.ToString(), out float value) && validator(value))
+            if (TryParseCellValue(currentCell.Value?.ToString(), out var value) &&
+                ValidateCellValue(rowIndex, columnIndex, value))
             {
                 _tableData[rowIndex].Cells[columnIndex].ParseValue(value);
                 if (columnIndex == Params.TimeSetpointIndex)
                     ProcessSpeed(rowIndex);
                 else
                     ProcessTime(rowIndex);
-                // Update formating
-                dataGridView1.Rows[rowIndex].Cells[columnIndex].Value = _tableData[rowIndex].Cells[columnIndex].GetValue();
+                currentCell.Value = _tableData[rowIndex].Cells[columnIndex].GetValue();
                 RefreshTable();
             }
             else
             {
                 currentCell.Value = _tableData[rowIndex].Cells[columnIndex].GetValue();
-                ShowError("Введите корректное значение", _tableData[rowIndex].GetMinValue(columnIndex), _tableData[rowIndex].GetMaxValue(columnIndex));
+
+                var isTimeColumn = columnIndex == Params.TimeSetpointIndex;
+                ShowError("Введите корректное значение",
+                    _tableData[rowIndex].GetMinValue(columnIndex).ToString(),
+                    _tableData[rowIndex].GetMaxValue(columnIndex).ToString(),
+                    _tableData[rowIndex].Cells[columnIndex].GetUnits());
             }
+        }
+
+        private bool TryParseCellValue(string input, out float value)
+        {
+            value = 0;
+            if (string.IsNullOrEmpty(input)) return false;
+
+            var trimmedInput = input.Trim();
+
+            // Try parse time format hh:mm:ss[.ms]
+            if (trimmedInput.Contains(':'))
+            {
+                var parts = trimmedInput.Split(':');
+                if (parts.Length >= 2)
+                {
+                    var hours = int.TryParse(parts[0], out var h) ? h : 0;
+                    var minutes = int.TryParse(parts[1], out var m) ? m : 0;
+                    var seconds = parts.Length > 2 && int.TryParse(parts[2].Split('.')[0], out var s) ? s : 0;
+                    var milliseconds = parts.Length > 2 && parts[2].Contains('.') &&
+                                       float.TryParse(("0" + parts[2].Split('.')[1]).Replace('.', ','), out var ms)
+                        ? ms
+                        : 0;
+
+                    value = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
+                    return true;
+                }
+            }
+
+            // Try parse regular numeric value
+            var numericPart =
+                new string(trimmedInput.TakeWhile(c => char.IsDigit(c) || c == '.' || c == ',').ToArray());
+            numericPart = numericPart.Replace('.', ',');
+            return float.TryParse(numericPart, out value);
+        }
+
+        private bool ValidateCellValue(int rowIndex, int columnIndex, float value)
+        {
+            return columnIndex switch
+            {
+                Params.SetpointIndex => _tableData[rowIndex].ValidateSetpoint(value),
+                Params.InitialValueIndex => _tableData[rowIndex].ValidateInitialValue(value),
+                Params.SpeedIndex => _tableData[rowIndex].ValidateSpeed(value),
+                Params.TimeSetpointIndex => _tableData[rowIndex].ValidateTimeSetpoint(value),
+                _ => false
+            };
         }
 
         private void HandleActionTargetEdit(int rowIndex, DataGridViewCell currentCell)
@@ -738,7 +779,6 @@ namespace NtoLib.Recipes.MbeTable
             RefreshTable();
         }
 
-
         private void ProcessTime(int rowIndex)
         {
             var setpoint = _tableData[rowIndex].Cells[Params.SetpointIndex].FloatValue;
@@ -746,8 +786,9 @@ namespace NtoLib.Recipes.MbeTable
             var speed = _tableData[rowIndex].Cells[Params.SpeedIndex].FloatValue;
             try
             {
-                _tableData[rowIndex].Duration = (float)Math.Abs(setpoint - initial) * 60 / (float)speed;
-                dataGridView1.Rows[rowIndex].Cells[Params.TimeSetpointIndex].Value = _tableData[rowIndex].Cells[Params.TimeSetpointIndex].GetValue();
+                _tableData[rowIndex].Duration = Math.Abs(setpoint - initial) * 60 / speed;
+                dataGridView1.Rows[rowIndex].Cells[Params.TimeSetpointIndex].Value =
+                    _tableData[rowIndex].Cells[Params.TimeSetpointIndex].GetValue();
             }
             catch (DivideByZeroException)
             {
@@ -762,8 +803,9 @@ namespace NtoLib.Recipes.MbeTable
             var time = _tableData[rowIndex].Cells[Params.TimeSetpointIndex].FloatValue;
             try
             {
-                _tableData[rowIndex].Speed = (float)Math.Abs(setpoint - initial) * 60 / (float)time;
-                dataGridView1.Rows[rowIndex].Cells[Params.SpeedIndex].Value = _tableData[rowIndex].Cells[Params.SpeedIndex].GetValue();
+                _tableData[rowIndex].Speed = Math.Abs(setpoint - initial) * 60 / time;
+                dataGridView1.Rows[rowIndex].Cells[Params.SpeedIndex].Value =
+                    _tableData[rowIndex].Cells[Params.SpeedIndex].GetValue();
             }
             catch (DivideByZeroException)
             {
@@ -771,11 +813,13 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        private void ShowError(string message, float min, float max, string unit = "")
+        private void ShowError(string message, string min, string max, string unit = "")
         {
             MessageBox.Show(
-                $"{message}:\nминимальное значение: {min} {unit}\nмаксимальное значение: {max} {unit}",
-                "Ошибка ввода данных:",
+                $@"{message}:
+                минимальное значение: {min}{unit}
+                максимальное значение: {max}{unit}",
+                @"Ошибка ввода данных",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }

@@ -98,8 +98,6 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
         #endregion
 
-        //public override string ToString() => GetValue();
-
         public void ParseValue(string value)
         {
             string upperValue = value?.ToUpper();
@@ -148,27 +146,34 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         {
             _floatValue = value;
         }
-
-        // Получение строки с форматированным значением
+        
         public string GetValue()
         {
-            return Type == CellType.Bool
-                ? _boolValue.ToString()
-                : Type == CellType.Float
-                ? _floatValue.ToString("F2")
-                : Type == CellType.FloatTemp
-                ? $"{_floatValue:F0} ⁰C"
-                : Type == CellType.FloatPercent
-                ? $"{_floatValue:F1} %"
-                : Type == CellType.FloatSecond
-                ? FormatTime(_floatValue)
-                : Type == CellType.FloatTempSpeed
-                ? $"{_floatValue:F1} ⁰C/мин"
-                : Type == CellType.FloatPowerSpeed
-                ? $"{_floatValue:F2} %/мин"
-                : Type == CellType.Int ? _intValue.ToString() : Type == CellType.String || Type == CellType.Enum ? _stringValue : string.Empty;
+            return Type switch
+            {
+                CellType.Bool => _boolValue.ToString(),
+                CellType.Float => _floatValue.ToString("F2"),
+                CellType.FloatTemp => $"{_floatValue:F0} {GetUnits()}",
+                CellType.FloatPercent => $"{_floatValue:F1} {GetUnits()}",
+                CellType.FloatSecond => FormatTime(_floatValue),
+                CellType.FloatTempSpeed => $"{_floatValue:F1} {GetUnits()}",
+                CellType.FloatPowerSpeed => $"{_floatValue:F2} {GetUnits()}",
+                CellType.Int => _intValue.ToString(),
+                CellType.String or CellType.Enum => _stringValue,
+                _ => string.Empty
+            };
         }
 
+        public string GetUnits() => Type switch
+        {
+            CellType.FloatTemp => "⁰C",
+            CellType.FloatPercent => "%",
+            CellType.FloatSecond => "с",
+            CellType.FloatTempSpeed => "⁰C/мин",
+            CellType.FloatPowerSpeed => "%/мин",
+            _ => string.Empty
+        };
+        
         private string FormatTime(double time)
         {
             return TimeSpan.FromSeconds(time).ToString("hh\\:mm\\:ss\\.ff");
