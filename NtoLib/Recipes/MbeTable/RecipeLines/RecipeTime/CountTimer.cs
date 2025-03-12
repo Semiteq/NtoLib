@@ -3,15 +3,16 @@ using System.Threading;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
 {
-    internal class CountdownTimer
+    internal class CountTimer
     {
         private TimeSpan _remainingSeconds;
         private Timer _timer;
         private readonly object _lock = new();
 
         public event Action OnTimerFinished;
+        public bool started;
 
-        public CountdownTimer(TimeSpan remainingSeconds)
+        public CountTimer(TimeSpan remainingSeconds)
         {
             _remainingSeconds = remainingSeconds;
         }
@@ -19,23 +20,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         public void Start()
         {
             _timer = new Timer(TimerCallback, null, 1000, 1000);
-        }
-
-        public void Pause()
-        {
-            lock (_lock)
-            {
-                _timer?.Dispose();
-                _timer = null;
-            }
-        }
-
-        public void Resume()
-        {
-            lock (_lock)
-            {
-                _timer ??= new Timer(TimerCallback, null, 1000, 1000);
-            }
+            started = true;
         }
 
         public void Stop()
@@ -45,6 +30,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
                 _timer?.Dispose();
                 _timer = null;
                 _remainingSeconds = TimeSpan.Zero;
+                started = false;
             }
         }
 

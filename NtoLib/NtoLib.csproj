@@ -129,7 +129,7 @@
     <Compile Include="Recipes\MbeTable\RecipeLines\CellType.cs" />
     <Compile Include="Recipes\MbeTable\PLC\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Params.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\CountdownTimer.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\CountTimer.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableAddLine.cs">
       <SubType>UserControl</SubType>
     </Compile>

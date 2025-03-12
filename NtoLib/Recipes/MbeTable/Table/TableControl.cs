@@ -327,6 +327,9 @@ namespace NtoLib.Recipes.MbeTable
         /// </summary>
         private void ChangeRowFont()
         {
+            if (dataGridView1.Rows.Count == 0)
+                return;
+
             for (int i = 0; i < dataGridView1.Rows.Count; i++)
             {
                 var rowStyle = dataGridView1.Rows[i].DefaultCellStyle;
@@ -336,20 +339,40 @@ namespace NtoLib.Recipes.MbeTable
                     rowStyle.BackColor = _passed_line_bg_color;
                     rowStyle.Font = _passed_line_font;
                     rowStyle.ForeColor = _passed_line_text_color;
+
+                    // Apply style to each cell in the row to ensure color change
+                    foreach (DataGridViewCell cell in dataGridView1.Rows[i].Cells)
+                    {
+                        cell.Style.BackColor = _passed_line_bg_color;
+                    }
                 }
                 else if (i == currentRecipeLine)
                 {
                     rowStyle.BackColor = _selected_line_bg_color;
                     rowStyle.Font = _selected_line_font;
                     rowStyle.ForeColor = _selected_line_text_color;
+
+                    // Apply style to each cell in the row to ensure color change
+                    foreach (DataGridViewCell cell in dataGridView1.Rows[i].Cells)
+                    {
+                        cell.Style.BackColor = _selected_line_bg_color;
+                    }
                 }
                 else
                 {
                     rowStyle.BackColor = _line_bg_color;
                     rowStyle.Font = _line_font;
                     rowStyle.ForeColor = _line_text_color;
+
+                    // Apply style to each cell in the row to ensure color change
+                    foreach (DataGridViewCell cell in dataGridView1.Rows[i].Cells)
+                    {
+                        cell.Style.BackColor = _line_bg_color;
+                    }
                 }
             }
+
+            dataGridView1.Refresh();
         }
 
         /// <summary>

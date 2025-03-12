@@ -7,7 +7,7 @@
 			<!-- Flag if recipe is curently running.  -->
 			<Pin ID="1" Name="RecipeActive"			Type="Логический" DefaultValue="false"/>
 			
-			<!-- Flag if recipe is paused.  -->
+			<!-- Flag if recipe is paused. (Not Implemented)  -->
 			<Pin ID="2" Name="RecipePaused"			Type="Логический" DefaultValue="false"/>
 			
 			<!-- Current recipe line number in opertation mode. -->

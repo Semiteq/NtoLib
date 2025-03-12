@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using FB;
 using FB.VisualFB;
@@ -35,14 +36,15 @@ namespace NtoLib.Recipes.MbeTable
         private const int ID_LineTimeLeft = 102;
 
         [NonSerialized]
-        private CountdownTimer _countdownTimer;
+        private CountTimer _countdownTimer;
 
-        private TimeSpan _lastRecipeTimeLeft;
+        [NonSerialized]
+        private CountTimer _lineTimer;
 
         private int _previousLineNumber = -1;
+        private double _previousPlcLineTime;
 
         private bool _isRecipeRunning;
-        private bool _isTimerPaused;
 
         #region VisualProperties
 
@@ -181,6 +183,9 @@ namespace NtoLib.Recipes.MbeTable
         }
         #endregion
 
+
+
+
         protected override void ToRuntime() { }
 
         protected override void ToDesign() { }
@@ -224,86 +229,123 @@ namespace NtoLib.Recipes.MbeTable
             var forLoopCount3 = GetPinValue<int>(ID_ForLoopCount3);
 
             var currentLine = GetPinValue<int>(ID_ActualLineNumber);
-            var plcLineTime = GetPinValue<double>(ID_StepCurrentTime);
+            var plcLineTime = GetPinValue<float>(ID_StepCurrentTime);
 
             var isRecipeActive = GetPinValue<bool>(ID_RecipeActive);
-            var isRecipePaused = GetPinValue<bool>(ID_RecipePaused);
 
             // Get expected time for current line from flattened recipe data
             var currentLineTime = RecipeTimeManager.GetRowTime(currentLine, forLoopCount1, forLoopCount2, forLoopCount3);
 
             // Update timer info
-            RecipeRunControl(isRecipeActive, isRecipePaused, plcLineTime, currentLineTime);
+            RecipeRunControl(isRecipeActive, plcLineTime);
 
             // Update recipe time
             UpdateRecipeTime(currentLine, plcLineTime, currentLineTime);
-        }
 
-        private void UpdateRecipeTime(int currentLine, double plcLineTime, TimeSpan currentLineTime)
-        {
-            var recipeTimeLeft = _countdownTimer?.GetRemainingTime() ?? TimeSpan.Zero;
-            var lineTimeLeft = currentLineTime - TimeSpan.FromSeconds(plcLineTime);
-
-            // Update recipe time left if line number has changed
+            // Trigger LineChanged event if the line has changed
             if (currentLine != _previousLineNumber)
             {
-                _lastRecipeTimeLeft = recipeTimeLeft;
+                OnLineChanged(isRecipeActive, currentLine, plcLineTime);
                 _previousLineNumber = currentLine;
             }
+        }
+
+        private void UpdateRecipeTime(int currentLine, float plcLineTime, TimeSpan currentLineTime)
+        {
+            var recipeTimeLeft = _countdownTimer?.GetRemainingTime() ?? TimeSpan.Zero;
+            var lineTimeLeft = TimeSpan.FromSeconds(plcLineTime);
 
             SetPinValue(ID_TotalTimeLeft, recipeTimeLeft.TotalSeconds);
             SetPinValue(ID_LineTimeLeft, lineTimeLeft.TotalSeconds);
         }
 
-        private void RecipeRunControl(bool isRecipeActive, bool isRecipePaused, double plcLineTime, TimeSpan expectedTimePassed)
+        private void OnLineChanged(bool isRecipeActive, int currentLine, float plcLineTime)
+        {
+            var delta = 0.5f;
+            Debug.WriteLine("------------------------------------------------");
+            Debug.WriteLine($"[LineChanged] Начало обработки перехода строки. isRecipeActive: {isRecipeActive}, текущая строка: {currentLine}, plcLineTime для новой строки: {plcLineTime}");
+
+            // If there is a timer for the previous line, calculate the difference between internal and external elapsed time
+            if (_lineTimer is not null)
+            {
+                // Getting internal and extenal elapsed time for the previous line
+                TimeSpan internalRemaining = _lineTimer.GetRemainingTime();
+                double internalElapsedSeconds = _previousPlcLineTime - internalRemaining.TotalSeconds;
+
+                // Using Plc time as the reference value
+                double externalElapsedSeconds = _previousPlcLineTime;
+                double diffSeconds = externalElapsedSeconds - internalElapsedSeconds;
+
+                Debug.WriteLine($"[LineChanged] Коррекция для предыдущей строки: предыдущий plcLineTime: {_previousPlcLineTime} с, " +
+                                $"внутреннее прошедшее время: {internalElapsedSeconds:F2} с, разница: {diffSeconds:F2} с");
+
+                if (Math.Abs(diffSeconds) > delta)
+                {
+                    if (_countdownTimer is not null)
+                    {
+                        TimeSpan currentOverallRemaining = _countdownTimer.GetRemainingTime();
+                        TimeSpan newOverallRemaining = currentOverallRemaining + TimeSpan.FromSeconds(diffSeconds);
+                        _countdownTimer.SetRemainingTime(newOverallRemaining);
+                        Debug.WriteLine($"[LineChanged] Применена коррекция. Было: {currentOverallRemaining.TotalSeconds:F2} с, стало: {newOverallRemaining.TotalSeconds:F2} с");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("[LineChanged] _countdownTimer равен null, коррекция не выполнена.");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"[LineChanged] Разница менее или равна {delta} с – коррекция не требуется.");
+                }
+
+                // Stop and dispose the timer for the previous line
+                _lineTimer.Stop();
+                _lineTimer = null;
+            }
+            else
+            {
+                Debug.WriteLine("[LineChanged] Нет активного таймера строки – коррекция не выполняется.");
+            }
+
+            // Set new timer for the current line
+            _previousPlcLineTime = plcLineTime;
+            _lineTimer = new CountTimer(TimeSpan.FromSeconds(plcLineTime));
+            _lineTimer.Start();
+            Debug.WriteLine($"[LineChanged] Запущен новый таймер строки с длительностью: {plcLineTime} с для строки: {currentLine}");
+
+            _previousLineNumber = currentLine;
+        }
+
+
+
+        private void RecipeRunControl(bool isRecipeActive, double plcLineTime)
         {
             if (RecipeTimeManager.TotalTime == TimeSpan.Zero) return;
 
             if (isRecipeActive && !_isRecipeRunning)
             {
-                _countdownTimer ??= new CountdownTimer(RecipeTimeManager.TotalTime);
+                if (_countdownTimer == null)
+                    _countdownTimer = new CountTimer(RecipeTimeManager.TotalTime);
+                else
+                    _countdownTimer.SetRemainingTime(RecipeTimeManager.TotalTime);
                 _isRecipeRunning = true;
                 _countdownTimer.Start();
+
             }
 
             if (isRecipeActive)
             {
-                if (isRecipePaused && !_isTimerPaused)
-                {
-                    _isTimerPaused = true;
-                    _countdownTimer.Pause();
-                }
-                else if (!isRecipePaused && _isTimerPaused)
-                {
-                    _isTimerPaused = false;
-                    _countdownTimer.Resume();
-                }
-
-                // Time correction between PLC and HMI
-                // Delta time in seconds to consider when correction is applied
-                var delta = 0.5f;
-                if (plcLineTime < delta && _lastRecipeTimeLeft < TimeSpan.FromSeconds(delta))
-                {
-                    var actualTimePassed = _lastRecipeTimeLeft - _countdownTimer.GetRemainingTime();
-                    var timeError = expectedTimePassed - actualTimePassed;
-
-                    if (Math.Abs(timeError.TotalSeconds) > 1)
-                    {
-                        _countdownTimer.SetRemainingTime(_countdownTimer.GetRemainingTime() + timeError);
-                    }
-
-                    _lastRecipeTimeLeft = TimeSpan.Zero;
-                }
-
                 if (_countdownTimer.GetRemainingTime() == TimeSpan.Zero)
                 {
                     _countdownTimer.Stop();
+
                     _isRecipeRunning = false;
                 }
             }
             else
             {
                 _countdownTimer?.Stop();
+
                 _isRecipeRunning = false;
             }
         }
