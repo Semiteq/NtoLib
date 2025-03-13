@@ -5,12 +5,13 @@ using System.Runtime.InteropServices;
 // набора атрибутов. Измените значения этих атрибутов для изменения сведений,
 // связанные со сборкой.
 [assembly: AssemblyTitle("NtoLib")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("NtoLib")]
-[assembly: AssemblyCopyright("Copyright ©  2025")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyDescription("Библиотека для высокопроизводительных вычислений и работы с данными.")]
+[assembly: AssemblyConfiguration("Release")]
+[assembly: AssemblyCompany("Semiteq")]
+[assembly: AssemblyProduct("NtoLib SDK 1.8.4")]
+
+[assembly: AssemblyCopyright("Copyright Semiteq©, 2025")]
+[assembly: AssemblyTrademark("Semiteq™")]
 [assembly: AssemblyCulture("")]
 
 // Установка значения False для параметра ComVisible делает типы в этой сборке невидимыми
@@ -31,5 +32,5 @@ using System.Runtime.InteropServices;
 // Можно задать все значения или принять номера сборки и редакции по умолчанию 
 // используя "*", как показано ниже:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.8.3")]
-[assembly: AssemblyFileVersion("1.8.3")]
+[assembly: AssemblyVersion("1.8.4")]
+[assembly: AssemblyFileVersion("1.8.4")]

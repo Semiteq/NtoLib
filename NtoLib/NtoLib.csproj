@@ -337,6 +337,6 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll"
-del /Q "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)EasyModbus.xml"</PostBuildEvent>
+del /Q "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)EasyModbus.xml" "$(TargetDir)NtoLib.pdb" "$(TargetDir)NtoLib.dll.config" "$(TargetDir)NtoLib.tlb"</PostBuildEvent>
   </PropertyGroup>
 </Project>
