@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,7 +22,8 @@ namespace NtoLib.Recipes.MbeTable
 
             if (!settingsReader.CheckQuality())
             {
-                StatusManager.WriteStatusMessage("Ошибка чтения настроек. Нет связи, продолжение загрузки рецепта не возможно", true);
+                StatusManager.WriteStatusMessage(
+                    "Ошибка чтения настроек. Нет связи, продолжение загрузки рецепта не возможно", true);
             }
             else
             {
@@ -37,6 +39,7 @@ namespace NtoLib.Recipes.MbeTable
                     else if ((int)settings.IntAreaSize / settings.IntColumNum < num)
                         num = (int)settings.IntAreaSize / settings.IntColumNum;
                 }
+
                 if (settings.BoolColumNum > 0)
                 {
                     if (num < 0)
@@ -44,6 +47,7 @@ namespace NtoLib.Recipes.MbeTable
                     else if ((int)settings.BoolAreaSize * 16 / settings.BoolColumNum < num)
                         num = (int)settings.BoolAreaSize * 16 / settings.BoolColumNum;
                 }
+
                 if (num < 0)
                     StatusManager.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
                 else if (num == 0)
@@ -74,7 +78,6 @@ namespace NtoLib.Recipes.MbeTable
                     if (num < recipe.Count)
                     {
                         StatusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
-
                     }
                     else
                     {
@@ -98,7 +101,8 @@ namespace NtoLib.Recipes.MbeTable
                             if (CompareRecipes(recipe, recipeFromPlc))
                                 StatusManager.WriteStatusMessage("Рецепт успешно загружен в контроллер");
                             else
-                                StatusManager.WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!", true);
+                                StatusManager.WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!",
+                                    true);
                         }
 
                         foreach (RecipeLine line in recipe)
@@ -138,7 +142,7 @@ namespace NtoLib.Recipes.MbeTable
             if (recipe1.Count != recipe2.Count)
                 return false;
 
-            for (int i = 0; i < recipe1.Count; i++)
+            for (var i = 0; i < recipe1.Count; i++)
             {
                 var cells1 = recipe1[i].Cells;
                 var cells2 = recipe2[i].Cells;
@@ -146,12 +150,14 @@ namespace NtoLib.Recipes.MbeTable
                 if (cells1.Count != cells2.Count)
                     return false;
 
-                for (int j = 0; j < cells1.Count; j++)
+                for (var j = 0; j < cells1.Count; j++)
                 {
-                    if (cells1[j].GetValue() != cells2[j].GetValue())
-                        return false;
+                    if (cells1[j].GetValue() == cells2[j].GetValue()) continue;
+                    Debug.WriteLine($"Cell {j} in row {i} differs: {cells1[j].GetValue()} != {cells2[j].GetValue()}");
+                    return false;
                 }
             }
+
             return true;
         }
 
@@ -196,7 +202,8 @@ namespace NtoLib.Recipes.MbeTable
                     cell.Value = cellValue;
 
                     // Number column combo box update
-                    if (colIndex == Params.ActionTargetIndex && cell is DataGridViewComboBoxCell comboBoxCell && cellValue != null)
+                    if (colIndex == Params.ActionTargetIndex && cell is DataGridViewComboBoxCell comboBoxCell &&
+                        cellValue != null)
                     {
                         UpdateEnumDropDown(comboBoxCell, cellValue);
                     }
@@ -287,7 +294,6 @@ namespace NtoLib.Recipes.MbeTable
 
                         for (var i = 0; i < cells.Count; i++)
                         {
-
                             var cellValue = cells[i].StringValue;
 
                             if (i == Params.ActionIndex)

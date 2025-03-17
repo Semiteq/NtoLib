@@ -16,11 +16,11 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
             { Temperature.ActionName,       (n, s, _, _, _, c) => new Temperature       (n, s > 0f ? s : 500f, c) },
             { TemperatureWait.ActionName,   (n, s, _, _, t, c) => new TemperatureWait   (n, s > 0f ? s : 500f, t > 0f ? t : 60f, c) },
-            { TemperatureSmooth.ActionName, (n, s, i, v, t, c) => new TemperatureSmooth (n, s > 0f ? s : 500f, i > 0f ? s : 600, v > 0 ? v : 10f, t > 0f ? t : 600f, c) },
+            { TemperatureSmooth.ActionName, (n, s, i, v, t, c) => new TemperatureSmooth (n, s > 0f ? s : 500f, i > 0f ? i : 600, v > 0 ? v : 10f, t > 0f ? t : 600f, c) },
 
             { Power.ActionName,             (n, s, _, _, _, c) => new Power             (n, s > 0f ? s : 10f, c) },
             { PowerWait.ActionName,         (n, s, _, _, t, c) => new PowerWait         (n, s > 0f ? s : 10f, t > 0f ? t : 60f, c) },
-            { PowerSmooth.ActionName,       (n, s, i, v, t, c) => new PowerSmooth       (n, s > 0f ? s : 10f, i > 0f ? s : 20f, v > 0f ? v : 1f, t > 0f ? t : 600f, c) },
+            { PowerSmooth.ActionName,       (n, s, i, v, t, c) => new PowerSmooth       (n, s > 0f ? s : 10f, i > 0f ? i : 20f, v > 0f ? v : 1f, t > 0f ? t : 600f, c) },
 
             { Wait.ActionName,              (_, _, _, _, t, c) => new Wait              (t > 0f ? t : 10f, c) },
             { For_Loop.ActionName,          (n, _, _, _, _, c) => new For_Loop          (n > 0 ? n : 5, c) },
@@ -46,12 +46,14 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
             for (var i = 0; i < 4; i++)
             {
-                var baseIndex = index * 4 + i * 2;
-                floatValues[i] = BitConverter.ToSingle(BitConverter.GetBytes(floatData[baseIndex] + ((uint)floatData[baseIndex + 1] << 16)), 0);
+                var baseIndex = index * 8 + i * 2;
+                uint raw = (uint)floatData[baseIndex] | ((uint)floatData[baseIndex + 1] << 16);
+                floatValues[i] = BitConverter.ToSingle(BitConverter.GetBytes(raw), 0);
             }
 
             return NewLine(actionName, actionTarget, floatValues[0], floatValues[1], floatValues[2], floatValues[3], string.Empty);
         }
+
 
     }
 }
