@@ -18,8 +18,8 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType.Enum, ActionName, actionNumber),
                 new(CellType.Enum, NitrogenSourceName, actionTarget),
                 
-                new(CellType.Float, setpoint),
                 new(CellType.Blocked, ""),
+                new(CellType.FloatSccm, setpoint),
                 
                 new(CellType.Blocked, ""),
                 new(CellType.Blocked, ""),
@@ -27,6 +27,9 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType.Blocked, ""),
                 new(CellType.String, comment)
             };
+            
+            MinSetpoint = 0.1f;
+            MaxSetpoint = 1000f;
         }
     }
 }

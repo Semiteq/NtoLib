@@ -314,6 +314,7 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dataGridView1.RowHeadersWidth = 90;
             StatusManager.DbgMsg = DbgMsg;
         }
 
@@ -330,7 +331,7 @@ namespace NtoLib.Recipes.MbeTable
             if (dataGridView1.Rows.Count == 0)
                 return;
 
-            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            for (var i = 0; i < dataGridView1.Rows.Count; i++)
             {
                 var rowStyle = dataGridView1.Rows[i].DefaultCellStyle;
 
@@ -463,12 +464,12 @@ namespace NtoLib.Recipes.MbeTable
             {
                 "Действие" => 200,
                 "Объект" => 150,
-                "Задание" => 150,
-                "Нач.значение" => 150,
+                "Задание" => 180,
+                "Нач.значение" => 200,
                 "Скорость" => 150,
                 "Длительность" => 200,
                 "Время" => 150,
-                _ => dataGridView1.Width - 1080 - _rowHeadersWidth
+                _ => dataGridView1.Width - (200 + 150 + 180 + 200 + 150 + 200 + 150) - _rowHeadersWidth - 20
             };
         }
 

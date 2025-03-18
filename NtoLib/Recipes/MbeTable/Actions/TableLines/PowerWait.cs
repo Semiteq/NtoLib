@@ -18,8 +18,8 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType.Enum, ActionName, actionNumber),
                 new(CellType.Enum, HeaterName, actionTarget),
                 
-                new(CellType.FloatPercent, powerSetpoint),
                 new(CellType.Blocked, ""),
+                new(CellType.FloatPercent, powerSetpoint),
                 
                 new(CellType.Blocked, ""),
                 new(CellType.FloatSecond, timeSetpoint),

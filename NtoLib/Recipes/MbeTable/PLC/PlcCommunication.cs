@@ -35,6 +35,7 @@ namespace NtoLib.Recipes.MbeTable.PLC
             {
                 return false;
             }
+
             return true;
         }
 
@@ -43,25 +44,66 @@ namespace NtoLib.Recipes.MbeTable.PLC
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingRequest);
             if (modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0] != StateWritingAllowed)
             {
-                Debug.WriteLine($"Controller is not ready for writing, state: {modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0]}");
+                Debug.WriteLine(
+                    $"Controller is not ready for writing, state: {modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0]}");
                 StatusManager.WriteStatusMessage("Запись заблокирована контроллером", true);
             }
+
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), 0);
         }
 
         private void WriteRecipeData(CommunicationSettings settings, ModbusClient modbusClient, List<RecipeLine> recipe)
         {
             var (intArray, floatArray, boolArray) = PrepareRecipeData(settings, recipe);
+            const int maxChunkSize = 123; // Modbus supports MAX 256 bytes per request (256 / 2 - 10)
+
+            if (intArray.Length > settings.IntAreaSize)
+            {
+                Debug.WriteLine($"Int area size exceeded: {intArray.Length} > {settings.IntAreaSize}");
+                StatusManager.WriteStatusMessage("Превышен размер области Int в ПЛК", true);
+                return;
+            }
+            if (floatArray.Length > settings.FloatAreaSize)
+            {
+                Debug.WriteLine($"Float area size exceeded: {floatArray.Length} > {settings.FloatAreaSize}");
+                StatusManager.WriteStatusMessage("Превышен размер области Float в ПЛК", true);
+                return;
+            }
+
+            if (boolArray.Length > settings.BoolAreaSize)
+            {
+                Debug.WriteLine($"Bool area size exceeded: {boolArray.Length} > {settings.BoolAreaSize}");
+                StatusManager.WriteStatusMessage("Превышен размер области Bool в ПЛК", true);
+                return;
+            }
 
             if (intArray.Length > 0)
-                modbusClient.WriteMultipleRegisters((int)settings.IntBaseAddr, intArray);
+                WriteRegistersChunked(modbusClient, (int)settings.IntBaseAddr, intArray, maxChunkSize);
 
             if (floatArray.Length > 0)
-                modbusClient.WriteMultipleRegisters((int)settings.FloatBaseAddr, floatArray);
+                WriteRegistersChunked(modbusClient, (int)settings.FloatBaseAddr, floatArray, maxChunkSize);
 
             if (boolArray.Length > 0)
-                modbusClient.WriteMultipleRegisters((int)settings.BoolBaseAddr, boolArray);
+                WriteRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolArray, maxChunkSize);
         }
+
+        private void WriteRegistersChunked(ModbusClient modbusClient, int baseAddress, int[] values, int maxChunkSize)
+        {
+            var totalRegisters = values.Length;
+            var currentIndex = 0;
+
+            while (currentIndex < totalRegisters)
+            {
+                var chunkSize = Math.Min(maxChunkSize, totalRegisters - currentIndex);
+                var chunk = new int[chunkSize];
+                Array.Copy(values, currentIndex, chunk, 0, chunkSize);
+
+                // адрес для записи смещается на текущий индекс
+                modbusClient.WriteMultipleRegisters(baseAddress + currentIndex, chunk);
+                currentIndex += chunkSize;
+            }
+        }
+
 
         private void CompleteWriteProcess(CommunicationSettings settings, ModbusClient modbusClient, int recipeCount)
         {
@@ -98,6 +140,7 @@ namespace NtoLib.Recipes.MbeTable.PLC
                 floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 0);
                 floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 2);
             }
+
             return (intArray, floatArray, boolArray);
         }
 
@@ -133,30 +176,48 @@ namespace NtoLib.Recipes.MbeTable.PLC
 
             var capacity = controlData[2];
             var data = new List<RecipeLine>(capacity);
-            if (capacity <= 0) return data;
-
+            if (capacity <= 0)
+                return data;
 
             var intQuantity = capacity * settings.IntColumNum;
             var floatQuantity = capacity * settings.FloatColumNum * 2;
-            var boolQuantity = capacity * settings.BoolColumNum / 16 + (capacity * settings.BoolColumNum % 16 > 0 ? 1 : 0);
+            var boolQuantity = capacity * settings.BoolColumNum / 16 +
+                               (capacity * settings.BoolColumNum % 16 > 0 ? 1 : 0);
 
             var intData = Array.Empty<int>();
             var floatData = Array.Empty<int>();
             var boolData = Array.Empty<int>();
 
             if (intQuantity > 0)
-                intData = modbusClient.ReadHoldingRegisters((int)settings.IntBaseAddr, intQuantity);
+                intData = ReadRegistersChunked(modbusClient, (int)settings.IntBaseAddr, intQuantity);
 
             if (floatQuantity > 0)
-                floatData = modbusClient.ReadHoldingRegisters((int)settings.FloatBaseAddr, floatQuantity);
+                floatData = ReadRegistersChunked(modbusClient, (int)settings.FloatBaseAddr, floatQuantity);
 
             if (boolQuantity > 0)
-                boolData = modbusClient.ReadHoldingRegisters((int)settings.BoolBaseAddr, boolQuantity);
+                boolData = ReadRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolQuantity);
 
             for (var i = 0; i < capacity; i++)
                 data.Add(RecipeLineFactory.NewLine(intData, floatData, boolData, i));
 
             return data;
+        }
+
+        private int[] ReadRegistersChunked(ModbusClient modbusClient, int baseAddress, int totalRegisters)
+        {
+            const int maxChunkSize = 123; // Modbus supports MAX 256 bytes per request (256 / 2 - 10)
+            var result = new int[totalRegisters];
+            var currentIndex = 0;
+
+            while (currentIndex < totalRegisters)
+            {
+                var chunkSize = Math.Min(maxChunkSize, totalRegisters - currentIndex);
+                var chunk = modbusClient.ReadHoldingRegisters(baseAddress + currentIndex, chunkSize);
+                Array.Copy(chunk, 0, result, currentIndex, chunkSize);
+                currentIndex += chunkSize;
+            }
+
+            return result;
         }
     }
 }

@@ -52,8 +52,8 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                 {
                     new("Действие", ActionManager.Names),
                     new("Объект", CellType.Enum),
-                    new("Задание", CellType.Float),
                     new("Нач.значение", CellType.Float),
+                    new("Задание", CellType.Float),
                     new("Скорость", CellType.Float),
                     new("Длительность", CellType.Float),
                     new("Время", CellType.Float),

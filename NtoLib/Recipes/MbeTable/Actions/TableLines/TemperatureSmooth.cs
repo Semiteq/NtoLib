@@ -9,7 +9,7 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
         public const string ActionName = Commands.TEMP_SMOOTH;
         public override ActionTime ActionTime => ActionTime.Immediately;
 
-        public TemperatureSmooth(int actionTarget, float temperatureSetpoint, float initialValue, float speed, float timeSetpoint, string comment) : base(ActionName)
+        public TemperatureSmooth(int actionTarget, float initialValue, float temperatureSetpoint, float speed, float timeSetpoint, string comment) : base(ActionName)
         {
             HeaterName = ActionTarget.HeaterNames.FirstOrDefault(x => x.Key == actionTarget).Value;
             int actionNumber = ActionManager.GetActionIdByCommand(ActionName);
@@ -18,8 +18,8 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType.Enum, ActionName, actionNumber),
                 new(CellType.Enum, HeaterName, actionTarget),
 
-                new(CellType.FloatTemp, temperatureSetpoint),
                 new(CellType.FloatTemp, initialValue),
+                new(CellType.FloatTemp, temperatureSetpoint),
 
                 new(CellType.FloatTempSpeed, speed),
                 new(CellType.FloatSecond, timeSetpoint),

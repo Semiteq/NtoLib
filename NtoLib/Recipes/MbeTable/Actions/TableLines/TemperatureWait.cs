@@ -19,8 +19,8 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType.Enum, ActionName, actionNumber),
                 new(CellType.Enum, HeaterName, actionTarget),
                 
-                new(CellType.FloatTemp, temperatureSetpoint),
                 new(CellType.Blocked, ""),
+                new(CellType.FloatTemp, temperatureSetpoint),
                 
                 new(CellType.Blocked, ""),
                 new(CellType.FloatSecond, timeSetpoint),

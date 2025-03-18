@@ -142,7 +142,8 @@ namespace NtoLib.Recipes.MbeTable
             if (recipe1.Count != recipe2.Count)
                 return false;
 
-            for (var i = 0; i < recipe1.Count; i++)
+            // not checking comments
+            for (var i = 0; i < recipe1.Count - 1; i++)
             {
                 var cells1 = recipe1[i].Cells;
                 var cells2 = recipe2[i].Cells;

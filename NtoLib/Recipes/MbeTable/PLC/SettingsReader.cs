@@ -33,7 +33,7 @@ namespace NtoLib.Recipes.MbeTable.PLC
             if (protocol != 1)
             {
                 settings.Protocol = protocol == 2 
-                    ? MbeTableFB.ControllerProtocol.SLMP_not_implimated 
+                    ? MbeTableFB.ControllerProtocol.SlmpNotImplimated 
                     : settings.Protocol;
                 return settings;
             }
@@ -77,8 +77,8 @@ namespace NtoLib.Recipes.MbeTable.PLC
             var areaValue = GetPinValue<uint>(Params.IdHmiAddrArea);
             settings.SlmpArea = areaValue switch
             {
-                1 => MbeTableFB.SLMP_area.D,
-                2 => MbeTableFB.SLMP_area.R,
+                1 => MbeTableFB.SlmpArea.D,
+                2 => MbeTableFB.SlmpArea.R,
                 _ => settings.SlmpArea
             };
             return true;

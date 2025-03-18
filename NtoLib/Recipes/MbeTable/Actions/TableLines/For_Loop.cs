@@ -16,8 +16,8 @@ namespace NtoLib.Recipes.MbeTable.Actions.TableLines
                 new(CellType.Enum, ActionName, actionNumber),
                 new(CellType.Blocked, ""),
                 
-                new(CellType.Int, setpoint),
                 new(CellType.Blocked, ""),
+                new(CellType.Int, setpoint),
                 
                 new(CellType.Blocked, ""),
                 new(CellType.Blocked, ""),

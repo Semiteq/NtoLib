@@ -57,8 +57,8 @@
         //Номера столбцов соответствующих параметров в таблице
         public const int ActionIndex = 0;
         public const int ActionTargetIndex = 1;
-        public const int SetpointIndex = 2;
-        public const int InitialValueIndex = 3;
+        public const int InitialValueIndex = 2;
+        public const int SetpointIndex = 3;
         public const int SpeedIndex = 4;
         public const int TimeSetpointIndex = 5;
         public const int RecipeTimeIndex = 6;

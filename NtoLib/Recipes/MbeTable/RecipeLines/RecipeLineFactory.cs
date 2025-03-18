@@ -14,22 +14,22 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             { OpenTime.ActionName,          (n, _, _, _, t, c) => new OpenTime          (n, t > 0f ? t : 1f, c) },
             { CloseAll.ActionName,          (_, _, _, _, _, c) => new CloseAll          (c) },
 
-            { Temperature.ActionName,       (n, s, _, _, _, c) => new Temperature       (n, s > 0f ? s : 500f, c) },
-            { TemperatureWait.ActionName,   (n, s, _, _, t, c) => new TemperatureWait   (n, s > 0f ? s : 500f, t > 0f ? t : 60f, c) },
-            { TemperatureSmooth.ActionName, (n, s, i, v, t, c) => new TemperatureSmooth (n, s > 0f ? s : 500f, i > 0f ? i : 600, v > 0 ? v : 10f, t > 0f ? t : 600f, c) },
+            { Temperature.ActionName,       (n, _, s, _, _, c) => new Temperature       (n, s > 0f ? s : 500f, c) },
+            { TemperatureWait.ActionName,   (n, _, s, _, t, c) => new TemperatureWait   (n, s > 0f ? s : 500f, t > 0f ? t : 60f, c) },
+            { TemperatureSmooth.ActionName, (n, i, s, v, t, c) => new TemperatureSmooth (n, i > 0f ? i : 500f, s > 0f ? s : 600f, v > 0 ? v : 10f, t > 0f ? t : 600f, c) },
 
-            { Power.ActionName,             (n, s, _, _, _, c) => new Power             (n, s > 0f ? s : 10f, c) },
-            { PowerWait.ActionName,         (n, s, _, _, t, c) => new PowerWait         (n, s > 0f ? s : 10f, t > 0f ? t : 60f, c) },
-            { PowerSmooth.ActionName,       (n, s, i, v, t, c) => new PowerSmooth       (n, s > 0f ? s : 10f, i > 0f ? i : 20f, v > 0f ? v : 1f, t > 0f ? t : 600f, c) },
+            { Power.ActionName,             (n, _, s, _, _, c) => new Power             (n, s > 0f ? s : 10f, c) },
+            { PowerWait.ActionName,         (n, _, s, _, t, c) => new PowerWait         (n, s > 0f ? s : 10f, t > 0f ? t : 60f, c) },
+            { PowerSmooth.ActionName,       (n, i, s, v, t, c) => new PowerSmooth       (n, i > 0f ? i : 10f, s > 0f ? s : 20f, v > 0f ? v : 1f, t > 0f ? t : 600f, c) },
 
             { Wait.ActionName,              (_, _, _, _, t, c) => new Wait              (t > 0f ? t : 10f, c) },
-            { For_Loop.ActionName,          (n, _, _, _, _, c) => new For_Loop          (n > 0 ? n : 5, c) },
+            { For_Loop.ActionName,          (_, _, s, _, _, c) => new For_Loop          (s > 0 ? (int)s : 5, c) },
             { EndFor_Loop.ActionName,       (_, _, _, _, _, c) => new EndFor_Loop       (c) },
             { Pause.ActionName,             (_, _, _, _, _, c) => new Pause             (c) },
 
-            { N_Run.ActionName,             (n, s, _, _, _, c) => new N_Run             (n, s > 0f ? s : 10f, c) },
+            { N_Run.ActionName,             (n, _, s, _, _, c) => new N_Run             (n, s > 0f ? s : 10f, c) },
             { N_Close.ActionName,           (_, _, _, _, _, c) => new N_Close           (c) },
-            { N_Vent.ActionName,            (n, s, _, _, _, c) => new N_Vent            (n, s > 0f ? s : 10f, c) }
+            { N_Vent.ActionName,            (n, _, s, _, _, c) => new N_Vent            (n, s > 0f ? s : 10f, c) }
         };
 
         public static RecipeLine NewLine(string actionName, int actionTarget, float setpoint, float initialValue, float speed, float timeSetpoint, string comment)

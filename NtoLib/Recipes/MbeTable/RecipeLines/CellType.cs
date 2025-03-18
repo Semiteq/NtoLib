@@ -11,6 +11,7 @@
         FloatSecond,
         FloatTempSpeed,
         FloatPowerSpeed,
+        FloatSccm,
         Enum,
         String
     }

@@ -90,6 +90,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                 (Type == CellType.FloatTemp) ||
                 (Type == CellType.FloatSecond) ||
                 (Type == CellType.FloatTempSpeed) ||
+                (Type == CellType.FloatSccm) ||
                 (Type == CellType.FloatPowerSpeed)) ? _floatValue.ToString("F5") :
 
                 (Type == CellType.Enum || Type == CellType.String) ? _stringValue :
@@ -145,8 +146,10 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
         public void ParseValue(float value)
         {
             _floatValue = value;
+            if (Math.Abs(_floatValue % 1) < float.Epsilon)
+                _intValue = (int)_floatValue;
         }
-        
+
         public string GetValue()
         {
             return Type switch
@@ -158,6 +161,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                 CellType.FloatSecond => FormatTime(_floatValue),
                 CellType.FloatTempSpeed => $"{_floatValue:F1} {GetUnits()}",
                 CellType.FloatPowerSpeed => $"{_floatValue:F2} {GetUnits()}",
+                CellType.FloatSccm => $"{_floatValue:F1} {GetUnits()}",
                 CellType.Int => _intValue.ToString(),
                 CellType.String or CellType.Enum => _stringValue,
                 _ => string.Empty
@@ -171,9 +175,10 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             CellType.FloatSecond => "с",
             CellType.FloatTempSpeed => "⁰C/мин",
             CellType.FloatPowerSpeed => "%/мин",
+            CellType.FloatSccm => "см³/мин",
             _ => string.Empty
         };
-        
+
         private string FormatTime(double time)
         {
             return TimeSpan.FromSeconds(time).ToString("hh\\:mm\\:ss\\.ff");

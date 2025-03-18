@@ -3,7 +3,7 @@
     internal class CommunicationSettings
     {
         public MbeTableFB.ControllerProtocol Protocol;
-        public MbeTableFB.SLMP_area SlmpArea;
+        public MbeTableFB.SlmpArea SlmpArea;
         public ushort ModbusTransactionId = 0;
 
         public uint FloatBaseAddr;
