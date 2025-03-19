@@ -56,7 +56,7 @@ namespace NtoLib.Recipes.MbeTable.Tests
             // Create a fake internal timer with elapsed time of 6 seconds.
             var fakeInternalTimer = new FakeCountTimer { ElapsedTime = TimeSpan.FromSeconds(6) };
             // Set previous expected step time to 5 seconds.
-            SetPrivateField(processor, "_previousExpectedStepTime", 5f);
+            SetPrivateField(processor, "_expectedStepTime", 5f);
             // Set _lineTimer to fakeInternalTimer.
             SetPrivateField(processor, "_lineTimer", fakeInternalTimer);
             // Set _lastIsRecipeActive to true.
