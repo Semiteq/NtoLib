@@ -11,8 +11,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
     internal class LineChangeProcessor : ILineChangeProcessor
     {
         private ICountTimer? _lineTimer; // Timer for the current recipe line
-        private float _previousExpectedStepTime; // Expected duration from the previous cycle
-        private int _previousLineNumber;
+        private float _expectedStepTime; // Expected duration from recipe
         private readonly object _processLock = new(); // Synchronization lock
         private readonly ILogger<LineChangeProcessor> _logger;
         private readonly ILoggerFactory _loggerFactory;
@@ -61,13 +60,12 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
 #endif
                 }
 
-                _previousExpectedStepTime = expectedStepTime;
+                _expectedStepTime = expectedStepTime;
                 _lineTimer = new CountTimer(TimeSpan.FromSeconds(expectedStepTime), _loggerFactory.CreateLogger<CountTimer>());
                 _lineTimer.Start();
 #if DEBUG
                 _logger.LogInformation("New line timer started for line {Line} with duration {Duration:F6}s", currentLine, expectedStepTime);
 #endif
-                _previousLineNumber = currentLine;
             }
         }
 
@@ -75,10 +73,10 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         private void ApplyTimerCorrection(ICountTimer? countdownTimer)
         {
             var actualElapsed = _lineTimer!.GetElapsedTime().TotalSeconds;
-            var diffSeconds = actualElapsed - _previousExpectedStepTime;
+            var diffSeconds = actualElapsed - _expectedStepTime;
 #if DEBUG
             _logger.LogInformation("Line timer: expected {Expected:F6}s, actual {Actual:F2}s, DIFF {Diff:F2}s",
-                _previousExpectedStepTime, actualElapsed, diffSeconds);
+                _expectedStepTime, actualElapsed, diffSeconds);
 #endif
             if (Math.Abs(diffSeconds) > CorrectionThreshold)
             {
