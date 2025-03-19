@@ -36,6 +36,7 @@ namespace NtoLib.Recipes.MbeTable
         private ControllerProtocol _enumProtocol;
         private SlmpArea _enumSlmpArea = SlmpArea.R;
 
+        // Named constants for pin IDs.
         private const int IdRecipeActive = 1;
         private const int IdRecipePaused = 2;
         private const int IdActualLineNumber = 3;
@@ -48,19 +49,17 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdLineTimeLeft = 102;
 
         [NonSerialized]
-        private CountTimer _recipeTimer;
+        private ICountTimer _recipeTimer;
 
-        [NonSerialized]
-        private CountTimer _lineTimer;
-
+        // Previous state values.
         private int _previousLineNumber = -1;
-        private double _previousPlcLineTime;
         private int _previousForLoopCount1;
         private int _previousForLoopCount2;
         private int _previousForLoopCount3;
-        private LineChangeProcessor _lineChangeProcessor;
 
-        private bool _isRecipeRunning;
+        // Use interfaces for easier testing and decoupling.
+        private ILineChangeProcessor _lineChangeProcessor;
+        private IRecipeTimeManager _recipeTimeManager;
 
         #region VisualProperties
 
@@ -102,7 +101,7 @@ namespace NtoLib.Recipes.MbeTable
             set => _uFloatBaseAddr = value;
         }
 
-        [Description("Определяет размер области для данных типа 'вещественный'. в 16-тибитных словах (2 слова на переменную). Если используется, например, область с адресами 100..199, то это 100 слов или 50 переменных типа float. Укажите в этом параметре 100.")]
+        [Description("Определяет размер области для данных типа 'вещественный'.")]
         [DisplayName(" 4.  Размер области хранения данных типа Real (Float)")]
         public uint UFloatAreaSize
         {
@@ -127,14 +126,14 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         [DisplayName(" 7.  Базовый адрес хранения данных типа Boolean")]
-        [Description("Определяет начальный адрес, куда помещаются данные типа 'логический'. Упаковываются в 16-ти битные слова.")]
+        [Description("Определяет начальный адрес, куда помещаются данные типа 'логический'.")]
         public uint UBoolBaseAddr
         {
             get => _uBoolBaseAddr;
             set => _uBoolBaseAddr = value;
         }
 
-        [Description("Определяет размер области для данных типа 'логический'. Определяется в 16-ти битных словах")]
+        [Description("Определяет размер области для данных типа 'логический'.")]
         [DisplayName(" 8.  Размер области хранения данных типа Boolean")]
         public uint UBoolAreaSize
         {
@@ -241,8 +240,15 @@ namespace NtoLib.Recipes.MbeTable
             var plcLineTime = GetPinValue<float>(IdStepCurrentTime);
             var isRecipeActive = GetPinValue<bool>(IdRecipeActive);
 
-            // Update HMI displays for remaining overall and line times.
-            _recipeTimer = RecipeTimeManager.ManageRecipeTimer(isRecipeActive, _recipeTimer, RecipeTimeManager.TotalTime, LoggerFactory);
+            // Initialize recipe manager if null.
+            if (_recipeTimeManager is null)
+            {
+                _recipeTimeManager = new RecipeTimeManager();
+                TableControl.RecipeTimeManager = _recipeTimeManager;
+            }
+            
+            // Update recipe timer based on activity.
+            _recipeTimer = _recipeTimeManager.ManageRecipeTimer(isRecipeActive, _recipeTimer, _recipeTimeManager.TotalTime, LoggerFactory) as CountTimer;
 
             // Trigger line change event if any relevant parameter has changed.
             if (currentLine != _previousLineNumber ||
@@ -251,11 +257,8 @@ namespace NtoLib.Recipes.MbeTable
                 _previousForLoopCount3 != forLoopCount3)
             {
                 // Get expected time for the current line from recipe data.
-                var currentLineTime = RecipeTimeManager.GetRowTime(currentLine, forLoopCount1, forLoopCount2, forLoopCount3);
-                
-                _lineChangeProcessor ??= new LineChangeProcessor(
-                    LoggerFactory.CreateLogger<LineChangeProcessor>(),
-                    LoggerFactory);
+                var currentLineTime = _recipeTimeManager.GetRowTime(currentLine, forLoopCount1, forLoopCount2, forLoopCount3);
+                _lineChangeProcessor ??= new LineChangeProcessor(LoggerFactory.CreateLogger<LineChangeProcessor>(), LoggerFactory);
                 _lineChangeProcessor.Process(isRecipeActive, currentLine, (float)currentLineTime.TotalSeconds, _recipeTimer);
             }
 
@@ -263,8 +266,8 @@ namespace NtoLib.Recipes.MbeTable
             _previousForLoopCount1 = forLoopCount1;
             _previousForLoopCount2 = forLoopCount2;
             _previousForLoopCount3 = forLoopCount3;
-            
-            RecipeTimeManager.UpdateRecipeTimeDisplay(
+
+            _recipeTimeManager.UpdateRecipeTimeDisplay(
                 plcLineTime,
                 _recipeTimer,
                 total => SetPinValue(IdTotalTimeLeft, total),
@@ -298,7 +301,7 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         /// <summary>
-        /// Calculates status flags based on the enabled load flag and pin quality.
+        /// Calculates status flags based on load enable and pin quality.
         /// </summary>
         private uint CalculateStatusFlags(int actualLine) =>
             (GetPinBool(IdEnaLoad) ? 1u : 0) |

@@ -3,7 +3,7 @@ using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable.Table
 {
-    internal class TableColumn
+    public class TableColumn
     {
         public TableColumn(string name, CellType type)
         {

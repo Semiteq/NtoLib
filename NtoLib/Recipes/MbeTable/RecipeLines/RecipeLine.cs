@@ -6,7 +6,7 @@ using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
-    internal abstract class RecipeLine
+    public abstract class RecipeLine
     {
         public List<TCell> Cells { get; protected set; } = new();
         public int TabulateLevel { get; set; } = 0;

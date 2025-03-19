@@ -2,7 +2,7 @@
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
-    internal class TCell
+    public class TCell
     {
         public CellType Type { get; }
 

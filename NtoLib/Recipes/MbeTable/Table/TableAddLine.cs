@@ -10,6 +10,7 @@ namespace NtoLib.Recipes.MbeTable
 {
     public partial class TableControl
     {
+        public static IRecipeTimeManager RecipeTimeManager;
         private void AddLineToRecipe(RecipeLine recipeLine, bool addAfter)
         {
             var rowIndex = dataGridView1?.CurrentRow?.Index ?? 0;

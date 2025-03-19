@@ -8,6 +8,9 @@ using Microsoft.Extensions.Options;
 
 namespace NtoLib.Recipes.MbeTable.Logging
 {
+    /// <summary>
+    /// Compact console formatter for logging output.
+    /// </summary>
     public class CompactConsoleFormatter : ConsoleFormatter
     {
         private readonly IOptions<CompactConsoleFormatterOptions> _options;
@@ -36,10 +39,5 @@ namespace NtoLib.Recipes.MbeTable.Logging
 
             textWriter.WriteLine($"{timestamp} [{logLevel}] [{category}] {logEntry.Formatter(logEntry.State, logEntry.Exception)}");
         }
-    }
-
-    public class CompactConsoleFormatterOptions : ConsoleFormatterOptions
-    {
-        public string TimestampFormat { get; set; } = "HH:mm:ss";
     }
 }
