@@ -313,7 +313,7 @@
     </Compile>
     <Compile Include="Recipes\MbeTable\Tests\CountTimerTests.cs" />
     <Compile Include="Recipes\MbeTable\Tests\FakeCountTimer.cs" />
-    <Compile Include="Recipes\MbeTable\Tests\Recipes\LineChangeProcessorTests.cs" />
+    <Compile Include="Recipes\MbeTable\Tests\LineChangeProcessorTests.cs" />
     <Compile Include="Recipes\MbeTable\Tests\RecipeTimeManagerTests.cs" />
     <Compile Include="Recipes\MbeTable\Tests\TestRecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\Utils\DateTimeParser.cs" />

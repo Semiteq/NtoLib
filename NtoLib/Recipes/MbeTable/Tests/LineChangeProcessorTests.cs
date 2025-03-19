@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NtoLib.Recipes.MbeTable.RecipeLines;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
-namespace NtoLib.Recipes.MbeTable.Tests.Recipes
+namespace NtoLib.Recipes.MbeTable.Tests
 {
     [TestClass]
     public class LineChangeProcessorTests
