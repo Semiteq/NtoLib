@@ -1,7 +1,7 @@
 ﻿using System;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
-namespace NtoLib.Recipes.MbeTable.Tests
+namespace NtoLib.Test.MbeTable
 {
     // Fake ICountTimer implementation for testing LineChangeProcessor and RecipeTimeManager
     public class FakeCountTimer : ICountTimer

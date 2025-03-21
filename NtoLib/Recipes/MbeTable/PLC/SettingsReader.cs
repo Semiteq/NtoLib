@@ -7,11 +7,16 @@ namespace NtoLib.Recipes.MbeTable.PLC
 {
     internal class SettingsReader
     {
-        private readonly VisualFBConnector _fbConnector;
+        private VisualFBConnector _fbConnector;
 
         public SettingsReader(VisualFBConnector visualFbConnector)
         {
             _fbConnector = visualFbConnector;
+        }
+
+        public void Initialize(VisualFBConnector visualFBConnector)
+        {
+            _fbConnector = visualFBConnector;
         }
 
         public bool CheckQuality()
@@ -32,8 +37,8 @@ namespace NtoLib.Recipes.MbeTable.PLC
             var protocol = GetPinValue<uint>(Params.IdHmiCommProtocol);
             if (protocol != 1)
             {
-                settings.Protocol = protocol == 2 
-                    ? MbeTableFB.ControllerProtocol.SlmpNotImplimated 
+                settings.Protocol = protocol == 2
+                    ? MbeTableFB.ControllerProtocol.SlmpNotImplimated
                     : settings.Protocol;
                 return settings;
             }

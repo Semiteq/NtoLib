@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using NtoLib.Properties;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.RecipeLines;
@@ -83,7 +84,17 @@ namespace NtoLib.Recipes.MbeTable
                     {
                         PlcCommunication plcCommunication = new();
 
-                        plcCommunication.WriteRecipeToPlc(recipe, settings);
+                        if (!plcCommunication.CheckConnection(settings))
+                        {
+                            StatusManager.WriteStatusMessage("Ошибка соединения с контроллером", true);
+                            return;
+                        }
+
+                        if (!plcCommunication.WriteRecipeToPlc(recipe, settings))
+                        {
+                            StatusManager.WriteStatusMessage("Ошибка записи рецепта в контроллер", true);
+                            return;
+                        }
 
                         Thread.Sleep(200);
 
@@ -121,11 +132,23 @@ namespace NtoLib.Recipes.MbeTable
         {
             SettingsReader settingsReader = new(FBConnector);
             var commSettings = settingsReader.ReadTableSettings();
+
             PlcCommunication plcCommunication = new();
+
+
+            if (!plcCommunication.CheckConnection(commSettings))
+            {
+                StatusManager.WriteStatusMessage("Нет соединения с ПЛК", true);
+                return false;
+            }
+
             var recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
 
             if (recipe == null)
+            {
+                StatusManager.WriteStatusMessage("Не удалось загрузить рецепт из ПЛК");
                 return false;
+            }
 
             dataGridView1.Rows.Clear();
             _tableData.Clear();

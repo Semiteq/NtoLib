@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using System;
-using Microsoft.Extensions.Logging;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
 {
@@ -8,23 +7,15 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
     /// Processes changes in recipe lines and adjusts timers accordingly.
     /// Logging is active only in DEBUG builds.
     /// </summary>
-    internal class LineChangeProcessor : ILineChangeProcessor
+    public class LineChangeProcessor : ILineChangeProcessor
     {
         private ICountTimer? _lineTimer; // Timer for the current recipe line
         private float _expectedStepTime; // Expected duration from recipe
         private readonly object _processLock = new(); // Synchronization lock
-        private readonly ILogger<LineChangeProcessor> _logger;
-        private readonly ILoggerFactory _loggerFactory;
 
         // Named constants for thresholds.
         private const double CorrectionThreshold = 0.1; // Seconds
         private bool _lastIsRecipeActive = true;
-
-        public LineChangeProcessor(ILogger<LineChangeProcessor> logger, ILoggerFactory loggerFactory)
-        {
-            _logger = logger;
-            _loggerFactory = loggerFactory;
-        }
 
         /// <summary>
         /// Processes the line change event and applies timer corrections.
@@ -38,9 +29,6 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
                     if (_lastIsRecipeActive)
                     {
                         StopLineTimer();
-#if DEBUG
-                        _logger.LogInformation("Recipe inactive: Line timer reset.");
-#endif
                     }
                     _lastIsRecipeActive = false;
                     return;
@@ -53,19 +41,10 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
                     ApplyTimerCorrection(countdownTimer);
                     StopLineTimer();
                 }
-                else
-                {
-#if DEBUG
-                    _logger.LogInformation("No previous line timer found; starting new timer.");
-#endif
-                }
 
                 _expectedStepTime = expectedStepTime;
-                _lineTimer = new CountTimer(TimeSpan.FromSeconds(expectedStepTime), _loggerFactory.CreateLogger<CountTimer>());
+                _lineTimer = new CountTimer(TimeSpan.FromSeconds(expectedStepTime));
                 _lineTimer.Start();
-#if DEBUG
-                _logger.LogInformation("New line timer started for line {Line} with duration {Duration:F6}s", currentLine, expectedStepTime);
-#endif
             }
         }
 
@@ -74,10 +53,6 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         {
             var actualElapsed = _lineTimer!.GetElapsedTime().TotalSeconds;
             var diffSeconds = actualElapsed - _expectedStepTime;
-#if DEBUG
-            _logger.LogInformation("Line timer: expected {Expected:F6}s, actual {Actual:F2}s, DIFF {Diff:F2}s",
-                _expectedStepTime, actualElapsed, diffSeconds);
-#endif
             if (Math.Abs(diffSeconds) > CorrectionThreshold)
             {
                 if (countdownTimer is not null)
@@ -85,23 +60,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
                     var currentOverallRemaining = countdownTimer.GetRemainingTime();
                     var newOverallRemaining = currentOverallRemaining + TimeSpan.FromSeconds(diffSeconds);
                     countdownTimer.SetRemainingTime(newOverallRemaining);
-#if DEBUG
-                    _logger.LogInformation("Overall timer CORRECTED from {Old:F2}s to {New:F2}s",
-                        currentOverallRemaining.TotalSeconds, newOverallRemaining.TotalSeconds);
-#endif
                 }
-                else
-                {
-#if DEBUG
-                    _logger.LogWarning("No overall timer available for correction.");
-#endif
-                }
-            }
-            else
-            {
-#if DEBUG
-                _logger.LogInformation("Time difference {Diff:F2}s within threshold; no correction applied.", diffSeconds);
-#endif
             }
         }
 

@@ -12,5 +12,16 @@ namespace NtoLib.Recipes.MbeTable
             DbgMsg.Text = message;
             DbgMsg.BackColor = isError ? Color.OrangeRed : Color.White;
         }
+
+        public static void ClearStatusMessage()
+        {
+            DbgMsg.Text = string.Empty;
+            DbgMsg.BackColor = Color.White;
+        }
+
+        public static void EnvalidateStatusMessage()
+        {
+            DbgMsg.Invalidate();
+        }
     }
 }

@@ -1,1 +1,1 @@
-﻿netreg.exe NtoLib.dll /showerror
+netreg.exe NtoLib.dll /showerror

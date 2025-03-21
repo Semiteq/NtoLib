@@ -14,13 +14,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
             { OpenTime.ActionName,          (n, _, _, _, t, c) => new OpenTime          (n, t > 0f ? t : 1f, c) },
             { CloseAll.ActionName,          (_, _, _, _, _, c) => new CloseAll          (c) },
 
-            { Temperature.ActionName,       (n, _, s, _, _, c) => new Temperature       (n, s > 0f ? s : 500f, c) },
-            { TemperatureWait.ActionName,   (n, _, s, _, t, c) => new TemperatureWait   (n, s > 0f ? s : 500f, t > 0f ? t : 60f, c) },
-            { TemperatureSmooth.ActionName, (n, i, s, v, t, c) => new TemperatureSmooth (n, i > 0f ? i : 500f, s > 0f ? s : 600f, v > 0 ? v : 10f, t > 0f ? t : 600f, c) },
+            { Temperature.ActionName,       (n, _, s, _, _, c) => new Temperature       (n, s >= 20f ? s : 500f, c) },
+            { TemperatureWait.ActionName,   (n, _, s, _, t, c) => new TemperatureWait   (n, s >= 20f ? s : 500f, t > 0f ? t : 60f, c) },
+            { TemperatureSmooth.ActionName, (n, i, s, v, t, c) => new TemperatureSmooth (n, i >= 20f ? i : 500f, s >= 20f ? s : 600f, v > 0 ? v : 10f, t > 0f ? t : 600f, c) },
 
-            { Power.ActionName,             (n, _, s, _, _, c) => new Power             (n, s > 0f ? s : 10f, c) },
-            { PowerWait.ActionName,         (n, _, s, _, t, c) => new PowerWait         (n, s > 0f ? s : 10f, t > 0f ? t : 60f, c) },
-            { PowerSmooth.ActionName,       (n, i, s, v, t, c) => new PowerSmooth       (n, i > 0f ? i : 10f, s > 0f ? s : 20f, v > 0f ? v : 1f, t > 0f ? t : 600f, c) },
+            { Power.ActionName,             (n, _, s, _, _, c) => new Power             (n, s >= 0f ? s : 10f, c) },
+            { PowerWait.ActionName,         (n, _, s, _, t, c) => new PowerWait         (n, s >= 0f ? s : 10f, t > 0f ? t : 60f, c) },
+            { PowerSmooth.ActionName,       (n, i, s, v, t, c) => new PowerSmooth       (n, i >= 0f ? i : 10f, s >= 0f ? s : 20f, v > 0f ? v : 1f, t > 0f ? t : 600f, c) },
 
             { Wait.ActionName,              (_, _, _, _, t, c) => new Wait              (t > 0f ? t : 10f, c) },
             { For_Loop.ActionName,          (_, _, s, _, _, c) => new For_Loop          (s > 0 ? (int)s : 5, c) },

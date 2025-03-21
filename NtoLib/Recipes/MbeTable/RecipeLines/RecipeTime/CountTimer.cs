@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.Extensions.Logging;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
 {
@@ -9,7 +8,7 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
     /// High-resolution timer using Stopwatch with state management.
     /// Logging is enabled only in DEBUG mode.
     /// </summary>
-    internal class CountTimer : ICountTimer
+    public class CountTimer : ICountTimer
     {
         // Total duration for the timer.
         private TimeSpan _duration;
@@ -25,17 +24,14 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         // Timer state.
         private TimerState State { get; set; } = TimerState.Stopped;
 
-        private readonly ILogger<CountTimer> _logger;
-
         public event Action OnTimerFinished;
 
         /// <summary>
         /// Initializes a new instance of CountTimer with the specified duration.
         /// </summary>
-        public CountTimer(TimeSpan duration, ILogger<CountTimer> logger)
+        public CountTimer(TimeSpan duration)
         {
             _duration = duration;
-            _logger = logger;
         }
 
         public bool IsRunning => State == TimerState.Running;
@@ -51,14 +47,9 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             {
                 if (State == TimerState.Running)
                 {
-#if DEBUG
-                    _logger.LogWarning("Attempted to start timer, but timer is already running.");
-#endif
                     return;
                 }
-#if DEBUG
-                _logger.LogInformation("Starting timer with duration {Duration}.", _duration);
-#endif
+
                 _stopwatch.Restart();
                 _timer = new Timer(TimerCallback, null, _checkInterval, _checkInterval);
                 State = TimerState.Running;
@@ -74,18 +65,12 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             {
                 if (State != TimerState.Running)
                 {
-#if DEBUG
-                    _logger.LogWarning("Attempted to pause timer, but timer is not running.");
-#endif
                     return;
                 }
                 _stopwatch.Stop();
                 _timer?.Dispose();
                 _timer = null;
                 State = TimerState.Paused;
-#if DEBUG
-                _logger.LogInformation("Timer paused at elapsed time {Elapsed}.", _stopwatch.Elapsed);
-#endif
             }
         }
 
@@ -98,17 +83,11 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             {
                 if (State != TimerState.Paused)
                 {
-#if DEBUG
-                    _logger.LogWarning("Attempted to resume timer, but timer is not paused.");
-#endif
                     return;
                 }
                 _stopwatch.Start();
                 _timer = new Timer(TimerCallback, null, _checkInterval, _checkInterval);
                 State = TimerState.Running;
-#if DEBUG
-                _logger.LogInformation("Timer resumed.");
-#endif
             }
         }
 
@@ -121,18 +100,12 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             {
                 if (State == TimerState.Stopped)
                 {
-#if DEBUG
-                    _logger.LogWarning("Attempted to stop timer, but timer is already stopped.");
-#endif
                     return;
                 }
                 _timer?.Dispose();
                 _timer = null;
                 _stopwatch.Stop();
                 State = TimerState.Stopped;
-#if DEBUG
-                _logger.LogInformation("Timer stopped.");
-#endif
             }
         }
 
@@ -178,9 +151,6 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             {
                 if (_stopwatch.Elapsed >= _duration)
                 {
-#if DEBUG
-                    _logger.LogInformation("Timer finished. Elapsed time {Elapsed} exceeds duration {Duration}.", _stopwatch.Elapsed, _duration);
-#endif
                     _timer?.Dispose();
                     _timer = null;
                     State = TimerState.Stopped;
@@ -200,9 +170,6 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
                 _timer = null;
             }
             _stopwatch.Stop();
-#if DEBUG
-            _logger.LogInformation("Timer disposed.");
-#endif
         }
 
         // Internal timer state enumeration.

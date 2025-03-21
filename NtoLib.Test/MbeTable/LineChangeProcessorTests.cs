@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Reflection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
-namespace NtoLib.Recipes.MbeTable.Tests
+namespace NtoLib.Test.MbeTable
 {
     [TestClass]
     public class LineChangeProcessorTests
@@ -27,9 +26,7 @@ namespace NtoLib.Recipes.MbeTable.Tests
         public void Process_InactiveRecipe_StopsLineTimer()
         {
             // Arrange: Create a LineChangeProcessor with null logger.
-            var loggerFactory = NullLoggerFactory.Instance;
-            var logger = NullLogger<LineChangeProcessor>.Instance;
-            var processor = new LineChangeProcessor(logger, loggerFactory);
+            var processor = new LineChangeProcessor();
 
             // Set _lineTimer to a fake timer using reflection.
             var fakeTimer = new FakeCountTimer();
@@ -49,9 +46,7 @@ namespace NtoLib.Recipes.MbeTable.Tests
         public void Process_ActiveRecipe_AppliesTimerCorrection()
         {
             // Arrange: Create a LineChangeProcessor.
-            var loggerFactory = NullLoggerFactory.Instance;
-            var logger = NullLogger<LineChangeProcessor>.Instance;
-            var processor = new LineChangeProcessor(logger, loggerFactory);
+            var processor = new LineChangeProcessor();
 
             // Create a fake internal timer with elapsed time of 6 seconds.
             var fakeInternalTimer = new FakeCountTimer { ElapsedTime = TimeSpan.FromSeconds(6) };

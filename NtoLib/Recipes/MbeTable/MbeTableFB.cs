@@ -5,8 +5,6 @@ using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
-using Microsoft.Extensions.Logging;
-using NtoLib.Recipes.MbeTable.Logging;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
 namespace NtoLib.Recipes.MbeTable
@@ -20,19 +18,6 @@ namespace NtoLib.Recipes.MbeTable
     [Serializable]
     public class MbeTableFB : VisualFBBase
     {
-        private static readonly ILoggerFactory LoggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-        {
-            builder.AddConsole(options =>
-            {
-                options.FormatterName = "compact";
-            });
-            builder.AddConsoleFormatter<CompactConsoleFormatter, CompactConsoleFormatterOptions>(options =>
-            {
-                options.TimestampFormat = "HH:mm:ss.fff";
-            });
-        });
-        private readonly ILogger<MbeTableFB> _logger = LoggerFactory.CreateLogger<MbeTableFB>();
-
         private ControllerProtocol _enumProtocol;
         private SlmpArea _enumSlmpArea = SlmpArea.R;
 
@@ -246,9 +231,9 @@ namespace NtoLib.Recipes.MbeTable
                 _recipeTimeManager = new RecipeTimeManager();
                 TableControl.RecipeTimeManager = _recipeTimeManager;
             }
-            
+
             // Update recipe timer based on activity.
-            _recipeTimer = _recipeTimeManager.ManageRecipeTimer(isRecipeActive, _recipeTimer, _recipeTimeManager.TotalTime, LoggerFactory) as CountTimer;
+            _recipeTimer = _recipeTimeManager.ManageRecipeTimer(isRecipeActive, _recipeTimer, _recipeTimeManager.TotalTime) as CountTimer;
 
             // Trigger line change event if any relevant parameter has changed.
             if (currentLine != _previousLineNumber ||
@@ -258,7 +243,7 @@ namespace NtoLib.Recipes.MbeTable
             {
                 // Get expected time for the current line from recipe data.
                 var currentLineTime = _recipeTimeManager.GetRowTime(currentLine, forLoopCount1, forLoopCount2, forLoopCount3);
-                _lineChangeProcessor ??= new LineChangeProcessor(LoggerFactory.CreateLogger<LineChangeProcessor>(), LoggerFactory);
+                _lineChangeProcessor ??= new LineChangeProcessor();
                 _lineChangeProcessor.Process(isRecipeActive, currentLine, (float)currentLineTime.TotalSeconds, _recipeTimer);
             }
 
@@ -271,8 +256,7 @@ namespace NtoLib.Recipes.MbeTable
                 plcLineTime,
                 _recipeTimer,
                 total => SetPinValue(IdTotalTimeLeft, total),
-                line => SetPinValue(IdLineTimeLeft, line),
-                _logger);
+                line => SetPinValue(IdLineTimeLeft, line));
         }
 
         private int GetProtocolValue() =>

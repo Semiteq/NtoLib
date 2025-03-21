@@ -2,14 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using Microsoft.Extensions.Logging;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
 {
     // Implementation of IRecipeTimeManager
-    internal class RecipeTimeManager : IRecipeTimeManager
+    public class RecipeTimeManager : IRecipeTimeManager
     {
         // Recipe data and UI control reference.
         private List<RecipeLine>? _tableData;
@@ -177,12 +176,8 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         /// Manages the overall recipe timer based on recipe activity.
         /// For unit testing, verify state transitions and timer corrections.
         /// </summary>
-        public ICountTimer? ManageRecipeTimer(bool isRecipeActive, ICountTimer? currentTimer, TimeSpan totalRecipeTime,
-            ILoggerFactory loggerFactory)
+        public ICountTimer? ManageRecipeTimer(bool isRecipeActive, ICountTimer? currentTimer, TimeSpan totalRecipeTime)
         {
-#if DEBUG
-            var logger = loggerFactory.CreateLogger<RecipeTimeManager>();
-#endif
 
             if (!isRecipeActive)
             {
@@ -190,9 +185,6 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
                 {
                     currentTimer?.Stop();
                     _isRecipeRunning = false;
-#if DEBUG
-                    logger.LogInformation("Recipe inactive: Overall timer reset.");
-#endif
                 }
 
                 return null;
@@ -204,11 +196,8 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
             if (!_isRecipeRunning)
             {
                 _overallTimerStart = DateTime.UtcNow;
-                currentTimer = new CountTimer(totalRecipeTime, loggerFactory.CreateLogger<CountTimer>());
+                currentTimer = new CountTimer(totalRecipeTime);
                 currentTimer.Start();
-#if DEBUG
-                logger.LogInformation("Overall timer started with total time {TotalTime}.", totalRecipeTime);
-#endif
                 _isRecipeRunning = true;
             }
             else
@@ -229,18 +218,13 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime
         /// Designed for unit testing of display update logic.
         /// </summary>
         public void UpdateRecipeTimeDisplay(float plcLineTime, ICountTimer? countdownTimer, Action<double> setTotalTime,
-            Action<double> setLineTime, ILogger? logger)
+            Action<double> setLineTime)
         {
             var recipeTimeLeft = countdownTimer?.GetRemainingTime() ?? TimeSpan.Zero;
             var lineTimeLeft = TimeSpan.FromSeconds(plcLineTime);
 
             setTotalTime(recipeTimeLeft.TotalSeconds);
             setLineTime(lineTimeLeft.TotalSeconds);
-#if DEBUG
-            logger?.LogInformation(
-                "Display updated: TotalTimeLeft = {TotalTimeLeft:F2}s, LineTimeLeft = {LineTimeLeft:F2}s",
-                recipeTimeLeft.TotalSeconds, lineTimeLeft.TotalSeconds);
-#endif
         }
     }
 }

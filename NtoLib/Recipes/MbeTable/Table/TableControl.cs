@@ -8,7 +8,9 @@ using System.Windows.Forms;
 using FB;
 using FB.VisualFB;
 using InSAT.OPC;
+using MasterSCADALib;
 using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 using NtoLib.Recipes.MbeTable.Table;
 
@@ -805,16 +807,20 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ProcessTime(int rowIndex)
         {
+            var currentCommand = _tableData[rowIndex].Cells[Params.ActionIndex].StringValue;
+            if (currentCommand == "TEMP + WAIT" || currentCommand == "POWER + WAIT") return;
+
             var setpoint = _tableData[rowIndex].Cells[Params.SetpointIndex].FloatValue;
             var initial = _tableData[rowIndex].Cells[Params.InitialValueIndex].FloatValue;
             var speed = _tableData[rowIndex].Cells[Params.SpeedIndex].FloatValue;
-            try
+
+            if (Math.Abs(setpoint - initial) * 60 / speed != float.NaN)
             {
                 _tableData[rowIndex].Duration = Math.Abs(setpoint - initial) * 60 / speed;
                 dataGridView1.Rows[rowIndex].Cells[Params.TimeSetpointIndex].Value =
                     _tableData[rowIndex].Cells[Params.TimeSetpointIndex].GetValue();
             }
-            catch (DivideByZeroException)
+            else
             {
                 StatusManager.WriteStatusMessage("Скорость не может быть равна 0", true);
             }
@@ -822,16 +828,20 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ProcessSpeed(int rowIndex)
         {
+            var currentCommand = _tableData[rowIndex].Cells[Params.ActionIndex].StringValue;
+            if (currentCommand == "TEMP + WAIT" || currentCommand == "POWER + WAIT") return;
+
             var setpoint = _tableData[rowIndex].Cells[Params.SetpointIndex].FloatValue;
             var initial = _tableData[rowIndex].Cells[Params.InitialValueIndex].FloatValue;
             var time = _tableData[rowIndex].Cells[Params.TimeSetpointIndex].FloatValue;
-            try
+
+            if (Math.Abs(setpoint - initial) * 60 / time != float.NaN)
             {
                 _tableData[rowIndex].Speed = Math.Abs(setpoint - initial) * 60 / time;
                 dataGridView1.Rows[rowIndex].Cells[Params.SpeedIndex].Value =
                     _tableData[rowIndex].Cells[Params.SpeedIndex].GetValue();
             }
-            catch (DivideByZeroException)
+            else
             {
                 StatusManager.WriteStatusMessage("Время не может быть равно 0", true);
             }
@@ -868,7 +878,7 @@ namespace NtoLib.Recipes.MbeTable
                 var command = (string)dataGridView1.Rows[rowIndex].Cells[columnIndex].Value;
                 var minNumber = ActionTarget.GetMinNumber(command);
 
-                ReplaceLineInRecipe(RecipeLineFactory.NewLine(command, minNumber, 0f, 0f, 0f, 0f, ""));
+                ReplaceLineInRecipe(RecipeLineFactory.NewLine(command, minNumber, -1f, -1f, 0f, 0f, ""));
 
                 RefreshTable();
                 dataGridView1.Invalidate();
@@ -890,14 +900,12 @@ namespace NtoLib.Recipes.MbeTable
                 if (_loadDelay == null)
                 {
                     _loadDelay = new Timer();
-                    _loadDelay.Interval = 100;
+                    _loadDelay.Interval = 1000;
 
                     _loadDelay.Tick += (object sender2, EventArgs e2) =>
                     {
                         if (TryLoadRecipeFromPlc())
                             StatusManager.WriteStatusMessage("Рецепт загружен из ПЛК");
-                        else
-                            StatusManager.WriteStatusMessage("Не удалось загрузить рецепт из ПЛК");
 
                         _loadDelay.Stop();
                     };

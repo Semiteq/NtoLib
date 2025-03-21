@@ -1,7 +1,7 @@
 ﻿using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
-namespace NtoLib.Recipes.MbeTable.Tests
+namespace NtoLib.Test.MbeTable
 {
     // Dummy implementation for testing purposes
     public class TestRecipeLine : RecipeLine

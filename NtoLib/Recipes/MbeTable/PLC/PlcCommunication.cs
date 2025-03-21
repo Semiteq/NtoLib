@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using EasyModbus;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
@@ -17,6 +18,23 @@ namespace NtoLib.Recipes.MbeTable.PLC
 
         private string _ip;
 
+        public bool CheckConnection(CommunicationSettings settings)
+        {
+            _ip = $"{settings.Ip1}.{settings.Ip2}.{settings.Ip3}.{settings.Ip4}";
+            var modbusClient = new ModbusClient(_ip, (int)settings.Port);
+            try
+            {
+                modbusClient.Connect();
+                modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1);
+                modbusClient.Disconnect();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
+        }
+
         public bool WriteRecipeToPlc(List<RecipeLine> recipe, CommunicationSettings settings)
         {
             try
@@ -25,21 +43,26 @@ namespace NtoLib.Recipes.MbeTable.PLC
                 var modbusClient = new ModbusClient(_ip, (int)settings.Port);
                 modbusClient.Connect();
 
-                RequestWritePermission(settings, modbusClient);
-                WriteRecipeData(settings, modbusClient, recipe);
+                if (!RequestWritePermission(settings, modbusClient))
+                    return false;
+
+                if (!WriteRecipeData(settings, modbusClient, recipe))
+                    return false;
+
                 CompleteWriteProcess(settings, modbusClient, recipe.Count);
 
                 modbusClient.Disconnect();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine(ex);
                 return false;
             }
 
             return true;
         }
 
-        private void RequestWritePermission(CommunicationSettings settings, ModbusClient modbusClient)
+        private bool RequestWritePermission(CommunicationSettings settings, ModbusClient modbusClient)
         {
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingRequest);
             if (modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0] != StateWritingAllowed)
@@ -47,12 +70,14 @@ namespace NtoLib.Recipes.MbeTable.PLC
                 Debug.WriteLine(
                     $"Controller is not ready for writing, state: {modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0]}");
                 StatusManager.WriteStatusMessage("Запись заблокирована контроллером", true);
+                return false;
             }
 
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), 0);
+            return true;
         }
 
-        private void WriteRecipeData(CommunicationSettings settings, ModbusClient modbusClient, List<RecipeLine> recipe)
+        private bool WriteRecipeData(CommunicationSettings settings, ModbusClient modbusClient, List<RecipeLine> recipe)
         {
             var (intArray, floatArray, boolArray) = PrepareRecipeData(settings, recipe);
             const int maxChunkSize = 123; // Modbus supports MAX 256 bytes per request (256 / 2 - 10)
@@ -61,20 +86,20 @@ namespace NtoLib.Recipes.MbeTable.PLC
             {
                 Debug.WriteLine($"Int area size exceeded: {intArray.Length} > {settings.IntAreaSize}");
                 StatusManager.WriteStatusMessage("Превышен размер области Int в ПЛК", true);
-                return;
+                return false;
             }
             if (floatArray.Length > settings.FloatAreaSize)
             {
                 Debug.WriteLine($"Float area size exceeded: {floatArray.Length} > {settings.FloatAreaSize}");
                 StatusManager.WriteStatusMessage("Превышен размер области Float в ПЛК", true);
-                return;
+                return false;
             }
 
             if (boolArray.Length > settings.BoolAreaSize)
             {
                 Debug.WriteLine($"Bool area size exceeded: {boolArray.Length} > {settings.BoolAreaSize}");
                 StatusManager.WriteStatusMessage("Превышен размер области Bool в ПЛК", true);
-                return;
+                return false;
             }
 
             if (intArray.Length > 0)
@@ -85,6 +110,8 @@ namespace NtoLib.Recipes.MbeTable.PLC
 
             if (boolArray.Length > 0)
                 WriteRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolArray, maxChunkSize);
+
+            return true;
         }
 
         private void WriteRegistersChunked(ModbusClient modbusClient, int baseAddress, int[] values, int maxChunkSize)
@@ -98,7 +125,6 @@ namespace NtoLib.Recipes.MbeTable.PLC
                 var chunk = new int[chunkSize];
                 Array.Copy(values, currentIndex, chunk, 0, chunkSize);
 
-                // адрес для записи смещается на текущий индекс
                 modbusClient.WriteMultipleRegisters(baseAddress + currentIndex, chunk);
                 currentIndex += chunkSize;
             }

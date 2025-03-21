@@ -1,9 +1,8 @@
 ﻿using System;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
-namespace NtoLib.Recipes.MbeTable.Tests
+namespace NtoLib.Test.MbeTable
 {
     [TestClass]
     public class RecipeTimeManagerTests
@@ -57,12 +56,11 @@ namespace NtoLib.Recipes.MbeTable.Tests
         public void ManageRecipeTimerTest_Inactive()
         {
             // Arrange: Create a RecipeTimeManager and a fake timer.
-            var loggerFactory = NullLoggerFactory.Instance;
             var manager = new RecipeTimeManager();
             var fakeTimer = new FakeCountTimer { RemainingTime = TimeSpan.FromSeconds(30) };
 
             // Act: Manage timer when recipe is inactive.
-            var result = manager.ManageRecipeTimer(false, fakeTimer, TimeSpan.FromSeconds(30), loggerFactory);
+            var result = manager.ManageRecipeTimer(false, fakeTimer, TimeSpan.FromSeconds(30));
 
             // Assert: When inactive, timer should be stopped and null returned.
             Assert.IsNull(result, "Inactive recipe should result in null timer.");
@@ -72,11 +70,10 @@ namespace NtoLib.Recipes.MbeTable.Tests
         public void ManageRecipeTimerTest_Active_StartsTimer()
         {
             // Arrange: Create a RecipeTimeManager.
-            var loggerFactory = NullLoggerFactory.Instance;
             var manager = new RecipeTimeManager();
 
             // Act: Manage timer when recipe is active and not running.
-            var result = manager.ManageRecipeTimer(true, null, TimeSpan.FromSeconds(30), loggerFactory);
+            var result = manager.ManageRecipeTimer(true, null, TimeSpan.FromSeconds(30));
 
             // Assert: A new timer should be created and be running.
             Assert.IsNotNull(result, "Active recipe should result in a non-null timer.");
