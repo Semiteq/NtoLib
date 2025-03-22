@@ -44,7 +44,7 @@ namespace NtoLib.Recipes.MbeTable
             if (!CheckRecipeCycles())
             {
                 button_save.Enabled = false;
-                StatusManager.WriteStatusMessage("Ошибка составления рецепта: Несоответствие команд FOR и END_FOR", true);
+                statusManager.WriteStatusMessage("Ошибка составления рецепта: Несоответствие команд FOR и END_FOR", true);
                 return;
             }
 
@@ -52,7 +52,7 @@ namespace NtoLib.Recipes.MbeTable
 
             if (_tableType == TableMode.Edit)
             {
-                StatusManager.WriteStatusMessage("Редактирование рецепта: рецепт корректный", false);
+                statusManager.WriteStatusMessage("Редактирование рецепта: рецепт корректный", false);
             }
 
             RecipeTimeManager.SetData(_tableData, dataGridView1);
@@ -108,7 +108,7 @@ namespace NtoLib.Recipes.MbeTable
             }
             catch (InvalidOperationException ex)
             {
-                StatusManager.WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
+                statusManager.WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
             }
         }
 
@@ -123,7 +123,7 @@ namespace NtoLib.Recipes.MbeTable
             }
             catch (InvalidOperationException ex)
             {
-                StatusManager.WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
+                statusManager.WriteStatusMessage($"Ошибка состаления списка аргументов: {ex.Message}", true);
             }
         }
     }

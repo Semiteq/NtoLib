@@ -129,6 +129,7 @@
     <Compile Include="Recipes\MbeTable\RecipeLines\ActionTarget.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeComparator.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\FlattenedRecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\ICountTimer.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\ILineChangeProcessor.cs" />
@@ -139,6 +140,7 @@
     <Compile Include="Recipes\MbeTable\PLC\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Params.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\CountTimer.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeFileReader.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableAddLine.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -149,7 +151,6 @@
     <Compile Include="Recipes\MbeTable\Table\ReadPins.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineFactory.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineParser.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\RecipeTimeManager.cs" />
     <Compile Include="Recipes\MbeTable\PLC\SettingsReader.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />

@@ -3,23 +3,33 @@ using System.Windows.Forms;
 
 namespace NtoLib.Recipes.MbeTable
 {
-    public static class StatusManager
-    {
-        public static Label DbgMsg { get; set; }
 
-        public static void WriteStatusMessage(string message, bool isError = false)
+    public interface IStatusManager
+    {
+        void WriteStatusMessage(string message, bool isError = false);
+    }
+    public class StatusManager : IStatusManager
+    {
+        private readonly Label DbgMsg;
+
+        public StatusManager(Label dbgMsg)
+        {
+            DbgMsg = dbgMsg;
+        }
+
+        public void WriteStatusMessage(string message, bool isError = false)
         {
             DbgMsg.Text = message;
             DbgMsg.BackColor = isError ? Color.OrangeRed : Color.White;
         }
 
-        public static void ClearStatusMessage()
+        public void ClearStatusMessage()
         {
             DbgMsg.Text = string.Empty;
             DbgMsg.BackColor = Color.White;
         }
 
-        public static void EnvalidateStatusMessage()
+        public void EnvalidateStatusMessage()
         {
             DbgMsg.Invalidate();
         }

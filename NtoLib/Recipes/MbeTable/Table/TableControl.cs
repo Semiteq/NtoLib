@@ -8,7 +8,6 @@ using System.Windows.Forms;
 using FB;
 using FB.VisualFB;
 using InSAT.OPC;
-using MasterSCADALib;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.RecipeLines;
@@ -73,6 +72,10 @@ namespace NtoLib.Recipes.MbeTable
         private int make_upload;
 
         private List<RecipeLine> _tableData = new();
+
+        private readonly StatusManager statusManager;
+        private readonly PlcCommunication plcCommunication;
+        private readonly RecipeFileReader recipeFileReader;
 
         #endregion
 
@@ -300,9 +303,9 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 _pathToXmlTableDefinition = value;
-                StatusManager.WriteStatusMessage("Описание таблицы будет изменено", false);
+                statusManager.WriteStatusMessage("Описание таблицы будет изменено", false);
                 ConfigureColumns(_tableType == TableMode.Edit);
-                StatusManager.WriteStatusMessage("Описание таблицы изменено", false);
+                statusManager.WriteStatusMessage("Описание таблицы изменено", false);
             }
         }
 
@@ -317,7 +320,10 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.Columns.Clear();
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
             dataGridView1.RowHeadersWidth = 90;
-            StatusManager.DbgMsg = DbgMsg;
+
+            statusManager = new(DbgMsg);
+            plcCommunication = new(statusManager);
+            recipeFileReader = new(openFileDialog1, statusManager);
         }
 
         #endregion
@@ -383,7 +389,7 @@ namespace NtoLib.Recipes.MbeTable
         /// </summary>
         private void ConfigureColumns(bool editMode)
         {
-            StatusManager.WriteStatusMessage("Подготовка таблицы. ");
+            statusManager.WriteStatusMessage("Подготовка таблицы. ");
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
 
@@ -453,7 +459,7 @@ namespace NtoLib.Recipes.MbeTable
 
             ChangeCellAlignment();
 
-            StatusManager.WriteStatusMessage("Таблица подготовлена. ");
+            statusManager.WriteStatusMessage("Таблица подготовлена. ");
         }
 
         /// <summary>
@@ -631,7 +637,7 @@ namespace NtoLib.Recipes.MbeTable
             ConfigureColumns(false);
             currentRecipeLine = 2;
             ChangeRowFont();
-            StatusManager.WriteStatusMessage(make_table_msg, false);
+            statusManager.WriteStatusMessage(make_table_msg, false);
             make_upload = 0;
         }
 
@@ -822,7 +828,7 @@ namespace NtoLib.Recipes.MbeTable
             }
             else
             {
-                StatusManager.WriteStatusMessage("Скорость не может быть равна 0", true);
+                statusManager.WriteStatusMessage("Скорость не может быть равна 0", true);
             }
         }
 
@@ -843,7 +849,7 @@ namespace NtoLib.Recipes.MbeTable
             }
             else
             {
-                StatusManager.WriteStatusMessage("Время не может быть равно 0", true);
+                statusManager.WriteStatusMessage("Время не может быть равно 0", true);
             }
         }
 
@@ -905,7 +911,7 @@ namespace NtoLib.Recipes.MbeTable
                     _loadDelay.Tick += (object sender2, EventArgs e2) =>
                     {
                         if (TryLoadRecipeFromPlc())
-                            StatusManager.WriteStatusMessage("Рецепт загружен из ПЛК");
+                            statusManager.WriteStatusMessage("Рецепт загружен из ПЛК");
 
                         _loadDelay.Stop();
                     };

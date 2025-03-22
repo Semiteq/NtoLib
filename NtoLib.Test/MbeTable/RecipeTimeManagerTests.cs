@@ -1,9 +1,16 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
 
 namespace NtoLib.Test.MbeTable
 {
+    // Dummy implementation for testing purposes
+    public class TestRecipeLine : RecipeLine
+    {
+        public TestRecipeLine() : base() { }
+        public ActionTime ActionTime => ActionTime.TimeSetpoint;
+        public override List<IDummyCell> Cells { get; } = new List<IDummyCell>();
+    }
+
     [TestClass]
     public class RecipeTimeManagerTests
     {
@@ -13,8 +20,8 @@ namespace NtoLib.Test.MbeTable
         //    // Arrange: Create a list of recipe lines with two TimeSetpoint actions.
         //    var recipeLines = new List<RecipeLine>
         //    {
-        //        new TestRecipeLine("Line1") { Duration = 10 },
-        //        new TestRecipeLine("Line2") { Duration = 20 }
+        //        new TestRecipeLine() { Duration = 10 },
+        //        new TestRecipeLine() { Duration = 20 }
         //    };
         //    var manager = new RecipeTimeManager();
 
@@ -37,8 +44,8 @@ namespace NtoLib.Test.MbeTable
         //    // Arrange: Create recipe lines using the concrete TestRecipeLine.
         //    var recipeLines = new List<RecipeLine>
         //    {
-        //        new TestRecipeLine("Line1") { Duration = 10 },
-        //        new TestRecipeLine("Line2") { Duration = 20 }
+        //        new TestRecipeLine() { Duration = 10 },
+        //        new TestRecipeLine() { Duration = 20 }
         //    };
         //    var manager = new RecipeTimeManager();
         //    manager.SetData(recipeLines, null);

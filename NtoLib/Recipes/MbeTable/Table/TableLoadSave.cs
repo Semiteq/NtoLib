@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using NtoLib.Properties;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.RecipeLines;
@@ -20,10 +19,11 @@ namespace NtoLib.Recipes.MbeTable
         private void LoadRecipeToView()
         {
             SettingsReader settingsReader = new(FBConnector);
+            RecipeComparator recipeComparator = new();
 
             if (!settingsReader.CheckQuality())
             {
-                StatusManager.WriteStatusMessage(
+                statusManager.WriteStatusMessage(
                     "Ошибка чтения настроек. Нет связи, продолжение загрузки рецепта не возможно", true);
             }
             else
@@ -50,10 +50,10 @@ namespace NtoLib.Recipes.MbeTable
                 }
 
                 if (num < 0)
-                    StatusManager.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
+                    statusManager.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
                 else if (num == 0)
                 {
-                    StatusManager.WriteStatusMessage("Не выделены отдельные области памяти", true);
+                    statusManager.WriteStatusMessage("Не выделены отдельные области памяти", true);
                 }
                 else
                 {
@@ -61,38 +61,37 @@ namespace NtoLib.Recipes.MbeTable
                     List<RecipeLine> recipe;
                     try
                     {
-                        recipe = ReadRecipeFromFile();
+                        recipe = recipeFileReader.Read();
                     }
                     catch (Exception ex)
                     {
-                        StatusManager.WriteStatusMessage(ex.Message, true);
+                        statusManager.WriteStatusMessage(ex.Message, true);
                         return;
                     }
 
                     if (recipe.Count == 0)
                     {
-                        StatusManager.WriteStatusMessage("Ошибка при чтении рецепта", true);
+                        statusManager.WriteStatusMessage("Ошибка при чтении рецепта", true);
                         return;
                     }
 
 
                     if (num < recipe.Count)
                     {
-                        StatusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
+                        statusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
                     }
                     else
                     {
-                        PlcCommunication plcCommunication = new();
 
                         if (!plcCommunication.CheckConnection(settings))
                         {
-                            StatusManager.WriteStatusMessage("Ошибка соединения с контроллером", true);
+                            statusManager.WriteStatusMessage("Ошибка соединения с контроллером", true);
                             return;
                         }
 
                         if (!plcCommunication.WriteRecipeToPlc(recipe, settings))
                         {
-                            StatusManager.WriteStatusMessage("Ошибка записи рецепта в контроллер", true);
+                            statusManager.WriteStatusMessage("Ошибка записи рецепта в контроллер", true);
                             return;
                         }
 
@@ -102,17 +101,17 @@ namespace NtoLib.Recipes.MbeTable
                         _tableData.Clear();
 
                         var recipeFromPlc = plcCommunication.LoadRecipeFromPlc(settings);
-                        if (recipeFromPlc == null)
+                        if (recipeFromPlc)
                         {
-                            StatusManager.WriteStatusMessage("Рецепт не удалось загрузить в контроллер", true);
+                            statusManager.WriteStatusMessage("Рецепт не удалось загрузить в контроллер", true);
                             return;
                         }
                         else
                         {
-                            if (CompareRecipes(recipe, recipeFromPlc))
-                                StatusManager.WriteStatusMessage("Рецепт успешно загружен в контроллер");
+                            if (recipeComparator.Compare(recipe, recipeFromPlc))
+                                statusManager.WriteStatusMessage("Рецепт успешно загружен в контроллер");
                             else
-                                StatusManager.WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!",
+                                statusManager.WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!",
                                     true);
                         }
 
@@ -133,12 +132,9 @@ namespace NtoLib.Recipes.MbeTable
             SettingsReader settingsReader = new(FBConnector);
             var commSettings = settingsReader.ReadTableSettings();
 
-            PlcCommunication plcCommunication = new();
-
-
             if (!plcCommunication.CheckConnection(commSettings))
             {
-                StatusManager.WriteStatusMessage("Нет соединения с ПЛК", true);
+                statusManager.WriteStatusMessage("Нет соединения с ПЛК", true);
                 return false;
             }
 
@@ -146,7 +142,7 @@ namespace NtoLib.Recipes.MbeTable
 
             if (recipe == null)
             {
-                StatusManager.WriteStatusMessage("Не удалось загрузить рецепт из ПЛК");
+                statusManager.WriteStatusMessage("Не удалось загрузить рецепт из ПЛК");
                 return false;
             }
 
@@ -160,32 +156,6 @@ namespace NtoLib.Recipes.MbeTable
             return true;
         }
 
-        private bool CompareRecipes(List<RecipeLine> recipe1, List<RecipeLine> recipe2)
-        {
-            if (recipe1.Count != recipe2.Count)
-                return false;
-
-            // not checking comments
-            for (var i = 0; i < recipe1.Count - 1; i++)
-            {
-                var cells1 = recipe1[i].Cells;
-                var cells2 = recipe2[i].Cells;
-
-                if (cells1.Count != cells2.Count)
-                    return false;
-
-                for (var j = 0; j < cells1.Count; j++)
-                {
-                    if (cells1[j].GetValue() == cells2[j].GetValue()) continue;
-                    Debug.WriteLine($"Cell {j} in row {i} differs: {cells1[j].GetValue()} != {cells2[j].GetValue()}");
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-
         private void LoadRecipeToEdit()
         {
             var reserveTableData = _tableData;
@@ -193,12 +163,12 @@ namespace NtoLib.Recipes.MbeTable
             try
             {
                 _tableData.Clear();
-                _tableData = ReadRecipeFromFile();
+                _tableData = recipeFileReader.Read();
                 FillCells(_tableData);
             }
             catch (Exception ex)
             {
-                StatusManager.WriteStatusMessage(ex.Message, true);
+                statusManager.WriteStatusMessage(ex.Message, true);
                 _tableData = reserveTableData;
             }
         }
@@ -238,47 +208,6 @@ namespace NtoLib.Recipes.MbeTable
 
             RefreshTable();
             isLoadingActive = false;
-        }
-
-
-        private List<RecipeLine> ReadRecipeFromFile()
-        {
-            var recipeLineList = new List<RecipeLine>();
-
-            try
-            {
-                using var stream = new FileStream(openFileDialog1.FileName, FileMode.OpenOrCreate);
-                using var streamReader = new StreamReader(stream);
-
-                var isHeader = true;
-
-                while (streamReader.ReadLine() is { } line)
-                {
-                    if (isHeader)
-                    {
-                        isHeader = false;
-                        continue;
-                    }
-
-                    try
-                    {
-                        var recipeLine = RecipeLineParser.Parse(line);
-                        recipeLineList.Add(recipeLine);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Ошибка при разборе строки {recipeLineList.Count + 1}: {ex.Message}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                StatusManager.WriteStatusMessage($"Ошибка при загрузке файла: {ex.Message}", true);
-                throw;
-            }
-
-            StatusManager.WriteStatusMessage($"Данные загружены из файла {openFileDialog1.FileName}", false);
-            return recipeLineList;
         }
 
 
@@ -344,11 +273,11 @@ namespace NtoLib.Recipes.MbeTable
                     }
                 }
 
-                StatusManager.WriteStatusMessage($"Данные сохранены в файл {saveFileDialog1.FileName}", false);
+                statusManager.WriteStatusMessage($"Данные сохранены в файл {saveFileDialog1.FileName}", false);
             }
             catch (Exception ex)
             {
-                StatusManager.WriteStatusMessage($"Ошибка при сохранении: {ex.Message}", true);
+                statusManager.WriteStatusMessage($"Ошибка при сохранении: {ex.Message}", true);
             }
         }
     }

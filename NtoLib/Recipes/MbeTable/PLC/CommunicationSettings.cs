@@ -1,6 +1,6 @@
 ﻿namespace NtoLib.Recipes.MbeTable.PLC
 {
-    internal class CommunicationSettings
+    public class CommunicationSettings
     {
         public MbeTableFB.ControllerProtocol Protocol;
         public MbeTableFB.SlmpArea SlmpArea;
