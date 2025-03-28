@@ -41,7 +41,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void RefreshTable()
         {
-            if (!CheckRecipeCycles())
+            if (!CheckRecipeCycles(_tableData))
             {
                 button_save.Enabled = false;
                 statusManager.WriteStatusMessage("Ошибка составления рецепта: Несоответствие команд FOR и END_FOR", true);

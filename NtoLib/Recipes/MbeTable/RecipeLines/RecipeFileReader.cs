@@ -1,10 +1,10 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Actions;
+using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
@@ -15,191 +15,132 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 
     public class RecipeFileReader : IRecipeFileReader
     {
+        private const char CsvSeparator = ';';
         private readonly OpenFileDialog _openFileDialog;
         private readonly IStatusManager _statusManager;
 
         public RecipeFileReader(OpenFileDialog openFileDialog, IStatusManager statusManager)
         {
-            _openFileDialog = openFileDialog;
-            _statusManager = statusManager;
+            _openFileDialog = openFileDialog ?? throw new ArgumentNullException(nameof(openFileDialog));
+            _statusManager = statusManager ?? throw new ArgumentNullException(nameof(statusManager));
         }
 
         public List<RecipeLine> Read()
         {
-            var recipeLineList = new List<RecipeLine>();
+            if (!File.Exists(_openFileDialog.FileName))
+            {
+                throw new Exception($"Файл не найден: {_openFileDialog.FileName}");
+            }
 
             try
             {
-                // Use FileMode.Open to avoid creating a new file
-                using var stream = new FileStream(_openFileDialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = new StreamReader(stream);
+                var parsedRecipes = ParseFile(_openFileDialog.FileName);
 
-                // Read header line and discard it
-                if (reader.ReadLine() is null)
-                {
-                    _statusManager.WriteStatusMessage("Файл пуст.", true);
-                    Debug.WriteLine("File is empty.");
-                    return recipeLineList;
-                }
+                if (!CheckRecipeCycles(parsedRecipes))
+                    throw new Exception($"Ошибка синтаксиса For/EndFor");
 
-                var lineNumber = 2; // Header is line 1
-                string? line;
-                while ((line = reader.ReadLine()) is not null)
-                {
-                    if (string.IsNullOrWhiteSpace(line))
-                    {
-                        lineNumber++;
-                        continue;
-                    }
-
-                    var recipeLine = TryParseLine(line, lineNumber);
-                    if (recipeLine is null)
-                    {
-                        // Abort processing on parsing error
-                        return new List<RecipeLine>();
-                    }
-
-                    recipeLineList.Add(recipeLine);
-                    lineNumber++;
-                }
+                return parsedRecipes;
             }
             catch (Exception ex)
             {
-                _statusManager.WriteStatusMessage($"Ошибка при загрузке файла: {ex.Message}", true);
-                Debug.WriteLine($"File load error: {ex.Message}");
-                return new List<RecipeLine>();
+                throw new Exception($"Ошибка при загрузке файла: {ex.Message}");
             }
-
-            _statusManager.WriteStatusMessage($"Данные загружены из файла {_openFileDialog.FileName}", false);
-            return recipeLineList;
         }
 
-        private RecipeLine? TryParseLine(string line, int lineNumber)
+        private List<RecipeLine> ParseFile(string filePath)
         {
-            var recipeLine = Parse(line);
-            if (recipeLine is null)
-            {
-                _statusManager.WriteStatusMessage($"Ошибка при разборе строки {lineNumber}.", true);
-                Debug.WriteLine($"Failed to parse line {lineNumber}.");
-            }
-            return recipeLine;
-        }
+            var lines = File.ReadAllLines(filePath).Skip(1); // Skip header
+            var result = new List<RecipeLine>();
 
-        // Changed from static to instance method to use _statusManager for logging errors.
-        private RecipeLine? Parse(string line)
-        {
-            var cellStrings = SplitLine(line, Params.ColumnCount);
+            foreach (var (csvLine, index) in lines.Select((value, i) => (value, i)))
+            {
+                if (string.IsNullOrWhiteSpace(csvLine)) continue;
 
-            if (cellStrings.Count < Params.ColumnCount)
-            {
-                _statusManager.WriteStatusMessage("Недостаточно столбцов в строке.", true);
-                Debug.WriteLine("Not enough columns in the line.");
-                return null;
-            }
-
-            var command = ParseCommand(cellStrings[Params.ActionIndex]);
-            if (command is null)
-            {
-                return null;
-            }
-
-            if (!TryParseInt(cellStrings[Params.ActionTargetIndex], "Объект", out var number))
-            {
-                return null;
-            }
-            if (!TryParseFloat(cellStrings[Params.InitialValueIndex], "Нач.значение", out var initialValue))
-            {
-                return null;
-            }
-            if (!TryParseFloat(cellStrings[Params.SetpointIndex], "Задание", out var setpoint))
-            {
-                return null;
-            }
-            if (!TryParseFloat(cellStrings[Params.SpeedIndex], "Скорость", out var speed))
-            {
-                return null;
-            }
-            if (!TryParseFloat(cellStrings[Params.TimeSetpointIndex], "Длительность", out var timeSetpoint))
-            {
-                return null;
-            }
-
-            var comment = cellStrings.Count > Params.CommentIndex ? cellStrings[Params.CommentIndex] ?? string.Empty : string.Empty;
-
-            return RecipeLineFactory.NewLine(command, number, initialValue, setpoint, speed, timeSetpoint, comment);
-        }
-
-        /// <summary>
-        /// Splits a semicolon-separated string into exactly columnCount cells.
-        /// If there are fewer columns, empty strings are appended.
-        /// </summary>
-        private static List<string> SplitLine(string input, int columnCount)
-        {
-            // Split line without omitting empty entries
-            var parts = input.Split(new[] { ';' }, StringSplitOptions.None);
-            var cells = new List<string>(parts);
-            // Append empty strings if necessary
-            while (cells.Count < columnCount)
-            {
-                cells.Add(string.Empty);
-            }
-            return cells;
-        }
-
-        /// <summary>
-        /// Parses the command from the given cell value.
-        /// </summary>
-        private string? ParseCommand(string commandCell)
-        {
-            if (int.TryParse(commandCell, out var commandId))
-            {
-                var command = ActionManager.GetActionNameById(commandId);
-                if (command is not null)
+                try
                 {
-                    return command;
+                    result.Add(ParseLine(csvLine));
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Ошибка в строке {index + 1}/{lines.Count()}: {ex.Message}");
                 }
             }
-            _statusManager.WriteStatusMessage("Не удалось распарсить поле 'Действие'.", true);
-            Debug.WriteLine($"Failed to parse 'Действие' field. Input: {commandCell}");
-            return null;
+
+            _statusManager.WriteStatusMessage($"Данные загружены из файла {filePath}", false);
+            return result;
         }
 
-        /// <summary>
-        /// Tries to parse an integer value; logs error if parsing fails.
-        /// </summary>
-        private bool TryParseInt(string input, string fieldName, out int value)
+        private RecipeLine ParseLine(string csvLine)
         {
-            if (string.IsNullOrEmpty(input))
+            var textLine = csvLine.Split(CsvSeparator)
+                .Select(x => x.Trim())
+                .ToArray();
+
+            if (textLine.Length < Params.ColumnCount)
             {
-                value = 0;
-                return true;
+                throw new ArgumentException(
+                    $"Недостаточно колонок. Ожидалось: {Params.ColumnCount}, получено: {textLine.Length}");
             }
-            if (int.TryParse(input, out value))
-            {
-                return true;
-            }
-            _statusManager.WriteStatusMessage($"Не удалось распарсить поле '{fieldName}'.", true);
-            Debug.WriteLine($"Failed to parse integer for field '{fieldName}'. Input: {input}");
-            return false;
+
+            return RecipeLineFactory.NewLine(
+                ParseCommand(textLine, Params.ActionIndex),
+
+                ParseInt(textLine, Params.ActionTargetIndex),
+
+                ParseFloat(textLine, Params.InitialValueIndex),
+                ParseFloat(textLine, Params.SetpointIndex),
+                ParseFloat(textLine, Params.SpeedIndex),
+                ParseFloat(textLine, Params.TimeSetpointIndex),
+
+                ParseString(textLine, Params.CommentIndex)
+            );
         }
 
-        /// <summary>
-        /// Tries to parse a float value; logs error if parsing fails.
-        /// </summary>
-        private bool TryParseFloat(string input, string fieldName, out float value)
+        private string ParseCommand(string[] textLine, int index)
         {
-            if (string.IsNullOrEmpty(input))
+            if (!int.TryParse(textLine[index], out var commandId))
             {
-                value = 0f;
-                return true;
+                throw new FormatException($"Некорректный формат действия: {textLine[index]}");
             }
-            if (float.TryParse(input, out value))
+
+            return ActionManager.GetActionNameById(commandId)
+                   ?? throw new ArgumentException($"Неизвестный код действия: {commandId}");
+        }
+
+        private static int ParseInt(string[] textLine, int index) =>
+            string.IsNullOrEmpty(textLine[index]) ? 0 :
+            int.TryParse(textLine[index], out var result) ? result :
+            throw new FormatException($"Некорректное значение поля '{Params.ColumnNames[index]}': {textLine}");
+
+        private static float ParseFloat(string[] textLine, int index) =>
+            string.IsNullOrEmpty(textLine[index]) ? 0f :
+            float.TryParse(textLine[index], out var result) ? result :
+            throw new FormatException($"Некорректное значение поля '{Params.ColumnNames[index]}': {textLine}");
+
+        private static string ParseString(string[] textLine, int index) =>
+            textLine.Length > index ? textLine[index] : string.Empty;
+
+        private bool CheckRecipeCycles(List<RecipeLine> recipe)
+        {
+            var cycleDepth = 0;
+
+            foreach (var line in recipe)
             {
-                return true;
+                if (cycleDepth > Params.MaxLoopCount)
+                    return false;
+
+                cycleDepth += line switch
+                {
+                    For_Loop => 1,
+                    EndFor_Loop when cycleDepth > 0 => -1,
+                    EndFor_Loop => throw new InvalidOperationException("Найден EndFor без соответствующего For"),
+                    _ => 0
+                };
+
+                line.TabulateLevel = cycleDepth;
             }
-            _statusManager.WriteStatusMessage($"Не удалось распарсить поле '{fieldName}'.", true);
-            Debug.WriteLine($"Failed to parse float for field '{fieldName}'. Input: {input}");
-            return false;
+
+            return cycleDepth == 0;
         }
     }
 }

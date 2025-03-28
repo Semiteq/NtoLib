@@ -1,15 +1,17 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Actions.TableLines;
+using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Recipes.MbeTable
 {
     public partial class TableControl
     {
-        private bool CheckRecipeCycles()
+        private bool CheckRecipeCycles(List<RecipeLine> recipe)
         {
             var cycleDepth = 0;
-            foreach (var recipeLine in _tableData)
+            foreach (var recipeLine in recipe)
             {
                 if (cycleDepth > Params.MaxLoopCount)
                     return false;

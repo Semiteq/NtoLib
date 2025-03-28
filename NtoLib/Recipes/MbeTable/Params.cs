@@ -1,6 +1,6 @@
 ﻿namespace NtoLib.Recipes.MbeTable
 {
-    internal readonly struct Params
+    internal readonly ref struct Params
     {
         public const uint UFloatBaseAddr = 0;
         public const uint UFloatAreaSize = 100;
@@ -40,13 +40,13 @@
         public const int IdHmiActualLine = 1016;
         public const int IdHmiStatus = 1017;
 
-        //Номер пина, с которого начинается нумерация пинов с информацией о названиях заслонок в MasterSCADA
+        // Номер пина, с которого начинается нумерация пинов с информацией о названиях заслонок в MasterSCADA
         public const int IdFirstShutterName = 201;
 
-        //Номер пина, с которого начинается нумерация пинов с информацией о названиях нагревателей в MasterSCADA
+        // Номер пина, с которого начинается нумерация пинов с информацией о названиях нагревателей в MasterSCADA
         public const int IdFirstHeaterName = 301;
 
-        //Номер пина, с которого начинается нумерация пинов с информацией о названиях линий NH3 в MasterSCADA
+        // Номер пина, с которого начинается нумерация пинов с информацией о названиях линий NH3 в MasterSCADA
         public const int IdFirstNitrogenSourceName = 401;
 
         public const int ShutterNameQuantity = 32;
@@ -54,7 +54,7 @@
         public const int NitrogenSourceNameQuantity = 3;
         public const int MaxLoopCount = 3;
 
-        //Номера столбцов соответствующих параметров в таблице
+        // Номера столбцов соответствующих параметров в таблице
         public const int ActionIndex = 0;
         public const int ActionTargetIndex = 1;
         public const int InitialValueIndex = 2;
@@ -64,11 +64,21 @@
         public const int RecipeTimeIndex = 6;
         public const int CommentIndex = 7;
 
+        // Названия столбцов в таблице
+        public static readonly string[] ColumnNames = { "Действие",
+                                                        "Объект",
+                                                        "Нач.значение",
+                                                        "Задание",
+                                                        "Скорость",
+                                                        "Длительность",
+                                                        "Время",
+                                                        "Комментарий" };
+
         // Количество столбцов в таблице соответствующих типов для передачи в PLC
         public const int IntColumNum = 2;
         public const int FloatColumNum = 4;
 
-        //Общее число столбцов в UI таблице
+        // Общее число столбцов в UI таблице
         public const int ColumnCount = 8;
     }
 }

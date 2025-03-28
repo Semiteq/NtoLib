@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using EasyModbus;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
@@ -9,8 +10,11 @@ namespace NtoLib.Recipes.MbeTable.PLC
 {
     public interface IPlcCommunication
     {
+        // Returns true if connection check succeeded, otherwise throws an exception
         bool CheckConnection(CommunicationSettings settings);
+        // Returns true if recipe successfully written, otherwise throws an exception
         bool WriteRecipeToPlc(List<RecipeLine> recipe, CommunicationSettings settings);
+        // Returns recipe lines if successful, otherwise throws an exception
         List<RecipeLine> LoadRecipeFromPlc(CommunicationSettings settings);
     }
 
@@ -28,27 +32,23 @@ namespace NtoLib.Recipes.MbeTable.PLC
         // Maximum registers per Modbus request chunk (calculation: 256 bytes / 2 - overhead)
         private const int MaxChunkSize = 123;
 
-        private readonly IStatusManager statusManager;
-
-        public PlcCommunication(IStatusManager StatusManager)
-        {
-            statusManager = StatusManager;
-        }
-
         public bool CheckConnection(CommunicationSettings settings)
         {
             var ip = BuildIpString(settings);
             var modbusClient = new ModbusClient(ip, (int)settings.Port);
-
             try
             {
+                Debug.WriteLine($"[CheckConnection] Attempting connection to {ip}:{settings.Port}");
                 modbusClient.Connect();
+                // Try reading a single register to verify connection
                 modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1);
+                Debug.WriteLine("[CheckConnection] Connection successful.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex);
-                return false;
+                // Log error with stack trace and rethrow
+                Debug.WriteLine($"[CheckConnection] Exception during connection: {ex}");
+                throw;
             }
             finally
             {
@@ -63,27 +63,25 @@ namespace NtoLib.Recipes.MbeTable.PLC
             var modbusClient = new ModbusClient(ip, (int)settings.Port);
             try
             {
+                Debug.WriteLine($"[WriteRecipeToPlc] Connecting to PLC at {ip}:{settings.Port}");
                 modbusClient.Connect();
 
                 // Request permission for writing
-                if (!RequestWritePermission(settings, modbusClient, statusManager))
-                {
-                    return false;
-                }
+                RequestWritePermission(settings, modbusClient);
+                Debug.WriteLine("[WriteRecipeToPlc] Write permission granted.");
 
                 // Write recipe data to PLC
-                if (!WriteRecipeData(settings, modbusClient, recipe, statusManager))
-                {
-                    return false;
-                }
+                WriteRecipeData(settings, modbusClient, recipe);
+                Debug.WriteLine("[WriteRecipeToPlc] Recipe data written successfully.");
 
                 // Complete writing process by informing PLC about new recipe count
                 CompleteWriteProcess(settings, modbusClient, recipe.Count);
+                Debug.WriteLine("[WriteRecipeToPlc] Write process completed.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex);
-                return false;
+                Debug.WriteLine($"[WriteRecipeToPlc] Exception during write process: {ex}");
+                throw;
             }
             finally
             {
@@ -98,13 +96,16 @@ namespace NtoLib.Recipes.MbeTable.PLC
             var modbusClient = new ModbusClient(ip, (int)settings.Port);
             try
             {
+                Debug.WriteLine($"[LoadRecipeFromPlc] Connecting to PLC at {ip}:{settings.Port}");
                 modbusClient.Connect();
-                return ReadRecipeData(settings, modbusClient, statusManager);
+                var recipeLines = ReadRecipeData(settings, modbusClient);
+                Debug.WriteLine($"[LoadRecipeFromPlc] Loaded {recipeLines.Count} recipe lines.");
+                return recipeLines;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error reading recipe from PLC {ip}: {ex.Message}");
-                return null;
+                Debug.WriteLine($"[LoadRecipeFromPlc] Exception during read process: {ex}");
+                throw;
             }
             finally
             {
@@ -118,80 +119,98 @@ namespace NtoLib.Recipes.MbeTable.PLC
             return $"{settings.Ip1}.{settings.Ip2}.{settings.Ip3}.{settings.Ip4}";
         }
 
-        // Request write permission from the controller
-        private bool RequestWritePermission(CommunicationSettings settings, ModbusClient modbusClient, IStatusManager? statusManager)
+        // Request write permission from the controller. Throws exception if not allowed.
+        private void RequestWritePermission(CommunicationSettings settings, ModbusClient modbusClient)
         {
-            modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingRequest);
+            const int maxAttempts = 5;
+            const int retryDelay = 50;
+            Debug.WriteLine("[RequestWritePermission] Requesting write permission.");
 
-            var state = modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0];
-            if (state != StateWritingAllowed)
+            for (var attempt = 0; attempt < maxAttempts; attempt++)
             {
-                Debug.WriteLine($"Controller is not ready for writing, state: {state}");
-                statusManager?.WriteStatusMessage("Запись заблокирована контроллером", true);
-                return false;
+                try
+                {
+                    // Request write permission 
+                    modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingRequest);
+                    Thread.Sleep(retryDelay * attempt);
+
+                    // Check controller state to see if writing is allowed
+                    var state = modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0];
+
+                    if (state == StateWritingAllowed)
+                    {
+                        // Clear previous recipe count if write permission granted
+                        modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), 0);
+                        Debug.WriteLine("[RequestWritePermission] Write permission granted, previous recipe count cleared.");
+                        return;
+                    }
+
+                    Debug.WriteLine($"[RequestWritePermission] Attempt {attempt + 1} failed, controller state: {state}");
+                    Thread.Sleep(retryDelay);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[RequestWritePermission] Communication error on attempt {attempt + 1}: {ex.Message}");
+                    if (attempt == maxAttempts - 1) throw;
+                }
             }
 
-            // Clear previous recipe count
-            modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), 0);
-            return true;
+            throw new Exception("[RequestWritePermission] Write permission denied: maximum attempts exceeded");
         }
 
         // Write recipe data to PLC with chunked register writing
-        private bool WriteRecipeData(CommunicationSettings settings, ModbusClient modbusClient, List<RecipeLine> recipe, IStatusManager? statusManager)
+        private void WriteRecipeData(CommunicationSettings settings, ModbusClient modbusClient, List<RecipeLine> recipe)
         {
             var (intArray, floatArray, boolArray) = PrepareRecipeData(settings, recipe);
 
             if (intArray.Length > settings.IntAreaSize)
-            {
-                Debug.WriteLine($"Int area size exceeded: {intArray.Length} > {settings.IntAreaSize}");
-                statusManager?.WriteStatusMessage("Превышен размер области Int в ПЛК", true);
-                return false;
-            }
+                throw new Exception($"[WriteRecipeData] PLC Int area size exceeded: {intArray.Length} > {settings.IntAreaSize}");
+
             if (floatArray.Length > settings.FloatAreaSize)
-            {
-                Debug.WriteLine($"Float area size exceeded: {floatArray.Length} > {settings.FloatAreaSize}");
-                statusManager?.WriteStatusMessage("Превышен размер области Float в ПЛК", true);
-                return false;
-            }
+                throw new Exception($"[WriteRecipeData] PLC Float area size exceeded: {floatArray.Length} > {settings.FloatAreaSize}");
+
             if (boolArray.Length > settings.BoolAreaSize)
-            {
-                Debug.WriteLine($"Bool area size exceeded: {boolArray.Length} > {settings.BoolAreaSize}");
-                statusManager?.WriteStatusMessage("Превышен размер области Bool в ПЛК", true);
-                return false;
-            }
+                throw new Exception($"[WriteRecipeData] PLC Bool area size exceeded: {boolArray.Length} > {settings.BoolAreaSize}");
 
             if (intArray.Length > 0)
-                WriteRegistersChunked(modbusClient, (int)settings.IntBaseAddr, intArray);
+                TryWriteRegistersChunked(modbusClient, (int)settings.IntBaseAddr, intArray);
 
             if (floatArray.Length > 0)
-                WriteRegistersChunked(modbusClient, (int)settings.FloatBaseAddr, floatArray);
+                TryWriteRegistersChunked(modbusClient, (int)settings.FloatBaseAddr, floatArray);
 
             if (boolArray.Length > 0)
-                WriteRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolArray);
-
-            return true;
+                TryWriteRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolArray);
         }
 
         // Write registers in chunks to avoid exceeding Modbus request size
-        private void WriteRegistersChunked(ModbusClient modbusClient, int baseAddress, int[] values)
+        private void TryWriteRegistersChunked(ModbusClient modbusClient, int baseAddress, int[] values)
         {
-            var totalRegisters = values.Length;
-            var currentIndex = 0;
-
-            while (currentIndex < totalRegisters)
+            try
             {
-                var chunkSize = Math.Min(MaxChunkSize, totalRegisters - currentIndex);
-                var chunk = new int[chunkSize];
-                Array.Copy(values, currentIndex, chunk, 0, chunkSize);
+                var totalRegisters = values.Length;
+                var currentIndex = 0;
 
-                modbusClient.WriteMultipleRegisters(baseAddress + currentIndex, chunk);
-                currentIndex += chunkSize;
+                while (currentIndex < totalRegisters)
+                {
+                    var chunkSize = Math.Min(MaxChunkSize, totalRegisters - currentIndex);
+                    var chunk = new int[chunkSize];
+                    Array.Copy(values, currentIndex, chunk, 0, chunkSize);
+
+                    modbusClient.WriteMultipleRegisters(baseAddress + currentIndex, chunk);
+                    Debug.WriteLine($"[TryWriteRegistersChunked] Written chunk at address {baseAddress + currentIndex} with {chunkSize} registers.");
+                    currentIndex += chunkSize;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"[TryWriteRegistersChunked] Error writing data in chunks: {ex.Message}");
             }
         }
 
         // Complete the write process by setting recipe count and resetting write command
         private void CompleteWriteProcess(CommunicationSettings settings, ModbusClient modbusClient, int recipeCount)
         {
+            Debug.WriteLine("[CompleteWriteProcess] Completing write process.");
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), (ushort)recipeCount);
             modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingNotActive);
         }
@@ -199,7 +218,7 @@ namespace NtoLib.Recipes.MbeTable.PLC
         // Prepare data arrays from the recipe for writing to PLC
         private (int[] intArray, int[] floatArray, int[] boolArray) PrepareRecipeData(CommunicationSettings settings, List<RecipeLine> recipe)
         {
-            // todo: boolArray remains empty, data preparation required.
+            // Note: boolArray remains empty; data preparation for boolean values should be implemented.
             var floatArray = new int[recipe.Count * settings.FloatColumNum * 2];
             var intArray = new int[recipe.Count * settings.IntColumNum];
             var boolArray = new int[recipe.Count * settings.BoolColumNum / 16 + (recipe.Count * settings.BoolColumNum % 16 > 0 ? 1 : 0)];
@@ -233,18 +252,18 @@ namespace NtoLib.Recipes.MbeTable.PLC
             return (intArray, floatArray, boolArray);
         }
 
-        // Read recipe data from PLC, including int, float и bool arrays
-        private List<RecipeLine> ReadRecipeData(CommunicationSettings settings, ModbusClient modbusClient, IStatusManager? statusManager)
+        // Read recipe data from PLC, including int, float and bool arrays
+        private List<RecipeLine> ReadRecipeData(CommunicationSettings settings, ModbusClient modbusClient)
         {
+            Debug.WriteLine("[ReadRecipeData] Reading control data.");
             var controlData = modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 3);
+
             if (controlData[0] != StateIdle && controlData[0] != StateWritingBlocked)
-            {
-                Debug.WriteLine($"Controller is not ready for reading, state: {controlData[0]}");
-                statusManager?.WriteStatusMessage("Контроллер не готов к чтению", true);
-            }
+                throw new Exception($"[ReadRecipeData] Controller not ready for reading, state: {controlData[0]}");
 
             var capacity = controlData[2];
             var data = new List<RecipeLine>(capacity);
+
             if (capacity <= 0)
                 return data;
 
@@ -252,6 +271,7 @@ namespace NtoLib.Recipes.MbeTable.PLC
             var floatQuantity = capacity * settings.FloatColumNum * 2;
             var boolQuantity = capacity * settings.BoolColumNum / 16 + (capacity * settings.BoolColumNum % 16 > 0 ? 1 : 0);
 
+            Debug.WriteLine($"[ReadRecipeData] Reading {intQuantity} int, {floatQuantity} float and {boolQuantity} bool registers.");
             var intData = intQuantity > 0 ? ReadRegistersChunked(modbusClient, (int)settings.IntBaseAddr, intQuantity) : Array.Empty<int>();
             var floatData = floatQuantity > 0 ? ReadRegistersChunked(modbusClient, (int)settings.FloatBaseAddr, floatQuantity) : Array.Empty<int>();
             var boolData = boolQuantity > 0 ? ReadRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolQuantity) : Array.Empty<int>();
@@ -274,9 +294,9 @@ namespace NtoLib.Recipes.MbeTable.PLC
                 var chunkSize = Math.Min(MaxChunkSize, totalRegisters - currentIndex);
                 var chunk = modbusClient.ReadHoldingRegisters(baseAddress + currentIndex, chunkSize);
                 Array.Copy(chunk, 0, result, currentIndex, chunkSize);
+                Debug.WriteLine($"[ReadRegistersChunked] Read chunk from address {baseAddress + currentIndex} of size {chunkSize}.");
                 currentIndex += chunkSize;
             }
-
             return result;
         }
     }

@@ -18,110 +18,130 @@ namespace NtoLib.Recipes.MbeTable
 
         private void LoadRecipeToView()
         {
-            SettingsReader settingsReader = new(FBConnector);
-            RecipeComparator recipeComparator = new();
 
+            var settingsReader = new SettingsReader(FBConnector);
+            var recipeComparator = new RecipeComparator();
+
+            if (!TryGetSettings(settingsReader, out var settings))
+                return;
+
+            var maxRows = CalculateMaxRows(settings);
+            if (maxRows <= 0)
+                return;
+
+            List<RecipeLine> recipe;
+
+            try
+            {
+                recipe = recipeFileReader.Read();
+            }
+            catch (Exception ex)
+            {
+                statusManager.WriteStatusMessage(ex.Message, true);
+                Debug.WriteLine(ex);
+                return;
+            }
+
+            if (recipe == null || recipe.Count == 0)
+                return;
+
+            if (maxRows < recipe.Count)
+            {
+                statusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
+                return;
+            }
+
+            if (!TryWriteAndVerifyRecipe(recipe, settings, recipeComparator))
+                return;
+
+            UpdateTableView(recipe);
+        }
+
+        private bool TryGetSettings(SettingsReader settingsReader, out CommunicationSettings settings)
+        {
+            settings = null;
             if (!settingsReader.CheckQuality())
             {
                 statusManager.WriteStatusMessage(
                     "Ошибка чтения настроек. Нет связи, продолжение загрузки рецепта не возможно", true);
+                return false;
             }
-            else
+
+            settings = settingsReader.ReadTableSettings();
+            return true;
+        }
+
+        private int CalculateMaxRows(CommunicationSettings settings)
+        {
+            int maxRows = -1;
+
+            if (settings.FloatColumNum > 0)
+                maxRows = (int)settings.FloatAreaSize / 2 / settings.FloatColumNum;
+
+            if (settings.IntColumNum > 0)
+                maxRows = maxRows < 0
+                    ? (int)settings.IntAreaSize / settings.IntColumNum
+                    : Math.Min(maxRows, (int)settings.IntAreaSize / settings.IntColumNum);
+
+            if (settings.BoolColumNum > 0)
+                maxRows = maxRows < 0
+                    ? (int)settings.BoolAreaSize * 16 / settings.BoolColumNum
+                    : Math.Min(maxRows, (int)settings.BoolAreaSize * 16 / settings.BoolColumNum);
+
+            if (maxRows < 0)
+                statusManager.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
+            else if (maxRows == 0)
+                statusManager.WriteStatusMessage("Не выделены отдельные области памяти", true);
+
+            return maxRows;
+        }
+
+        private bool TryWriteAndVerifyRecipe(List<RecipeLine> recipe, CommunicationSettings settings,
+            RecipeComparator recipeComparator)
+        {
+            if (!plcCommunication.CheckConnection(settings))
             {
-                CommunicationSettings settings = settingsReader.ReadTableSettings();
-
-                int num = -1;
-                if (settings.FloatColumNum > 0)
-                    num = (int)settings.FloatAreaSize / 2 / settings.FloatColumNum;
-                if (settings.IntColumNum > 0)
-                {
-                    if (num < 0)
-                        num = (int)settings.IntAreaSize / settings.IntColumNum;
-                    else if ((int)settings.IntAreaSize / settings.IntColumNum < num)
-                        num = (int)settings.IntAreaSize / settings.IntColumNum;
-                }
-
-                if (settings.BoolColumNum > 0)
-                {
-                    if (num < 0)
-                        num = (int)settings.BoolAreaSize * 16 / settings.BoolColumNum;
-                    else if ((int)settings.BoolAreaSize * 16 / settings.BoolColumNum < num)
-                        num = (int)settings.BoolAreaSize * 16 / settings.BoolColumNum;
-                }
-
-                if (num < 0)
-                    statusManager.WriteStatusMessage("Описание не загружено или ошибки при загрузки описания", true);
-                else if (num == 0)
-                {
-                    statusManager.WriteStatusMessage("Не выделены отдельные области памяти", true);
-                }
-                else
-                {
-                    List<RecipeLine> recipeLineList = new();
-                    List<RecipeLine> recipe;
-                    try
-                    {
-                        recipe = recipeFileReader.Read();
-                    }
-                    catch (Exception ex)
-                    {
-                        statusManager.WriteStatusMessage(ex.Message, true);
-                        return;
-                    }
-
-                    if (recipe.Count == 0)
-                    {
-                        statusManager.WriteStatusMessage("Ошибка при чтении рецепта", true);
-                        return;
-                    }
-
-
-                    if (num < recipe.Count)
-                    {
-                        statusManager.WriteStatusMessage("Слишком длинный рецепт, загрузка не возможна", true);
-                    }
-                    else
-                    {
-
-                        if (!plcCommunication.CheckConnection(settings))
-                        {
-                            statusManager.WriteStatusMessage("Ошибка соединения с контроллером", true);
-                            return;
-                        }
-
-                        if (!plcCommunication.WriteRecipeToPlc(recipe, settings))
-                        {
-                            statusManager.WriteStatusMessage("Ошибка записи рецепта в контроллер", true);
-                            return;
-                        }
-
-                        Thread.Sleep(200);
-
-                        dataGridView1.Rows.Clear();
-                        _tableData.Clear();
-
-                        var recipeFromPlc = plcCommunication.LoadRecipeFromPlc(settings);
-                        if (recipeFromPlc)
-                        {
-                            statusManager.WriteStatusMessage("Рецепт не удалось загрузить в контроллер", true);
-                            return;
-                        }
-                        else
-                        {
-                            if (recipeComparator.Compare(recipe, recipeFromPlc))
-                                statusManager.WriteStatusMessage("Рецепт успешно загружен в контроллер");
-                            else
-                                statusManager.WriteStatusMessage("Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!",
-                                    true);
-                        }
-
-                        foreach (RecipeLine line in recipe)
-                            AddLineToRecipe(line, true);
-
-                        RefreshTable();
-                    }
-                }
+                statusManager.WriteStatusMessage("Ошибка соединения с контроллером", true);
+                return false;
             }
+
+            if (!plcCommunication.WriteRecipeToPlc(recipe, settings))
+            {
+                statusManager.WriteStatusMessage("Ошибка записи рецепта в контроллер", true);
+                return false;
+            }
+
+            Thread.Sleep(200);
+
+            List<RecipeLine> recipeFromPlc;
+
+            try
+            {
+                recipeFromPlc = plcCommunication.LoadRecipeFromPlc(settings);
+            }
+            catch (Exception ex)
+            {
+                statusManager.WriteStatusMessage($"Рецепт не удалось загрузить в контроллер: {ex}", true);
+                return false;
+            }
+
+            var isMatch = recipeComparator.Compare(recipe, recipeFromPlc);
+            statusManager.WriteStatusMessage(isMatch
+                ? "Рецепт успешно загружен в контроллер"
+                : "Рецепт загружен в контроллер. НО ОТЛИЧАЕТСЯ!!!", !isMatch);
+
+            return true;
+        }
+
+        private void UpdateTableView(List<RecipeLine> recipe)
+        {
+            dataGridView1.Rows.Clear();
+            _tableData.Clear();
+
+            foreach (var line in recipe)
+                AddLineToRecipe(line, true);
+
+            RefreshTable();
         }
 
         /// <summary>
@@ -138,9 +158,14 @@ namespace NtoLib.Recipes.MbeTable
                 return false;
             }
 
-            var recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
+            List<RecipeLine> recipe;
 
-            if (recipe == null)
+            try
+            {
+                recipe = plcCommunication.LoadRecipeFromPlc(commSettings);
+
+            }
+            catch
             {
                 statusManager.WriteStatusMessage("Не удалось загрузить рецепт из ПЛК");
                 return false;

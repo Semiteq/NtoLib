@@ -1,6 +1,6 @@
 ﻿namespace NtoLib.Recipes.MbeTable.Actions
 {
-    internal enum ActionType
+    public enum ActionType
     {
         Shutter,
         Heater,

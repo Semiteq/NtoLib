@@ -322,7 +322,7 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.RowHeadersWidth = 90;
 
             statusManager = new(DbgMsg);
-            plcCommunication = new(statusManager);
+            plcCommunication = new();
             recipeFileReader = new(openFileDialog1, statusManager);
         }
 

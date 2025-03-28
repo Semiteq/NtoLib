@@ -12,7 +12,7 @@
 
         public uint ControlBaseAddr;
 
-        public int FloatColumNum = Params.FloatColumNum;
+        public readonly int FloatColumNum = Params.FloatColumNum;
         public readonly int IntColumNum = Params.IntColumNum;
         public readonly int BoolColumNum = 0;
 

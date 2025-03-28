@@ -36,7 +36,7 @@ namespace NtoLib.Recipes.MbeTable.Actions
         public static int GetActionIdByCommand(string commandName)
         {
             return ActionEntries.FirstOrDefault(entry => entry.Command == commandName)?.Id
-                   ?? throw new KeyNotFoundException($"Command '{commandName}' not found.");
+                   ?? throw new KeyNotFoundException($"Команда: '{commandName}' не найдена.");
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace NtoLib.Recipes.MbeTable.Actions
         public static string GetActionNameById(int id)
         {
             return ActionEntries.FirstOrDefault(entry => entry.Id == id)?.Command
-                   ?? throw new KeyNotFoundException($"ID '{id}' not found.");
+                   ?? throw new KeyNotFoundException($"Действие с id: '{id}' не найдено.");
         }
 
         /// <summary>

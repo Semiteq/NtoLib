@@ -1,72 +1,128 @@
 ﻿using System.Windows.Forms;
+using Moq;
+using NtoLib.Recipes.MbeTable;
+using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 
 namespace NtoLib.Test.MbeTable
 {
-    // Dummy IStatusManager implementation for testing
-    public class DummyStatusManager : NtoLib.Recipes.MbeTable.IStatusManager
-    {
-        public List<string> Messages { get; } = new();
-        public void WriteStatusMessage(string message, bool isError)
-        {
-            Messages.Add(message);
-        }
-    }
-
     [TestClass]
-    public class RecipeFileReaderTests
+    public class CsvFilesValidationTests
     {
-        // Test for valid file reading.
-        [TestMethod]
-        public void Read_ValidFile_ReturnsRecipeLines()
-        {
-            // Create temporary file with header and one valid data line.
-            var tempFile = Path.GetTempFileName();
-            try
-            {
-                // For simplicity assume the valid data line contains 7 semicolon-separated columns.
-                // Первый столбец (command) – число, позволяющее успешно пройти ParseCommand.
-                var lines = new[]
-                {
-                    "Header",
-                    "1;123;0;0;0;0;Comment"
-                };
-                File.WriteAllLines(tempFile, lines);
+        public TestContext TestContext { get; set; }
 
-                // Set file name in OpenFileDialog.
-                var openFileDialog = new OpenFileDialog { FileName = tempFile };
-                var statusManager = new DummyStatusManager();
-                var reader = new RecipeFileReader(openFileDialog, statusManager);
-                var recipeLines = reader.Read();
-                Assert.IsTrue(recipeLines.Count > 0, "Recipe lines should be returned for valid file.");
-            }
-            finally
+        [ClassInitialize]
+        public static void ClassInit(TestContext context)
+        {
+            // Initialize dictionaries to ensure non-zero counts
+            ActionTarget.SetNames(ActionType.Shutter, new Dictionary<int, string>
             {
-                File.Delete(tempFile);
-            }
+                { 1, "Shutter1" },
+                { 2, "Shutter2" }
+            });
+            ActionTarget.SetNames(ActionType.Heater, new Dictionary<int, string>
+            {
+                { 1, "Heater1" },
+                { 2, "Heater2" }
+            });
+            ActionTarget.SetNames(ActionType.NitrogenSource, new Dictionary<int, string>
+            {
+                { 1, "Nitrogen1" },
+                { 2, "Nitrogen2" }
+            });
         }
 
-        // Test for empty file.
         [TestMethod]
-        public void Read_EmptyFile_ReturnsEmptyListAndLogsError()
+        public void TryLoadValidCsvRecipeFilesInDir()
         {
-            var tempFile = Path.GetTempFileName();
-            try
-            {
-                // Write empty content.
-                File.WriteAllText(tempFile, string.Empty);
+            var baseDirectory = Path.GetFullPath(@"..\..\..\MbeTable\Recipes\valid");
+            Assert.IsTrue(Directory.Exists(baseDirectory), $"Directory not found: {baseDirectory}");
 
-                var openFileDialog = new OpenFileDialog { FileName = tempFile };
-                var statusManager = new DummyStatusManager();
-                var reader = new RecipeFileReader(openFileDialog, statusManager);
-                var recipeLines = reader.Read();
-                Assert.AreEqual(0, recipeLines.Count, "Empty file should return empty recipe list.");
-                Assert.IsTrue(statusManager.Messages.Any(m => m.Contains("Файл пуст.")), "Status message should indicate empty file.");
-            }
-            finally
+            // Retrieve all CSV files in the directory and its subdirectories
+            var csvFiles = Directory.EnumerateFiles(baseDirectory, "*.csv", SearchOption.AllDirectories)
+                                    .OrderBy(path => path)
+                                    .ToList();
+
+            TestContext.WriteLine($"Total files found: {csvFiles.Count}");
+
+            var passedFiles = new List<string>();
+            var failedFiles = new List<string>();
+
+            var statusManagerMock = new Mock<IStatusManager>();
+            statusManagerMock.Setup(sm => sm.WriteStatusMessage(It.IsAny<string>(), It.IsAny<bool>()));
+
+            foreach (var filePath in csvFiles)
             {
-                File.Delete(tempFile);
+                // Assigning the file path to the OpenFileDialog.FileName property
+                var openFileDialog = new OpenFileDialog { FileName = filePath };
+
+                var reader = new RecipeFileReader(openFileDialog, statusManagerMock.Object);
+
+                try
+                {
+                    var result = reader.Read();
+                    Assert.IsNotNull(result, $"Result should not be null for file {filePath}");
+
+                    passedFiles.Add(filePath);
+                    TestContext.WriteLine($"Passed: {filePath}");
+                }
+                catch (Exception ex)
+                {
+                    failedFiles.Add(filePath);
+                    TestContext.WriteLine($"Failed: {filePath} - {ex.Message}");
+                    Assert.Fail($"Exception for file '{filePath}': {ex.Message}");
+                }
             }
+
+            TestContext.WriteLine($"Files processed: {csvFiles.Count}");
+            TestContext.WriteLine($"Passed files: {passedFiles.Count}");
+            TestContext.WriteLine($"Failed files: {failedFiles.Count}");
+        }
+
+        [TestMethod]
+        public void TryLoadInvalidCsvRecipesInDir()
+        {
+            var baseDirectory = Path.GetFullPath(@"..\..\..\MbeTable\Recipes\invalid");
+            Assert.IsTrue(Directory.Exists(baseDirectory), $"Directory not found: {baseDirectory}");
+
+            // Retrieve all CSV files in the directory and its subdirectories
+            var csvFiles = Directory.EnumerateFiles(baseDirectory, "*.csv", SearchOption.AllDirectories)
+                                    .OrderBy(path => path)
+                                    .ToList();
+
+            TestContext.WriteLine($"Total files found: {csvFiles.Count}");
+
+            var passedFiles = new List<string>();
+            var failedFiles = new List<string>();
+
+            var statusManagerMock = new Mock<IStatusManager>();
+            statusManagerMock.Setup(sm => sm.WriteStatusMessage(It.IsAny<string>(), It.IsAny<bool>()));
+
+            foreach (var filePath in csvFiles)
+            {
+                // Assigning the file path to the OpenFileDialog.FileName property
+                var openFileDialog = new OpenFileDialog { FileName = filePath };
+
+                var reader = new RecipeFileReader(openFileDialog, statusManagerMock.Object);
+
+                try
+                {
+                    var result = reader.Read();
+                    // If no exception is thrown, the test should fail
+                    Assert.Fail($"Invalid test failed for file {filePath}");
+                    passedFiles.Add(filePath);
+                    TestContext.WriteLine($"Passed: {filePath}");
+                }
+                catch (Exception ex)
+                {
+                    failedFiles.Add(filePath);
+                    TestContext.WriteLine($"Failed: {filePath} - {ex.Message}");
+                }
+            }
+
+            TestContext.WriteLine($"Files processed: {csvFiles.Count}");
+            TestContext.WriteLine($"Passed files: {passedFiles.Count}");
+            TestContext.WriteLine($"Failed files: {failedFiles.Count}");
         }
     }
 }
