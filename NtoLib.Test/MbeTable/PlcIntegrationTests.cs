@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+﻿using Moq;
 using NtoLib.Recipes.MbeTable;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.PLC;
@@ -126,11 +126,10 @@ namespace NtoLib.Test.MbeTable
 
                     statusManager.WriteStatusMessage($"Processing file: {filePath}", false);
 
-                    var openFileDialog = new OpenFileDialog { FileName = filePath };
-                    var reader = new RecipeFileReader(openFileDialog, statusManager);
-
+                    var reader = new RecipeFileReader();
+                    
                     statusManager.WriteStatusMessage($"Reading recipe from file: {filePath}", false);
-                    var originalRecipe = reader.Read();
+                    var originalRecipe = reader.Read(filePath);
 
                     statusManager.WriteStatusMessage($"Writing recipe to PLC: {filePath}", false);
                     var writeResult = plcCommunication.WriteRecipeToPlc(originalRecipe, settings);

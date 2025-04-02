@@ -34,9 +34,6 @@ namespace NtoLib.Recipes.MbeTable
         private Button button_save;
         private Button button_open;
 
-        private OpenFileDialog openFileDialog1;
-        private SaveFileDialog saveFileDialog1;
-
         private TableMode _tableType = TableMode.Edit;
         private Font _headerFont = new("Arial", 16f, FontStyle.Bold);
         private bool _headerFontChanged = true;
@@ -60,8 +57,6 @@ namespace NtoLib.Recipes.MbeTable
         private int _buttons_size = 60;
         private Color _buttons_color;
         private bool _resize = true;
-        private string _pathToRecipeFolder = "c:\\";
-        private string _pathToXmlTableDefinition = @"c:\Distr\table.xml";
         private int currentRecipeLine = 2;
         private int prevCurrentRecipeLine = -2;
         private bool _to_runtime;
@@ -76,6 +71,10 @@ namespace NtoLib.Recipes.MbeTable
         private readonly StatusManager statusManager;
         private readonly PlcCommunication plcCommunication;
         private readonly RecipeFileReader recipeFileReader;
+        private readonly RecipeFileWriter recipeFileWriter;
+
+        private readonly OpenFileDialog openFileDialog1;
+        private readonly SaveFileDialog saveFileDialog1;
 
         #endregion
 
@@ -284,31 +283,6 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        [DisplayName("Путь к рецептам")]
-        public string init_path
-        {
-            get => _pathToRecipeFolder;
-            set
-            {
-                _pathToRecipeFolder = value;
-                openFileDialog1.InitialDirectory = _pathToRecipeFolder;
-                saveFileDialog1.InitialDirectory = _pathToRecipeFolder;
-            }
-        }
-
-        [DisplayName("XML файл с описанием таблицы")]
-        public string table_definition
-        {
-            get => _pathToXmlTableDefinition;
-            set
-            {
-                _pathToXmlTableDefinition = value;
-                statusManager.WriteStatusMessage("Описание таблицы будет изменено", false);
-                ConfigureColumns(_tableType == TableMode.Edit);
-                statusManager.WriteStatusMessage("Описание таблицы изменено", false);
-            }
-        }
-
         #endregion
 
         #region Constructor
@@ -322,8 +296,27 @@ namespace NtoLib.Recipes.MbeTable
             dataGridView1.RowHeadersWidth = 90;
 
             statusManager = new(DbgMsg);
+
+            openFileDialog1 = new OpenFileDialog
+            {
+                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+                AddExtension = true,
+                Multiselect = false,
+                Title = "Выберите файл рецепта",
+                RestoreDirectory = true
+            };
+
+            saveFileDialog1 = new SaveFileDialog
+            {
+                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+                AddExtension = true,
+                Title = "Сохраните файл рецепта",
+                RestoreDirectory = true
+            };
+
             plcCommunication = new();
-            recipeFileReader = new(openFileDialog1, statusManager);
+            recipeFileReader = new();
+            recipeFileWriter = new();
         }
 
         #endregion

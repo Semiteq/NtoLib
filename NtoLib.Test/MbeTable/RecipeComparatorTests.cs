@@ -1,6 +1,4 @@
-﻿using NtoLib.Recipes.MbeTable.RecipeLines;
-
-namespace NtoLib.Test.MbeTable;
+﻿namespace NtoLib.Test.MbeTable;
 
 // Dummy interfaces/classes to simulate RecipeLine and its cells.
 // В реальном проекте они уже должны быть определены.
@@ -48,7 +46,7 @@ public static class RecipeLineFactory
         };
         return new DummyRecipeLine(cells);
     }
-    
+
     public static RecipeLine NewLine(int[] intData, int[] floatData, int[] boolData, int index)
     {
         // Create dummy cells from provided arrays (simplified for test)
@@ -73,7 +71,7 @@ public class RecipeComparatorTests
         var cells = values.Select(v => new DummyCellImpl(v) as IDummyCell).ToList();
         return new DummyRecipeLine(cells);
     }
-    
+
     // [TestMethod]
     // public void Compare_EqualRecipes_ReturnsTrue()
     // {

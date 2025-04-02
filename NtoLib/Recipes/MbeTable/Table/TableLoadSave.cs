@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.RecipeLines;
 using NtoLib.Recipes.MbeTable.Table;
@@ -16,7 +13,7 @@ namespace NtoLib.Recipes.MbeTable
     {
         private bool isLoadingActive = false;
 
-        private void LoadRecipeToView()
+        private void LoadRecipeToView(string filePath)
         {
 
             var settingsReader = new SettingsReader(FBConnector);
@@ -33,7 +30,7 @@ namespace NtoLib.Recipes.MbeTable
 
             try
             {
-                recipe = recipeFileReader.Read();
+                recipe = recipeFileReader.Read(filePath);
             }
             catch (Exception ex)
             {
@@ -51,7 +48,7 @@ namespace NtoLib.Recipes.MbeTable
                 return;
             }
 
-            if (!TryWriteAndVerifyRecipe(recipe, settings, recipeComparator))
+            if (!TryWriteToPlcAndVerifyRecipe(recipe, settings, recipeComparator))
                 return;
 
             UpdateTableView(recipe);
@@ -73,6 +70,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private int CalculateMaxRows(CommunicationSettings settings)
         {
+            //todo: add check when new line is added
             int maxRows = -1;
 
             if (settings.FloatColumNum > 0)
@@ -96,7 +94,7 @@ namespace NtoLib.Recipes.MbeTable
             return maxRows;
         }
 
-        private bool TryWriteAndVerifyRecipe(List<RecipeLine> recipe, CommunicationSettings settings,
+        private bool TryWriteToPlcAndVerifyRecipe(List<RecipeLine> recipe, CommunicationSettings settings,
             RecipeComparator recipeComparator)
         {
             if (!plcCommunication.CheckConnection(settings))
@@ -181,20 +179,20 @@ namespace NtoLib.Recipes.MbeTable
             return true;
         }
 
-        private void LoadRecipeToEdit()
+        private void LoadRecipeToEdit(string filePath)
         {
-            var reserveTableData = _tableData;
-
             try
             {
+                var fileData = recipeFileReader.Read(filePath);
+                
                 _tableData.Clear();
-                _tableData = recipeFileReader.Read();
+                _tableData = fileData;
                 FillCells(_tableData);
+                statusManager.WriteStatusMessage($"Загружены данные из файла: {filePath}");
             }
             catch (Exception ex)
             {
-                statusManager.WriteStatusMessage(ex.Message, true);
-                _tableData = reserveTableData;
+                statusManager.WriteStatusMessage(ex.Message, true); 
             }
         }
 
@@ -240,69 +238,28 @@ namespace NtoLib.Recipes.MbeTable
         {
             if (this.FBConnector.DesignMode || openFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
-            saveFileDialog1.InitialDirectory = openFileDialog1.InitialDirectory;
-
+            
             if (_tableType == TableMode.View)
-                LoadRecipeToView();
+                LoadRecipeToView(openFileDialog1.FileName);
             else
-                LoadRecipeToEdit();
+                LoadRecipeToEdit(openFileDialog1.FileName);
         }
 
         private void ClickButton_Save(object sender, EventArgs e)
         {
             if (FBConnector.DesignMode) return;
-            if (saveFileDialog1.ShowDialog() != DialogResult.OK) return;
-
+            
+            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+            
             try
             {
-                using (var stream = new FileStream(saveFileDialog1.FileName, FileMode.Create))
-                using (var streamWriter = new StreamWriter(stream))
-                {
-                    // Writing headers
-                    var columnHeaders = string.Join(";", columns.Select(column => column.Name));
-                    streamWriter.WriteLine(columnHeaders);
-
-                    // Writing lines
-                    foreach (var recipeLine in _tableData)
-                    {
-                        var cells = recipeLine.Cells.ToList();
-                        var rowData = new List<string>();
-                        var currentCommand = cells[Params.ActionIndex].StringValue;
-                        var action = ActionManager.GetTargetAction(currentCommand);
-
-                        for (var i = 0; i < cells.Count; i++)
-                        {
-                            var cellValue = cells[i].StringValue;
-
-                            if (i == Params.ActionIndex)
-                            {
-                                cellValue = ActionManager.GetActionIdByCommand(cellValue).ToString();
-                            }
-
-                            if (i == Params.ActionTargetIndex && action != ActionType.Unspecified)
-                            {
-                                try
-                                {
-                                    cellValue = ActionTarget.GetActionTypeByName(cellValue, currentCommand).ToString();
-                                }
-                                catch (KeyNotFoundException)
-                                {
-                                    cellValue = "";
-                                }
-                            }
-
-                            rowData.Add(cellValue);
-                        }
-
-                        streamWriter.WriteLine(string.Join(";", rowData));
-                    }
-                }
-
-                statusManager.WriteStatusMessage($"Данные сохранены в файл {saveFileDialog1.FileName}", false);
+                recipeFileWriter.Write(_tableData, saveFileDialog1.FileName);
+                statusManager.WriteStatusMessage($"Файл успешно сохранен: {saveFileDialog1.FileName}");
             }
             catch (Exception ex)
             {
-                statusManager.WriteStatusMessage($"Ошибка при сохранении: {ex.Message}", true);
+                statusManager.WriteStatusMessage($"{ex.Message}");
             }
         }
     }

@@ -130,6 +130,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeComparator.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeFileWriter.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\FlattenedRecipeLine.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\ICountTimer.cs" />
     <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\ILineChangeProcessor.cs" />

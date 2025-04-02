@@ -1,5 +1,4 @@
-﻿using System.Windows.Forms;
-using Moq;
+﻿using Moq;
 using NtoLib.Recipes.MbeTable;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.RecipeLines;
@@ -7,7 +6,7 @@ using NtoLib.Recipes.MbeTable.RecipeLines;
 namespace NtoLib.Test.MbeTable
 {
     [TestClass]
-    public class CsvFilesValidationTests
+    public class RecipeFileReaderTests
     {
         public TestContext TestContext { get; set; }
 
@@ -54,13 +53,13 @@ namespace NtoLib.Test.MbeTable
             foreach (var filePath in csvFiles)
             {
                 // Assigning the file path to the OpenFileDialog.FileName property
-                var openFileDialog = new OpenFileDialog { FileName = filePath };
-
-                var reader = new RecipeFileReader(openFileDialog, statusManagerMock.Object);
+                var fileDialogMock = new Mock<IFileDialog>();
+                fileDialogMock.Setup(fd => fd.FileName).Returns(filePath);
+                var reader = new RecipeFileReader();
 
                 try
                 {
-                    var result = reader.Read();
+                    var result = reader.Read(filePath);
                     Assert.IsNotNull(result, $"Result should not be null for file {filePath}");
 
                     passedFiles.Add(filePath);
@@ -100,14 +99,13 @@ namespace NtoLib.Test.MbeTable
 
             foreach (var filePath in csvFiles)
             {
-                // Assigning the file path to the OpenFileDialog.FileName property
-                var openFileDialog = new OpenFileDialog { FileName = filePath };
-
-                var reader = new RecipeFileReader(openFileDialog, statusManagerMock.Object);
+                var fileDialogMock = new Mock<IFileDialog>();
+                fileDialogMock.Setup(fd => fd.FileName).Returns(filePath);
+                var reader = new RecipeFileReader();
 
                 try
                 {
-                    var result = reader.Read();
+                    var result = reader.Read(filePath);
                     // If no exception is thrown, the test should fail
                     Assert.Fail($"Invalid test failed for file {filePath}");
                     passedFiles.Add(filePath);

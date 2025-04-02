@@ -5,7 +5,7 @@ using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
 namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
-    internal static class RecipeLineFactory
+    public static class RecipeLineFactory
     {
         private static readonly Dictionary<string, Func<int, float, float, float, float, string, RecipeLine>> Creators = new()
         {

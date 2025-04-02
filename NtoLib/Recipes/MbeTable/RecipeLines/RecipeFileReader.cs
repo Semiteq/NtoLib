@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.Actions.TableLines;
 
@@ -10,31 +9,23 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
 {
     public interface IRecipeFileReader
     {
-        List<RecipeLine> Read();
+        List<RecipeLine> Read(string FilePath);
     }
 
     public class RecipeFileReader : IRecipeFileReader
     {
         private const char CsvSeparator = ';';
-        private readonly OpenFileDialog _openFileDialog;
-        private readonly IStatusManager _statusManager;
 
-        public RecipeFileReader(OpenFileDialog openFileDialog, IStatusManager statusManager)
+        public List<RecipeLine> Read(string FilePath)
         {
-            _openFileDialog = openFileDialog ?? throw new ArgumentNullException(nameof(openFileDialog));
-            _statusManager = statusManager ?? throw new ArgumentNullException(nameof(statusManager));
-        }
-
-        public List<RecipeLine> Read()
-        {
-            if (!File.Exists(_openFileDialog.FileName))
+            if (!File.Exists(FilePath))
             {
-                throw new Exception($"Файл не найден: {_openFileDialog.FileName}");
+                throw new Exception($"Файл не найден: {FilePath}");
             }
 
             try
             {
-                var parsedRecipes = ParseFile(_openFileDialog.FileName);
+                var parsedRecipes = ParseFile(FilePath);
 
                 if (!CheckRecipeCycles(parsedRecipes))
                     throw new Exception($"Ошибка синтаксиса For/EndFor");
@@ -66,7 +57,6 @@ namespace NtoLib.Recipes.MbeTable.RecipeLines
                 }
             }
 
-            _statusManager.WriteStatusMessage($"Данные загружены из файла {filePath}", false);
             return result;
         }
 
