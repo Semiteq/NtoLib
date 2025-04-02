@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("Библиотека для высокопроизводительных вычислений и работы с данными.")]
 [assembly: AssemblyConfiguration("Release")]
 [assembly: AssemblyCompany("Semiteq")]
-[assembly: AssemblyProduct("NtoLib SDK 1.8.6")]
+[assembly: AssemblyProduct("NtoLib SDK 1.8.7")]
 
 [assembly: AssemblyCopyright("Copyright Semiteq©, 2025")]
 [assembly: AssemblyTrademark("Semiteq™")]
@@ -22,15 +22,14 @@ using System.Runtime.InteropServices;
 // Следующий GUID служит для идентификации библиотеки типов, если этот проект будет видимым для COM
 [assembly: Guid("ab49b767-7843-42ae-b6d2-443afbff7699")]
 
-// Сведения о версии сборки состоят из указанных ниже четырех значений:
+// Сведения о версии сборки состоят из указанных ниже трех значений:
 //
 //      Основной номер версии
 //      Дополнительный номер версии
 //      Номер сборки
-//      Редакция
 //
 // Можно задать все значения или принять номера сборки и редакции по умолчанию 
 // используя "*", как показано ниже:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.8.6")]
-[assembly: AssemblyFileVersion("1.8.6")]
+[assembly: AssemblyVersion("1.8.7")]
+[assembly: AssemblyFileVersion("1.8.7")]

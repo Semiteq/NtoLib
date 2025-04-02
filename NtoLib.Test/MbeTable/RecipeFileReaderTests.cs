@@ -53,8 +53,6 @@ namespace NtoLib.Test.MbeTable
             foreach (var filePath in csvFiles)
             {
                 // Assigning the file path to the OpenFileDialog.FileName property
-                var fileDialogMock = new Mock<IFileDialog>();
-                fileDialogMock.Setup(fd => fd.FileName).Returns(filePath);
                 var reader = new RecipeFileReader();
 
                 try
@@ -99,8 +97,6 @@ namespace NtoLib.Test.MbeTable
 
             foreach (var filePath in csvFiles)
             {
-                var fileDialogMock = new Mock<IFileDialog>();
-                fileDialogMock.Setup(fd => fd.FileName).Returns(filePath);
                 var reader = new RecipeFileReader();
 
                 try
