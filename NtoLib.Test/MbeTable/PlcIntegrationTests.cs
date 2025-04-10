@@ -1,5 +1,4 @@
-﻿using Moq;
-using NtoLib.Recipes.MbeTable;
+﻿using NtoLib.Recipes.MbeTable;
 using NtoLib.Recipes.MbeTable.Actions;
 using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.RecipeLines;
@@ -127,7 +126,7 @@ namespace NtoLib.Test.MbeTable
                     statusManager.WriteStatusMessage($"Processing file: {filePath}", false);
 
                     var reader = new RecipeFileReader();
-                    
+
                     statusManager.WriteStatusMessage($"Reading recipe from file: {filePath}", false);
                     var originalRecipe = reader.Read(filePath);
 

@@ -21,7 +21,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>C:\Program Files %28x86%29\MPSSoft\MasterSCADA\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -48,23 +48,16 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FB">
-      <HintPath>..\..\..\Program Files\MSCada\FB.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\FB.dll</HintPath>
     </Reference>
     <Reference Include="InSAT.Library">
-      <HintPath>..\..\..\Program Files\MSCada\InSAT.Library.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\InSAT.Library.dll</HintPath>
     </Reference>
     <Reference Include="Insat.Opc">
-      <HintPath>..\..\..\Program Files\MSCada\Insat.Opc.dll</HintPath>
-    </Reference>
-    <Reference Include="InternalModules">
-      <HintPath>..\..\..\Program Files\MSCada\InternalModules.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\Insat.Opc.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Common">
-      <HintPath>..\..\..\Program Files\MSCada\MasterSCADA.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="MasterSCADALib">
-      <HintPath>..\..\..\Program Files\MSCada\MasterSCADALib.dll</HintPath>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Common.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
@@ -348,7 +341,10 @@
     <Error Condition="!Exists('..\packages\ILRepack.2.0.40\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.40\build\ILRepack.props'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)logs\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll"</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)logs\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll"
+chcp 437 &amp;&amp; xcopy "$(TargetPath)" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
+chcp 437 &amp;&amp; xcopy "$(TargetDir)NtoLib.pdb" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
+chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I</PostBuildEvent>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="Build">
     <!-- Clean temporary files -->
