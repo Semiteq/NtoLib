@@ -1,14 +1,15 @@
-﻿using FB.VisualFB;
-using InSAT.Library.Gui;
-using InSAT.Library.Interop.Win32;
-using NtoLib.Devices.Pumps.Settings;
-using NtoLib.Render.Pumps;
-using NtoLib.Utils;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using FB.VisualFB;
+using InSAT.Library.Gui;
+using InSAT.Library.Interop.Win32;
+using NtoLib.Devices.Pumps.Settings;
+using NtoLib.Render.Pumps;
+using NtoLib.Render.Valves;
+using NtoLib.Utils;
 
 namespace NtoLib.Devices.Pumps
 {
@@ -29,7 +30,7 @@ namespace NtoLib.Devices.Pumps
             {
                 bool updateRequired = _noButtons != value;
                 _noButtons = value;
-                if(updateRequired)
+                if (updateRequired)
                     UpdateLayout();
             }
         }
@@ -46,7 +47,7 @@ namespace NtoLib.Devices.Pumps
             {
                 bool updateRequired = _orientation != value;
                 _orientation = value;
-                if(updateRequired)
+                if (updateRequired)
                     UpdateLayout();
             }
         }
@@ -63,7 +64,7 @@ namespace NtoLib.Devices.Pumps
             {
                 bool updateRequired = _buttonOrientation != value;
                 _buttonOrientation = value;
-                if(updateRequired)
+                if (updateRequired)
                     UpdateLayout();
             }
         }
@@ -136,13 +137,13 @@ namespace NtoLib.Devices.Pumps
 
         private void HandleStartClick(object sender, EventArgs e)
         {
-            if(!Status.UsedByAutoMode && !Status.BlockStart)
+            if (!Status.UsedByAutoMode && !Status.BlockStart)
                 SendCommand(PumpFB.StartCmdId);
         }
 
         private void HandleStopClick(object sender, EventArgs e)
         {
-            if(!Status.UsedByAutoMode && !Status.BlockStop)
+            if (!Status.UsedByAutoMode && !Status.BlockStop)
                 SendCommand(PumpFB.StopCmdId);
         }
 
@@ -152,7 +153,7 @@ namespace NtoLib.Devices.Pumps
         {
             e.Graphics.Clear(BackColor);
 
-            if(!FBConnector.DesignMode)
+            if (!FBConnector.DesignMode)
                 UpdateStatus();
 
             UpdateSprite();
@@ -177,7 +178,7 @@ namespace NtoLib.Devices.Pumps
         private void UpdateButtonTable()
         {
             Render.Orientation buttonsOrientation;
-            if(!IsHorizontal())
+            if (!IsHorizontal())
                 buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Top : Render.Orientation.Bottom;
             else
                 buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop ? Render.Orientation.Left : Render.Orientation.Right;
@@ -189,9 +190,11 @@ namespace NtoLib.Devices.Pumps
 
         private void UpdateSprite()
         {
+            _renderer ??= new PumpRenderer(this);
+
             spriteBox.Image = new Bitmap(Math.Max(1, spriteBox.Width), Math.Max(1, spriteBox.Height));
 
-            using(var g = Graphics.FromImage(spriteBox.Image))
+            using (var g = Graphics.FromImage(spriteBox.Image))
             {
                 g.Clear(BackColor);
 
@@ -209,7 +212,7 @@ namespace NtoLib.Devices.Pumps
 
         private void HandleMouseDown(object sender, MouseEventArgs e)
         {
-            if(e.Button != MouseButtons.Right)
+            if (e.Button != MouseButtons.Right)
             {
                 _mouseHoldTimer.Stop();
                 _settingsForm?.Close();
@@ -227,7 +230,7 @@ namespace NtoLib.Devices.Pumps
 
         private void HandleMouseUp(object sender, MouseEventArgs e)
         {
-            if(e.Button != MouseButtons.Right)
+            if (e.Button != MouseButtons.Right)
                 return;
 
             _mouseHoldTimer.Stop();
@@ -243,7 +246,7 @@ namespace NtoLib.Devices.Pumps
 
         private void HandleVisibleChanged(object sender, EventArgs e)
         {
-            if(!Visible)
+            if (!Visible)
                 _settingsForm?.Close();
         }
 
@@ -257,7 +260,7 @@ namespace NtoLib.Devices.Pumps
 
         private void SendCommand(int commandId)
         {
-            if(_impulseTimer.Enabled)
+            if (_impulseTimer.Enabled)
             {
                 DisableCommandImpulse(this, null);
                 _impulseTimer.Stop();
@@ -273,9 +276,9 @@ namespace NtoLib.Devices.Pumps
             _settingsForm = new PumpSettingForm(this);
             Point formLocation = MousePosition;
             Rectangle area = Screen.GetWorkingArea(formLocation);
-            if(formLocation.X + _settingsForm.Width > area.Right)
+            if (formLocation.X + _settingsForm.Width > area.Right)
                 formLocation.X -= _settingsForm.Width;
-            if(formLocation.Y + _settingsForm.Height > area.Bottom)
+            if (formLocation.Y + _settingsForm.Height > area.Bottom)
                 formLocation.Y -= _settingsForm.Height;
 
             _settingsForm.Location = formLocation;
@@ -315,42 +318,42 @@ namespace NtoLib.Devices.Pumps
             var fb = FBConnector.Fb as PumpFB;
             Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
 
-            switch(fb.PumpType)
+            switch (fb.PumpType)
             {
                 case PumpType.Forvacuum:
-                {
+                    {
 
-                    break;
-                }
+                        break;
+                    }
                 case PumpType.Turbine:
-                {
-                    Status.Units = GetPinValue<bool>(PumpFB.CustomId);
-                    Status.Speed = GetPinValue<float>(PumpFB.TurbineSpeedId);
+                    {
+                        Status.Units = GetPinValue<bool>(PumpFB.CustomId);
+                        Status.Speed = GetPinValue<float>(PumpFB.TurbineSpeedId);
 
-                    Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
-                    break;
-                }
+                        Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
+                        break;
+                    }
                 case PumpType.Ion:
-                {
-                    Status.SafeMode = GetPinValue<bool>(PumpFB.CustomId);
+                    {
+                        Status.SafeMode = GetPinValue<bool>(PumpFB.CustomId);
 
-                    Status.Voltage = GetPinValue<float>(PumpFB.IonPumpVoltage);
-                    Status.Current = GetPinValue<float>(PumpFB.IonPumpCurrent);
-                    Status.Power = GetPinValue<float>(PumpFB.IonPumpPower);
-                    break;
-                }
+                        Status.Voltage = GetPinValue<float>(PumpFB.IonPumpVoltage);
+                        Status.Current = GetPinValue<float>(PumpFB.IonPumpCurrent);
+                        Status.Power = GetPinValue<float>(PumpFB.IonPumpPower);
+                        break;
+                    }
                 case PumpType.Cryogen:
-                {
-                    Status.TemperatureIn = GetPinValue<float>(PumpFB.CryoInTemperature);
-                    Status.TemperatureOut = GetPinValue<float>(PumpFB.CryoOutTemperature);
-                    break;
-                }
+                    {
+                        Status.TemperatureIn = GetPinValue<float>(PumpFB.CryoInTemperature);
+                        Status.TemperatureOut = GetPinValue<float>(PumpFB.CryoOutTemperature);
+                        break;
+                    }
             }
 
             bool animationNeeded = Status.AnimationNeeded;
-            if(!_animationTimer.Enabled && animationNeeded)
+            if (!_animationTimer.Enabled && animationNeeded)
                 _animationTimer.Start();
-            if(_animationTimer.Enabled && !animationNeeded)
+            if (_animationTimer.Enabled && !animationNeeded)
                 _animationTimer.Stop();
 
             _settingsForm?.Invalidate();

@@ -1,14 +1,14 @@
-﻿using FB.VisualFB;
-using InSAT.Library.Gui;
-using InSAT.Library.Interop.Win32;
-using NtoLib.Render.Valves;
-using NtoLib.Utils;
-using NtoLib.Devices.Valves.Settings;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using FB.VisualFB;
+using InSAT.Library.Gui;
+using InSAT.Library.Interop.Win32;
+using NtoLib.Devices.Valves.Settings;
+using NtoLib.Render.Valves;
+using NtoLib.Utils;
 
 namespace NtoLib.Devices.Valves
 {
@@ -255,6 +255,8 @@ namespace NtoLib.Devices.Valves
 
         private void UpdateSprite()
         {
+            _renderer ??= new CommonValveRenderer(this);
+
             spriteBox.Image = new Bitmap(Math.Max(1, spriteBox.Width), Math.Max(1, spriteBox.Height));
 
             using (var g = Graphics.FromImage(spriteBox.Image))
