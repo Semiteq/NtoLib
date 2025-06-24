@@ -5,7 +5,7 @@ namespace NtoLib.Utils
 {
     public partial class TextBoxInt : TextBox
     {
-        public event Action ValidatingValue;
+        public event System.Action ValidatingValue;
 
 
 

@@ -303,8 +303,18 @@ namespace NtoLib.InputFields.TextBoxInt
 
         private void UpdateFocus(VisualControlBase focusedControl)
         {
-            if(this != focusedControl)
-                ToCommonMode();
+            try
+            {
+                if (IsDisposed)
+                    return;
+                    
+                if (this != focusedControl)
+                    ToCommonMode();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Игнорируем исключения для освобожденных объектов
+            }
         }
 
 

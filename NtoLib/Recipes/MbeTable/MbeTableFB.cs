@@ -1,11 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
-using NtoLib.Recipes.MbeTable.RecipeLines.RecipeTime;
+using NtoLib.Recipes.MbeTable.Managers.Contracts;
+using NtoLib.Recipes.MbeTable.PLC;
+using NtoLib.Recipes.MbeTable.Recipe;
+using NtoLib.Recipes.MbeTable.Recipe.Actions;
+using NtoLib.Recipes.MbeTable.Recipe.StepManager;
+using NtoLib.Recipes.MbeTable.Table;
+using NtoLib.Recipes.MbeTable.Table.UI;
+using NtoLib.Recipes.MbeTable.Table.UI.TableUpdate;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -18,10 +26,7 @@ namespace NtoLib.Recipes.MbeTable
     [Serializable]
     public class MbeTableFB : VisualFBBase
     {
-        private ControllerProtocol _enumProtocol;
-        private SlmpArea _enumSlmpArea = SlmpArea.R;
-
-        // Named constants for pin IDs.
+        // Pin IDs
         private const int IdRecipeActive = 1;
         private const int IdRecipePaused = 2;
         private const int IdActualLineNumber = 3;
@@ -32,276 +37,345 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdEnaLoad = 8;
         private const int IdTotalTimeLeft = 101;
         private const int IdLineTimeLeft = 102;
-
-        [NonSerialized]
-        private ICountTimer _recipeTimer;
-
-        // Previous state values.
+        
+        // ActionProperty pins
+        private const int IdFirstShutterName = 201;
+        private const int IdFirstHeaterName = 301;
+        private const int IdFirstNitrogenSourceName = 401;
+        
+        private const int ShutterNameQuantity = 32;
+        private const int HeaterNameQuantity = 32;
+        private const int NitrogenSourceNameQuantity = 3;
+        
+        // Communication pins
+        private const int IdHmiFloatBaseAddr = 1003;
+        private const int IdHmiFloatAreaSize = 1004;
+        private const int IdHmiIntBaseAddr = 1005;
+        private const int IdHmiIntAreaSize = 1006;
+        private const int IdHmiBoolBaseAddr = 1007;
+        private const int IdHmiBoolAreaSize = 1008;
+        private const int IdHmiControlBaseAddr = 1009;
+        private const int IdHmiIp1 = 1010;
+        private const int IdHmiIp2 = 1011;
+        private const int IdHmiIp3 = 1012;
+        private const int IdHmiIp4 = 1013;
+        private const int IdHmiPort = 1014;
+        
+        // Private fields
+        [NonSerialized] private List<Step> _tableData;
+        [NonSerialized] private TableTimeManager _tableTimeManager;
+        [NonSerialized] private RecipeTimerManager _recipeTimerManager;
+        [NonSerialized] private UpdateBatcher _updateBatcher;
+        [NonSerialized] private CommunicationSettings _communicationSettings;
+        [NonSerialized] private ActionTarget _actionTarget;
+        [NonSerialized] private Shutters _shutters;
+        [NonSerialized] private Heaters _heaters;
+        [NonSerialized] private NitrogenSources _nitrogenSources;
+        
+        // Default values
         private int _previousLineNumber = -1;
-        private int _previousForLoopCount1;
-        private int _previousForLoopCount2;
-        private int _previousForLoopCount3;
-
-        // Use interfaces for easier testing and decoupling.
-        private ILineChangeProcessor _lineChangeProcessor;
-        private IRecipeTimeManager _recipeTimeManager;
+        private int _previousForLoopCount1 = -1;
+        private int _previousForLoopCount2 = -1;
+        private int _previousForLoopCount3 = -1;
 
         #region VisualProperties
 
-        private uint _uFloatBaseAddr = Params.UFloatBaseAddr;
-        private uint _uFloatAreaSize = Params.UFloatAreaSize;
-        private uint _uIntBaseAddr = Params.UIntBaseAddr;
-        private uint _uIntAreaSize = Params.UIntBaseAddr;
-        private uint _uBoolBaseAddr = Params.UBoolBaseAddr;
-        private uint _uBoolAreaSize = Params.UBoolAreaSize;
-        private uint _uControlBaseAddr = Params.UControlBaseAddr;
-        private uint _controllerIp1 = Params.ControllerIp1;
-        private uint _controllerIp2 = Params.ControllerIp2;
-        private uint _controllerIp3 = Params.ControllerIp3;
-        private uint _controllerIp4 = Params.ControllerIp4;
-        private uint _controllerTcpPort = Params.ControllerTcpPort;
-        private uint _timeout = Params.Timeout;
-
-        [DisplayName(" 1. Протокол обмена передачи данных в контроллер")]
-        [Description("Определяет по какому протоколу передаются данные в контроллер")]
-        public ControllerProtocol EnumProtocol
-        {
-            get => _enumProtocol;
-            set => _enumProtocol = value;
-        }
-
-        [DisplayName(" 2. Пространство хранения данных при использовании SLMP")]
-        [Description("Определяет в какой области (D или R) помещаются данные таблицы")]
-        public SlmpArea EnumSlmpArea
-        {
-            get => _enumSlmpArea;
-            set => _enumSlmpArea = value;
-        }
+        private uint _uFloatBaseAddr = 8100;
+        private uint _uFloatAreaSize = 19600;
+        
+        private uint _uIntBaseAddr = 27700;
+        private uint _uIntAreaSize = 1400;
+        
+        private uint _uBoolBaseAddr = 29100;
+        private uint _uBoolAreaSize = 50;
+        
+        private uint _uControlBaseAddr = 8000;
+        
+        private uint _controllerIp1 = 192;
+        private uint _controllerIp2 = 168;
+        private uint _controllerIp3 = 0;
+        private uint _controllerIp4 = 141;
+        
+        private uint _controllerTcpPort = 502;
 
         [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
-        [DisplayName(" 3.  Базовый адрес хранения данных типа Real (Float)")]
+        [DisplayName(" 1.  Базовый адрес хранения данных типа Real (Float)")]
         public uint UFloatBaseAddr
         {
-            get => _uFloatBaseAddr;
+            get => _uFloatBaseAddr; 
             set => _uFloatBaseAddr = value;
         }
 
         [Description("Определяет размер области для данных типа 'вещественный'.")]
-        [DisplayName(" 4.  Размер области хранения данных типа Real (Float)")]
+        [DisplayName(" 2.  Размер области хранения данных типа Real (Float)")]
         public uint UFloatAreaSize
         {
-            get => _uFloatAreaSize;
+            get => _uFloatAreaSize; 
             set => _uFloatAreaSize = value;
         }
 
         [Description("Определяет начальный адрес, куда помещаются данные типа 'целый 16 бит'")]
-        [DisplayName(" 5.  Базовый адрес хранения данных типа Int")]
+        [DisplayName(" 3.  Базовый адрес хранения данных типа Int")]
         public uint UIntBaseAddr
         {
-            get => _uIntBaseAddr;
+            get => _uIntBaseAddr; 
             set => _uIntBaseAddr = value;
         }
 
-        [DisplayName(" 6.  Размер области хранения данных типа Int")]
+        [DisplayName(" 4.  Размер области хранения данных типа Int")]
         [Description("Определяет размер области для данных типа 'целый 16 бит'")]
         public uint UIntAreaSize
         {
-            get => _uIntAreaSize;
+            get => _uIntAreaSize; 
             set => _uIntAreaSize = value;
         }
 
-        [DisplayName(" 7.  Базовый адрес хранения данных типа Boolean")]
+        [DisplayName(" 5.  Базовый адрес хранения данных типа Boolean")]
         [Description("Определяет начальный адрес, куда помещаются данные типа 'логический'.")]
         public uint UBoolBaseAddr
         {
-            get => _uBoolBaseAddr;
+            get => _uBoolBaseAddr; 
             set => _uBoolBaseAddr = value;
         }
 
         [Description("Определяет размер области для данных типа 'логический'.")]
-        [DisplayName(" 8.  Размер области хранения данных типа Boolean")]
+        [DisplayName(" 6.  Размер области хранения данных типа Boolean")]
         public uint UBoolAreaSize
         {
-            get => _uBoolAreaSize;
+            get => _uBoolAreaSize; 
             set => _uBoolAreaSize = value;
         }
 
-        [DisplayName(" 9.  Базовый адрес контрольной области")]
+        [DisplayName(" 7.  Базовый адрес контрольной области")]
         [Description("Определяет начальный адрес, где располагается зона контрольных данных (3 слова)")]
         public uint UControlBaseAddr
         {
-            get => _uControlBaseAddr;
+            get => _uControlBaseAddr; 
             set => _uControlBaseAddr = value;
         }
 
         [Description("IP адрес контроллера байт 1")]
-        [DisplayName("10.  IP адрес контроллера байт 1")]
+        [DisplayName("8.  IP адрес контроллера байт 1")]
         public uint ControllerIp1
         {
-            get => _controllerIp1;
+            get => _controllerIp1; 
             set => _controllerIp1 = value;
         }
 
-        [DisplayName("11.  IP адрес контроллера байт 2")]
+        [DisplayName("9.  IP адрес контроллера байт 2")]
         [Description("IP адрес контроллера байт 2")]
         public uint ControllerIp2
         {
-            get => _controllerIp2;
+            get => _controllerIp2; 
             set => _controllerIp2 = value;
         }
 
         [Description("IP адрес контроллера байт 3")]
-        [DisplayName("12.  IP адрес контроллера байт 3")]
+        [DisplayName("10.  IP адрес контроллера байт 3")]
         public uint ControllerIp3
         {
-            get => _controllerIp3;
+            get => _controllerIp3; 
             set => _controllerIp3 = value;
         }
 
         [Description("IP адрес контроллера байт 4")]
-        [DisplayName("13.  IP адрес контроллера байт 4")]
+        [DisplayName("11.  IP адрес контроллера байт 4")]
         public uint ControllerIp4
         {
-            get => _controllerIp4;
+            get => _controllerIp4; 
             set => _controllerIp4 = value;
         }
 
-        [DisplayName("14.  TCP порт")]
+        [DisplayName("12.  TCP порт")]
         [Description("TCP порт")]
         public uint ControllerTcpPort
         {
-            get => _controllerTcpPort;
+            get => _controllerTcpPort; 
             set => _controllerTcpPort = value;
         }
-
-        [DisplayName("15.  Timeout")]
-        [Description("Timeout")]
-        public uint Timeout
-        {
-            get => _timeout;
-            set => _timeout = value;
-        }
+        
         #endregion
 
-        protected override void ToRuntime() { }
-        protected override void ToDesign() { }
+        #region Registration Methods
+        public void RegisterTableData(List<Step> tableData)
+        {
+            _tableData = tableData ?? throw new ArgumentNullException(nameof(tableData));
+        }
+        
+        public void RegisterTableTimeManager(TableTimeManager tableTimeManager)
+        {
+            _tableTimeManager = tableTimeManager ?? throw new ArgumentNullException(nameof(tableTimeManager));
+        }
 
+        public void RegisterDataGridViewUpdater(UpdateBatcher updateBatcher)
+        {
+            _updateBatcher = updateBatcher ?? throw new ArgumentNullException(nameof(updateBatcher));
+        }
+        
+        public void RegisterCommunicationSettings(CommunicationSettings communicationSettings)
+        {
+            _communicationSettings = communicationSettings ?? throw new ArgumentNullException(nameof(communicationSettings));
+            UpdateCommunicationSettings(_communicationSettings);
+        }
+
+        public void RegisterShutters(Shutters shutters)
+        {
+            _shutters = shutters ?? throw new ArgumentNullException(nameof(shutters));
+        }
+        
+        public void RegisterHeaters(Heaters heaters)
+        {
+            _heaters = heaters ?? throw new ArgumentNullException(nameof(heaters));
+        }
+        
+        public void RegisterNitrogenSources(NitrogenSources nitrogenSources)
+        {
+            _nitrogenSources = nitrogenSources ?? throw new ArgumentNullException(nameof(nitrogenSources));
+        }
+
+        #endregion
+        
+        protected override void ToRuntime()
+        {
+            base.ToRuntime();
+        }
+
+        protected override void ToDesign()
+        {
+            base.ToDesign();
+        }
+        
         protected override void UpdateData()
         {
-            // Update communication protocol and address area values.
-            VisualPins.SetPinValue(Params.IdHmiCommProtocol, GetProtocolValue());
-            VisualPins.SetPinValue(Params.IdHmiAddrArea, GetAddressAreaValue());
+            base.UpdateData();
+            
+            UpdateHmiPins();
+            if (_communicationSettings != null) UpdateCommunicationSettings(_communicationSettings);
 
-            // Update HMI values.
-            VisualPins.SetPinValue(Params.IdHmiFloatBaseAddr, _uFloatBaseAddr);
-            VisualPins.SetPinValue(Params.IdHmiFloatAreaSize, _uFloatAreaSize);
-            VisualPins.SetPinValue(Params.IdHmiIntBaseAddr, _uIntBaseAddr);
-            VisualPins.SetPinValue(Params.IdHmiIntAreaSize, _uIntAreaSize);
-            VisualPins.SetPinValue(Params.IdHmiBoolBaseAddr, _uBoolBaseAddr);
-            VisualPins.SetPinValue(Params.IdHmiBoolAreaSize, _uBoolAreaSize);
-            VisualPins.SetPinValue(Params.IdHmiControlBaseAddr, _uControlBaseAddr);
-
-            // Update controller IP and port values.
-            VisualPins.SetPinValue(Params.IdHmiIp1, _controllerIp1);
-            VisualPins.SetPinValue(Params.IdHmiIp2, _controllerIp2);
-            VisualPins.SetPinValue(Params.IdHmiIp3, _controllerIp3);
-            VisualPins.SetPinValue(Params.IdHmiIp4, _controllerIp4);
-            VisualPins.SetPinValue(Params.IdHmiPort, _controllerTcpPort);
-
-            // Update timeout value.
-            VisualPins.SetPinValue(Params.IdHmiTimeout, Params.Timeout);
-
-            // Process actual line and enable load status.
+            UpdateShutters();
+            UpdateHeaters();
+            UpdateNitrogenSources();
+            
             var actualLine = GetActualLineValue();
-            var statusFlags = CalculateStatusFlags(actualLine);
-            VisualPins.SetPinValue(Params.IdHmiActualLine, actualLine);
-            VisualPins.SetPinValue(Params.IdHmiStatus, statusFlags);
-
-            // Retrieve FOR loop counters and recipe line data.
+            var isRecipeActive = GetPinValue<bool>(IdRecipeActive);
+            var actualLineNumber = GetPinValue<int>(IdActualLineNumber); 
+            var stepCurrentTime = GetPinValue<float>(IdStepCurrentTime);
             var forLoopCount1 = GetPinValue<int>(IdForLoopCount1);
             var forLoopCount2 = GetPinValue<int>(IdForLoopCount2);
             var forLoopCount3 = GetPinValue<int>(IdForLoopCount3);
-            var currentLine = GetPinValue<int>(IdActualLineNumber);
-            var plcLineTime = GetPinValue<float>(IdStepCurrentTime);
-            var isRecipeActive = GetPinValue<bool>(IdRecipeActive);
+            
+            var isLineChanged = IsLineChanged(actualLineNumber, forLoopCount1, forLoopCount2, forLoopCount3);
 
-            // Initialize recipe manager if null.
-            if (_recipeTimeManager is null)
+            if (_recipeTimerManager is null && _tableTimeManager is not null)
+                _recipeTimerManager = new RecipeTimerManager(_tableTimeManager);
+
+            if (_recipeTimerManager is null) return;
+            
+            if (isRecipeActive)
             {
-                _recipeTimeManager = new RecipeTimeManager();
-                TableControl.RecipeTimeManager = _recipeTimeManager;
+                var(leftStepTime, leftTotalTime) = _recipeTimerManager.GetLeftTimes(actualLineNumber, stepCurrentTime);
+                SetPinValue(IdActualLineNumber, leftStepTime);
+                SetPinValue(IdTotalTimeLeft, leftTotalTime);
+            }
+            
+            if (isRecipeActive && isLineChanged)
+            { 
+                _recipeTimerManager.HandleLineChange(actualLineNumber);
+                _updateBatcher.HandleLineChange(actualLineNumber);
+            }
+        }
+
+        private void UpdateHmiPins()
+        {
+            VisualPins.SetValue<uint>(IdHmiFloatBaseAddr, UFloatBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiFloatAreaSize, UFloatAreaSize);
+            VisualPins.SetValue<uint>(IdHmiIntBaseAddr, UIntBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiIntAreaSize, UIntAreaSize);
+            VisualPins.SetValue<uint>(IdHmiBoolBaseAddr, UBoolBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiBoolAreaSize, UBoolAreaSize);
+            VisualPins.SetValue<uint>(IdHmiControlBaseAddr, UControlBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiIp1, ControllerIp1);
+            VisualPins.SetValue<uint>(IdHmiIp2, ControllerIp2);
+            VisualPins.SetValue<uint>(IdHmiIp3, ControllerIp3);
+            VisualPins.SetValue<uint>(IdHmiIp4, ControllerIp4);
+            VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
+        }
+        
+        private void UpdateCommunicationSettings(CommunicationSettings settings)
+        {
+            settings.FloatBaseAddr = UFloatBaseAddr;
+            settings.FloatAreaSize = UFloatAreaSize;
+            
+            settings.IntBaseAddr = UIntBaseAddr;
+            settings.IntAreaSize = UIntAreaSize;
+            
+            settings.BoolBaseAddr = UBoolBaseAddr;
+            settings.BoolAreaSize = UBoolAreaSize;
+            
+            settings.ControlBaseAddr = UControlBaseAddr;
+            
+            settings.Ip1 = ControllerIp1;
+            settings.Ip2 = ControllerIp2;
+            settings.Ip3 = ControllerIp3;
+            settings.Ip4 = ControllerIp4;
+            
+            settings.Port = ControllerTcpPort;
+        }
+        
+        public int GetActualLineValue() => GetPinQuality(IdActualLineNumber) == OpcQuality.Good ? GetPinInt(IdActualLineNumber) : -1;
+        
+        bool IsLineChanged(int currentLine, int forLoopCount1, int forLoopCount2, int forLoopCount3)
+        {
+            if (currentLine != _previousLineNumber
+                || _previousForLoopCount1 != forLoopCount1
+                || _previousForLoopCount2 != forLoopCount2
+                || _previousForLoopCount3 != forLoopCount3)
+            {
+                _previousLineNumber = currentLine;
+                _previousForLoopCount1 = forLoopCount1;
+                _previousForLoopCount2 = forLoopCount2;
+                _previousForLoopCount3 = forLoopCount3;
+
+                return true;
+            }
+            return false;
+        }
+        
+        private void UpdateShutters()
+        {
+            _shutters.SetNames(ReadPinGroup(IdFirstShutterName, ShutterNameQuantity));
+        }
+        
+        private void UpdateHeaters()
+        {
+            _heaters.SetNames(ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity));
+        }
+        
+        private void UpdateNitrogenSources()
+        {
+            _nitrogenSources.SetNames(ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity));
+        }
+
+        private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
+        {
+            if (quantity <= 0) 
+                return new Dictionary<int, string>();
+
+            var pinGroup = new Dictionary<int, string>();
+
+            for (var pinId = firstId; pinId < firstId + quantity; pinId++)
+            {
+                if (GetPinQuality(pinId) != OpcQuality.Good)
+                    continue;
+            
+                var pinValue = GetPinValue<string>(pinId);
+                if (!string.IsNullOrEmpty(pinValue))
+                {
+                    pinGroup.Add(pinId - firstId, pinValue);
+                }
             }
 
-            // Update recipe timer based on activity.
-            _recipeTimer = _recipeTimeManager.ManageRecipeTimer(isRecipeActive, _recipeTimer, _recipeTimeManager.TotalTime) as CountTimer;
-
-            // Trigger line change event if any relevant parameter has changed.
-            if (currentLine != _previousLineNumber ||
-                _previousForLoopCount1 != forLoopCount1 ||
-                _previousForLoopCount2 != forLoopCount2 ||
-                _previousForLoopCount3 != forLoopCount3)
-            {
-                // Get expected time for the current line from recipe data.
-                var currentLineTime = _recipeTimeManager.GetRowTime(currentLine, forLoopCount1, forLoopCount2, forLoopCount3);
-                _lineChangeProcessor ??= new LineChangeProcessor();
-                _lineChangeProcessor.Process(isRecipeActive, currentLine, (float)currentLineTime.TotalSeconds, _recipeTimer);
-            }
-
-            _previousLineNumber = currentLine;
-            _previousForLoopCount1 = forLoopCount1;
-            _previousForLoopCount2 = forLoopCount2;
-            _previousForLoopCount3 = forLoopCount3;
-
-            _recipeTimeManager.UpdateRecipeTimeDisplay(
-                plcLineTime,
-                _recipeTimer,
-                total => SetPinValue(IdTotalTimeLeft, total),
-                line => SetPinValue(IdLineTimeLeft, line));
-        }
-
-        private int GetProtocolValue() =>
-            _enumProtocol switch
-            {
-                ControllerProtocol.Modbus => 1,
-                ControllerProtocol.SlmpNotImplimated => 2,
-                _ => 0
-            };
-
-        private int GetAddressAreaValue() =>
-            _enumSlmpArea switch
-            {
-                SlmpArea.D => 1,
-                SlmpArea.R => 2,
-                _ => 0
-            };
-
-        /// <summary>
-        /// Returns the actual line number if the pin quality is good; otherwise returns -1.
-        /// </summary>
-        private int GetActualLineValue()
-        {
-            int actualLine = GetPinInt(IdActualLineNumber);
-            return GetPinQuality(IdActualLineNumber) == OpcQuality.Good ? actualLine : -1;
-        }
-
-        /// <summary>
-        /// Calculates status flags based on load enable and pin quality.
-        /// </summary>
-        private uint CalculateStatusFlags(int actualLine) =>
-            (GetPinBool(IdEnaLoad) ? 1u : 0) |
-            (GetPinQuality(IdEnaLoad) == OpcQuality.Good ? 2u : 0) |
-            (actualLine != -1 ? 4u : 0);
-
-        public enum ControllerProtocol
-        {
-            Modbus,
-            SlmpNotImplimated,
-        }
-
-        public enum SlmpArea
-        {
-            D,
-            R,
+            return pinGroup;
         }
     }
 }

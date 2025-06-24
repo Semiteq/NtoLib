@@ -121,12 +121,6 @@
 	<VisualMap>
 		<!-- Visual pins start with 1001 -->
 		<Items>
-			<!-- Protocol for exchanging data transfer to the controller -->
-			<Pout ID="1001" Name="CommProtocol"		Type="БеззнаковыйЦелый"/>
-			
-			<!-- Data Storage Area for SLMP -->
-			<Pout ID="1002" Name="AddrArea"			Type="БеззнаковыйЦелый"/>
-			
 			<!-- Base Address for Real (Float) Data Storage -->
 			<Pout ID="1003" Name="FloatBaseAddr"	Type="БеззнаковыйЦелый"/>
 			
