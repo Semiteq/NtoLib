@@ -12,15 +12,13 @@ namespace NtoLib.Recipes.MbeTable.Table
         private readonly ColorScheme _colorScheme;
         private readonly Font _blockedFont; 
 
-        // Конструктор теперь принимает только ColorScheme
         public TablePainter(ColorScheme colorScheme)
         {
             _colorScheme = colorScheme;
-            // Можно вынести в саму ColorScheme или оставить здесь
+            // Можно вынести в ColorScheme
             _blockedFont = new Font("Arial", 14f, FontStyle.Italic);
         }
 
-        // Этот метод определяет состояние ячейки на основе ViewModel
         public StateType GetStateType(StepViewModel viewModel, int actualLineNumber, ColumnKey columnKey)
         {
             if (viewModel.IsCellBlocked(columnKey))
@@ -38,11 +36,9 @@ namespace NtoLib.Recipes.MbeTable.Table
                 return StateType.Selected;
             }
 
-            // Если ни одно из условий не выполнилось - это обычная ячейка
             return StateType.Default;
         }
 
-        // Метод применения стиля остается почти таким же
         public void ApplyState(DataGridViewCellStyle cellStyle, StateType state)
         {
             Font font;

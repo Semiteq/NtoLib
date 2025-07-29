@@ -22,7 +22,7 @@ public class PropertyDependencyCalc
         indexesToUpdate = Array.Empty<int>();
         errorString = string.Empty;
         
-        if (!step.TryGetProperty(ColumnKey.Action, out var actionWrapper) || !IsSmoothAction(actionWrapper.PropertyValue.AsInt))
+        if (!step.TryGetPropertyWrapper(ColumnKey.Action, out var actionWrapper) || !IsSmoothAction(actionWrapper.PropertyValue.AsInt))
             return true;
         
         var changedColumnKey = _schema.GetColumnKeyByIndex(columnIndex);
@@ -78,9 +78,9 @@ public class PropertyDependencyCalc
         errorString = null;
         value1 = value2 = value3 = 0;
 
-        if (!step.TryGetProperty(ColumnKey.Speed, out var speedWrapper) ||
-            !step.TryGetProperty(ColumnKey.Setpoint, out var setpointWrapper) ||
-            !step.TryGetProperty(ColumnKey.InitialValue, out var initialWrapper))
+        if (!step.TryGetPropertyWrapper(ColumnKey.Speed, out var speedWrapper) ||
+            !step.TryGetPropertyWrapper(ColumnKey.Setpoint, out var setpointWrapper) ||
+            !step.TryGetPropertyWrapper(ColumnKey.InitialValue, out var initialWrapper))
         {
             errorString = "Failed to retrieve required properties";
             return false;
@@ -123,7 +123,7 @@ public class PropertyDependencyCalc
 
     private PropertyType GetSpeedPropertyType(Step step)
     {
-        step.TryGetProperty(ColumnKey.Action, out var actionWrapper);
+        step.TryGetPropertyWrapper(ColumnKey.Action, out var actionWrapper);
 
         return actionWrapper.PropertyValue.AsInt switch
         {
@@ -136,6 +136,6 @@ public class PropertyDependencyCalc
     private bool TrySetCalculatedProperty(Step step, ColumnKey propertyKey, float value, PropertyType type, out string errorString)
     {
         var propertyValue = new PropertyValue(value, type, false);
-        return step.TryChangeProperty(propertyKey, propertyValue, out errorString);
+        return step.TryChangePropertyValue(propertyKey, propertyValue, out errorString);
     }
 }

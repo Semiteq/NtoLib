@@ -41,6 +41,11 @@ namespace NtoLib.Recipes.MbeTable.Recipe.Actions
                 NRun, NClose, NVent
             };
         }
+        
+        public Dictionary<int, string> GetAllActionsAsDictionary()
+        {
+            return _actions.ToDictionary(a => a.Id, a => a.Name);
+        }
 
         public bool GetActionEntryById(int id, out ActionEntry actionEntry, out string errorString)
         {

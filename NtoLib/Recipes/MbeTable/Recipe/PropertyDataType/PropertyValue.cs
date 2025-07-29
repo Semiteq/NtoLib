@@ -4,7 +4,7 @@ namespace NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 
 public class PropertyValue
 {
-    public OneOf<bool, int, float, string> UnionValue;
+    public readonly OneOf<bool, int, float, string> UnionValue;
     public readonly PropertyType Type;
     public readonly bool IsBlocked;
     

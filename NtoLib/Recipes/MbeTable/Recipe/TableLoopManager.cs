@@ -31,7 +31,7 @@ namespace NtoLib.Recipes.MbeTable.Recipe
                 if (cycleDepth > _maxLoopCount)
                     return false;
 
-                recipeLine.TryGetValue(ColumnKey.Action, out int actionId);
+                recipeLine.TryGetPropertyValue(ColumnKey.Action, out int actionId);
                 _actionManager.GetActionEntryById(actionId, out var actionEntry, out _);
 
                 if (actionEntry == _actionManager.ForLoop)
@@ -91,7 +91,7 @@ namespace NtoLib.Recipes.MbeTable.Recipe
             var level = 1;
             for (var i = endIndex - 1; i >= 0; i--)
             {
-                _tableData[i].TryGetValue(ColumnKey.Action, out int actionId);
+                _tableData[i].TryGetPropertyValue(ColumnKey.Action, out int actionId);
                 _actionManager.GetActionEntryById(actionId, out var actionEntry, out _);
 
                 if (actionEntry == _actionManager.EndForLoop)
@@ -114,7 +114,7 @@ namespace NtoLib.Recipes.MbeTable.Recipe
             var level = 1;
             for (var i = startIndex + 1; i < _tableData.Count; i++)
             {
-                _tableData[i].TryGetValue(ColumnKey.Action, out int actionId);
+                _tableData[i].TryGetPropertyValue(ColumnKey.Action, out int actionId);
                 _actionManager.GetActionEntryById(actionId, out var actionEntry, out _);
 
                 if (actionEntry == _actionManager.ForLoop)

@@ -2,18 +2,30 @@
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 using NtoLib.Recipes.MbeTable.Schema;
+using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable.Recipe
 {
     public class RecipeViewModel
     {
+        /// <summary>
+        /// Part of the MVVM pattern.
+        /// Acts as a Facade between the UI (View) and the business logic (Model).
+        /// It exposes a simplified interface for UI interactions, like adding
+        /// or removing steps, and manages the collection of StepViewModels for data binding.
+        /// This class hides the complexity of the RecipeManager
+        /// and ensures the View remains decoupled from the core logic.
+        /// </summary>
+        
+        private readonly ComboBoxDataProvider _dataProvider;
         private readonly RecipeManager _recipeManager;
         
         public BindingList<StepViewModel> Steps { get; }
 
-        public RecipeViewModel(TableSchema schema, ActionManager actionManager)
+        public RecipeViewModel(TableSchema schema, ActionManager actionManager, ComboBoxDataProvider dataProvider)
         {
             _recipeManager = new RecipeManager(schema, actionManager);
+            _dataProvider = dataProvider;
             Steps = new BindingList<StepViewModel>();
 
             _recipeManager.StepAdded += OnStepAdded;
@@ -33,7 +45,7 @@ namespace NtoLib.Recipes.MbeTable.Recipe
 
         private void OnStepAdded(Step step, int index)
         {
-            var viewModel = new StepViewModel(step, _recipeManager, index);
+            var viewModel = new StepViewModel(step, _recipeManager, index, _dataProvider);
             Steps.Insert(index, viewModel);
             RefreshViewModelIndexes();
         }

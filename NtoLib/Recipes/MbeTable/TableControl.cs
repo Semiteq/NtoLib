@@ -8,8 +8,9 @@ using FB.VisualFB;
 
 using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.StatusManager;
+using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 using NtoLib.Recipes.MbeTable.Schema;
+using NtoLib.Recipes.MbeTable.StatusManager;
 using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
@@ -26,22 +27,25 @@ namespace NtoLib.Recipes.MbeTable
         private Button _buttonAddBefore;
         private Button _buttonDel;
         private Button _buttonSave;
-        private Button _buttonOpen;        
+        private Button _buttonOpen;
 
-        private RecipeViewModel _recipeViewModel;
+        private bool _isInitialized = false;
         
         // Managers
-        private StatusManager _statusManager;
+        private StatusManager.StatusManager _statusManager;
         private TableColumnManager _tableColumnManager;
         private ActionManager _actionManager = new();
-        
-        // Classes 
+
+        // Classes
+        private RecipeViewModel _recipeViewModel;
+        private ComboBoxDataProvider _dataProvider;
+
         private OpenFileDialog _openFileDialog1;
         private SaveFileDialog _saveFileDialog1;
-        
+
         private TableSchema _tableSchema = new();
         private TablePainter _tablePainter;
-        
+
         private TableCellFormatter _tableCellFormatter;
 
         private ColorScheme _colorScheme = new();
@@ -241,16 +245,28 @@ namespace NtoLib.Recipes.MbeTable
         public TableControl() : base(true)
         {
             InitializeComponent();
-
-            InitializeServicesAndData();
-            UpdateUiManagers();
-            
-            _tableColumnManager.InitializeHeaders();
-            _tableColumnManager.InitializeTableColumns();
-            
-            InitializeDialogs();
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (!_isInitialized)
+            {
+                InitializeControl(FBConnector.DesignMode);
+            }
+        }
+        
+        protected override void ToRuntime()
+        {
+            _statusManager?.ClearStatusMessage();
+            InitializeControl(false);
+        }
+
+        protected override void ToDesign()
+        {
+            _statusManager?.ClearStatusMessage();
+            InitializeControl(true);
+        }
 
         private void InitializeDialogs()
         {
@@ -271,59 +287,14 @@ namespace NtoLib.Recipes.MbeTable
                 RestoreDirectory = true
             };
         }
-
-        private void InitializeServicesAndData()
+        
+        private void SetupEventHandlers()
         {
-            _statusManager = new StatusManager(DbgMsg);
-            _tableSchema = new TableSchema();
-            _actionManager = new ActionManager();
-    
-            _recipeViewModel = new RecipeViewModel(_tableSchema, _actionManager);
-            _table.DataSource = _recipeViewModel.Steps;
-
-            _tableCellFormatter = new TableCellFormatter();
-            
-            _colorScheme = new ColorScheme
-            {
-                ControlBackgroundColor = Color.White,
-                TableBackgroundColor = Color.White,
-                
-                HeaderFont = new Font("Arial", 16f, FontStyle.Bold),
-                
-                LineFont = new Font("Arial", 14f),
-                SelectedLineFont = new Font("Arial", 14f),
-                PassedLineFont = new Font("Arial", 14f),
-                
-                LineTextColor = Color.Black,
-                SelectedLineTextColor = Color.Black,
-                PassedLineTextColor = Color.DarkGray,
-                
-                LineBgColor = Color.White,
-                SelectedLineBgColor = Color.Green,
-                PassedLineBgColor = Color.Yellow,
-              
-                HeaderBgColor = Color.LightGray,
-                HeaderTextColor = Color.Black,
-                
-                ButtonsColor = Color.LightGray,
-            };
-        }
-
-        private void RegisterComponents()
-        {
-            if (FBConnector.Fb is not MbeTableFB fb) return;
-
-            // fb.RegisterTableData(_recipe);
-            // fb.RegisterDataGridViewUpdater(_updateBatcher);
-            // fb.RegisterCommunicationSettings(_communicationSettings);
-            // fb.RegisterShutters(_shutters);
-            // fb.RegisterHeaters(_heaters);
-            // fb.RegisterNitrogenSources(_nitrogenSources);
+            _table.CellFormatting += Table_CellFormatting;
+            _table.CellBeginEdit += Table_CellBeginEdit;
         }
 
         #endregion
-
-        #region RecipeManager Event Handlers
 
         private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
@@ -331,21 +302,34 @@ namespace NtoLib.Recipes.MbeTable
                 return;
 
             var viewModel = _recipeViewModel.Steps[e.RowIndex];
-    
+            
+            // Name-based binding, same propblem as recipemaneger todo: refactor mapping
             var columnKey = (ColumnKey)Enum.Parse(typeof(ColumnKey), _table.Columns[e.ColumnIndex].DataPropertyName);
-    
-            e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
-            e.FormattingApplied = true;
-
-            var actualLineNumber = 1; // todo: get from a source that provides runtime context
-
+            
+            var actualLineNumber = -1; // todo: get from a source that provides runtime context
+            
             var stateType = _tablePainter.GetStateType(viewModel, actualLineNumber, columnKey);
-    
+            
             _tablePainter.ApplyState(e.CellStyle, stateType);
+            
+            if (stateType != TablePainter.StateType.Blocked)
+                e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
+            
+            e.FormattingApplied = true;
         }
 
+        private void Table_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            if (e.RowIndex < 0 || _table.Columns[e.ColumnIndex].DataPropertyName != nameof(StepViewModel.ActionTarget))
+                return;
 
-        #endregion
+            var viewModel = _recipeViewModel.Steps[e.RowIndex];
+
+            if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
+            {
+                cell.DataSource = new BindingSource(viewModel.ActionTargetSource, null);
+            }
+        }
 
         #region Button Click Handlers
 
@@ -365,7 +349,7 @@ namespace NtoLib.Recipes.MbeTable
         {
             if (FBConnector.DesignMode) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? 0;
-    
+
             if (!_recipeViewModel.AddNewStep(selectedRowIndex, out var errorString))
             {
                 _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
@@ -402,32 +386,79 @@ namespace NtoLib.Recipes.MbeTable
 
             // _fileManager.SaveRecipe(_saveFileDialog1.FileName);
         }
-        
+
         private void ClickButton_Write(object sender, EventArgs e)
         {
 
         }
 
-        protected override void ToDesign()
-        {
-            _statusManager.ClearStatusMessage();
-        }
-
-        protected override void ToRuntime()
-        {
-            _statusManager.ClearStatusMessage();
-        }
-        
         private void UpdateUiManagers()
         {
-            if (_tableSchema == null) return;
+            if (_tableSchema == null || _dataProvider == null) return;
 
-            _tableColumnManager = new TableColumnManager(_table, _tableSchema, _colorScheme);
-            _tablePainter = new TablePainter(_colorScheme); // Если painter тоже зависит от схемы
+            _tableColumnManager = new TableColumnManager(_table, _tableSchema, _colorScheme, _dataProvider);
+            _tablePainter = new TablePainter(_colorScheme);
     
             _tableColumnManager.InitializeHeaders();
             _tableColumnManager.InitializeTableColumns();
             _table.Invalidate();
+        }
+        
+        private void InitializeControl(bool isDesignMode)
+        {
+            _statusManager = new StatusManager.StatusManager(DbgMsg);
+            _tableSchema = new TableSchema();
+            _actionManager = new ActionManager();
+            _tableCellFormatter = new TableCellFormatter();
+            
+            IFbActionTarget fbTarget;
+            if (isDesignMode || !(FBConnector.Fb is IFbActionTarget realFb))
+            {
+                fbTarget = new MockFbActionTarget();
+            }
+            else
+            {
+                fbTarget = realFb;
+            }
+            _dataProvider = new ComboBoxDataProvider(_actionManager, fbTarget);
+
+            _recipeViewModel = new RecipeViewModel(_tableSchema, _actionManager, _dataProvider);
+            _table.DataSource = _recipeViewModel.Steps;
+
+            UpdateUiManagers();
+    
+            if (!_isInitialized)
+            {
+                SetupEventHandlers();
+                InitializeDialogs();
+            }
+    
+            _colorScheme = new ColorScheme
+            {
+                ControlBackgroundColor = Color.White,
+                TableBackgroundColor = Color.White,
+
+                HeaderFont = new Font("Arial", 16f, FontStyle.Bold),
+
+                LineFont = new Font("Arial", 14f),
+                SelectedLineFont = new Font("Arial", 14f),
+                PassedLineFont = new Font("Arial", 14f),
+
+                LineTextColor = Color.Black,
+                SelectedLineTextColor = Color.Black,
+                PassedLineTextColor = Color.DarkGray,
+
+                LineBgColor = Color.White,
+                SelectedLineBgColor = Color.Green,
+                PassedLineBgColor = Color.Yellow,
+
+                HeaderBgColor = Color.LightGray,
+                HeaderTextColor = Color.Black,
+
+                ButtonsColor = Color.LightGray,
+            };
+            
+            _isInitialized = true;
         }
     }
 }

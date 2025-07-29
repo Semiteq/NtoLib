@@ -10,20 +10,20 @@ public class StepFactory
 {
     private readonly ActionManager _actionManager;
     private readonly TableSchema _schema;
-    
+
     public StepFactory(ActionManager actionManager, TableSchema schema)
     {
         _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
         _schema = schema ?? throw new ArgumentNullException(nameof(schema));
     }
-    
+
     public bool TryCreateStep(out Step step, out string errorString, int actionId, Dictionary<ColumnKey, PropertyWrapper> parameters)
     {
         step = new Step();
 
         foreach (var param in parameters)
         {
-            if (!step.TryChangeProperty(param.Key, param.Value.PropertyValue, out errorString))
+            if (!step.TrySetPropertyWrapper(param.Key, param.Value, out errorString))
                 return false;
         }
 
@@ -34,27 +34,27 @@ public class StepFactory
     #region Heater Actions
 
     public bool TryCreatePowerStep(
-        out Step step, 
-        out string stringError, 
-        int target, 
+        out Step step,
+        out string stringError,
+        int target,
         float setpoint = 10f,
-        string comment = "") 
+        string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Power.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Percent)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
-    
+
     public bool TryCreatePowerSmoothStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         int target,
-        float initialValue = 10f, 
-        float setpoint = 20f, 
-        float speed = 1f, 
-        float duration = 600f, 
-        string comment = "") 
+        float initialValue = 10f,
+        float setpoint = 20f,
+        float speed = 1f,
+        float duration = 600f,
+        string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.PowerSmooth.Id)
             .WithTarget(target)
@@ -66,11 +66,11 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreatePowerWaitStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         int target,
-        float setpoint = 10f, 
-        float speed = 60f, 
+        float setpoint = 10f,
+        float speed = 60f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.PowerWait.Id)
@@ -81,10 +81,10 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateTemperatureStep(
-        out Step step, 
-        out string stringError, 
-        int target, 
-        float setpoint = 500f, 
+        out Step step,
+        out string stringError,
+        int target,
+        float setpoint = 500f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Temperature.Id)
@@ -94,13 +94,13 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateTemperatureSmoothStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         int target,
-        float initialValue = 500f, 
+        float initialValue = 500f,
         float setpoint = 600f,
-        float speed = 10f, 
-        float duration = 600f, 
+        float speed = 10f,
+        float duration = 600f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.TemperatureSmooth.Id)
@@ -113,11 +113,11 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateTemperatureWaitStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         int target,
-        float setpoint = 500f, 
-        float speed = 60f, 
+        float setpoint = 500f,
+        float speed = 60f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.TemperatureWait.Id)
@@ -132,9 +132,9 @@ public class StepFactory
     #region Shutter Actions
 
     public bool TryCreateCloseStep(
-        out Step step, 
-        out string stringError, 
-        int target, 
+        out Step step,
+        out string stringError,
+        int target,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Close.Id)
@@ -143,8 +143,8 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateCloseAllStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.CloseAll.Id)
@@ -152,9 +152,9 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateOpenStep(
-        out Step step, 
-        out string stringError, 
-        int target, 
+        out Step step,
+        out string stringError,
+        int target,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Open.Id)
@@ -163,10 +163,10 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateOpenTimeStep(
-        out Step step, 
+        out Step step,
         out string stringError,
-        int target, 
-        float setpoint = 1f, 
+        int target,
+        float setpoint = 1f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.OpenTime.Id)
@@ -180,10 +180,10 @@ public class StepFactory
     #region Nitrogen Source Actions
 
     public bool TryCreateNitrogenRunSourceStep(
-        out Step step, 
+        out Step step,
         out string stringError,
-        int target, 
-        float setpoint = 10f, 
+        int target,
+        float setpoint = 10f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.NRun.Id)
@@ -193,8 +193,8 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateNitrogenSourceCloseStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.NClose.Id)
@@ -202,10 +202,10 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateNitrogenSourceVentStep(
-        out Step step, 
+        out Step step,
         out string stringError,
-        int target, 
-        float setpoint = 10f, 
+        int target,
+        float setpoint = 10f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.NVent.Id)
@@ -219,8 +219,8 @@ public class StepFactory
     #region Service Actions
 
     public bool TryCreatePauseStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Pause.Id)
@@ -228,9 +228,9 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateForLoopStep(
-        out Step step, 
-        out string stringError, 
-        int setpoint, 
+        out Step step,
+        out string stringError,
+        int setpoint,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.ForLoop.Id)
@@ -239,8 +239,8 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateEndForLoopStep(
-        out Step step, 
-        out string stringError, 
+        out Step step,
+        out string stringError,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.EndForLoop.Id)
@@ -248,9 +248,9 @@ public class StepFactory
             .TryBuild(out step, out stringError);
 
     public bool TryCreateWaitStep(
-        out Step step, 
-        out string stringError, 
-        float setpoint = 60f, 
+        out Step step,
+        out string stringError,
+        float setpoint = 60f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Wait.Id)

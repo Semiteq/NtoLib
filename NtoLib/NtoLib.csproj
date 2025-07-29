@@ -17,6 +17,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <LangVersion>10</LangVersion>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,7 +27,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RegisterForComInterop>true</RegisterForComInterop>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
@@ -58,6 +58,12 @@
     <Reference Include="MasterSCADA.Common">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Common.dll</HintPath>
     </Reference>
+    <Reference Include="MasterSCADALib">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADALib.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="OneOf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\OneOf.3.0.271\lib\net45\OneOf.dll</HintPath>
@@ -66,22 +72,37 @@
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
+    <Reference Include="System.Collections.Immutable, Version=9.0.0.7, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.9.0.7\lib\net462\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.5.1\lib\netstandard2.0\System.Memory.dll</HintPath>
+    <Reference Include="System.Formats.Nrbf, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Formats.Nrbf.9.0.7\lib\net462\System.Formats.Nrbf.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Metadata, Version=9.0.0.7, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reflection.Metadata.9.0.7\lib\net462\System.Reflection.Metadata.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Extensions, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Resources.Extensions.9.0.7\lib\net462\System.Resources.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime" />
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -127,11 +148,13 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
+    <Compile Include="Recipes\MbeTable\IFbActionTarget.cs" />
     <Compile Include="Recipes\MbeTable\IO\RecipeComparator.cs" />
     <Compile Include="Recipes\MbeTable\IO\RecipeFileReader.cs" />
     <Compile Include="Recipes\MbeTable\IO\RecipeFileWriter.cs" />
     <Compile Include="Recipes\MbeTable\IO\TableFileManager.cs" />
     <Compile Include="Recipes\MbeTable\IO\PlcCommunication.cs" />
+    <Compile Include="Recipes\MbeTable\MockFbActionTarget.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionTarget.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionEntry.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionManager.cs" />
@@ -139,18 +162,25 @@
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionType.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\IRecipeCommands.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\IStepUpdater.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Contracts\ITableProperty.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyCaster.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Contracts\IPropertyTypeDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\BoolDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\EnumDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\FloatDefinitionBase.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\FloatGenericDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\FlowDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\IntDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\PercentDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\PowerSpeedDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\StringDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\TemperatureDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\TempSpeedDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\TimeDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyDefinitionRegistry.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyWrapper.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyFormatter.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyType.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyValidator.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyValue.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\RecipeManager.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\RecipeViewModel.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StatusManager\IStatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StatusManager\StatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StatusManager\StatusMessage.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\DeployDuration.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\ModBusDeserializer.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\PropertyDependencyCalc.cs" />
@@ -162,8 +192,12 @@
     <Compile Include="Recipes\MbeTable\Schema\ColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ColumnKey.cs" />
     <Compile Include="Recipes\MbeTable\Schema\TableSchema.cs" />
+    <Compile Include="Recipes\MbeTable\StatusManager\IStatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\StatusManager\StatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\StatusManager\StatusMessage.cs" />
     <Compile Include="Recipes\MbeTable\Table\CellState.cs" />
     <Compile Include="Recipes\MbeTable\Table\ColorScheme.cs" />
+    <Compile Include="Recipes\MbeTable\Table\ComboBoxDataProvider.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableCellFormatter.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableColumnManager.cs" />
     <Compile Include="Recipes\MbeTable\Table\TablePainter.cs" />
@@ -334,18 +368,9 @@
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.bmp" />
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Recipes\MbeTable\Domain\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\writepic.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\writepic1.png" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll"
+    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll"
 chcp 437 &amp;&amp; xcopy "$(TargetPath)" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(TargetDir)NtoLib.pdb" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I</PostBuildEvent>

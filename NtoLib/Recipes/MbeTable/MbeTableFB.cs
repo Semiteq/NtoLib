@@ -7,6 +7,7 @@ using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
 using NtoLib.Recipes.MbeTable.PLC;
+using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 
@@ -19,7 +20,7 @@ namespace NtoLib.Recipes.MbeTable
     [DisplayName("Таблица рецептов MBE")]
     [ComVisible(true)]
     [Serializable]
-    public class MbeTableFB : VisualFBBase
+    public class MbeTableFB : VisualFBBase, IFbActionTarget
     {
         // Pin IDs
         private const int IdRecipeActive = 1;
@@ -58,13 +59,8 @@ namespace NtoLib.Recipes.MbeTable
 
         // Private fields
         [NonSerialized] private List<Step> _tableData;
-        // [NonSerialized] private TableTimeManager _tableTimeManager;
-        // [NonSerialized] private RecipeTimerManager _recipeTimerManager;
         [NonSerialized] private CommunicationSettings _communicationSettings;
         [NonSerialized] private ActionTarget _actionTarget;
-        // [NonSerialized] private Shutters _shutters;
-        // [NonSerialized] private Heaters _heaters;
-        // [NonSerialized] private NitrogenSources _nitrogenSources;
 
         // Default values
         private int _previousLineNumber = -1;
@@ -229,26 +225,12 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
 
-        protected override void ToRuntime()
-        {
-            base.ToRuntime();
-        }
-
-        protected override void ToDesign()
-        {
-            base.ToDesign();
-        }
-
         protected override void UpdateData()
         {
             base.UpdateData();
 
             UpdateHmiPins();
             if (_communicationSettings != null) UpdateCommunicationSettings(_communicationSettings);
-
-            // UpdateShutters();
-            // UpdateHeaters();
-            // UpdateNitrogenSources();
 
             var actualLine = GetActualLineValue();
             var isRecipeActive = GetPinValue<bool>(IdRecipeActive);
@@ -335,20 +317,20 @@ namespace NtoLib.Recipes.MbeTable
             return false;
         }
 
-        // private void UpdateShutters()
-        // {
-        //     _shutters.SetNames(ReadPinGroup(IdFirstShutterName, ShutterNameQuantity));
-        // }
-        //
-        // private void UpdateHeaters()
-        // {
-        //     _heaters.SetNames(ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity));
-        // }
-        //
-        // private void UpdateNitrogenSources()
-        // {
-        //     _nitrogenSources.SetNames(ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity));
-        // }
+        public Dictionary<int, string> GetShutterNames()
+        {
+            return ReadPinGroup(IdFirstShutterName, ShutterNameQuantity);
+        }
+        
+        public Dictionary<int, string> GetHeaterNames()
+        {
+            return ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity);
+        }
+        
+        public Dictionary<int, string> GetNitrogenSourceNames()
+        {
+            return ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity);
+        }
 
         private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
         {
