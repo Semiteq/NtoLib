@@ -1,8 +1,7 @@
-﻿namespace NtoLib.Recipes.MbeTable.Recipe.PropertyUnion
+﻿namespace NtoLib.Recipes.MbeTable.Recipe.PropertyDataType
 {
     public enum PropertyType
     {
-        Blocked,
         Bool,
         Enum,
         Float,

@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Recipes.MbeTable.Table.UI.StatusManager
+﻿namespace NtoLib.Recipes.MbeTable.Recipe.StatusManager
 {
     public interface IStatusManager
     {

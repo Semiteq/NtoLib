@@ -273,26 +273,26 @@ namespace NtoLib.Recipes.MbeTable.IO
             var intIndex = 0;
             foreach (var line in recipe)
             {
-                // Assuming first two cells are int values
-                intArray[intIndex++] = (ushort)line.ActionProperty;
-                intArray[intIndex++] = (ushort)line.TargetActionProperty;
-
-                // Next cells are float values converted to two 16-bit values each
-                var bytes2 = BitConverter.GetBytes(line.InitialValueProperty);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 0);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 2);
-
-                var bytes3 = BitConverter.GetBytes(line.SetpointProperty);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 0);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 2);
-
-                var bytes4 = BitConverter.GetBytes(line.SpeedProperty);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 0);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 2);
-
-                var bytes5 = BitConverter.GetBytes(line.StartTimeProperty);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 0);
-                floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 2);
+                // // Assuming first two cells are int values
+                // intArray[intIndex++] = (ushort)line.ActionProperty;
+                // intArray[intIndex++] = (ushort)line.TargetActionProperty;
+                //
+                // // Next cells are float values converted to two 16-bit values each
+                // var bytes2 = BitConverter.GetBytes(line.InitialValueProperty);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 0);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 2);
+                //
+                // var bytes3 = BitConverter.GetBytes(line.SetpointProperty);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 0);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 2);
+                //
+                // var bytes4 = BitConverter.GetBytes(line.SpeedProperty);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 0);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 2);
+                //
+                // var bytes5 = BitConverter.GetBytes(line.StartTimeProperty);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 0);
+                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 2);
             }
 
             return (intArray, floatArray, boolArray);
@@ -324,7 +324,7 @@ namespace NtoLib.Recipes.MbeTable.IO
 
             for (var i = 0; i < capacity; i++)
             {
-                data.Add(RecipeLineFactory.NewLine(intData, floatData, boolData, i));
+                // data.Add(RecipeLineFactory.NewLine(intData, floatData, boolData, i));
             }
             return data;
         }

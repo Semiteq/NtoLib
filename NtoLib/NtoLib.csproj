@@ -137,32 +137,37 @@
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionManager.cs" />
     <Compile Include="Recipes\MbeTable\IO\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionType.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyUnion\Property.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyUnion\PropertyLimitsMapper.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyUnion\PropertyType.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyUnion\PropertyTypeMapper.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyUnion\PropertyUnitsMapper.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\IRecipeCommands.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\IStepUpdater.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Contracts\ITableProperty.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyCaster.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyWrapper.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyFormatter.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyType.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyValue.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\RecipeManager.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\RecipeViewModel.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\StatusManager\IStatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\StatusManager\StatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\StatusManager\StatusMessage.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\DeployDuration.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\ModBusDeserializer.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\StepManager\PropertyDependencyCalc.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\Step.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepViewModel.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\TableLoopManager.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ColumnKey.cs" />
     <Compile Include="Recipes\MbeTable\Schema\TableSchema.cs" />
-    <Compile Include="Recipes\MbeTable\Table\RecipeDataExtractor.cs" />
+    <Compile Include="Recipes\MbeTable\Table\CellState.cs" />
+    <Compile Include="Recipes\MbeTable\Table\ColorScheme.cs" />
+    <Compile Include="Recipes\MbeTable\Table\TableCellFormatter.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableColumnManager.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TableLoopManager.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TableManager.cs" />
+    <Compile Include="Recipes\MbeTable\Table\TablePainter.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableTimeManager.cs" />
-    <Compile Include="Recipes\MbeTable\Table\UI\StatusManager\IStatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\Table\UI\StatusManager\StatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\Table\UI\StatusManager\StatusMessage.cs" />
-    <Compile Include="Recipes\MbeTable\Table\UI\TableUpdate\CellState.cs" />
-    <Compile Include="Recipes\MbeTable\Table\UI\TableUpdate\ColorScheme.cs" />
-    <Compile Include="Recipes\MbeTable\Table\UI\TableUpdate\TablePainter.cs" />
-    <Compile Include="Recipes\MbeTable\Table\UI\TableUpdate\UpdateBatcher.cs" />
     <Compile Include="Recipes\MbeTable\Timer\ILineChangeManager.cs" />
     <Compile Include="Recipes\MbeTable\Timer\IRecipeTimer.cs" />
     <Compile Include="Recipes\MbeTable\Timer\RecipeTimer.cs" />
@@ -174,7 +179,6 @@
     <Compile Include="Recipes\MbeTable\TableControl.Designer.cs">
       <DependentUpon>TableControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Recipes\MbeTable\Table\TableMode.cs" />
     <Compile Include="Spectrometer\SpectrometerFB.cs" />
     <Compile Include="Utils\ReadResult.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
@@ -329,6 +333,15 @@
   <ItemGroup>
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.bmp" />
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Recipes\MbeTable\Domain\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\writepic.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\writepic1.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

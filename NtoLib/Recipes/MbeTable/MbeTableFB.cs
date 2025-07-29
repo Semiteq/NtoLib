@@ -6,14 +6,9 @@ using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
-using NtoLib.Recipes.MbeTable.Managers.Contracts;
 using NtoLib.Recipes.MbeTable.PLC;
-using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
-using NtoLib.Recipes.MbeTable.Table;
-using NtoLib.Recipes.MbeTable.Table.UI;
-using NtoLib.Recipes.MbeTable.Table.UI.TableUpdate;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -37,16 +32,16 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdEnaLoad = 8;
         private const int IdTotalTimeLeft = 101;
         private const int IdLineTimeLeft = 102;
-        
+
         // ActionProperty pins
         private const int IdFirstShutterName = 201;
         private const int IdFirstHeaterName = 301;
         private const int IdFirstNitrogenSourceName = 401;
-        
+
         private const int ShutterNameQuantity = 32;
         private const int HeaterNameQuantity = 32;
         private const int NitrogenSourceNameQuantity = 3;
-        
+
         // Communication pins
         private const int IdHmiFloatBaseAddr = 1003;
         private const int IdHmiFloatAreaSize = 1004;
@@ -60,18 +55,17 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdHmiIp3 = 1012;
         private const int IdHmiIp4 = 1013;
         private const int IdHmiPort = 1014;
-        
+
         // Private fields
         [NonSerialized] private List<Step> _tableData;
-        [NonSerialized] private TableTimeManager _tableTimeManager;
-        [NonSerialized] private RecipeTimerManager _recipeTimerManager;
-        [NonSerialized] private UpdateBatcher _updateBatcher;
+        // [NonSerialized] private TableTimeManager _tableTimeManager;
+        // [NonSerialized] private RecipeTimerManager _recipeTimerManager;
         [NonSerialized] private CommunicationSettings _communicationSettings;
         [NonSerialized] private ActionTarget _actionTarget;
-        [NonSerialized] private Shutters _shutters;
-        [NonSerialized] private Heaters _heaters;
-        [NonSerialized] private NitrogenSources _nitrogenSources;
-        
+        // [NonSerialized] private Shutters _shutters;
+        // [NonSerialized] private Heaters _heaters;
+        // [NonSerialized] private NitrogenSources _nitrogenSources;
+
         // Default values
         private int _previousLineNumber = -1;
         private int _previousForLoopCount1 = -1;
@@ -82,27 +76,27 @@ namespace NtoLib.Recipes.MbeTable
 
         private uint _uFloatBaseAddr = 8100;
         private uint _uFloatAreaSize = 19600;
-        
+
         private uint _uIntBaseAddr = 27700;
         private uint _uIntAreaSize = 1400;
-        
+
         private uint _uBoolBaseAddr = 29100;
         private uint _uBoolAreaSize = 50;
-        
+
         private uint _uControlBaseAddr = 8000;
-        
+
         private uint _controllerIp1 = 192;
         private uint _controllerIp2 = 168;
         private uint _controllerIp3 = 0;
         private uint _controllerIp4 = 141;
-        
+
         private uint _controllerTcpPort = 502;
 
         [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
         [DisplayName(" 1.  Базовый адрес хранения данных типа Real (Float)")]
         public uint UFloatBaseAddr
         {
-            get => _uFloatBaseAddr; 
+            get => _uFloatBaseAddr;
             set => _uFloatBaseAddr = value;
         }
 
@@ -110,7 +104,7 @@ namespace NtoLib.Recipes.MbeTable
         [DisplayName(" 2.  Размер области хранения данных типа Real (Float)")]
         public uint UFloatAreaSize
         {
-            get => _uFloatAreaSize; 
+            get => _uFloatAreaSize;
             set => _uFloatAreaSize = value;
         }
 
@@ -118,7 +112,7 @@ namespace NtoLib.Recipes.MbeTable
         [DisplayName(" 3.  Базовый адрес хранения данных типа Int")]
         public uint UIntBaseAddr
         {
-            get => _uIntBaseAddr; 
+            get => _uIntBaseAddr;
             set => _uIntBaseAddr = value;
         }
 
@@ -126,7 +120,7 @@ namespace NtoLib.Recipes.MbeTable
         [Description("Определяет размер области для данных типа 'целый 16 бит'")]
         public uint UIntAreaSize
         {
-            get => _uIntAreaSize; 
+            get => _uIntAreaSize;
             set => _uIntAreaSize = value;
         }
 
@@ -134,7 +128,7 @@ namespace NtoLib.Recipes.MbeTable
         [Description("Определяет начальный адрес, куда помещаются данные типа 'логический'.")]
         public uint UBoolBaseAddr
         {
-            get => _uBoolBaseAddr; 
+            get => _uBoolBaseAddr;
             set => _uBoolBaseAddr = value;
         }
 
@@ -142,7 +136,7 @@ namespace NtoLib.Recipes.MbeTable
         [DisplayName(" 6.  Размер области хранения данных типа Boolean")]
         public uint UBoolAreaSize
         {
-            get => _uBoolAreaSize; 
+            get => _uBoolAreaSize;
             set => _uBoolAreaSize = value;
         }
 
@@ -150,7 +144,7 @@ namespace NtoLib.Recipes.MbeTable
         [Description("Определяет начальный адрес, где располагается зона контрольных данных (3 слова)")]
         public uint UControlBaseAddr
         {
-            get => _uControlBaseAddr; 
+            get => _uControlBaseAddr;
             set => _uControlBaseAddr = value;
         }
 
@@ -158,7 +152,7 @@ namespace NtoLib.Recipes.MbeTable
         [DisplayName("8.  IP адрес контроллера байт 1")]
         public uint ControllerIp1
         {
-            get => _controllerIp1; 
+            get => _controllerIp1;
             set => _controllerIp1 = value;
         }
 
@@ -166,7 +160,7 @@ namespace NtoLib.Recipes.MbeTable
         [Description("IP адрес контроллера байт 2")]
         public uint ControllerIp2
         {
-            get => _controllerIp2; 
+            get => _controllerIp2;
             set => _controllerIp2 = value;
         }
 
@@ -174,7 +168,7 @@ namespace NtoLib.Recipes.MbeTable
         [DisplayName("10.  IP адрес контроллера байт 3")]
         public uint ControllerIp3
         {
-            get => _controllerIp3; 
+            get => _controllerIp3;
             set => _controllerIp3 = value;
         }
 
@@ -182,7 +176,7 @@ namespace NtoLib.Recipes.MbeTable
         [DisplayName("11.  IP адрес контроллера байт 4")]
         public uint ControllerIp4
         {
-            get => _controllerIp4; 
+            get => _controllerIp4;
             set => _controllerIp4 = value;
         }
 
@@ -190,51 +184,51 @@ namespace NtoLib.Recipes.MbeTable
         [Description("TCP порт")]
         public uint ControllerTcpPort
         {
-            get => _controllerTcpPort; 
+            get => _controllerTcpPort;
             set => _controllerTcpPort = value;
         }
-        
+
         #endregion
 
         #region Registration Methods
-        public void RegisterTableData(List<Step> tableData)
-        {
-            _tableData = tableData ?? throw new ArgumentNullException(nameof(tableData));
-        }
-        
-        public void RegisterTableTimeManager(TableTimeManager tableTimeManager)
-        {
-            _tableTimeManager = tableTimeManager ?? throw new ArgumentNullException(nameof(tableTimeManager));
-        }
-
-        public void RegisterDataGridViewUpdater(UpdateBatcher updateBatcher)
-        {
-            _updateBatcher = updateBatcher ?? throw new ArgumentNullException(nameof(updateBatcher));
-        }
-        
-        public void RegisterCommunicationSettings(CommunicationSettings communicationSettings)
-        {
-            _communicationSettings = communicationSettings ?? throw new ArgumentNullException(nameof(communicationSettings));
-            UpdateCommunicationSettings(_communicationSettings);
-        }
-
-        public void RegisterShutters(Shutters shutters)
-        {
-            _shutters = shutters ?? throw new ArgumentNullException(nameof(shutters));
-        }
-        
-        public void RegisterHeaters(Heaters heaters)
-        {
-            _heaters = heaters ?? throw new ArgumentNullException(nameof(heaters));
-        }
-        
-        public void RegisterNitrogenSources(NitrogenSources nitrogenSources)
-        {
-            _nitrogenSources = nitrogenSources ?? throw new ArgumentNullException(nameof(nitrogenSources));
-        }
+        // public void RegisterTableData(List<Step> tableData)
+        // {
+        //     _tableData = tableData ?? throw new ArgumentNullException(nameof(tableData));
+        // }
+        //
+        // public void RegisterTableTimeManager(TableTimeManager tableTimeManager)
+        // {
+        //     _tableTimeManager = tableTimeManager ?? throw new ArgumentNullException(nameof(tableTimeManager));
+        // }
+        //
+        // public void RegisterDataGridViewUpdater(UpdateBatcher updateBatcher)
+        // {
+        //     _updateBatcher = updateBatcher ?? throw new ArgumentNullException(nameof(updateBatcher));
+        // }
+        //
+        // public void RegisterCommunicationSettings(CommunicationSettings communicationSettings)
+        // {
+        //     _communicationSettings = communicationSettings ?? throw new ArgumentNullException(nameof(communicationSettings));
+        //     UpdateCommunicationSettings(_communicationSettings);
+        // }
+        //
+        // public void RegisterShutters(Shutters shutters)
+        // {
+        //     _shutters = shutters ?? throw new ArgumentNullException(nameof(shutters));
+        // }
+        //
+        // public void RegisterHeaters(Heaters heaters)
+        // {
+        //     _heaters = heaters ?? throw new ArgumentNullException(nameof(heaters));
+        // }
+        //
+        // public void RegisterNitrogenSources(NitrogenSources nitrogenSources)
+        // {
+        //     _nitrogenSources = nitrogenSources ?? throw new ArgumentNullException(nameof(nitrogenSources));
+        // }
 
         #endregion
-        
+
         protected override void ToRuntime()
         {
             base.ToRuntime();
@@ -244,45 +238,45 @@ namespace NtoLib.Recipes.MbeTable
         {
             base.ToDesign();
         }
-        
+
         protected override void UpdateData()
         {
             base.UpdateData();
-            
+
             UpdateHmiPins();
             if (_communicationSettings != null) UpdateCommunicationSettings(_communicationSettings);
 
-            UpdateShutters();
-            UpdateHeaters();
-            UpdateNitrogenSources();
-            
+            // UpdateShutters();
+            // UpdateHeaters();
+            // UpdateNitrogenSources();
+
             var actualLine = GetActualLineValue();
             var isRecipeActive = GetPinValue<bool>(IdRecipeActive);
-            var actualLineNumber = GetPinValue<int>(IdActualLineNumber); 
+            var actualLineNumber = GetPinValue<int>(IdActualLineNumber);
             var stepCurrentTime = GetPinValue<float>(IdStepCurrentTime);
             var forLoopCount1 = GetPinValue<int>(IdForLoopCount1);
             var forLoopCount2 = GetPinValue<int>(IdForLoopCount2);
             var forLoopCount3 = GetPinValue<int>(IdForLoopCount3);
-            
+
             var isLineChanged = IsLineChanged(actualLineNumber, forLoopCount1, forLoopCount2, forLoopCount3);
 
-            if (_recipeTimerManager is null && _tableTimeManager is not null)
-                _recipeTimerManager = new RecipeTimerManager(_tableTimeManager);
+            // if (_recipeTimerManager is null && _tableTimeManager is not null)
+            //     _recipeTimerManager = new RecipeTimerManager(_tableTimeManager);
+            //
+            // if (_recipeTimerManager is null) return;
 
-            if (_recipeTimerManager is null) return;
-            
-            if (isRecipeActive)
-            {
-                var(leftStepTime, leftTotalTime) = _recipeTimerManager.GetLeftTimes(actualLineNumber, stepCurrentTime);
-                SetPinValue(IdActualLineNumber, leftStepTime);
-                SetPinValue(IdTotalTimeLeft, leftTotalTime);
-            }
-            
-            if (isRecipeActive && isLineChanged)
-            { 
-                _recipeTimerManager.HandleLineChange(actualLineNumber);
-                _updateBatcher.HandleLineChange(actualLineNumber);
-            }
+            // if (isRecipeActive)
+            // {
+            //     var(leftStepTime, leftTotalTime) = _recipeTimerManager.GetLeftTimes(actualLineNumber, stepCurrentTime);
+            //     SetPinValue(IdActualLineNumber, leftStepTime);
+            //     SetPinValue(IdTotalTimeLeft, leftTotalTime);
+            // }
+            //
+            // if (isRecipeActive && isLineChanged)
+            // { 
+            //     _recipeTimerManager.HandleLineChange(actualLineNumber);
+            //     _updateBatcher.HandleLineChange(actualLineNumber);
+            // }
         }
 
         private void UpdateHmiPins()
@@ -300,31 +294,31 @@ namespace NtoLib.Recipes.MbeTable
             VisualPins.SetValue<uint>(IdHmiIp4, ControllerIp4);
             VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
         }
-        
+
         private void UpdateCommunicationSettings(CommunicationSettings settings)
         {
             settings.FloatBaseAddr = UFloatBaseAddr;
             settings.FloatAreaSize = UFloatAreaSize;
-            
+
             settings.IntBaseAddr = UIntBaseAddr;
             settings.IntAreaSize = UIntAreaSize;
-            
+
             settings.BoolBaseAddr = UBoolBaseAddr;
             settings.BoolAreaSize = UBoolAreaSize;
-            
+
             settings.ControlBaseAddr = UControlBaseAddr;
-            
+
             settings.Ip1 = ControllerIp1;
             settings.Ip2 = ControllerIp2;
             settings.Ip3 = ControllerIp3;
             settings.Ip4 = ControllerIp4;
-            
+
             settings.Port = ControllerTcpPort;
         }
-        
+
         public int GetActualLineValue() => GetPinQuality(IdActualLineNumber) == OpcQuality.Good ? GetPinInt(IdActualLineNumber) : -1;
-        
-        bool IsLineChanged(int currentLine, int forLoopCount1, int forLoopCount2, int forLoopCount3)
+
+        private bool IsLineChanged(int currentLine, int forLoopCount1, int forLoopCount2, int forLoopCount3)
         {
             if (currentLine != _previousLineNumber
                 || _previousForLoopCount1 != forLoopCount1
@@ -340,25 +334,25 @@ namespace NtoLib.Recipes.MbeTable
             }
             return false;
         }
-        
-        private void UpdateShutters()
-        {
-            _shutters.SetNames(ReadPinGroup(IdFirstShutterName, ShutterNameQuantity));
-        }
-        
-        private void UpdateHeaters()
-        {
-            _heaters.SetNames(ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity));
-        }
-        
-        private void UpdateNitrogenSources()
-        {
-            _nitrogenSources.SetNames(ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity));
-        }
+
+        // private void UpdateShutters()
+        // {
+        //     _shutters.SetNames(ReadPinGroup(IdFirstShutterName, ShutterNameQuantity));
+        // }
+        //
+        // private void UpdateHeaters()
+        // {
+        //     _heaters.SetNames(ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity));
+        // }
+        //
+        // private void UpdateNitrogenSources()
+        // {
+        //     _nitrogenSources.SetNames(ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity));
+        // }
 
         private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
         {
-            if (quantity <= 0) 
+            if (quantity <= 0)
                 return new Dictionary<int, string>();
 
             var pinGroup = new Dictionary<int, string>();
@@ -367,7 +361,7 @@ namespace NtoLib.Recipes.MbeTable
             {
                 if (GetPinQuality(pinId) != OpcQuality.Good)
                     continue;
-            
+
                 var pinValue = GetPinValue<string>(pinId);
                 if (!string.IsNullOrEmpty(pinValue))
                 {

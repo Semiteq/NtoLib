@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.PropertyUnion;
+using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Recipe.StepManager;
@@ -9,26 +9,25 @@ namespace NtoLib.Recipes.MbeTable.Recipe.StepManager;
 public class StepFactory
 {
     private readonly ActionManager _actionManager;
-
-    public StepFactory(ActionManager actionManager)
+    private readonly TableSchema _schema;
+    
+    public StepFactory(ActionManager actionManager, TableSchema schema)
     {
         _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
+        _schema = schema ?? throw new ArgumentNullException(nameof(schema));
     }
     
-    public bool TryCreateStep(out Step step, out string error, int actionId, Dictionary<ColumnKey, Property> parameters)
+    public bool TryCreateStep(out Step step, out string errorString, int actionId, Dictionary<ColumnKey, PropertyWrapper> parameters)
     {
-        step = new Step(_actionManager.GetActionEntryById(actionId));
-
-        if (!step.TrySetAction(actionId, out error))
-            return false;
+        step = new Step();
 
         foreach (var param in parameters)
         {
-            if (!step.TrySetProperty(param.Key, param.Value, out error))
+            if (!step.TryChangeProperty(param.Key, param.Value.PropertyValue, out errorString))
                 return false;
         }
 
-        error = string.Empty;
+        errorString = string.Empty;
         return true;
     }
 
@@ -40,7 +39,8 @@ public class StepFactory
         int target, 
         float setpoint = 10f,
         string comment = "") 
-        => new StepBuilder(_actionManager, _actionManager.Power.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.Power.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Percent)
             .WithComment(comment)
@@ -55,7 +55,8 @@ public class StepFactory
         float speed = 1f, 
         float duration = 600f, 
         string comment = "") 
-        => new StepBuilder(_actionManager, _actionManager.PowerSmooth.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.PowerSmooth.Id)
             .WithTarget(target)
             .WithInitialValue(initialValue, PropertyType.Percent)
             .WithSetpoint(setpoint, PropertyType.Percent)
@@ -71,7 +72,8 @@ public class StepFactory
         float setpoint = 10f, 
         float speed = 60f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.PowerWait.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.PowerWait.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Percent)
             .WithSpeed(speed, PropertyType.PowerSpeed)
@@ -84,7 +86,8 @@ public class StepFactory
         int target, 
         float setpoint = 500f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.Temperature.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.Temperature.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Temp)
             .WithComment(comment)
@@ -99,7 +102,8 @@ public class StepFactory
         float speed = 10f, 
         float duration = 600f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.TemperatureSmooth.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.TemperatureSmooth.Id)
             .WithTarget(target)
             .WithInitialValue(initialValue, PropertyType.Temp)
             .WithSetpoint(setpoint, PropertyType.Temp)
@@ -115,7 +119,8 @@ public class StepFactory
         float setpoint = 500f, 
         float speed = 60f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.TemperatureWait.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.TemperatureWait.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Temp)
             .WithDuration(speed)
@@ -131,7 +136,8 @@ public class StepFactory
         out string stringError, 
         int target, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.Close.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.Close.Id)
             .WithTarget(target)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
@@ -140,7 +146,8 @@ public class StepFactory
         out Step step, 
         out string stringError, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.CloseAll.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.CloseAll.Id)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
 
@@ -149,7 +156,8 @@ public class StepFactory
         out string stringError, 
         int target, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.Open.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.Open.Id)
             .WithTarget(target)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
@@ -160,7 +168,8 @@ public class StepFactory
         int target, 
         float setpoint = 1f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.OpenTime.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.OpenTime.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Time)
             .WithComment(comment)
@@ -176,7 +185,8 @@ public class StepFactory
         int target, 
         float setpoint = 10f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.NVent.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.NRun.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Flow)
             .WithComment(comment)
@@ -186,7 +196,8 @@ public class StepFactory
         out Step step, 
         out string stringError, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.NRun.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.NClose.Id)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
 
@@ -196,7 +207,8 @@ public class StepFactory
         int target, 
         float setpoint = 10f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.NVent.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.NVent.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Flow)
             .WithComment(comment)
@@ -210,7 +222,8 @@ public class StepFactory
         out Step step, 
         out string stringError, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.Pause.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.Pause.Id)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
 
@@ -219,7 +232,8 @@ public class StepFactory
         out string stringError, 
         int setpoint, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.ForLoop.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.ForLoop.Id)
             .WithSetpoint(setpoint, PropertyType.Int)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
@@ -228,7 +242,8 @@ public class StepFactory
         out Step step, 
         out string stringError, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.EndForLoop.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.EndForLoop.Id)
             .WithComment(comment)
             .TryBuild(out step, out stringError);
 
@@ -237,7 +252,8 @@ public class StepFactory
         out string stringError, 
         float setpoint = 60f, 
         string comment = "")
-        => new StepBuilder(_actionManager, _actionManager.Wait.Id)
+        => new StepBuilder(_actionManager, _schema)
+            .WithAction(_actionManager.Wait.Id)
             .WithSetpoint(setpoint, PropertyType.Time)
             .WithComment(comment)
             .TryBuild(out step, out stringError);

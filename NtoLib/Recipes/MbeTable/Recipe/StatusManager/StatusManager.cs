@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace NtoLib.Recipes.MbeTable.Table.UI.StatusManager
+namespace NtoLib.Recipes.MbeTable.Recipe.StatusManager
 {
     public class StatusManager : IStatusManager
     {

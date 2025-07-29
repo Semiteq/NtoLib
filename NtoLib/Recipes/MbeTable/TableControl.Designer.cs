@@ -24,12 +24,13 @@ namespace NtoLib.Recipes.MbeTable
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TableControl));
             this._table = new System.Windows.Forms.DataGridView();
+            this.DbgMsg = new System.Windows.Forms.Label();
+            this._buttonWrite = new System.Windows.Forms.Button();
+            this._buttonOpen = new System.Windows.Forms.Button();
             this._buttonAddAfter = new System.Windows.Forms.Button();
+            this._buttonSave = new System.Windows.Forms.Button();
             this._buttonAddBefore = new System.Windows.Forms.Button();
             this._buttonDel = new System.Windows.Forms.Button();
-            this._buttonSave = new System.Windows.Forms.Button();
-            this._buttonOpen = new System.Windows.Forms.Button();
-            this.DbgMsg = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this._table)).BeginInit();
             this.SuspendLayout();
             // 
@@ -58,80 +59,6 @@ namespace NtoLib.Recipes.MbeTable
             this._table.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this._table.Size = new System.Drawing.Size(962, 474);
             this._table.TabIndex = 1;
-            this._table.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.EndCellEdit);
-            this._table.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellValueChanged);
-            this._table.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridView1_CurrentCellDirtyStateChanged);
-            // 
-            // _buttonAddAfter
-            // 
-            this._buttonAddAfter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this._buttonAddAfter.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonAddAfter.BackgroundImage")));
-            this._buttonAddAfter.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this._buttonAddAfter.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonAddAfter.Location = new System.Drawing.Point(826, 483);
-            this._buttonAddAfter.Name = "_buttonAddAfter";
-            this._buttonAddAfter.Size = new System.Drawing.Size(43, 40);
-            this._buttonAddAfter.TabIndex = 13;
-            this._buttonAddAfter.UseVisualStyleBackColor = true;
-            this._buttonAddAfter.Visible = false;
-            this._buttonAddAfter.Click += new System.EventHandler(this.ClickButton_AddLineAfter);
-            // 
-            // _buttonAddBefore
-            // 
-            this._buttonAddBefore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this._buttonAddBefore.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonAddBefore.BackgroundImage")));
-            this._buttonAddBefore.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this._buttonAddBefore.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonAddBefore.Location = new System.Drawing.Point(777, 483);
-            this._buttonAddBefore.Name = "_buttonAddBefore";
-            this._buttonAddBefore.Size = new System.Drawing.Size(43, 40);
-            this._buttonAddBefore.TabIndex = 12;
-            this._buttonAddBefore.UseVisualStyleBackColor = true;
-            this._buttonAddBefore.Visible = false;
-            this._buttonAddBefore.Click += new System.EventHandler(this.ClickButton_AddLineBefore);
-            // 
-            // _buttonDel
-            // 
-            this._buttonDel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this._buttonDel.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonDel.BackgroundImage")));
-            this._buttonDel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this._buttonDel.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonDel.Location = new System.Drawing.Point(728, 483);
-            this._buttonDel.Name = "_buttonDel";
-            this._buttonDel.Size = new System.Drawing.Size(43, 40);
-            this._buttonDel.TabIndex = 11;
-            this._buttonDel.UseVisualStyleBackColor = true;
-            this._buttonDel.Visible = false;
-            this._buttonDel.Click += new System.EventHandler(this.ClickButton_Delete);
-            // 
-            // _buttonSave
-            // 
-            this._buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this._buttonSave.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonSave.BackgroundImage")));
-            this._buttonSave.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this._buttonSave.Enabled = false;
-            this._buttonSave.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonSave.Location = new System.Drawing.Point(924, 483);
-            this._buttonSave.Name = "_buttonSave";
-            this._buttonSave.Size = new System.Drawing.Size(41, 40);
-            this._buttonSave.TabIndex = 9;
-            this._buttonSave.UseVisualStyleBackColor = true;
-            this._buttonSave.Visible = false;
-            this._buttonSave.Click += new System.EventHandler(this.ClickButton_Save);
-            // 
-            // _buttonOpen
-            // 
-            this._buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this._buttonOpen.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonOpen.BackgroundImage")));
-            this._buttonOpen.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this._buttonOpen.Enabled = false;
-            this._buttonOpen.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonOpen.Location = new System.Drawing.Point(875, 483);
-            this._buttonOpen.Name = "_buttonOpen";
-            this._buttonOpen.Size = new System.Drawing.Size(43, 40);
-            this._buttonOpen.TabIndex = 8;
-            this._buttonOpen.UseVisualStyleBackColor = true;
-            this._buttonOpen.Click += new System.EventHandler(this.ClickButton_Open);
             // 
             // DbgMsg
             // 
@@ -140,14 +67,91 @@ namespace NtoLib.Recipes.MbeTable
             this.DbgMsg.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.DbgMsg.Location = new System.Drawing.Point(3, 483);
             this.DbgMsg.Name = "DbgMsg";
-            this.DbgMsg.Size = new System.Drawing.Size(719, 40);
+            this.DbgMsg.Size = new System.Drawing.Size(670, 40);
             this.DbgMsg.TabIndex = 14;
             this.DbgMsg.Text = "DbgMsg";
             this.DbgMsg.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // _buttonWrite
+            // 
+            this._buttonWrite.BackgroundImage = global::NtoLib.Properties.Resources.writepic1;
+            this._buttonWrite.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this._buttonWrite.Location = new System.Drawing.Point(922, 483);
+            this._buttonWrite.Name = "_buttonWrite";
+            this._buttonWrite.Size = new System.Drawing.Size(43, 40);
+            this._buttonWrite.TabIndex = 15;
+            this._buttonWrite.UseVisualStyleBackColor = true;
+            this._buttonWrite.Click += new System.EventHandler(this.ClickButton_Write);
+            // 
+            // _buttonOpen
+            // 
+            this._buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonOpen.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonOpen.BackgroundImage")));
+            this._buttonOpen.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this._buttonOpen.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this._buttonOpen.Location = new System.Drawing.Point(826, 483);
+            this._buttonOpen.Name = "_buttonOpen";
+            this._buttonOpen.Size = new System.Drawing.Size(43, 40);
+            this._buttonOpen.TabIndex = 8;
+            this._buttonOpen.UseVisualStyleBackColor = true;
+            this._buttonOpen.Click += new System.EventHandler(this.ClickButton_Open);
+            // 
+            // _buttonAddAfter
+            // 
+            this._buttonAddAfter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonAddAfter.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonAddAfter.BackgroundImage")));
+            this._buttonAddAfter.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this._buttonAddAfter.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this._buttonAddAfter.Location = new System.Drawing.Point(778, 483);
+            this._buttonAddAfter.Name = "_buttonAddAfter";
+            this._buttonAddAfter.Size = new System.Drawing.Size(43, 40);
+            this._buttonAddAfter.TabIndex = 13;
+            this._buttonAddAfter.UseVisualStyleBackColor = true;
+            this._buttonAddAfter.Click += new System.EventHandler(this.ClickButton_AddLineAfter);
+            // 
+            // _buttonSave
+            // 
+            this._buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonSave.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonSave.BackgroundImage")));
+            this._buttonSave.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this._buttonSave.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this._buttonSave.Location = new System.Drawing.Point(874, 483);
+            this._buttonSave.Name = "_buttonSave";
+            this._buttonSave.Size = new System.Drawing.Size(43, 40);
+            this._buttonSave.TabIndex = 9;
+            this._buttonSave.UseVisualStyleBackColor = true;
+            this._buttonSave.Click += new System.EventHandler(this.ClickButton_Save);
+            // 
+            // _buttonAddBefore
+            // 
+            this._buttonAddBefore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonAddBefore.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonAddBefore.BackgroundImage")));
+            this._buttonAddBefore.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this._buttonAddBefore.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this._buttonAddBefore.Location = new System.Drawing.Point(730, 483);
+            this._buttonAddBefore.Name = "_buttonAddBefore";
+            this._buttonAddBefore.Size = new System.Drawing.Size(43, 40);
+            this._buttonAddBefore.TabIndex = 12;
+            this._buttonAddBefore.UseVisualStyleBackColor = true;
+            this._buttonAddBefore.Click += new System.EventHandler(this.ClickButton_AddLineBefore);
+            // 
+            // _buttonDel
+            // 
+            this._buttonDel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonDel.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("_buttonDel.BackgroundImage")));
+            this._buttonDel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this._buttonDel.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this._buttonDel.Location = new System.Drawing.Point(682, 483);
+            this._buttonDel.Name = "_buttonDel";
+            this._buttonDel.Size = new System.Drawing.Size(43, 40);
+            this._buttonDel.TabIndex = 11;
+            this._buttonDel.UseVisualStyleBackColor = true;
+            this._buttonDel.Click += new System.EventHandler(this.ClickButton_Delete);
+            // 
             // TableControl
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+            this.Controls.Add(this._buttonWrite);
             this.Controls.Add(this._buttonOpen);
             this.Controls.Add(this._buttonAddAfter);
             this.Controls.Add(this._buttonSave);
@@ -157,11 +161,11 @@ namespace NtoLib.Recipes.MbeTable
             this.Controls.Add(this.DbgMsg);
             this.Name = "TableControl";
             this.Size = new System.Drawing.Size(968, 526);
-            this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             ((System.ComponentModel.ISupportInitialize)(this._table)).EndInit();
             this.ResumeLayout(false);
 
         }
         private Label DbgMsg;
+        private Button _buttonWrite;
     }
 }

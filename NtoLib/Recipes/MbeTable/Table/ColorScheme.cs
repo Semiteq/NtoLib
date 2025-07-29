@@ -1,8 +1,8 @@
 ﻿using System.Drawing;
 
-namespace NtoLib.Recipes.MbeTable.Table.UI.TableUpdate;
+namespace NtoLib.Recipes.MbeTable.Table;
 
-public struct ColorScheme
+public class ColorScheme
 {
     // User can only change UI parameters when changing "To Design" => "To Runtime" state.
     // No defaults are applied dew to UI stores the default values.
@@ -31,5 +31,4 @@ public struct ColorScheme
         
     // Buttons
     public Color ButtonsColor;
-    public int ButtonsSize;
 }

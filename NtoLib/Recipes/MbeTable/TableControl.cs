@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+
 using FB.VisualFB;
-using NtoLib.Recipes.MbeTable.IO;
-using NtoLib.Recipes.MbeTable.PLC;
+
 using NtoLib.Recipes.MbeTable.Recipe;
-using NtoLib.Recipes.MbeTable.Recipe.StepManager;
-using NtoLib.Recipes.MbeTable.RecipeLines;
+using NtoLib.Recipes.MbeTable.Recipe.Actions;
+using NtoLib.Recipes.MbeTable.Recipe.StatusManager;
 using NtoLib.Recipes.MbeTable.Schema;
 using NtoLib.Recipes.MbeTable.Table;
-using NtoLib.Recipes.MbeTable.Table.UI.StatusManager;
-using NtoLib.Recipes.MbeTable.Table.UI.TableUpdate;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -30,271 +26,211 @@ namespace NtoLib.Recipes.MbeTable
         private Button _buttonAddBefore;
         private Button _buttonDel;
         private Button _buttonSave;
-        private Button _buttonOpen;
+        private Button _buttonOpen;        
 
-        private readonly List<Step> _recipe = new();
-        private TableMode _tableType = TableMode.Edit;
+        private RecipeViewModel _recipeViewModel;
         
         // Managers
         private StatusManager _statusManager;
-        private RecipeManager _recipeManager;
-        private TableManager _tableManager;
-
+        private TableColumnManager _tableColumnManager;
+        private ActionManager _actionManager = new();
+        
         // Classes 
         private OpenFileDialog _openFileDialog1;
         private SaveFileDialog _saveFileDialog1;
-        private ColorScheme _colorScheme;
-        private TableSchema _tableSchema;
+        
+        private TableSchema _tableSchema = new();
         private TablePainter _tablePainter;
-        private UpdateBatcher _updateBatcher;
         
-        // Table background colors
-        private Color _controlBackgroundColor = Color.White;
-        private Color _tableBackgroundColor = Color.White;
-        
-        // Table fonts
-        private Font _headerFont = new("Arial", 16f, FontStyle.Bold);
-        private Font _lineFont = new("Arial", 14f);
-        private Font _selectedLineFont = new("Arial", 14f);
-        private Font _passedLineFont = new("Arial", 14f);
+        private TableCellFormatter _tableCellFormatter;
 
-        // Line text colors
-        private Color _headerTextColor = Color.Black;
-        private Color _lineTextColor = Color.Black;
-        private Color _selectedLineTextColor = Color.Black;
-        private Color _passedLineTextColor = Color.DarkGray;
-        
-        // Line background colors
-        private Color _headerBgColor = Color.DarkGray;
-        private Color _lineBgColor = Color.White;
-        private Color _selectedLineBgColor = Color.Green;
-        private Color _passedLineBgColor = Color.Yellow;
-        
-        // Buttons
-        private Color _buttonsColor = Color.Gray;
-        private int _buttonsSize = 24;
-        
+        private ColorScheme _colorScheme = new();
+
         #endregion
 
         #region Properties
 
-        [DisplayName("Режим")]
-        public TableMode TableType
-        {
-            get => _tableType;
-            set
-            {
-                _tableType = value;
-                if (_tableType == TableMode.View)
-                    ChangeToViewMode();
-                else
-                    ChangeToEditMode();
-            }
-        }
-
         [DisplayName("Цвет фона")]
         public Color ControlBgColor
         {
-            get => _controlBackgroundColor;
+            get => _colorScheme.ControlBackgroundColor;
             set
             {
-                if (value != Color.Transparent)
-                    _controlBackgroundColor = value;
-                
-                BackColor = _controlBackgroundColor;
-                DbgMsg.BackColor = _controlBackgroundColor;
-
+                if (value == Color.Transparent) return;
                 _colorScheme.ControlBackgroundColor = value;
+                BackColor = value;
+                DbgMsg.BackColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет фона таблицы")]
         public Color TableBgColor
         {
-            get => _tableBackgroundColor;
+            get => _colorScheme.TableBackgroundColor;
             set
             {
-                if (value != Color.Transparent)
-                    _tableBackgroundColor = value;
-                
-                _table.BackgroundColor = _tableBackgroundColor;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.TableBackgroundColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Шрифт заголовка таблицы")]
         public Font HeaderFont
         {
-            get => _headerFont;
+            get => _colorScheme.HeaderFont;
             set
             {
-                _headerFont = value;
+                if (Equals(_colorScheme.HeaderFont, value)) return;
                 _colorScheme.HeaderFont = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет текста заголовка таблицы")]
         public Color HeaderTextColor
         {
-            get => _headerTextColor;
+            get => _colorScheme.HeaderTextColor;
             set
             {
-                if (value != Color.Transparent)
-                    _headerTextColor = value;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.HeaderTextColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет фона заголовка таблицы")]
         public Color HeaderBgColor
         {
-            get => _headerBgColor;
+            get => _colorScheme.HeaderBgColor;
             set
             {
-                if (value != Color.Transparent)
-                    _headerBgColor = value;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.HeaderBgColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Шрифт строки таблицы")]
         public Font LineFont
         {
-            get => _lineFont;
+            get => _colorScheme.LineFont;
             set
             {
-                _lineFont = value;
+                if (Equals(_colorScheme.LineFont, value)) return;
                 _colorScheme.LineFont = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет текста строки таблицы")]
         public Color LineTextColor
         {
-            get => _lineTextColor;
+            get => _colorScheme.LineTextColor;
             set
             {
-                if (value != Color.Transparent)
-                    _lineTextColor = value;
-                
-                _colorScheme.LineTextColor = value;
+                if (_colorScheme.LineBgColor == value) return;
+                _colorScheme.LineBgColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет фона строки таблицы")]
         public Color LineBgColor
         {
-            get => _lineBgColor;
+            get => _colorScheme.LineBgColor;
             set
             {
-                if (value != Color.Transparent)
-                    _lineBgColor = value;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.LineBgColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Шрифт текущей строки таблицы")]
         public Font SelectedLineFont
         {
-            get => _selectedLineFont;
+            get => _colorScheme.SelectedLineFont;
             set
             {
-                _selectedLineFont = value; 
+                if (Equals(_colorScheme.SelectedLineFont, value)) return;
                 _colorScheme.SelectedLineFont = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет текста текущей строки таблицы")]
         public Color SelectedLineTextColor
         {
-            get => _selectedLineTextColor;
+            get => _colorScheme.SelectedLineTextColor;
             set
             {
-                if (value != Color.Transparent)
-                    _selectedLineTextColor = value;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.SelectedLineTextColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет фона текущей строки таблицы")]
         public Color SelectedLineBgColor
         {
-            get => _selectedLineBgColor;
+            get => _colorScheme.SelectedLineBgColor;
             set
             {
-                if (value != Color.Transparent)
-                    _selectedLineBgColor = value;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.SelectedLineBgColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Шрифт пройденной строки таблицы")]
         public Font PassedLineFont
         {
-            get => _passedLineFont;
+            get => _colorScheme.PassedLineFont;
             set
             {
-                _passedLineFont = value; 
+                if (Equals(_colorScheme.PassedLineFont, value)) return;
                 _colorScheme.PassedLineFont = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет текста пройденной строки таблицы")]
         public Color PassedLineTextColor
         {
-            get => _passedLineTextColor;
+            get => _colorScheme.PassedLineTextColor;
             set
             {
-                if (value != Color.Transparent)
-                    _passedLineTextColor = value;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.PassedLineTextColor = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет фона пройденной строки таблицы")]
         public Color PassedLineBgColor
         {
-            get => _passedLineBgColor;
+            get => _colorScheme.PassedLineBgColor;
             set
             {
-                if (value != Color.Transparent)
-                    _passedLineBgColor = value;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.PassedLineBgColor = value;
-            }
-        }
-
-        [DisplayName("Размер кнопок")]
-        public int ButtonsSize
-        {
-            get => _buttonsSize;
-            set
-            {
-                _buttonsSize = value; 
-                _colorScheme.ButtonsSize = value;
+                UpdateUiManagers();
             }
         }
 
         [DisplayName("Цвет кнопок")]
         public Color ButtonsColor
         {
-            get => _buttonsColor;
+            get => _colorScheme.ButtonsColor;
             set
             {
-                if (value != Color.Transparent)
-                    _buttonsColor = value;
-                
-                _buttonOpen.BackColor = _buttonsColor;
-                _buttonSave.BackColor = _buttonsColor;
-                
+                if (value == Color.Transparent) return;
                 _colorScheme.ButtonsColor = value;
+                _buttonOpen.BackColor = value;
+                _buttonSave.BackColor = value;
+                UpdateUiManagers();
             }
         }
 
@@ -305,25 +241,16 @@ namespace NtoLib.Recipes.MbeTable
         public TableControl() : base(true)
         {
             InitializeComponent();
-            Initialize();
-        }
 
-        private void Initialize()
-        {
-            InitializeDataGrid();
+            InitializeServicesAndData();
+            UpdateUiManagers();
+            
+            _tableColumnManager.InitializeHeaders();
+            _tableColumnManager.InitializeTableColumns();
+            
             InitializeDialogs();
-            InitializeServices();
-            InitializeManagers();
-            SetupEventHandlers();
         }
 
-        private void InitializeDataGrid()
-        {
-            _table.Rows.Clear();
-            _table.Columns.Clear();
-            _table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-            _table.RowHeadersWidth = 90;
-        }
 
         private void InitializeDialogs()
         {
@@ -345,91 +272,125 @@ namespace NtoLib.Recipes.MbeTable
             };
         }
 
-        private void InitializeServices()
-        {
-            _tableSchema = new();
-            
-            _plcCommunication = new PlcCommunication();
-            _communicationSettings = new CommunicationSettings();
-
-            _recipeFileReader = new RecipeFileReader();
-            _recipeFileWriter = new RecipeFileWriter();
-
-            _tablePainter = new TablePainter(_table);
-            _updateBatcher = new UpdateBatcher(_table, _recipe);
-        }
-
-        private void InitializeManagers()
+        private void InitializeServicesAndData()
         {
             _statusManager = new StatusManager(DbgMsg);
+            _tableSchema = new TableSchema();
+            _actionManager = new ActionManager();
+    
+            _recipeViewModel = new RecipeViewModel(_tableSchema, _actionManager);
+            _table.DataSource = _recipeViewModel.Steps;
+
+            _tableCellFormatter = new TableCellFormatter();
+            
+            _colorScheme = new ColorScheme
+            {
+                ControlBackgroundColor = Color.White,
+                TableBackgroundColor = Color.White,
+                
+                HeaderFont = new Font("Arial", 16f, FontStyle.Bold),
+                
+                LineFont = new Font("Arial", 14f),
+                SelectedLineFont = new Font("Arial", 14f),
+                PassedLineFont = new Font("Arial", 14f),
+                
+                LineTextColor = Color.Black,
+                SelectedLineTextColor = Color.Black,
+                PassedLineTextColor = Color.DarkGray,
+                
+                LineBgColor = Color.White,
+                SelectedLineBgColor = Color.Green,
+                PassedLineBgColor = Color.Yellow,
+              
+                HeaderBgColor = Color.LightGray,
+                HeaderTextColor = Color.Black,
+                
+                ButtonsColor = Color.LightGray,
+            };
         }
 
         private void RegisterComponents()
         {
             if (FBConnector.Fb is not MbeTableFB fb) return;
 
-            fb.RegisterTableData(_recipe);
-            fb.RegisterDataGridViewUpdater(_updateBatcher);
-            fb.RegisterCommunicationSettings(_communicationSettings);
-            fb.RegisterShutters(_shutters);
-            fb.RegisterHeaters(_heaters);
-            fb.RegisterNitrogenSources(_nitrogenSources);
+            // fb.RegisterTableData(_recipe);
+            // fb.RegisterDataGridViewUpdater(_updateBatcher);
+            // fb.RegisterCommunicationSettings(_communicationSettings);
+            // fb.RegisterShutters(_shutters);
+            // fb.RegisterHeaters(_heaters);
+            // fb.RegisterNitrogenSources(_nitrogenSources);
         }
 
         #endregion
 
-        #region Event Handlers
+        #region RecipeManager Event Handlers
+
+        private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _recipeViewModel.Steps.Count)
+                return;
+
+            var viewModel = _recipeViewModel.Steps[e.RowIndex];
+    
+            var columnKey = (ColumnKey)Enum.Parse(typeof(ColumnKey), _table.Columns[e.ColumnIndex].DataPropertyName);
+    
+            e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
+            e.FormattingApplied = true;
+
+            var actualLineNumber = 1; // todo: get from a source that provides runtime context
+
+            var stateType = _tablePainter.GetStateType(viewModel, actualLineNumber, columnKey);
+    
+            _tablePainter.ApplyState(e.CellStyle, stateType);
+        }
+
+
+        #endregion
+
+        #region Button Click Handlers
 
         private void ClickButton_Delete(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode || _tableType == TableMode.View) return;
+            if (FBConnector.DesignMode) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? -1;
+            if (selectedRowIndex < 0) return;
 
-            if (!_recipeManager.TryRemoveStep(selectedRowIndex, out var errorString))
+            if (!_recipeViewModel.RemoveStep(selectedRowIndex, out var errorString))
             {
                 _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
-                return;
             }
-            
-            _tableManager.RemoveLine(selectedRowIndex);
         }
 
         private void ClickButton_AddLineBefore(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode || _tableType == TableMode.View) return;
-
+            if (FBConnector.DesignMode) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? 0;
-            
-            if (!_recipeManager.TryAddNewStep(selectedRowIndex, out var step, out var errorString))
+    
+            if (!_recipeViewModel.AddNewStep(selectedRowIndex, out var errorString))
             {
                 _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
-                return;
             }
-
-            _tableManager.AddLine(step, selectedRowIndex);
         }
 
         private void ClickButton_AddLineAfter(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode || _tableType == TableMode.View) return;
-
+            if (FBConnector.DesignMode) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? 0;
 
-            if (!_recipeManager.TryAddNewStep(selectedRowIndex + 1, out var step, out var errorString))
+            if (!_recipeViewModel.AddNewStep(selectedRowIndex + 1, out var errorString))
             {
                 _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
-                return;
             }
-            
-            _tableManager.AddLine(step, selectedRowIndex);
         }
+
+        #endregion
 
         private void ClickButton_Open(object sender, EventArgs e)
         {
-            if (this.FBConnector.DesignMode || _openFileDialog1.ShowDialog() != DialogResult.OK)
+            if (FBConnector.DesignMode || _openFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
-            _fileManager.LoadRecipe(_openFileDialog1.FileName);
+            // _fileManager.LoadRecipe(_openFileDialog1.FileName);
         }
 
         private void ClickButton_Save(object sender, EventArgs e)
@@ -439,110 +400,34 @@ namespace NtoLib.Recipes.MbeTable
             if (_saveFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
-            _fileManager.SaveRecipe(_saveFileDialog1.FileName);
+            // _fileManager.SaveRecipe(_saveFileDialog1.FileName);
         }
-
-        // Handles cell edit completion event
-        private void EndCellEdit(object sender, DataGridViewCellEventArgs e)
+        
+        private void ClickButton_Write(object sender, EventArgs e)
         {
 
         }
-
-        private void OnRowHeaderDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            _loopManager.OnRowHeaderDoubleClick(sender, e);
-        }
-
-        // Handles immediate cell edit state changes for real-time processing
-        private void dataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        // Handles cell edit completion (fires when editing ends, regardless of value change)
-        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0 || e.RowIndex >= _table.Rows.Count)
-                return;
-
-            var rowIndex = e.RowIndex;
-            var columnIndex = e.ColumnIndex;
-            var cell = _table.Rows[rowIndex].Cells[columnIndex];
-            
-            
-            
-            if (!_recipeManager.TrySetStepProperty(rowIndex, columnIndex, cell.Value, out var errorString))
-            {
-                _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
-                return;
-            }
-            
-            _tableManager.UpdateCell(rowIndex, columnIndex, cell.Value);
-        }
-
-        private async void HandleVisibleChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!Visible || DesignMode || _tableType != TableMode.View) return;
-                if (await _fileManager.TryLoadRecipeFromPlc())
-                    _statusManager.WriteStatusMessage("Рецепт загружен из ПЛК");
-            }
-            catch (Exception ex)
-            {
-                _statusManager.WriteStatusMessage($"Ошибка загрузки рецепта: {ex.Message}", true);
-            }
-        }
-
-        private void SetupEventHandlers()
-        {
-            _table.RowHeaderMouseDoubleClick += OnRowHeaderDoubleClick;
-        }
-
-        #endregion
-
-        #region OnPaint
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            if (FBConnector.DesignMode || FBConnector.Fb is not MbeTableFB) return;
-
-            _updateBatcher.ProcessUpdates();
-        }
-
-        private void ChangeToViewMode()
-        {
-            _buttonOpen.Enabled = true;
-        }
-
-        private void ChangeToEditMode()
-        {
-            _buttonOpen.Enabled = true;
-            
-            _buttonSave.Visible = true;
-            _buttonSave.Enabled = true;
-            
-            _buttonDel.Visible = true;
-            
-            _buttonAddAfter.Visible = true;
-            _buttonAddBefore.Visible = true;
-        }
-
-        #endregion
 
         protected override void ToDesign()
         {
-            
             _statusManager.ClearStatusMessage();
-            _tableManager.ToDesign();
         }
 
         protected override void ToRuntime()
         {
             _statusManager.ClearStatusMessage();
-            _tableManager.ToRuntime();
-            
+        }
+        
+        private void UpdateUiManagers()
+        {
+            if (_tableSchema == null) return;
+
+            _tableColumnManager = new TableColumnManager(_table, _tableSchema, _colorScheme);
+            _tablePainter = new TablePainter(_colorScheme); // Если painter тоже зависит от схемы
+    
+            _tableColumnManager.InitializeHeaders();
+            _tableColumnManager.InitializeTableColumns();
+            _table.Invalidate();
         }
     }
 }
-

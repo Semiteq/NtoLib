@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Recipe.PropertyUnion;
+using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 
 namespace NtoLib.Recipes.MbeTable.Schema
 {
@@ -16,6 +16,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Index = 0, 
                 UiName = "Действие", 
                 PropertyType = PropertyType.Enum, 
+                Type = typeof(int),
+                TableCellType = typeof(DataGridViewComboBoxCell),
                 Width = 200, 
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleLeft
@@ -26,6 +28,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Index = 1, 
                 UiName = "Объект", 
                 PropertyType = PropertyType.Enum, 
+                TableCellType = typeof(DataGridViewComboBoxCell),
+                Type = typeof(int),
                 Width = 150, 
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -35,7 +39,9 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Key = ColumnKey.InitialValue,
                 Index = 2, 
                 UiName = "Нач.значение", 
-                PropertyType = PropertyType.Float, 
+                PropertyType = PropertyType.Float,
+                TableCellType = typeof(DataGridViewTextBoxCell),
+                Type = typeof(float),
                 Width = 200,
                 ReadOnly = false, 
                 Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -46,6 +52,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Index = 3, 
                 UiName = "Задание", 
                 PropertyType = PropertyType.Float, 
+                TableCellType = typeof(DataGridViewTextBoxCell),
+                Type = typeof(float),
                 Width = 180, 
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -55,7 +63,9 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Key = ColumnKey.Speed,
                 Index = 4, 
                 UiName = "Скорость", 
-                PropertyType = PropertyType.Float, 
+                PropertyType = PropertyType.Float,
+                TableCellType = typeof(DataGridViewTextBoxCell),
+                Type = typeof(float),
                 Width = 150, 
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -66,6 +76,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Index = 5, 
                 UiName = "Длительность", 
                 PropertyType = PropertyType.Float, 
+                TableCellType = typeof(DataGridViewTextBoxCell),
+                Type = typeof(float),
                 Width = 200,
                 ReadOnly = false, 
                 Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -76,6 +88,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Index = 6, 
                 UiName = "Время", 
                 PropertyType = PropertyType.Float, 
+                TableCellType = typeof(DataGridViewTextBoxCell),
+                Type = typeof(float),
                 Width = 150, 
                 ReadOnly = true,
                 Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -86,6 +100,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Index = 7, 
                 UiName = "Комментарий", 
                 PropertyType = PropertyType.String, 
+                TableCellType = typeof(DataGridViewTextBoxCell),
+                Type = typeof(string),
                 Width = -1,
                 ReadOnly = false, 
                 Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -95,6 +111,22 @@ namespace NtoLib.Recipes.MbeTable.Schema
         public int GetColumnCount() => _columns.Count;
         
         public IReadOnlyList<ColumnDefinition> GetReadonlyColumns() => _columns.AsReadOnly();
+        
+        public Type GetColumnTypeByColumnKey(ColumnKey key)
+        {
+            var column = _columns.FirstOrDefault(c => c.Key == key);
+            if (column == null)
+                throw new ArgumentException($"Column with key {key} does not exist.");
+            return column.Type;
+        }
+        
+        public string GetColumnUiNameByKey(ColumnKey key)
+        {
+            var column = _columns.FirstOrDefault(c => c.Key == key);
+            if (column == null)
+                throw new ArgumentException($"Column with key {key} does not exist.");
+            return column.UiName;
+        }
         
         public ColumnKey GetColumnKeyByIndex(int index)
         {
