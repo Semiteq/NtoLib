@@ -5,9 +5,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FB.VisualFB;
 using NtoLib.Recipes.MbeTable.Recipe;
-using NtoLib.Recipes.MbeTable.Recipe.Actions;
 using NtoLib.Recipes.MbeTable.Schema;
-using NtoLib.Recipes.MbeTable.StatusManager;
+using NtoLib.Recipes.MbeTable.Status;
 using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
@@ -17,308 +16,440 @@ namespace NtoLib.Recipes.MbeTable
     [Guid("8161DF32-8D80-4B81-AF52-3021AE0AD293")]
     public partial class TableControl : VisualControlBase
     {
-        #region Private fields
-
-        private DataGridView _table;
-        private Button _buttonAddAfter;
-        private Button _buttonAddBefore;
-        private Button _buttonDel;
-        private Button _buttonSave;
-        private Button _buttonOpen;
-
-        private bool _isInitialized = false;
-
-        // Managers
-        private StatusManager.StatusManager _statusManager;
-        private TableColumnManager _tableColumnManager;
-        private ActionManager _actionManager = new();
-
-        // Classes
-        private RecipeViewModel _recipeViewModel;
-        private ComboBoxDataProvider _dataProvider;
-
-        private OpenFileDialog _openFileDialog1;
-        private SaveFileDialog _saveFileDialog1;
-
-        private TableSchema _tableSchema = new();
-        private TablePainter _tablePainter;
-
-        private TableCellFormatter _tableCellFormatter;
-
-        private ColorScheme _colorScheme = new();
-
-        #endregion
+        [NonSerialized] private ServiceProvider _sp;
+        
+        [NonSerialized] private RecipeViewModel _recipeViewModel;
+        [NonSerialized] private TableSchema _tableSchema;
+        [NonSerialized] private IStatusManager _statusManager;
+        [NonSerialized] private TablePainter _tablePainter;
+        [NonSerialized] private TableCellFormatter _tableCellFormatter;
+        [NonSerialized] private ComboBoxDataProvider _dataProvider;
+        [NonSerialized] private OpenFileDialog _openFileDialog;
+        [NonSerialized] private SaveFileDialog _saveFileDialog;
+        [NonSerialized] private ColorScheme _colorScheme;
+        [NonSerialized] private TableColumnManager _tableColumnManager;
+        
+        [NonSerialized] private Color _controlBgColor = Color.White;
+        [NonSerialized] private Color _tableBgColor = Color.White;
+        [NonSerialized] private Font _headerFont = new("Arial", 16f, FontStyle.Bold);
+        [NonSerialized] private Color _headerTextColor = Color.Black;
+        [NonSerialized] private Color _headerBgColor = Color.LightGray;
+        [NonSerialized] private Font _lineFont = new("Arial", 14f);
+        [NonSerialized] private Color _lineTextColor = Color.Black;
+        [NonSerialized] private Color _lineBgColor = Color.White;
+        [NonSerialized] private Font _selectedLineFont = new("Arial", 14f);
+        [NonSerialized] private Color _selectedLineTextColor = Color.Black;
+        [NonSerialized] private Color _selectedLineBgColor = Color.Green;
+        [NonSerialized] private Font _passedLineFont = new("Arial", 14f);
+        [NonSerialized] private Color _passedLineTextColor = Color.DarkGray;
+        [NonSerialized] private Color _passedLineBgColor = Color.Yellow;
+        [NonSerialized] private Color _buttonsColor = Color.LightGray;
 
         #region Properties
 
         [DisplayName("Цвет фона")]
         public Color ControlBgColor
         {
-            get => _colorScheme.ControlBackgroundColor;
+            get => _controlBgColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.ControlBackgroundColor = value;
+                if (_controlBgColor == value) return;
+                
+                _controlBgColor = value;
                 BackColor = value;
-                DbgMsg.BackColor = value;
-                UpdateUiManagers();
+                
+                if (_labelStatus != null) _labelStatus.BackColor = value;
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.ControlBackgroundColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет фона таблицы")]
         public Color TableBgColor
         {
-            get => _colorScheme.TableBackgroundColor;
+            get => _tableBgColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.TableBackgroundColor = value;
-                UpdateUiManagers();
+                if (_tableBgColor == value) return;
+                
+                _tableBgColor = value;
+                
+                if (_table != null) _table.BackgroundColor = value;
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.TableBackgroundColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Шрифт заголовка таблицы")]
         public Font HeaderFont
         {
-            get => _colorScheme.HeaderFont;
+            get => _headerFont;
             set
             {
-                if (Equals(_colorScheme.HeaderFont, value)) return;
-                _colorScheme.HeaderFont = value;
-                UpdateUiManagers();
+                if (Equals(_headerFont, value)) return;
+                
+                _headerFont = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.HeaderFont = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет текста заголовка таблицы")]
         public Color HeaderTextColor
         {
-            get => _colorScheme.HeaderTextColor;
+            get => _headerTextColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.HeaderTextColor = value;
-                UpdateUiManagers();
+                if (_headerTextColor == value) return;
+                
+                _headerTextColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.HeaderTextColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет фона заголовка таблицы")]
         public Color HeaderBgColor
         {
-            get => _colorScheme.HeaderBgColor;
+            get => _headerBgColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.HeaderBgColor = value;
-                UpdateUiManagers();
+                if (_headerBgColor == value) return;
+                
+                _headerBgColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.HeaderBgColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Шрифт строки таблицы")]
         public Font LineFont
         {
-            get => _colorScheme.LineFont;
+            get => _lineFont;
             set
             {
-                if (Equals(_colorScheme.LineFont, value)) return;
-                _colorScheme.LineFont = value;
-                UpdateUiManagers();
+                if (Equals(_lineFont, value)) return;
+                
+                _lineFont = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.LineFont = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет текста строки таблицы")]
         public Color LineTextColor
         {
-            get => _colorScheme.LineTextColor;
+            get => _lineTextColor;
             set
             {
-                if (_colorScheme.LineBgColor == value) return;
-                _colorScheme.LineBgColor = value;
-                UpdateUiManagers();
+                if (_lineTextColor == value) return;
+                
+                _lineTextColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.LineTextColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет фона строки таблицы")]
         public Color LineBgColor
         {
-            get => _colorScheme.LineBgColor;
+            get => _lineBgColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.LineBgColor = value;
-                UpdateUiManagers();
+                if (_lineBgColor == value) return;
+                
+                _lineBgColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.LineBgColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Шрифт текущей строки таблицы")]
         public Font SelectedLineFont
         {
-            get => _colorScheme.SelectedLineFont;
+            get => _selectedLineFont;
             set
             {
-                if (Equals(_colorScheme.SelectedLineFont, value)) return;
-                _colorScheme.SelectedLineFont = value;
-                UpdateUiManagers();
+                if (Equals(_selectedLineFont, value)) return;
+
+                _selectedLineFont = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.SelectedLineFont = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет текста текущей строки таблицы")]
         public Color SelectedLineTextColor
         {
-            get => _colorScheme.SelectedLineTextColor;
+            get => _selectedLineTextColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.SelectedLineTextColor = value;
-                UpdateUiManagers();
+                if (_selectedLineTextColor == value) return;
+                
+                _selectedLineTextColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.SelectedLineTextColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет фона текущей строки таблицы")]
         public Color SelectedLineBgColor
         {
-            get => _colorScheme.SelectedLineBgColor;
+            get => _selectedLineBgColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.SelectedLineBgColor = value;
-                UpdateUiManagers();
+                if (_selectedLineBgColor == value) return;
+                
+                _selectedLineBgColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.SelectedLineBgColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Шрифт пройденной строки таблицы")]
         public Font PassedLineFont
         {
-            get => _colorScheme.PassedLineFont;
+            get => _passedLineFont;
             set
             {
-                if (Equals(_colorScheme.PassedLineFont, value)) return;
-                _colorScheme.PassedLineFont = value;
-                UpdateUiManagers();
+                if (Equals(_passedLineFont, value)) return;
+                
+                _passedLineFont = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.PassedLineFont = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет текста пройденной строки таблицы")]
         public Color PassedLineTextColor
         {
-            get => _colorScheme.PassedLineTextColor;
+            get => _passedLineTextColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.PassedLineTextColor = value;
-                UpdateUiManagers();
+                _passedLineTextColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.PassedLineTextColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет фона пройденной строки таблицы")]
         public Color PassedLineBgColor
         {
-            get => _colorScheme.PassedLineBgColor;
+            get => _passedLineBgColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.PassedLineBgColor = value;
-                UpdateUiManagers();
+                if (_passedLineBgColor == value) return;
+                
+                _passedLineBgColor = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.PassedLineBgColor = value;
+                
+                UpdateColorScheme();
             }
         }
 
         [DisplayName("Цвет кнопок")]
         public Color ButtonsColor
         {
-            get => _colorScheme.ButtonsColor;
+            get => _buttonsColor;
             set
             {
-                if (value == Color.Transparent) return;
-                _colorScheme.ButtonsColor = value;
-                _buttonOpen.BackColor = value;
-                _buttonSave.BackColor = value;
-                UpdateUiManagers();
+                if (_buttonsColor == value) return;
+
+                _buttonsColor = value;
+                
+                if (_buttonOpen != null) _buttonOpen.BackColor = value;
+                if (_buttonSave != null) _buttonSave.BackColor = value;
+                if (_buttonAddBefore != null) _buttonAddBefore.BackColor = value;
+                if (_buttonAddAfter != null) _buttonAddAfter.BackColor = value;
+                if (_buttonDel != null) _buttonDel.BackColor = value;
+                if (_buttonWrite != null) _buttonWrite.BackColor = value;
+
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.ButtonsColor = value;
+                
+                UpdateColorScheme();
             }
         }
-
         #endregion
 
         #region Constructor
-
+        
         public TableControl() : base(true)
         {
             InitializeComponent();
         }
 
-        protected override void OnLoad(EventArgs e)
+        protected override void OnFBLinkChanged()
         {
-            base.OnLoad(e);
-            if (!_isInitialized)
+            base.OnFBLinkChanged();
+            if (FBConnector.Fb != null)
             {
-                InitializeControl(FBConnector.DesignMode);
+                InitializeServicesAndEvents();
             }
         }
-
-        protected override void ToRuntime()
+        
+        private void InitializeServicesAndEvents()
         {
-            _statusManager?.ClearStatusMessage();
-            InitializeControl(false);
+            var fb = FBConnector.Fb as MbeTableFB ?? throw new NullReferenceException(
+                "No connection between MbeTableFB and TableControl was  established");
+
+            var serviceProvider = fb.ServiceProvider;
+            serviceProvider.InitializeServices(FBConnector);
+
+            _recipeViewModel = serviceProvider.RecipeViewModel;
+            _tableSchema = serviceProvider.TableSchema;
+            _statusManager = serviceProvider.StatusManager;
+            _tablePainter = serviceProvider.TablePainter;
+            _tableCellFormatter = serviceProvider.TableCellFormatter;
+            _dataProvider = serviceProvider.DataProvider;
+            _openFileDialog = serviceProvider.OpenFileDialog;
+            _saveFileDialog = serviceProvider.SaveFileDialog;
+
+            InitializeUi();
         }
 
-        protected override void ToDesign()
+        private void InitializeUi()
         {
-            _statusManager?.ClearStatusMessage();
-            InitializeControl(true);
-        }
+            var colorScheme = GetColorSchemeFromProperties();
+            var tableColumnManager = new TableColumnManager(_table, _tableSchema, colorScheme, _dataProvider);
+            
+            tableColumnManager.InitializeHeaders();
+            tableColumnManager.InitializeTableColumns();
+            
+            _table.DataSource = _recipeViewModel.ViewModels;
+            _table.Invalidate();
 
-        private void InitializeDialogs()
-        {
-            _openFileDialog1 = new OpenFileDialog
-            {
-                Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-                AddExtension = true,
-                Multiselect = false,
-                Title = @"Выберите файл рецепта",
-                RestoreDirectory = true
-            };
-
-            _saveFileDialog1 = new SaveFileDialog
-            {
-                Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-                AddExtension = true,
-                Title = @"Сохраните файл рецепта",
-                RestoreDirectory = true
-            };
-        }
-
-        private void SetupEventHandlers()
-        {
+            _table.CellFormatting -= Table_CellFormatting;
             _table.CellFormatting += Table_CellFormatting;
+            _table.CellBeginEdit -= Table_CellBeginEdit;
             _table.CellBeginEdit += Table_CellBeginEdit;
+            _table.DataError -= Table_DataError;
             _table.DataError += Table_DataError;
+            
+            _statusManager.StatusUpdated -= OnStatusUpdated;
+            _statusManager.StatusUpdated += OnStatusUpdated;
+            _statusManager.StatusCleared -= OnStatusCleared;
+            _statusManager.StatusCleared += OnStatusCleared;
+        }
+        
+        #endregion
+
+        #region Visuals
+        private void UpdateColorScheme()
+        {
+            if (_colorScheme == null) return; 
+            
+            _colorScheme.ButtonsColor = _buttonsColor;
+            _colorScheme.HeaderFont = _headerFont;
+            _colorScheme.LineBgColor = _lineBgColor;
+            _colorScheme.LineFont = _lineFont;
+            _colorScheme.LineTextColor = _lineTextColor;
+            _colorScheme.HeaderBgColor = _headerBgColor;
+            _colorScheme.HeaderTextColor = _headerTextColor;
+            _colorScheme.SelectedLineFont = _selectedLineFont;
+            _colorScheme.SelectedLineTextColor = _selectedLineTextColor;
+            _colorScheme.SelectedLineBgColor = _selectedLineBgColor;
+            _colorScheme.PassedLineFont = _passedLineFont;
+            _colorScheme.PassedLineTextColor = _passedLineTextColor;
+            _colorScheme.PassedLineBgColor = _passedLineBgColor;
+            _colorScheme.ControlBackgroundColor = _controlBgColor;
+            _colorScheme.TableBackgroundColor = _tableBgColor;
         }
 
+        private ColorScheme GetColorSchemeFromProperties()
+        {
+            return new ColorScheme
+            {
+                ControlBackgroundColor = this.ControlBgColor,
+                HeaderFont = this.HeaderFont,
+                HeaderTextColor = this.HeaderTextColor,
+                HeaderBgColor = this.HeaderBgColor,
+                LineFont = this.LineFont,
+                LineTextColor = this.LineTextColor,
+                LineBgColor = this.LineBgColor,
+                SelectedLineFont = this.SelectedLineFont,
+                SelectedLineTextColor = this.SelectedLineTextColor,
+                SelectedLineBgColor = this.SelectedLineBgColor,
+                PassedLineFont = this.PassedLineFont,
+                PassedLineTextColor = this.PassedLineTextColor,
+                PassedLineBgColor = this.PassedLineBgColor,
+                ButtonsColor = this.ButtonsColor,
+                TableBackgroundColor = this.TableBgColor
+            };
+        }
+        #endregion
+
+        private void OnStatusUpdated(string message, StatusMessage statusMessage)
+        {
+            _labelStatus.Text = message;
+            _labelStatus.BackColor = statusMessage == StatusMessage.Error ? Color.OrangeRed : _controlBgColor;
+        }
+        
+        private void OnStatusCleared()
+        {
+            _labelStatus.Text = string.Empty;
+            _labelStatus.BackColor = _controlBgColor;
+        }
+        
         private void Table_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            _statusManager.WriteStatusMessage($"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}", StatusMessage.Error);
-            //Console.WriteLine($"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}");
+            _sp?.StatusManager.WriteStatusMessage($"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}", StatusMessage.Error);
             e.ThrowException = true;
         }
 
-        #endregion
-
         private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            var columnIndex = e.ColumnIndex;
-            var rowIndex = e.RowIndex;
-
-            if (rowIndex < 0 || rowIndex >= _recipeViewModel.ViewModels.Count)
+            if (_sp == null || e.RowIndex < 0 || e.RowIndex >= _recipeViewModel.ViewModels.Count)
                 return;
 
-            var viewModel = _recipeViewModel.ViewModels[rowIndex];
-            var columnKey = _tableSchema.GetColumnKeyByIndex(columnIndex);
-            var columnDef = _tableSchema.GetColumnDefinition(columnIndex);
+            var viewModel = _recipeViewModel.ViewModels[e.RowIndex];
+            var columnKey = _tableSchema.GetColumnKeyByIndex(e.ColumnIndex);
+            var columnDef = _tableSchema.GetColumnDefinition(e.ColumnIndex);
 
             var actualLineNumber = -1; // todo: get from a source that provides runtime context
             var stateType = _tablePainter.GetStateType(viewModel, actualLineNumber, columnKey);
 
             _tablePainter.ApplyState(e.CellStyle, stateType);
 
-            if (columnDef.TableCellType != typeof(DataGridViewComboBoxCell))
+            if (columnDef.TableCellType == typeof(DataGridViewComboBoxCell))
+            {
+                if (!columnDef.ComboBoxSource.IsStatic)
+                {
+                    if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
+                    {
+                        var dynamicSource = _dataProvider.GetActionTargetDatasource(viewModel);
+                        if (cell.DataSource != dynamicSource)
+                        {
+                            cell.DataSource = dynamicSource;
+                        }
+                    }
+                }
+            }
+            else
             {
                 if (stateType != TablePainter.StateType.Blocked)
                 {
@@ -329,33 +460,24 @@ namespace NtoLib.Recipes.MbeTable
 
         private void Table_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            var rowIndex = e.RowIndex;
-            if (rowIndex < 0) return;
+            if (_sp == null || e.RowIndex < 0) return;
 
-            var columnIndex = e.ColumnIndex;
-            var columnDef = _tableSchema.GetColumnDefinition(columnIndex);
-
-
+            var columnDef = _tableSchema.GetColumnDefinition(e.ColumnIndex);
             if (columnDef.TableCellType == typeof(DataGridViewComboBoxCell) && !columnDef.ComboBoxSource.IsStatic)
             {
-
-                var viewModel = _recipeViewModel.ViewModels[rowIndex];
-
-
-                if (_table[columnIndex, rowIndex] is DataGridViewComboBoxCell cell)
+                var viewModel = _recipeViewModel.ViewModels[e.RowIndex];
+                if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
                 {
-
-                    var dynamicSource = _dataProvider.GetDynamicDataSource(columnDef.ComboBoxSource.DataSourceKey, viewModel);
+                    var dynamicSource = _dataProvider.GetActionTargetDatasource(viewModel);
                     cell.DataSource = new BindingSource(dynamicSource, null);
                 }
             }
         }
 
-        #region Button Click Handlers
-
+        #region Обработчики нажатия кнопок
         private void ClickButton_Delete(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode) return;
+            if (FBConnector.DesignMode || _sp == null) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? -1;
             if (selectedRowIndex < 0) return;
 
@@ -367,7 +489,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ClickButton_AddLineBefore(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode) return;
+            if (FBConnector.DesignMode || _sp == null) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? 0;
 
             if (!_recipeViewModel.AddNewStep(selectedRowIndex, out var errorString))
@@ -378,7 +500,7 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ClickButton_AddLineAfter(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode) return;
+            if (FBConnector.DesignMode || _sp == null) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? 0;
 
             if (!_recipeViewModel.AddNewStep(selectedRowIndex + 1, out var errorString))
@@ -389,92 +511,17 @@ namespace NtoLib.Recipes.MbeTable
 
         private void ClickButton_Open(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode || _openFileDialog1.ShowDialog() != DialogResult.OK)
+            if (FBConnector.DesignMode || _sp == null || _openFileDialog.ShowDialog() != DialogResult.OK)
                 return;
-
-            // _fileManager.LoadRecipe(_openFileDialog1.FileName);
+            // _fileManager.LoadRecipe(sp.OpenFileDialog.FileName);
         }
 
         private void ClickButton_Save(object sender, EventArgs e)
         {
-            if (FBConnector.DesignMode) return;
-
-            if (_saveFileDialog1.ShowDialog() != DialogResult.OK)
+            if (FBConnector.DesignMode || _sp == null || _saveFileDialog.ShowDialog() != DialogResult.OK)
                 return;
-
-            // _fileManager.SaveRecipe(_saveFileDialog1.FileName);
+            // _fileManager.SaveRecipe(sp.SaveFileDialog.FileName);
         }
-
         #endregion
-
-        private void UpdateUiManagers()
-        {
-            if (_tableSchema == null || _dataProvider == null) return;
-
-            _tableColumnManager = new TableColumnManager(_table, _tableSchema, _colorScheme, _dataProvider);
-            _tablePainter = new TablePainter(_colorScheme);
-
-            _tableColumnManager.InitializeHeaders();
-            _tableColumnManager.InitializeTableColumns();
-            _table.Invalidate();
-        }
-
-        private void InitializeControl(bool isDesignMode)
-        {
-            _statusManager = new StatusManager.StatusManager(DbgMsg);
-            _tableSchema = new TableSchema();
-            _actionManager = new ActionManager();
-            _tableCellFormatter = new TableCellFormatter();
-
-            IFbActionTarget fbTarget;
-            if (isDesignMode || !(FBConnector.Fb is IFbActionTarget realFb))
-            {
-                fbTarget = new MockFbActionTarget();
-            }
-            else
-            {
-                fbTarget = realFb;
-            }
-
-            _dataProvider = new ComboBoxDataProvider(_actionManager, fbTarget);
-
-            _recipeViewModel = new RecipeViewModel(_tableSchema, _actionManager, _dataProvider);
-            _table.DataSource = _recipeViewModel.ViewModels;
-
-            UpdateUiManagers();
-
-            if (!_isInitialized)
-            {
-                SetupEventHandlers();
-                InitializeDialogs();
-            }
-
-            _colorScheme = new ColorScheme
-            {
-                ControlBackgroundColor = Color.White,
-                TableBackgroundColor = Color.White,
-
-                HeaderFont = new Font("Arial", 16f, FontStyle.Bold),
-
-                LineFont = new Font("Arial", 14f),
-                SelectedLineFont = new Font("Arial", 14f),
-                PassedLineFont = new Font("Arial", 14f),
-
-                LineTextColor = Color.Black,
-                SelectedLineTextColor = Color.Black,
-                PassedLineTextColor = Color.DarkGray,
-
-                LineBgColor = Color.White,
-                SelectedLineBgColor = Color.Green,
-                PassedLineBgColor = Color.Yellow,
-
-                HeaderBgColor = Color.LightGray,
-                HeaderTextColor = Color.Black,
-
-                ButtonsColor = Color.LightGray,
-            };
-
-            _isInitialized = true;
-        }
     }
 }

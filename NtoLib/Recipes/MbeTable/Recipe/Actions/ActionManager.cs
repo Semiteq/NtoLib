@@ -42,22 +42,14 @@ namespace NtoLib.Recipes.MbeTable.Recipe.Actions
             };
         }
         
-        public Dictionary<int, string> GetAllActionsAsDictionary()
+        public List<(int Id, string Name)> GetAllActionsAsList()
         {
-            return _actions.ToDictionary(a => a.Id, a => a.Name);
+            return _actions.Select(a => (a.Id, a.Name)).ToList();
         }
 
-        public bool GetActionEntryById(int id, out ActionEntry actionEntry, out string errorString)
+        public ActionEntry GetActionEntryById(int id)
         {
-            actionEntry = _actions.FirstOrDefault(action => action.Id == id);
-            if (actionEntry != null)
-            {
-                errorString = string.Empty;
-                return true;
-            }
-
-            errorString = $"Action with ID {id} not found.";
-            return false;
+            return _actions.FirstOrDefault(a => a.Id == id);
         }
     }
 }

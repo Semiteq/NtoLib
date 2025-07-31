@@ -148,18 +148,21 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
-    <Compile Include="Recipes\MbeTable\IFbActionTarget.cs" />
     <Compile Include="Recipes\MbeTable\IO\RecipeComparator.cs" />
     <Compile Include="Recipes\MbeTable\IO\RecipeFileReader.cs" />
     <Compile Include="Recipes\MbeTable\IO\RecipeFileWriter.cs" />
     <Compile Include="Recipes\MbeTable\IO\TableFileManager.cs" />
     <Compile Include="Recipes\MbeTable\IO\PlcCommunication.cs" />
-    <Compile Include="Recipes\MbeTable\MockFbActionTarget.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionTarget.cs" />
+    <Compile Include="Recipes\MbeTable\Logger\DegugLogger.cs" />
+    <Compile Include="Recipes\MbeTable\Logger\ILogger.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionEntry.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionManager.cs" />
     <Compile Include="Recipes\MbeTable\IO\CommunicationSettings.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionType.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\ActionTarget.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\ActionTargetExtractor.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\ActionTargetViewModel.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\IFbActionTarget.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\IRecipeCommands.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\IStepUpdater.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Contracts\IPropertyTypeDefinition.cs" />
@@ -188,15 +191,16 @@
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\Step.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepFactory.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\DynamicStepViewModel.cs" />
+    <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Recipe\TableLoopManager.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ColumnKey.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ComboBoxSourceInfo.cs" />
     <Compile Include="Recipes\MbeTable\Schema\TableSchema.cs" />
-    <Compile Include="Recipes\MbeTable\StatusManager\IStatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\StatusManager\StatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\StatusManager\StatusMessage.cs" />
+    <Compile Include="Recipes\MbeTable\ServiceProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Status\IStatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\Status\StatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\Status\StatusMessage.cs" />
     <Compile Include="Recipes\MbeTable\Table\CellState.cs" />
     <Compile Include="Recipes\MbeTable\Table\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\Table\ComboBoxDataProvider.cs" />

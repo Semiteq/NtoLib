@@ -9,6 +9,7 @@ using InSAT.OPC;
 using NtoLib.Recipes.MbeTable.PLC;
 using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
+using NtoLib.Recipes.MbeTable.Recipe.ActionTargets;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 
 namespace NtoLib.Recipes.MbeTable
@@ -22,6 +23,11 @@ namespace NtoLib.Recipes.MbeTable
     [Serializable]
     public class MbeTableFB : VisualFBBase, IFbActionTarget
     {
+        [NonSerialized]
+        private ServiceProvider _serviceProvider; 
+
+        public ServiceProvider ServiceProvider => _serviceProvider ??= new ServiceProvider();
+        
         // Pin IDs
         private const int IdRecipeActive = 1;
         private const int IdRecipePaused = 2;
@@ -185,46 +191,7 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         #endregion
-
-        #region Registration Methods
-        // public void RegisterTableData(List<Step> tableData)
-        // {
-        //     _tableData = tableData ?? throw new ArgumentNullException(nameof(tableData));
-        // }
-        //
-        // public void RegisterTableTimeManager(TableTimeManager tableTimeManager)
-        // {
-        //     _tableTimeManager = tableTimeManager ?? throw new ArgumentNullException(nameof(tableTimeManager));
-        // }
-        //
-        // public void RegisterDataGridViewUpdater(UpdateBatcher updateBatcher)
-        // {
-        //     _updateBatcher = updateBatcher ?? throw new ArgumentNullException(nameof(updateBatcher));
-        // }
-        //
-        // public void RegisterCommunicationSettings(CommunicationSettings communicationSettings)
-        // {
-        //     _communicationSettings = communicationSettings ?? throw new ArgumentNullException(nameof(communicationSettings));
-        //     UpdateCommunicationSettings(_communicationSettings);
-        // }
-        //
-        // public void RegisterShutters(Shutters shutters)
-        // {
-        //     _shutters = shutters ?? throw new ArgumentNullException(nameof(shutters));
-        // }
-        //
-        // public void RegisterHeaters(Heaters heaters)
-        // {
-        //     _heaters = heaters ?? throw new ArgumentNullException(nameof(heaters));
-        // }
-        //
-        // public void RegisterNitrogenSources(NitrogenSources nitrogenSources)
-        // {
-        //     _nitrogenSources = nitrogenSources ?? throw new ArgumentNullException(nameof(nitrogenSources));
-        // }
-
-        #endregion
-
+        
         protected override void UpdateData()
         {
             base.UpdateData();

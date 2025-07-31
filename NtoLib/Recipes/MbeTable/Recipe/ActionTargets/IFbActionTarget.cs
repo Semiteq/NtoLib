@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace NtoLib.Recipes.MbeTable.Recipe;
+namespace NtoLib.Recipes.MbeTable.Recipe.ActionTargets;
 
 public interface IFbActionTarget
 {

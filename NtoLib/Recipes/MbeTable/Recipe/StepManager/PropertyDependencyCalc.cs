@@ -53,10 +53,12 @@ public class PropertyDependencyCalc
             _ => true
         };
     }
-    
-    private bool IsSmoothAction(int actionId) =>
-        _actionManager.GetActionEntryById(actionId, out var actionEntry, out _) &&
-        (actionEntry == _actionManager.PowerSmooth || actionEntry == _actionManager.TemperatureSmooth);
+
+    private bool IsSmoothAction(int actionId)
+    {
+        var actionEntry = _actionManager.GetActionEntryById(actionId);
+        return actionEntry == _actionManager.PowerSmooth || actionEntry == _actionManager.TemperatureSmooth;
+    }
 
     private static ColumnKey[] GetDependentColumns(ColumnKey changedColumn) =>
         changedColumn switch

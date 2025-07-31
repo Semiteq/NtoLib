@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
 using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 using NtoLib.Recipes.MbeTable.Schema;
@@ -9,28 +10,26 @@ namespace NtoLib.Recipes.MbeTable.Recipe.StepManager;
     {
         private readonly ActionManager _actionManager;
         private readonly Dictionary<ColumnKey, PropertyWrapper> _step;
-        private readonly PropertyDefinitionRegistry _registry = new();
+        private readonly PropertyDefinitionRegistry _registry;
         
-        public StepBuilder(ActionManager actionManager, TableSchema schema)
+        public StepBuilder(ActionManager actionManager, TableSchema schema, PropertyDefinitionRegistry registry)
         {
-            _actionManager = actionManager;
+            _registry = registry ?? throw new ArgumentNullException(nameof(registry), @"PropertyDefinitionRegistry cannot be null.");
+            _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager), @"ActionManager cannot be null.");
             _step = new Dictionary<ColumnKey, PropertyWrapper>();
             
             foreach (var column in schema.GetReadonlyColumns())
             {
-                // Initially all properties are blocked
+                // Initially, all properties are blocked
                 _step[column.Key] = new PropertyWrapper(_registry);
             }
         }
         
         public StepBuilder WithAction(int actionId)
         {
-            if (_actionManager.GetActionEntryById(actionId, out var actionEntry, out var error))
-            {
-                var propertyValue = new PropertyValue(actionEntry.Id, PropertyType.Enum);
-                return WithProperty(ColumnKey.Action, new(propertyValue, _registry));
-            }
-            throw new KeyNotFoundException($"Action with ID {actionId} not found: {error}");
+            var actionEntry = _actionManager.GetActionEntryById(actionId);
+            var propertyValue = new PropertyValue(actionEntry.Id, PropertyType.Enum);
+            return WithProperty(ColumnKey.Action, new(propertyValue, _registry));
         }
 
         public StepBuilder WithTarget(int target)

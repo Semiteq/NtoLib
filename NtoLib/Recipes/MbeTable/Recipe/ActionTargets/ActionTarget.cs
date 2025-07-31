@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NtoLib.Recipes.MbeTable.Recipe.Actions
+namespace NtoLib.Recipes.MbeTable.Recipe.ActionTargets
 {
     public class ActionTarget
     {

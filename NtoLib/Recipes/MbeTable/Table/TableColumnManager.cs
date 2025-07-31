@@ -50,7 +50,7 @@ namespace NtoLib.Recipes.MbeTable.Table
 
                     if (colDef.ComboBoxSource != null && colDef.ComboBoxSource.IsStatic)
                     {
-                        cboxColumn.DataSource = _dataProvider.GetDataSource(colDef.ComboBoxSource.DataSourceKey);
+                        cboxColumn.DataSource = _dataProvider.GetActionDataSource(colDef.ComboBoxSource.DataSourceKey);
                     }
 
                     column = cboxColumn;

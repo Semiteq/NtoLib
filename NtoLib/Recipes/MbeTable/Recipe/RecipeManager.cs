@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 using NtoLib.Recipes.MbeTable.Schema;
 
@@ -26,11 +25,11 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
 
     private readonly TableSchema _tableSchema;
 
-    public RecipeManager(TableSchema schema, ActionManager actionManager)
+    public RecipeManager(TableSchema schema, PropertyDependencyCalc propertyDependencyCalc, StepFactory stepFactory)
     {
         _tableSchema = schema ?? throw new ArgumentNullException(nameof(schema));
-        _propertyDependencyCalc = new PropertyDependencyCalc(actionManager, _tableSchema);
-        _stepFactory = new StepFactory(actionManager, schema);
+        _propertyDependencyCalc = propertyDependencyCalc ?? throw new ArgumentNullException(nameof(propertyDependencyCalc));
+        _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
     }
 
     public IReadOnlyList<Step> Steps => _recipe.AsReadOnly();

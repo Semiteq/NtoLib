@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
+using NtoLib.Recipes.MbeTable.Recipe.ActionTargets;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 
 namespace NtoLib.Recipes.MbeTable.Table;
@@ -12,64 +11,59 @@ public class ComboBoxDataProvider
     private readonly ActionManager _actionManager;
     private readonly IFbActionTarget _fbTarget;
 
-    public IReadOnlyDictionary<int, string> Actions { get; }
+    private readonly List<(int Id, string Name)> _actions;
 
-    /// <summary>
-    /// Initializes a new instance of the ComboBoxDataProvider class and preloads static data sources.
-    /// </summary>
+    private Dictionary<int, string> _cachedShutterNames;
+    private Dictionary<int, string> _cachedHeaterNames;
+    private Dictionary<int, string> _cachedNitrogenSourceNames;
+    private readonly Dictionary<int, string> _emptyServiceTargets = new Dictionary<int, string>();
+
     public ComboBoxDataProvider(ActionManager actionManager, IFbActionTarget fbTarget)
     {
-        _actionManager = actionManager;
-        _fbTarget = fbTarget;
+        _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager), @"ActionManager cannot be null.");
+        _fbTarget = fbTarget ?? throw new ArgumentNullException(nameof(fbTarget), @" cannot be null. Ensure that the IFbActionTarget implementation is provided.");
 
-        Actions = _actionManager.GetAllActionsAsDictionary();
+        _actions = _actionManager.GetAllActionsAsList();
     }
 
-    /// <summary>
-    /// Retrieves a static data source by its key.
-    /// </summary>
-    /// <param name="dataSourceKey">The key identifying the data source.</param>
-    /// <returns>The corresponding data source or null if not found.</returns>
-    public object GetDataSource(string dataSourceKey)
+    // public IReadOnlyList<(int Id, string Name)> GetActionTargets(StepViewModel stepViewModel)
+    // { 
+    //     if (stepViewModel == null)
+    //     {
+    //         throw new ArgumentNullException(nameof(stepViewModel), "StepViewModel cannot be null.");
+    //     }
+    //
+    //     return IReadOnlyList<>
+    // }
+    
+    
+    public List<IReadOnlyDictionary<int, string>> GetActionDataSource(string dataSourceKey)
     {
         switch (dataSourceKey)
         {
             case "Actions":
-                return Actions.ToList();
+                // return _actions;
             default:
                 return null;
         }
     }
-
-    /// <summary>
-    /// Retrieves a dynamic data source based on the context of a row.
-    /// </summary>
-    /// <param name="dataSourceKey">The key identifying the data source.</param>
-    /// <param name="rowViewModel">The view model representing the row context.</param>
-    /// <returns>The corresponding dynamic data source or null if not found.</returns>
-    public object GetDynamicDataSource(string dataSourceKey, DynamicStepViewModel rowViewModel)
+    
+    public Dictionary<int, string> GetActionTargetDatasource(StepViewModel rowViewModel)
     {
-        switch (dataSourceKey)
+        dynamic viewModel = rowViewModel;
+        int currentActionId;
+
+        
+        
+        currentActionId = (int)viewModel.Action;
+        
+
+        if (TryGetTargetsForAction(currentActionId, out var targets, out var error))
         {
-            case "ActionTargets":
-                dynamic viewModel = rowViewModel;
-                int currentActionId;
-
-                try
-                {
-                    currentActionId = (int)viewModel.Action;
-                }
-                catch
-                {
-                    return new Dictionary<int, string>();
-                }
-
-                TryGetTargetsForAction(currentActionId, out var targets, out _);
-                return targets;
-
-            default:
-                return null;
+            return targets;
         }
+
+        throw new InvalidOperationException($"Failed to get action targets for action ID {currentActionId}: {error}");
     }
 
     /// <summary>
@@ -84,10 +78,7 @@ public class ComboBoxDataProvider
         targets = new Dictionary<int, string>();
         error = null;
 
-        if (!_actionManager.GetActionEntryById(actionId, out var actionEntry, out error))
-        {
-            return false;
-        }
+        var actionEntry = _actionManager.GetActionEntryById(actionId);
 
         if (actionEntry.ActionType == ActionType.Shutter)
         {

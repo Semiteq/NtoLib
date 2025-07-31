@@ -20,13 +20,13 @@ namespace NtoLib.Recipes.MbeTable.Recipe
         private readonly ComboBoxDataProvider _dataProvider;
         private readonly RecipeManager _recipeManager;
         
-        public BindingList<DynamicStepViewModel> ViewModels { get; }
+        public BindingList<StepViewModel> ViewModels { get; }
 
-        public RecipeViewModel(TableSchema schema, ActionManager actionManager, ComboBoxDataProvider dataProvider)
+        public RecipeViewModel(RecipeManager recipeManager, ComboBoxDataProvider dataProvider)
         {
-            _recipeManager = new RecipeManager(schema, actionManager);
+            _recipeManager = recipeManager;
             _dataProvider = dataProvider;
-            ViewModels = new BindingList<DynamicStepViewModel>();
+            ViewModels = new BindingList<StepViewModel>();
 
             _recipeManager.StepAdded += OnStepAdded;
             _recipeManager.StepRemoved += OnStepRemoved;
@@ -45,7 +45,7 @@ namespace NtoLib.Recipes.MbeTable.Recipe
 
         private void OnStepAdded(IReadOnlyStep readOnlyStep, int index)
         {
-            var viewModel = new DynamicStepViewModel(readOnlyStep, _recipeManager, index, _dataProvider);
+            var viewModel = new StepViewModel(readOnlyStep, _recipeManager, index, _dataProvider);
             ViewModels.Insert(index, viewModel);
             RefreshViewModelIndexes();
         }

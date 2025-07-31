@@ -19,7 +19,7 @@ namespace NtoLib.Recipes.MbeTable.Table
             _blockedFont = new Font("Arial", 14f, FontStyle.Italic);
         }
 
-        public StateType GetStateType(DynamicStepViewModel viewModel, int actualLineNumber, ColumnKey columnKey)
+        public StateType GetStateType(StepViewModel viewModel, int actualLineNumber, ColumnKey columnKey)
         {
             
             if (viewModel.IsCellBlocked(columnKey))
