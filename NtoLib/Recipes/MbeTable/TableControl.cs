@@ -3,12 +3,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-
 using FB.VisualFB;
-
 using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 using NtoLib.Recipes.MbeTable.Schema;
 using NtoLib.Recipes.MbeTable.StatusManager;
 using NtoLib.Recipes.MbeTable.Table;
@@ -30,7 +27,7 @@ namespace NtoLib.Recipes.MbeTable
         private Button _buttonOpen;
 
         private bool _isInitialized = false;
-        
+
         // Managers
         private StatusManager.StatusManager _statusManager;
         private TableColumnManager _tableColumnManager;
@@ -255,7 +252,7 @@ namespace NtoLib.Recipes.MbeTable
                 InitializeControl(FBConnector.DesignMode);
             }
         }
-        
+
         protected override void ToRuntime()
         {
             _statusManager?.ClearStatusMessage();
@@ -287,47 +284,70 @@ namespace NtoLib.Recipes.MbeTable
                 RestoreDirectory = true
             };
         }
-        
+
         private void SetupEventHandlers()
         {
             _table.CellFormatting += Table_CellFormatting;
             _table.CellBeginEdit += Table_CellBeginEdit;
+            _table.DataError += Table_DataError;
+        }
+
+        private void Table_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            _statusManager.WriteStatusMessage($"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}", StatusMessage.Error);
+            //Console.WriteLine($"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}");
+            e.ThrowException = true;
         }
 
         #endregion
 
         private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _recipeViewModel.Steps.Count)
+            var columnIndex = e.ColumnIndex;
+            var rowIndex = e.RowIndex;
+
+            if (rowIndex < 0 || rowIndex >= _recipeViewModel.ViewModels.Count)
                 return;
 
-            var viewModel = _recipeViewModel.Steps[e.RowIndex];
-            
-            // Name-based binding, same propblem as recipemaneger todo: refactor mapping
-            var columnKey = (ColumnKey)Enum.Parse(typeof(ColumnKey), _table.Columns[e.ColumnIndex].DataPropertyName);
-            
+            var viewModel = _recipeViewModel.ViewModels[rowIndex];
+            var columnKey = _tableSchema.GetColumnKeyByIndex(columnIndex);
+            var columnDef = _tableSchema.GetColumnDefinition(columnIndex);
+
             var actualLineNumber = -1; // todo: get from a source that provides runtime context
-            
             var stateType = _tablePainter.GetStateType(viewModel, actualLineNumber, columnKey);
-            
+
             _tablePainter.ApplyState(e.CellStyle, stateType);
-            
-            if (stateType != TablePainter.StateType.Blocked)
-                e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
-            
-            e.FormattingApplied = true;
+
+            if (columnDef.TableCellType != typeof(DataGridViewComboBoxCell))
+            {
+                if (stateType != TablePainter.StateType.Blocked)
+                {
+                    e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
+                }
+            }
         }
 
         private void Table_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (e.RowIndex < 0 || _table.Columns[e.ColumnIndex].DataPropertyName != nameof(StepViewModel.ActionTarget))
-                return;
+            var rowIndex = e.RowIndex;
+            if (rowIndex < 0) return;
 
-            var viewModel = _recipeViewModel.Steps[e.RowIndex];
+            var columnIndex = e.ColumnIndex;
+            var columnDef = _tableSchema.GetColumnDefinition(columnIndex);
 
-            if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
+
+            if (columnDef.TableCellType == typeof(DataGridViewComboBoxCell) && !columnDef.ComboBoxSource.IsStatic)
             {
-                cell.DataSource = new BindingSource(viewModel.ActionTargetSource, null);
+
+                var viewModel = _recipeViewModel.ViewModels[rowIndex];
+
+
+                if (_table[columnIndex, rowIndex] is DataGridViewComboBoxCell cell)
+                {
+
+                    var dynamicSource = _dataProvider.GetDynamicDataSource(columnDef.ComboBoxSource.DataSourceKey, viewModel);
+                    cell.DataSource = new BindingSource(dynamicSource, null);
+                }
             }
         }
 
@@ -367,8 +387,6 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
-        #endregion
-
         private void ClickButton_Open(object sender, EventArgs e)
         {
             if (FBConnector.DesignMode || _openFileDialog1.ShowDialog() != DialogResult.OK)
@@ -387,10 +405,7 @@ namespace NtoLib.Recipes.MbeTable
             // _fileManager.SaveRecipe(_saveFileDialog1.FileName);
         }
 
-        private void ClickButton_Write(object sender, EventArgs e)
-        {
-
-        }
+        #endregion
 
         private void UpdateUiManagers()
         {
@@ -398,19 +413,19 @@ namespace NtoLib.Recipes.MbeTable
 
             _tableColumnManager = new TableColumnManager(_table, _tableSchema, _colorScheme, _dataProvider);
             _tablePainter = new TablePainter(_colorScheme);
-    
+
             _tableColumnManager.InitializeHeaders();
             _tableColumnManager.InitializeTableColumns();
             _table.Invalidate();
         }
-        
+
         private void InitializeControl(bool isDesignMode)
         {
             _statusManager = new StatusManager.StatusManager(DbgMsg);
             _tableSchema = new TableSchema();
             _actionManager = new ActionManager();
             _tableCellFormatter = new TableCellFormatter();
-            
+
             IFbActionTarget fbTarget;
             if (isDesignMode || !(FBConnector.Fb is IFbActionTarget realFb))
             {
@@ -420,19 +435,20 @@ namespace NtoLib.Recipes.MbeTable
             {
                 fbTarget = realFb;
             }
+
             _dataProvider = new ComboBoxDataProvider(_actionManager, fbTarget);
 
             _recipeViewModel = new RecipeViewModel(_tableSchema, _actionManager, _dataProvider);
-            _table.DataSource = _recipeViewModel.Steps;
+            _table.DataSource = _recipeViewModel.ViewModels;
 
             UpdateUiManagers();
-    
+
             if (!_isInitialized)
             {
                 SetupEventHandlers();
                 InitializeDialogs();
             }
-    
+
             _colorScheme = new ColorScheme
             {
                 ControlBackgroundColor = Color.White,
@@ -457,7 +473,7 @@ namespace NtoLib.Recipes.MbeTable
 
                 ButtonsColor = Color.LightGray,
             };
-            
+
             _isInitialized = true;
         }
     }

@@ -1,60 +1,43 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Recipe.StepManager
 {
-    public class Step
+    public class Step : IReadOnlyStep 
     {
         public int NestingLevel { get; set; } = 0;
         public IReadOnlyDictionary<ColumnKey, PropertyWrapper> ReadOnlyStep => _step;
         private readonly Dictionary<ColumnKey, PropertyWrapper> _step = new();
 
-        public bool TrySetPropertyWrapper(ColumnKey columnKey, PropertyWrapper propertyWrapper, out string errorString)
+        public void SetPropertyWrapper(ColumnKey columnKey, PropertyWrapper propertyWrapper)
         {
-            if (propertyWrapper == null)
-            {
-                errorString = "PropertyWrapper cannot be null.";
-                return false;
-            }
-
-            _step[columnKey] = propertyWrapper;
-            errorString = null;
-            return true;
+            _step[columnKey] = propertyWrapper ?? throw new ArgumentNullException(nameof(propertyWrapper), 
+                $@"PropertyWrapper for ColumnKey {columnKey} cannot be null.");; 
         }
-
-        public bool TryChangePropertyValue<T>(ColumnKey columnKey, T value, out string errorString)
+        
+        /// <param name="columnKey">The key of the property to change.</param>
+        /// <param name="value">The new value to set for the property.</param>
+        /// <param name="errorString">Stores validation error.</param>
+        public bool TryChangePropertyValue(ColumnKey columnKey, object value, out string errorString)
         {
-            if (!_step.ContainsKey(columnKey))
+            if (!_step.TryGetValue(columnKey, out var oldValue))
                 throw new KeyNotFoundException($"ColumnKey {columnKey} not found in step properties.");
 
-            return _step[columnKey].TryChangeValue(value, out errorString);
+            if (_step[columnKey].TryChangeValue(value, out errorString))
+                return true;
+
+            _step[columnKey] = oldValue;
+            return false;
         }
 
-        public bool TryGetPropertyWrapper(ColumnKey columnKey, out PropertyWrapper propertyWrapper)
+        public PropertyWrapper GetProperty(ColumnKey columnKey)
         {
-            if (!_step.TryGetValue(columnKey, out propertyWrapper))
-                return false;
-
-            return true;
-        }
-
-        public bool TryGetPropertyValue<T>(ColumnKey columnKey, out T value)
-        {
-            value = default;
-            return _step.TryGetValue(columnKey, out var propertyWrapper)
-                   && propertyWrapper.TryGetValue(out value);
-        }
-
-        public bool TryGetPropertyFormattedValue(ColumnKey columnKey, out string formattedValue)
-        {
-            formattedValue = null;
             if (!_step.TryGetValue(columnKey, out var propertyWrapper))
-                return false;
-
-            formattedValue = propertyWrapper.ToString();
-
-            return true;
+                throw new KeyNotFoundException($"ColumnKey {columnKey} not found in step properties.");
+                
+            return propertyWrapper;
         }
     }
 }

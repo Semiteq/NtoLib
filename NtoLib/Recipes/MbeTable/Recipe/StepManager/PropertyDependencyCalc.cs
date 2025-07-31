@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Recipe.StepManager;
@@ -22,7 +21,9 @@ public class PropertyDependencyCalc
         indexesToUpdate = Array.Empty<int>();
         errorString = string.Empty;
         
-        if (!step.TryGetPropertyWrapper(ColumnKey.Action, out var actionWrapper) || !IsSmoothAction(actionWrapper.PropertyValue.AsInt))
+        var actionWrapper = step.GetProperty(ColumnKey.Action);
+        
+        if (!IsSmoothAction(actionWrapper.GetValue<int>()))
             return true;
         
         var changedColumnKey = _schema.GetColumnKeyByIndex(columnIndex);
@@ -65,38 +66,35 @@ public class PropertyDependencyCalc
             _ => Array.Empty<ColumnKey>()
         };
 
-    private bool TryRecalculateDuration(Step step, out string errorString) =>
-        TryGetValuesForCalculation(step, out var speed, out var setpoint, out var initial, out errorString) &&
-        TryCalculateAndSetDuration(step, speed, setpoint, initial, out errorString);
-
-    private bool TryRecalculateSpeed(Step step, out string errorString) =>
-        TryGetValuesForCalculation(step, out var duration, out var setpoint, out var initial, out errorString) &&
-        TryCalculateAndSetSpeed(step, duration, setpoint, initial, out errorString);
-
-    private bool TryGetValuesForCalculation(Step step, out float value1, out float value2, out float value3, out string errorString)
+    private bool TryRecalculateDuration(Step step, out string errorString)
     {
-        errorString = null;
-        value1 = value2 = value3 = 0;
-
-        if (!step.TryGetPropertyWrapper(ColumnKey.Speed, out var speedWrapper) ||
-            !step.TryGetPropertyWrapper(ColumnKey.Setpoint, out var setpointWrapper) ||
-            !step.TryGetPropertyWrapper(ColumnKey.InitialValue, out var initialWrapper))
-        {
-            errorString = "Failed to retrieve required properties";
-            return false;
-        }
-
-        value1 = speedWrapper.PropertyValue.AsFloat;
-        value2 = setpointWrapper.PropertyValue.AsFloat;
-        value3 = initialWrapper.PropertyValue.AsFloat;
-
-        return true;
+        float[] values = GetValuesForCalculation(step);
+        return TryCalculateAndSetDuration(step, values, out errorString);
     }
 
-    private bool TryCalculateAndSetDuration(Step step, float speed, float setpoint, float initial, out string errorString)
+    private bool TryRecalculateSpeed(Step step, out string errorString)
+    {
+        float[] values = GetValuesForCalculation(step);
+        return TryCalculateAndSetSpeed(step, values, out errorString);
+    }
+
+    private float[] GetValuesForCalculation(Step step)
+    {
+        var speedValue = step.GetProperty(ColumnKey.Speed).GetValue<float>();
+        var setpointValue = step.GetProperty(ColumnKey.Setpoint).GetValue<float>();
+        var initialValue = step.GetProperty(ColumnKey.InitialValue).GetValue<float>();
+
+        return new[] { speedValue, setpointValue, initialValue };
+    }
+
+    private bool TryCalculateAndSetDuration(Step step, float[] values, out string errorString)
     {
         errorString = null;
 
+        var speed = values[0];
+        var setpoint = values[1];
+        var initial = values[2];
+        
         if (speed == 0)
         {
             errorString = "Invalid speed value: cannot be zero";
@@ -104,13 +102,17 @@ public class PropertyDependencyCalc
         }
 
         var calculatedTime = Math.Abs(setpoint - initial) * 60 / speed;
-        return TrySetCalculatedProperty(step, ColumnKey.Duration, calculatedTime, PropertyType.Time, out errorString);
+        return TrySetCalculatedProperty(step, ColumnKey.Duration, calculatedTime, out errorString);
     }
 
-    private bool TryCalculateAndSetSpeed(Step step, float duration, float setpoint, float initial, out string errorString)
+    private bool TryCalculateAndSetSpeed(Step step, float[] values, out string errorString)
     {
         errorString = null;
 
+        var duration = values[0];
+        var setpoint = values[1];
+        var initial = values[2];
+        
         if (duration == 0)
         {
             errorString = "Invalid duration value: cannot be zero";
@@ -118,24 +120,12 @@ public class PropertyDependencyCalc
         }
 
         var calculatedSpeed = Math.Abs(setpoint - initial) * 60 / duration;
-        return TrySetCalculatedProperty(step, ColumnKey.Speed, calculatedSpeed, GetSpeedPropertyType(step), out errorString);
+        return TrySetCalculatedProperty(step, ColumnKey.Speed, calculatedSpeed, out errorString);
     }
 
-    private PropertyType GetSpeedPropertyType(Step step)
+    private bool TrySetCalculatedProperty(Step step, ColumnKey columnKey, float value, 
+        out string errorString)
     {
-        step.TryGetPropertyWrapper(ColumnKey.Action, out var actionWrapper);
-
-        return actionWrapper.PropertyValue.AsInt switch
-        {
-            var id when id == _actionManager.PowerSmooth.Id => PropertyType.PowerSpeed,
-            var id when id == _actionManager.TemperatureSmooth.Id => PropertyType.TempSpeed,
-            _ => throw new InvalidOperationException("Unsupported action type for speed calculation")
-        };
-    }
-
-    private bool TrySetCalculatedProperty(Step step, ColumnKey propertyKey, float value, PropertyType type, out string errorString)
-    {
-        var propertyValue = new PropertyValue(value, type, false);
-        return step.TryChangePropertyValue(propertyKey, propertyValue, out errorString);
+        return step.TryChangePropertyValue(columnKey, value, out errorString);
     }
 }

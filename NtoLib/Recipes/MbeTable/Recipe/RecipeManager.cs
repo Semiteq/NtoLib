@@ -18,7 +18,7 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
 
     public event Action<Step, int> StepAdded;
     public event Action<int> StepRemoved;
-    public event Action<int, string> StepPropertyChanged;
+    public event Action<int, ColumnKey> StepPropertyChanged;
 
     private readonly List<Step> _recipe = new();
     private readonly StepFactory _stepFactory;
@@ -36,6 +36,13 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
     public IReadOnlyList<Step> Steps => _recipe.AsReadOnly();
     public int StepCount => _recipe.Count;
 
+    public Step GetStep(int rowIndex)
+    {
+        if (!ValidateRow(rowIndex, out var errorString))
+            throw new ArgumentOutOfRangeException(nameof(rowIndex), errorString);
+        return _recipe[rowIndex];
+    }
+
     public bool TryAddNewStep(int rowIndex, out Step openStep, out string errorString)
     {
         // A new step is always an open step
@@ -45,10 +52,7 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
         // If added at the end, rowIndex should be equal to Count
         rowIndex = Math.Max(0, Math.Min(rowIndex, _recipe.Count));
 
-        if (!_stepFactory.TryCreateOpenStep(out openStep, out errorString, 1))
-        {
-            return false;
-        }
+        openStep = _stepFactory.CreateOpenStep(1); // todo: get minimal id from shutters
 
         _recipe.Insert(rowIndex, openStep);
 
@@ -81,22 +85,6 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
         return true;
     }
 
-    public bool TrySetStepProperty(int rowIndex, int columnIndex, PropertyValue value,
-        out int[] dependencyIndexes, out string errorString)
-    {
-        dependencyIndexes = Array.Empty<int>();
-
-        if (!ValidateRow(rowIndex, out errorString))
-            return false;
-
-        var step = _recipe[rowIndex];
-        var columnKey = _tableSchema.GetColumnKeyByIndex(columnIndex);
-
-        return step.TryChangePropertyValue(columnKey, value, out errorString)
-               && _propertyDependencyCalc.TryRecalculate(step, columnIndex, out dependencyIndexes, out errorString);
-    }
-
-
     public bool TrySetStepPropertyByObject(int rowIndex, ColumnKey columnKey, object value,
         out string errorString)
     {
@@ -113,16 +101,12 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
         if (!_propertyDependencyCalc.TryRecalculate(step, columnIndex, out var dependencyIndexes, out errorString))
             return false;
 
-        // Binding name to ColumnKey; todo: improve this
-        // Achtung! This mapping is name-based and unreliable in case property names change.
-        string propertyName = Enum.GetName(typeof(ColumnKey), columnKey);
-
-        StepPropertyChanged?.Invoke(rowIndex, propertyName);
+        StepPropertyChanged?.Invoke(rowIndex, columnKey);
 
         foreach (var depIndex in dependencyIndexes)
         {
             var depKey = _tableSchema.GetColumnKeyByIndex(depIndex);
-            string depPropertyName = Enum.GetName(typeof(ColumnKey), depKey); // binding name to ColumnKey
+            var depPropertyName = depKey; // binding name to ColumnKey
             StepPropertyChanged?.Invoke(rowIndex, depPropertyName);
         }
 

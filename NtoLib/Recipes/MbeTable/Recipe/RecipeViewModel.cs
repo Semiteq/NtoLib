@@ -20,13 +20,13 @@ namespace NtoLib.Recipes.MbeTable.Recipe
         private readonly ComboBoxDataProvider _dataProvider;
         private readonly RecipeManager _recipeManager;
         
-        public BindingList<StepViewModel> Steps { get; }
+        public BindingList<DynamicStepViewModel> ViewModels { get; }
 
         public RecipeViewModel(TableSchema schema, ActionManager actionManager, ComboBoxDataProvider dataProvider)
         {
             _recipeManager = new RecipeManager(schema, actionManager);
             _dataProvider = dataProvider;
-            Steps = new BindingList<StepViewModel>();
+            ViewModels = new BindingList<DynamicStepViewModel>();
 
             _recipeManager.StepAdded += OnStepAdded;
             _recipeManager.StepRemoved += OnStepRemoved;
@@ -43,32 +43,32 @@ namespace NtoLib.Recipes.MbeTable.Recipe
             return _recipeManager.TryRemoveStep(rowIndex, out errorString);
         }
 
-        private void OnStepAdded(Step step, int index)
+        private void OnStepAdded(IReadOnlyStep readOnlyStep, int index)
         {
-            var viewModel = new StepViewModel(step, _recipeManager, index, _dataProvider);
-            Steps.Insert(index, viewModel);
+            var viewModel = new DynamicStepViewModel(readOnlyStep, _recipeManager, index, _dataProvider);
+            ViewModels.Insert(index, viewModel);
             RefreshViewModelIndexes();
         }
 
         private void OnStepRemoved(int index)
         {
-            Steps.RemoveAt(index);
+            ViewModels.RemoveAt(index);
             RefreshViewModelIndexes();
         }
 
-        private void OnStepPropertyChanged(int rowIndex, string propertyName)
+        private void OnStepPropertyChanged(int rowIndex, ColumnKey key)
         {
-            if (rowIndex >= 0 && rowIndex < Steps.Count)
+            if (rowIndex >= 0 && rowIndex < ViewModels.Count)
             {
-                Steps[rowIndex].RaisePropertyChanged(propertyName);
+                ViewModels[rowIndex].RaisePropertyChanged(key.ToString());
             }
         }
         
         private void RefreshViewModelIndexes()
         {
-            for (int i = 0; i < Steps.Count; i++)
+            for (int i = 0; i < ViewModels.Count; i++)
             {
-                Steps[i].UpdateRowIndex(i);
+                ViewModels[i].UpdateRowIndex(i);
             }
         }
     }

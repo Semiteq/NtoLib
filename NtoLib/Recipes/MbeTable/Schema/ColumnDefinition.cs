@@ -15,5 +15,6 @@ namespace NtoLib.Recipes.MbeTable.Schema
         public int Width { get; set; } // -1 for auto width
         public bool ReadOnly { get; set; }
         public DataGridViewContentAlignment Alignment { get; set; }
+        public ComboBoxSourceInfo ComboBoxSource { get; set; } 
     }
 }

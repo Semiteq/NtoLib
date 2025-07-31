@@ -19,8 +19,7 @@ public class ModBusDeserializer
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
     }
 
-    public bool TryCreateStep(out Step step, out string error,
-        int[] intData, int[] floatData, int[] boolData, int index)
+    public Step CreateStep(int[] intData, int[] floatData, int[] boolData, int index)
     {
         var actionId = intData[index * IntCellsQuantity];
         var actionTarget = intData[index * IntCellsQuantity + 1];
@@ -33,59 +32,57 @@ public class ModBusDeserializer
         var comment = string.Empty;
 
         if (actionId == _actionManager.Power.Id)
-            return _stepFactory.TryCreatePowerStep(out step, out error, actionTarget, initialValue, string.Empty);
+            return _stepFactory.CreatePowerStep(actionTarget, initialValue, string.Empty);
 
         if (actionId == _actionManager.PowerSmooth.Id)
-            return _stepFactory.TryCreatePowerSmoothStep(out step, out error, actionTarget, initialValue, setpoint,
+            return _stepFactory.CreatePowerSmoothStep(actionTarget, initialValue, setpoint,
                 speed, duration, comment);
 
         if (actionId == _actionManager.PowerWait.Id)
-            return _stepFactory.TryCreatePowerWaitStep(out step, out error, actionTarget, setpoint, speed, comment);
+            return _stepFactory.CreatePowerWaitStep(actionTarget, setpoint, speed, comment);
 
         if (actionId == _actionManager.Temperature.Id)
-            return _stepFactory.TryCreateTemperatureStep(out step, out error, actionTarget, setpoint, comment);
+            return _stepFactory.CreateTemperatureStep(actionTarget, setpoint, comment);
 
         if (actionId == _actionManager.TemperatureSmooth.Id)
-            return _stepFactory.TryCreateTemperatureSmoothStep(out step, out error, actionTarget, initialValue,
+            return _stepFactory.CreateTemperatureSmoothStep(actionTarget, initialValue,
                 setpoint, speed, duration, comment);
 
         if (actionId == _actionManager.TemperatureWait.Id)
-            return _stepFactory.TryCreateTemperatureWaitStep(out step, out error, actionTarget, setpoint, speed,
+            return _stepFactory.CreateTemperatureWaitStep(actionTarget, setpoint, speed,
                 comment);
 
         if (actionId == _actionManager.Close.Id)
-            return _stepFactory.TryCreateCloseStep(out step, out error, actionTarget, comment);
+            return _stepFactory.CreateCloseStep(actionTarget, comment);
 
         if (actionId == _actionManager.CloseAll.Id)
-            return _stepFactory.TryCreateCloseAllStep(out step, out error, comment);
+            return _stepFactory.CreateCloseAllStep(comment);
 
         if (actionId == _actionManager.Open.Id)
-            return _stepFactory.TryCreateOpenStep(out step, out error, actionTarget, comment);
+            return _stepFactory.CreateOpenStep(actionTarget, comment);
 
         if (actionId == _actionManager.OpenTime.Id)
-            return _stepFactory.TryCreateOpenTimeStep(out step, out error, actionTarget, setpoint, comment);
+            return _stepFactory.CreateOpenTimeStep(actionTarget, setpoint, comment);
 
         if (actionId == _actionManager.NRun.Id)
-            return _stepFactory.TryCreateNitrogenRunSourceStep(out step, out error, actionTarget, setpoint, comment);
+            return _stepFactory.CreateNitrogenRunSourceStep(actionTarget, setpoint, comment);
 
         if (actionId == _actionManager.NVent.Id)
-            return _stepFactory.TryCreateNitrogenSourceVentStep(out step, out error, actionTarget, setpoint, comment);
+            return _stepFactory.CreateNitrogenSourceVentStep(actionTarget, setpoint, comment);
 
         if (actionId == _actionManager.Pause.Id)
-            return _stepFactory.TryCreatePauseStep(out step, out error, comment);
+            return _stepFactory.CreatePauseStep(comment);
 
         if (actionId == _actionManager.ForLoop.Id)
-            return _stepFactory.TryCreateForLoopStep(out step, out error, (int)setpoint, comment);
+            return _stepFactory.CreateForLoopStep((int)setpoint, comment);
 
         if (actionId == _actionManager.EndForLoop.Id)
-            return _stepFactory.TryCreateEndForLoopStep(out step, out error, comment);
+            return _stepFactory.CreateEndForLoopStep(comment);
 
         if (actionId == _actionManager.Wait.Id)
-            return _stepFactory.TryCreateWaitStep(out step, out error, setpoint, comment);
-
-        step = null;
-        error = @"Unknown action ID";
-        return false;
+            return _stepFactory.CreateWaitStep(setpoint, comment);
+        
+        throw new NotSupportedException($"Action with ID {actionId} is not supported.");
     }
 
     private float[] ExtractFloatValues(int[] floatData, int index)

@@ -44,30 +44,20 @@ namespace NtoLib.Recipes.MbeTable.Table
                 // Comboboxes
                 if (colDef.TableCellType == typeof(DataGridViewComboBoxCell))
                 {
-                    column = new DataGridViewComboBoxColumn();
+                    var cboxColumn = new DataGridViewComboBoxColumn();
+                    cboxColumn.ValueMember = "Key";
+                    cboxColumn.DisplayMember = "Value";
+
+                    if (colDef.ComboBoxSource != null && colDef.ComboBoxSource.IsStatic)
+                    {
+                        cboxColumn.DataSource = _dataProvider.GetDataSource(colDef.ComboBoxSource.DataSourceKey);
+                    }
+
+                    column = cboxColumn;
                 }
                 else
                 {
                     column = new DataGridViewTextBoxColumn();
-                }
-
-                // Action
-                if (colDef.Key == ColumnKey.Action)
-                {
-                    var cboxColumn = new DataGridViewComboBoxColumn();
-                    cboxColumn.DataSource = new BindingSource(_dataProvider.Actions, null);
-                    cboxColumn.ValueMember = "Key";
-                    cboxColumn.DisplayMember = "Value";
-                    column = cboxColumn;
-                }
-                // ActionTarget
-                else if (colDef.Key == ColumnKey.ActionTarget)
-                {
-                    // Datasource for ActionTarget is dynamic and depends on the selected action
-                    var cboxColumn = new DataGridViewComboBoxColumn();
-                    cboxColumn.ValueMember = "Key";
-                    cboxColumn.DisplayMember = "Value";
-                    column = cboxColumn;
                 }
 
                 column.Name = colDef.Key.ToString();
@@ -75,7 +65,8 @@ namespace NtoLib.Recipes.MbeTable.Table
 
                 column.DataPropertyName = colDef.Key.ToString();
 
-                column.ReadOnly = colDef.ReadOnly;
+                //column.ReadOnly = colDef.ReadOnly;
+                column.ReadOnly = false;
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
 
                 if (column.Width > 0)

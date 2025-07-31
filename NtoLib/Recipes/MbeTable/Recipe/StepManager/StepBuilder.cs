@@ -70,18 +70,16 @@ namespace NtoLib.Recipes.MbeTable.Recipe.StepManager;
         }
         
         
-        public bool TryBuild(out Step step, out string error)
+        public Step Build()
         {
-            step = new Step();
+            var step = new Step();
 
             foreach (var param in _step)
             {
-                if (!step.TrySetPropertyWrapper(param.Key, param.Value, out error))
-                    return false;
+                step.SetPropertyWrapper(param.Key, param.Value);
             }
             
-            error = string.Empty;
-            return true;
+            return step;
         }
         private StepBuilder WithProperty(ColumnKey key, PropertyWrapper property)
         {

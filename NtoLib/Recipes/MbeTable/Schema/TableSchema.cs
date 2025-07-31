@@ -20,7 +20,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 TableCellType = typeof(DataGridViewComboBoxCell),
                 Width = 200, 
                 ReadOnly = false,
-                Alignment = DataGridViewContentAlignment.MiddleLeft
+                Alignment = DataGridViewContentAlignment.MiddleLeft,
+                ComboBoxSource = new ComboBoxSourceInfo { DataSourceKey = "Actions", IsStatic = true }
             },
             new ColumnDefinition
             {
@@ -32,7 +33,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Type = typeof(int),
                 Width = 150, 
                 ReadOnly = false,
-                Alignment = DataGridViewContentAlignment.MiddleCenter
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                ComboBoxSource = new ComboBoxSourceInfo { DataSourceKey = "ActionTargets", IsStatic = false }
             },
             new ColumnDefinition
             {
@@ -44,7 +46,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Type = typeof(float),
                 Width = 200,
                 ReadOnly = false, 
-                Alignment = DataGridViewContentAlignment.MiddleCenter
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                ComboBoxSource = null
             },
             new ColumnDefinition
             {
@@ -56,7 +59,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Type = typeof(float),
                 Width = 180, 
                 ReadOnly = false,
-                Alignment = DataGridViewContentAlignment.MiddleCenter
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                ComboBoxSource = null
             },
             new ColumnDefinition
             {
@@ -68,7 +72,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Type = typeof(float),
                 Width = 150, 
                 ReadOnly = false,
-                Alignment = DataGridViewContentAlignment.MiddleCenter
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                ComboBoxSource = null
             },
             new ColumnDefinition
             {
@@ -80,7 +85,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Type = typeof(float),
                 Width = 200,
                 ReadOnly = false, 
-                Alignment = DataGridViewContentAlignment.MiddleCenter
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                ComboBoxSource = null
             },
             new ColumnDefinition
             {
@@ -92,7 +98,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Type = typeof(float),
                 Width = 150, 
                 ReadOnly = true,
-                Alignment = DataGridViewContentAlignment.MiddleCenter
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                ComboBoxSource = null
             },
             new ColumnDefinition
             {
@@ -104,7 +111,8 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 Type = typeof(string),
                 Width = -1,
                 ReadOnly = false, 
-                Alignment = DataGridViewContentAlignment.MiddleCenter
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                ComboBoxSource = null
             }
         };
 
@@ -143,5 +151,15 @@ namespace NtoLib.Recipes.MbeTable.Schema
             return column.Index;
         }
         
+        public ColumnDefinition GetColumnDefinition(int index)
+        {
+            if (index < 0 || index >= _columns.Count)
+                throw new IndexOutOfRangeException("Invalid column index.");
+            
+            if (_columns[index] == null)
+                throw new ArgumentException($"Column at index {index} is null.");
+            
+            return _columns[index];
+        }
     }
 }

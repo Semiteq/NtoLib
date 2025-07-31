@@ -17,25 +17,9 @@ public class StepFactory
         _schema = schema ?? throw new ArgumentNullException(nameof(schema));
     }
 
-    public bool TryCreateStep(out Step step, out string errorString, int actionId, Dictionary<ColumnKey, PropertyWrapper> parameters)
-    {
-        step = new Step();
-
-        foreach (var param in parameters)
-        {
-            if (!step.TrySetPropertyWrapper(param.Key, param.Value, out errorString))
-                return false;
-        }
-
-        errorString = string.Empty;
-        return true;
-    }
-
     #region Heater Actions
 
-    public bool TryCreatePowerStep(
-        out Step step,
-        out string stringError,
+    public Step CreatePowerStep(
         int target,
         float setpoint = 10f,
         string comment = "")
@@ -44,11 +28,9 @@ public class StepFactory
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Percent)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreatePowerSmoothStep(
-        out Step step,
-        out string stringError,
+    public Step CreatePowerSmoothStep(
         int target,
         float initialValue = 10f,
         float setpoint = 20f,
@@ -63,11 +45,9 @@ public class StepFactory
             .WithSpeed(speed, PropertyType.PowerSpeed)
             .WithDuration(duration)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreatePowerWaitStep(
-        out Step step,
-        out string stringError,
+    public Step CreatePowerWaitStep(
         int target,
         float setpoint = 10f,
         float speed = 60f,
@@ -78,11 +58,9 @@ public class StepFactory
             .WithSetpoint(setpoint, PropertyType.Percent)
             .WithSpeed(speed, PropertyType.PowerSpeed)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateTemperatureStep(
-        out Step step,
-        out string stringError,
+    public Step CreateTemperatureStep(
         int target,
         float setpoint = 500f,
         string comment = "")
@@ -91,11 +69,9 @@ public class StepFactory
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Temp)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateTemperatureSmoothStep(
-        out Step step,
-        out string stringError,
+    public Step CreateTemperatureSmoothStep(
         int target,
         float initialValue = 500f,
         float setpoint = 600f,
@@ -110,11 +86,9 @@ public class StepFactory
             .WithSpeed(speed, PropertyType.PowerSpeed)
             .WithDuration(duration)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateTemperatureWaitStep(
-        out Step step,
-        out string stringError,
+    public Step CreateTemperatureWaitStep(
         int target,
         float setpoint = 500f,
         float speed = 60f,
@@ -125,46 +99,38 @@ public class StepFactory
             .WithSetpoint(setpoint, PropertyType.Temp)
             .WithDuration(speed)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
     #endregion
 
     #region Shutter Actions
 
-    public bool TryCreateCloseStep(
-        out Step step,
-        out string stringError,
+    public Step CreateCloseStep(
         int target,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Close.Id)
             .WithTarget(target)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateCloseAllStep(
-        out Step step,
-        out string stringError,
+    public Step CreateCloseAllStep(
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.CloseAll.Id)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateOpenStep(
-        out Step step,
-        out string stringError,
+    public Step CreateOpenStep(
         int target,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Open.Id)
             .WithTarget(target)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateOpenTimeStep(
-        out Step step,
-        out string stringError,
+    public Step CreateOpenTimeStep(
         int target,
         float setpoint = 1f,
         string comment = "")
@@ -173,15 +139,13 @@ public class StepFactory
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Time)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
     #endregion
 
     #region Nitrogen Source Actions
 
-    public bool TryCreateNitrogenRunSourceStep(
-        out Step step,
-        out string stringError,
+    public Step CreateNitrogenRunSourceStep(
         int target,
         float setpoint = 10f,
         string comment = "")
@@ -190,20 +154,16 @@ public class StepFactory
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Flow)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateNitrogenSourceCloseStep(
-        out Step step,
-        out string stringError,
+    public Step CreateNitrogenSourceCloseStep(
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.NClose.Id)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateNitrogenSourceVentStep(
-        out Step step,
-        out string stringError,
+    public Step CreateNitrogenSourceVentStep(
         int target,
         float setpoint = 10f,
         string comment = "")
@@ -212,51 +172,43 @@ public class StepFactory
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Flow)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
     #endregion
 
     #region Service Actions
 
-    public bool TryCreatePauseStep(
-        out Step step,
-        out string stringError,
+    public Step CreatePauseStep(
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Pause.Id)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateForLoopStep(
-        out Step step,
-        out string stringError,
+    public Step CreateForLoopStep(
         int setpoint,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.ForLoop.Id)
             .WithSetpoint(setpoint, PropertyType.Int)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateEndForLoopStep(
-        out Step step,
-        out string stringError,
+    public Step CreateEndForLoopStep(
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.EndForLoop.Id)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
-    public bool TryCreateWaitStep(
-        out Step step,
-        out string stringError,
+    public Step CreateWaitStep(
         float setpoint = 60f,
         string comment = "")
         => new StepBuilder(_actionManager, _schema)
             .WithAction(_actionManager.Wait.Id)
             .WithSetpoint(setpoint, PropertyType.Time)
             .WithComment(comment)
-            .TryBuild(out step, out stringError);
+            .Build();
 
     #endregion
 }
