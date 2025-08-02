@@ -35,7 +35,7 @@ namespace NtoLib.Recipes.MbeTable.Recipe
 
         public bool AddNewStep(int rowIndex, out string errorString)
         {
-            return _recipeManager.TryAddNewStep(rowIndex, out _, out errorString);
+            return _recipeManager.TryAddDefaultStep(rowIndex, out _, out errorString);
         }
 
         public bool RemoveStep(int rowIndex, out string errorString)

@@ -6,11 +6,10 @@ using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
-using NtoLib.Recipes.MbeTable.PLC;
-using NtoLib.Recipes.MbeTable.Recipe;
-using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.ActionTargets;
-using NtoLib.Recipes.MbeTable.Recipe.StepManager;
+using MasterSCADA.Hlp;
+using NtoLib.Recipes.MbeTable.IO;
+using NtoLib.Recipes.MbeTable.PinDataManager;
+using CommunicationSettings = NtoLib.Recipes.MbeTable.IO.CommunicationSettings;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -21,12 +20,15 @@ namespace NtoLib.Recipes.MbeTable
     [DisplayName("Таблица рецептов MBE")]
     [ComVisible(true)]
     [Serializable]
-    public class MbeTableFB : VisualFBBase, IFbActionTarget
+    public class MbeTableFB : VisualFBBase
     {
         [NonSerialized]
         private ServiceProvider _serviceProvider; 
-
         public ServiceProvider ServiceProvider => _serviceProvider ??= new ServiceProvider();
+        
+        [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
+        [NonSerialized] private IActionTargetProvider _actionTargetProvider;
+        [NonSerialized] private ICommunicationSettingsProvider _commSettingsProvider;
         
         // Pin IDs
         private const int IdRecipeActive = 1;
@@ -41,6 +43,10 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdLineTimeLeft = 102;
 
         // ActionProperty pins
+        private const int ShutterNamesGroupId = 200;
+        private const int HeaterNamesGroupId = 300;
+        private const int NitrogenSourcesGroupId = 400;
+        
         private const int IdFirstShutterName = 201;
         private const int IdFirstHeaterName = 301;
         private const int IdFirstNitrogenSourceName = 401;
@@ -63,19 +69,6 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdHmiIp4 = 1013;
         private const int IdHmiPort = 1014;
 
-        // Private fields
-        [NonSerialized] private List<Step> _tableData;
-        [NonSerialized] private CommunicationSettings _communicationSettings;
-        [NonSerialized] private ActionTarget _actionTarget;
-
-        // Default values
-        private int _previousLineNumber = -1;
-        private int _previousForLoopCount1 = -1;
-        private int _previousForLoopCount2 = -1;
-        private int _previousForLoopCount3 = -1;
-
-        #region VisualProperties
-
         private uint _uFloatBaseAddr = 8100;
         private uint _uFloatAreaSize = 19600;
 
@@ -94,6 +87,8 @@ namespace NtoLib.Recipes.MbeTable
 
         private uint _controllerTcpPort = 502;
 
+        #region VisualProperties
+        
         [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
         [DisplayName(" 1.  Базовый адрес хранения данных типа Real (Float)")]
         public uint UFloatBaseAddr
@@ -196,39 +191,36 @@ namespace NtoLib.Recipes.MbeTable
         {
             base.UpdateData();
 
-            UpdateHmiPins();
-            if (_communicationSettings != null) UpdateCommunicationSettings(_communicationSettings);
-
-            var actualLine = GetActualLineValue();
-            var isRecipeActive = GetPinValue<bool>(IdRecipeActive);
-            var actualLineNumber = GetPinValue<int>(IdActualLineNumber);
             var stepCurrentTime = GetPinValue<float>(IdStepCurrentTime);
+            var lineNumber = GetPinValue<int>(IdActualLineNumber);
             var forLoopCount1 = GetPinValue<int>(IdForLoopCount1);
             var forLoopCount2 = GetPinValue<int>(IdForLoopCount2);
             var forLoopCount3 = GetPinValue<int>(IdForLoopCount3);
-
-            var isLineChanged = IsLineChanged(actualLineNumber, forLoopCount1, forLoopCount2, forLoopCount3);
-
-            // if (_recipeTimerManager is null && _tableTimeManager is not null)
-            //     _recipeTimerManager = new RecipeTimerManager(_tableTimeManager);
-            //
-            // if (_recipeTimerManager is null) return;
-
-            // if (isRecipeActive)
-            // {
-            //     var(leftStepTime, leftTotalTime) = _recipeTimerManager.GetLeftTimes(actualLineNumber, stepCurrentTime);
-            //     SetPinValue(IdActualLineNumber, leftStepTime);
-            //     SetPinValue(IdTotalTimeLeft, leftTotalTime);
-            // }
-            //
-            // if (isRecipeActive && isLineChanged)
-            // { 
-            //     _recipeTimerManager.HandleLineChange(actualLineNumber);
-            //     _updateBatcher.HandleLineChange(actualLineNumber);
-            // }
+            
+            _plcStateMonitor.UpdateState(lineNumber, forLoopCount1, forLoopCount2, forLoopCount3, stepCurrentTime);
+            
+            UpdateUiConnectionPins();
         }
+        
+        private void InitializeServices()
+        {
+            _serviceProvider = ServiceProvider;
+            _serviceProvider.InitializeServices(this); 
 
-        private void UpdateHmiPins()
+            _plcStateMonitor = _serviceProvider.PlcStateMonitor;
+            _actionTargetProvider = _serviceProvider.ActionTargetProvider;
+            
+            _actionTargetProvider.RefreshTargets(this);
+        }
+        
+        protected override void ToDesign()
+        {
+            base.ToDesign();
+            InitializeServices();
+            CleanupServices();
+        }
+        
+        private void UpdateUiConnectionPins()
         {
             VisualPins.SetValue<uint>(IdHmiFloatBaseAddr, UFloatBaseAddr);
             VisualPins.SetValue<uint>(IdHmiFloatAreaSize, UFloatAreaSize);
@@ -243,45 +235,66 @@ namespace NtoLib.Recipes.MbeTable
             VisualPins.SetValue<uint>(IdHmiIp4, ControllerIp4);
             VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
         }
-
-        private void UpdateCommunicationSettings(CommunicationSettings settings)
+        
+        protected override void ToRuntime()
         {
-            settings.FloatBaseAddr = UFloatBaseAddr;
-            settings.FloatAreaSize = UFloatAreaSize;
-
-            settings.IntBaseAddr = UIntBaseAddr;
-            settings.IntAreaSize = UIntAreaSize;
-
-            settings.BoolBaseAddr = UBoolBaseAddr;
-            settings.BoolAreaSize = UBoolAreaSize;
-
-            settings.ControlBaseAddr = UControlBaseAddr;
-
-            settings.Ip1 = ControllerIp1;
-            settings.Ip2 = ControllerIp2;
-            settings.Ip3 = ControllerIp3;
-            settings.Ip4 = ControllerIp4;
-
-            settings.Port = ControllerTcpPort;
-        }
-
-        public int GetActualLineValue() => GetPinQuality(IdActualLineNumber) == OpcQuality.Good ? GetPinInt(IdActualLineNumber) : -1;
-
-        private bool IsLineChanged(int currentLine, int forLoopCount1, int forLoopCount2, int forLoopCount3)
-        {
-            if (currentLine != _previousLineNumber
-                || _previousForLoopCount1 != forLoopCount1
-                || _previousForLoopCount2 != forLoopCount2
-                || _previousForLoopCount3 != forLoopCount3)
+            base.ToRuntime();
+            
+            if (_serviceProvider == null)
             {
-                _previousLineNumber = currentLine;
-                _previousForLoopCount1 = forLoopCount1;
-                _previousForLoopCount2 = forLoopCount2;
-                _previousForLoopCount3 = forLoopCount3;
-
-                return true;
+                _serviceProvider = new ServiceProvider();
+                _serviceProvider.InitializeServices(this);
             }
-            return false;
+            
+            _plcStateMonitor = _serviceProvider.PlcStateMonitor;
+            _actionTargetProvider = _serviceProvider.ActionTargetProvider;
+            
+            _actionTargetProvider.RefreshTargets(this);
+        }
+        
+        public override void Dispose()
+        {
+            CleanupServices();
+            base.Dispose();
+        }
+        
+        protected override void CreatePinMap(bool newObject)
+        {
+            base.CreatePinMap(newObject);
+
+            var shutterGroup = Root.AddGroup(ShutterNamesGroupId, "ShutterNames");
+            var heaterGroup = Root.AddGroup(HeaterNamesGroupId, "HeaterNames");
+            var nitrogenGroup = Root.AddGroup(NitrogenSourcesGroupId, "NitrogenSourcesNames");
+
+            for (var i = 0; i < ShutterNameQuantity; i++)
+            {
+                var pinId = IdFirstShutterName + i; 
+                var pinName = $"Shutter{i + 1}";
+                shutterGroup.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
+            }
+
+            for (var i = 0; i < HeaterNameQuantity; i++)
+            {
+                var pinId = IdFirstHeaterName + i;
+                var pinName = $"Heater{i + 1}";
+                heaterGroup.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
+            }
+
+            for (var i = 0; i < NitrogenSourceNameQuantity; i++)
+            {
+                var pinId = IdFirstNitrogenSourceName + i;
+                var pinName = $"NitrogenSource{i + 1}";
+                nitrogenGroup.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
+            }
+
+            FirePinSpaceChanged();
+        }
+        
+        private void CleanupServices()
+        {
+            _plcStateMonitor = null;
+            _actionTargetProvider = null;
+            _serviceProvider = null; 
         }
 
         public Dictionary<int, string> GetShutterNames()
@@ -304,17 +317,17 @@ namespace NtoLib.Recipes.MbeTable
             if (quantity <= 0)
                 return new Dictionary<int, string>();
 
-            var pinGroup = new Dictionary<int, string>();
+            var pinGroup = new Dictionary<int, string>(quantity);
 
             for (var pinId = firstId; pinId < firstId + quantity; pinId++)
             {
-                if (GetPinQuality(pinId) != OpcQuality.Good)
-                    continue;
-
-                var pinValue = GetPinValue<string>(pinId);
-                if (!string.IsNullOrEmpty(pinValue))
+                if (GetPinQuality(pinId) == OpcQuality.Good)
                 {
-                    pinGroup.Add(pinId - firstId, pinValue);
+                    var pinValue = GetPinValue<string>(pinId);
+                    if (!string.IsNullOrWhiteSpace(pinValue))
+                    {
+                        pinGroup[pinId - firstId] = pinValue;
+                    }
                 }
             }
 

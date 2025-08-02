@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using NtoLib.Recipes.MbeTable.Recipe.Actions;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Recipe;
 
-public class RecipeManager : IStepUpdater, IRecipeCommands
+public class RecipeManager : IStepUpdater
 {
     /// <summary>
     /// Encapsulates the core business logic and rules for managing a recipe.
@@ -18,31 +17,23 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
     public event Action<Step, int> StepAdded;
     public event Action<int> StepRemoved;
     public event Action<int, ColumnKey> StepPropertyChanged;
-
-    private readonly List<Step> _recipe = new();
-    private readonly StepFactory _stepFactory;
-    private readonly PropertyDependencyCalc _propertyDependencyCalc;
-
+    
     private readonly TableSchema _tableSchema;
+    private readonly StepFactory _stepFactory;
 
-    public RecipeManager(TableSchema schema, PropertyDependencyCalc propertyDependencyCalc, StepFactory stepFactory)
+    private readonly List<Step> _recipe;
+
+    public RecipeManager(TableSchema schema, StepFactory stepFactory)
     {
         _tableSchema = schema ?? throw new ArgumentNullException(nameof(schema));
-        _propertyDependencyCalc = propertyDependencyCalc ?? throw new ArgumentNullException(nameof(propertyDependencyCalc));
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
+        
+        _recipe = new List<Step>();
     }
 
     public IReadOnlyList<Step> Steps => _recipe.AsReadOnly();
-    public int StepCount => _recipe.Count;
 
-    public Step GetStep(int rowIndex)
-    {
-        if (!ValidateRow(rowIndex, out var errorString))
-            throw new ArgumentOutOfRangeException(nameof(rowIndex), errorString);
-        return _recipe[rowIndex];
-    }
-
-    public bool TryAddNewStep(int rowIndex, out Step openStep, out string errorString)
+    public bool TryAddDefaultStep(int rowIndex, out Step openStep, out string errorString)
     {
         // A new step is always an open step
         openStep = null;
@@ -60,6 +51,21 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
         return true;
     }
 
+    public bool TrySetStepPropertyByObject(int rowIndex, ColumnKey columnKey, object value, out string errorString)
+    {
+        var result = _recipe[rowIndex].TryUpdatePropertyAndDependencies(columnKey, value, out var affectedKeys,  out errorString);
+        
+        if (result)
+        {
+            foreach (var affectedKey in affectedKeys)
+            {
+                StepPropertyChanged?.Invoke(rowIndex, affectedKey);
+            }
+        }
+        
+        return result;
+    }
+
     public bool TryRemoveStep(int rowIndex, out string errorString)
     {
         if (!ValidateRow(rowIndex, out errorString))
@@ -68,46 +74,6 @@ public class RecipeManager : IStepUpdater, IRecipeCommands
         _recipe.RemoveAt(rowIndex);
 
         StepRemoved?.Invoke(rowIndex);
-
-        return true;
-    }
-
-    public bool TryGetStep(int rowIndex, out Step step, out string errorString)
-    {
-        if (!ValidateRow(rowIndex, out errorString))
-        {
-            step = null;
-            return false;
-        }
-
-        step = _recipe[rowIndex];
-        return true;
-    }
-
-    public bool TrySetStepPropertyByObject(int rowIndex, ColumnKey columnKey, object value,
-        out string errorString)
-    {
-        if (!ValidateRow(rowIndex, out errorString))
-            return false;
-
-        var step = _recipe[rowIndex];
-
-        int columnIndex = _tableSchema.GetIndexByColumnKey(columnKey);
-
-        if (!step.TryChangePropertyValue(columnKey, value, out errorString))
-            return false;
-
-        if (!_propertyDependencyCalc.TryRecalculate(step, columnIndex, out var dependencyIndexes, out errorString))
-            return false;
-
-        StepPropertyChanged?.Invoke(rowIndex, columnKey);
-
-        foreach (var depIndex in dependencyIndexes)
-        {
-            var depKey = _tableSchema.GetColumnKeyByIndex(depIndex);
-            var depPropertyName = depKey; // binding name to ColumnKey
-            StepPropertyChanged?.Invoke(rowIndex, depPropertyName);
-        }
 
         return true;
     }

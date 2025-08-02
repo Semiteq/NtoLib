@@ -18,10 +18,9 @@ public class ComboBoxDataProvider
     private Dictionary<int, string> _cachedNitrogenSourceNames;
     private readonly Dictionary<int, string> _emptyServiceTargets = new Dictionary<int, string>();
 
-    public ComboBoxDataProvider(ActionManager actionManager, IFbActionTarget fbTarget)
+    public ComboBoxDataProvider(ActionManager actionManager)
     {
         _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager), @"ActionManager cannot be null.");
-        _fbTarget = fbTarget ?? throw new ArgumentNullException(nameof(fbTarget), @" cannot be null. Ensure that the IFbActionTarget implementation is provided.");
 
         _actions = _actionManager.GetAllActionsAsList();
     }

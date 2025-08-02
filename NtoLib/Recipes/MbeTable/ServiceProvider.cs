@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FB.VisualFB;
+using NtoLib.Recipes.MbeTable.PinDataManager;
 using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.ActionTargets;
 using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 using NtoLib.Recipes.MbeTable.Recipe.StepManager;
 using NtoLib.Recipes.MbeTable.Schema;
@@ -30,35 +29,38 @@ namespace NtoLib.Recipes.MbeTable
         public OpenFileDialog OpenFileDialog { get; private set; }
         public SaveFileDialog SaveFileDialog { get; private set; }
         public RecipeManager RecipeManager { get; private set; }
-        public PropertyDependencyCalc PropertyDependencyCalc { get; private set; }
         public StepFactory StepFactory { get; private set; }
         public ModBusDeserializer ModBusDeserializer { get; private set; }
         public PropertyDefinitionRegistry PropertyDefinitionRegistry { get; private set; }
-        public VisualFBConnector FbConnector { get; private set; }
+        public MbeTableFB MbeTableFb { get; private set; }
+        public IActionTargetProvider ActionTargetProvider { get; private set; }
+        public IPlcStateMonitor PlcStateMonitor { get; private set; }
+        public ICommunicationSettingsProvider CommunicationSettingsProvider { get; private set; }
 
-        public void InitializeServices(VisualFBConnector fbConnector)
+        public void InitializeServices(MbeTableFB mbeTableFb)
         {
-            FbConnector = fbConnector ?? throw new ArgumentNullException(nameof(fbConnector), 
+            MbeTableFb = mbeTableFb ?? throw new ArgumentNullException(nameof(mbeTableFb), 
                 @"FbConnector cannot be null. Ensure that the VisualFBConnector is properly initialized.");
             
             TableSchema = new TableSchema();
             ActionManager = new ActionManager();
             TableCellFormatter = new TableCellFormatter();
             PropertyDefinitionRegistry = new PropertyDefinitionRegistry();
+            
+            ActionTargetProvider = new ActionTargetProvider();
+            PlcStateMonitor = new PlcStateMonitor();
+            CommunicationSettingsProvider = new CommunicationSettingsProvider(MbeTableFb);
+            
             ColorScheme = CreateColorScheme();
 
             StatusManager = new StatusManager();
             TablePainter = new TablePainter(ColorScheme);
             
-            if (FbConnector.Fb is not IFbActionTarget fbTarget)
-                throw new InvalidOperationException("FbConnector.Fb must implement IFbActionTarget.");
-            
-            PropertyDependencyCalc = new PropertyDependencyCalc(ActionManager, TableSchema);
             StepFactory = new StepFactory(ActionManager, TableSchema, PropertyDefinitionRegistry);
-            DataProvider = new ComboBoxDataProvider(ActionManager, fbTarget);
+            DataProvider = new ComboBoxDataProvider(ActionManager);
             ModBusDeserializer = new ModBusDeserializer(ActionManager, StepFactory);
             
-            RecipeManager = new RecipeManager(TableSchema, PropertyDependencyCalc, StepFactory);
+            RecipeManager = new RecipeManager(TableSchema, StepFactory);
             RecipeViewModel = new RecipeViewModel(RecipeManager, DataProvider);
             
             InitializeUiComponents();

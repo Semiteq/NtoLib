@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FB.VisualFB;
+using NtoLib.Recipes.MbeTable.PinDataManager;
 using NtoLib.Recipes.MbeTable.Recipe;
 using NtoLib.Recipes.MbeTable.Schema;
 using NtoLib.Recipes.MbeTable.Status;
@@ -17,7 +18,7 @@ namespace NtoLib.Recipes.MbeTable
     public partial class TableControl : VisualControlBase
     {
         [NonSerialized] private ServiceProvider _sp;
-        
+
         [NonSerialized] private RecipeViewModel _recipeViewModel;
         [NonSerialized] private TableSchema _tableSchema;
         [NonSerialized] private IStatusManager _statusManager;
@@ -27,8 +28,8 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private OpenFileDialog _openFileDialog;
         [NonSerialized] private SaveFileDialog _saveFileDialog;
         [NonSerialized] private ColorScheme _colorScheme;
-        [NonSerialized] private TableColumnManager _tableColumnManager;
-        
+        [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
+
         [NonSerialized] private Color _controlBgColor = Color.White;
         [NonSerialized] private Color _tableBgColor = Color.White;
         [NonSerialized] private Font _headerFont = new("Arial", 16f, FontStyle.Bold);
@@ -54,13 +55,13 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_controlBgColor == value) return;
-                
+
                 _controlBgColor = value;
                 BackColor = value;
-                
+
                 if (_labelStatus != null) _labelStatus.BackColor = value;
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.ControlBackgroundColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -72,12 +73,12 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_tableBgColor == value) return;
-                
+
                 _tableBgColor = value;
-                
+
                 if (_table != null) _table.BackgroundColor = value;
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.TableBackgroundColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -89,11 +90,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (Equals(_headerFont, value)) return;
-                
+
                 _headerFont = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.HeaderFont = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -105,11 +106,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_headerTextColor == value) return;
-                
+
                 _headerTextColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.HeaderTextColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -121,11 +122,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_headerBgColor == value) return;
-                
+
                 _headerBgColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.HeaderBgColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -137,11 +138,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (Equals(_lineFont, value)) return;
-                
+
                 _lineFont = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.LineFont = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -153,11 +154,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_lineTextColor == value) return;
-                
+
                 _lineTextColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.LineTextColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -169,11 +170,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_lineBgColor == value) return;
-                
+
                 _lineBgColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.LineBgColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -187,9 +188,9 @@ namespace NtoLib.Recipes.MbeTable
                 if (Equals(_selectedLineFont, value)) return;
 
                 _selectedLineFont = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.SelectedLineFont = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -201,11 +202,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_selectedLineTextColor == value) return;
-                
+
                 _selectedLineTextColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.SelectedLineTextColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -217,11 +218,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_selectedLineBgColor == value) return;
-                
+
                 _selectedLineBgColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.SelectedLineBgColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -233,11 +234,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (Equals(_passedLineFont, value)) return;
-                
+
                 _passedLineFont = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.PassedLineFont = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -249,9 +250,9 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 _passedLineTextColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.PassedLineTextColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -263,11 +264,11 @@ namespace NtoLib.Recipes.MbeTable
             set
             {
                 if (_passedLineBgColor == value) return;
-                
+
                 _passedLineBgColor = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.PassedLineBgColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
@@ -281,7 +282,7 @@ namespace NtoLib.Recipes.MbeTable
                 if (_buttonsColor == value) return;
 
                 _buttonsColor = value;
-                
+
                 if (_buttonOpen != null) _buttonOpen.BackColor = value;
                 if (_buttonSave != null) _buttonSave.BackColor = value;
                 if (_buttonAddBefore != null) _buttonAddBefore.BackColor = value;
@@ -290,14 +291,14 @@ namespace NtoLib.Recipes.MbeTable
                 if (_buttonWrite != null) _buttonWrite.BackColor = value;
 
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.ButtonsColor = value;
-                
+
                 UpdateColorScheme();
             }
         }
         #endregion
 
         #region Constructor
-        
+
         public TableControl() : base(true)
         {
             InitializeComponent();
@@ -311,23 +312,23 @@ namespace NtoLib.Recipes.MbeTable
                 InitializeServicesAndEvents();
             }
         }
-        
+
         private void InitializeServicesAndEvents()
         {
             var fb = FBConnector.Fb as MbeTableFB ?? throw new NullReferenceException(
                 "No connection between MbeTableFB and TableControl was  established");
 
-            var serviceProvider = fb.ServiceProvider;
-            serviceProvider.InitializeServices(FBConnector);
+            _sp = fb.ServiceProvider;
 
-            _recipeViewModel = serviceProvider.RecipeViewModel;
-            _tableSchema = serviceProvider.TableSchema;
-            _statusManager = serviceProvider.StatusManager;
-            _tablePainter = serviceProvider.TablePainter;
-            _tableCellFormatter = serviceProvider.TableCellFormatter;
-            _dataProvider = serviceProvider.DataProvider;
-            _openFileDialog = serviceProvider.OpenFileDialog;
-            _saveFileDialog = serviceProvider.SaveFileDialog;
+            _recipeViewModel = _sp.RecipeViewModel;
+            _tableSchema = _sp.TableSchema;
+            _statusManager = _sp.StatusManager;
+            _tablePainter = _sp.TablePainter;
+            _tableCellFormatter = _sp.TableCellFormatter;
+            _dataProvider = _sp.DataProvider;
+            _plcStateMonitor = _sp.PlcStateMonitor;
+            _openFileDialog = _sp.OpenFileDialog;
+            _saveFileDialog = _sp.SaveFileDialog;
 
             InitializeUi();
         }
@@ -336,10 +337,10 @@ namespace NtoLib.Recipes.MbeTable
         {
             var colorScheme = GetColorSchemeFromProperties();
             var tableColumnManager = new TableColumnManager(_table, _tableSchema, colorScheme, _dataProvider);
-            
+
             tableColumnManager.InitializeHeaders();
             tableColumnManager.InitializeTableColumns();
-            
+
             _table.DataSource = _recipeViewModel.ViewModels;
             _table.Invalidate();
 
@@ -349,20 +350,20 @@ namespace NtoLib.Recipes.MbeTable
             _table.CellBeginEdit += Table_CellBeginEdit;
             _table.DataError -= Table_DataError;
             _table.DataError += Table_DataError;
-            
+
             _statusManager.StatusUpdated -= OnStatusUpdated;
             _statusManager.StatusUpdated += OnStatusUpdated;
             _statusManager.StatusCleared -= OnStatusCleared;
             _statusManager.StatusCleared += OnStatusCleared;
         }
-        
+
         #endregion
 
         #region Visuals
         private void UpdateColorScheme()
         {
-            if (_colorScheme == null) return; 
-            
+            if (_colorScheme == null) return;
+
             _colorScheme.ButtonsColor = _buttonsColor;
             _colorScheme.HeaderFont = _headerFont;
             _colorScheme.LineBgColor = _lineBgColor;
@@ -408,13 +409,13 @@ namespace NtoLib.Recipes.MbeTable
             _labelStatus.Text = message;
             _labelStatus.BackColor = statusMessage == StatusMessage.Error ? Color.OrangeRed : _controlBgColor;
         }
-        
+
         private void OnStatusCleared()
         {
             _labelStatus.Text = string.Empty;
             _labelStatus.BackColor = _controlBgColor;
         }
-        
+
         private void Table_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             _sp?.StatusManager.WriteStatusMessage($"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}", StatusMessage.Error);
@@ -423,39 +424,40 @@ namespace NtoLib.Recipes.MbeTable
 
         private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (_sp == null || e.RowIndex < 0 || e.RowIndex >= _recipeViewModel.ViewModels.Count)
-                return;
+            if (_sp == null) return;
+            
+            var rowIndex = e.RowIndex;
+            var columnIndex = e.ColumnIndex;
 
-            var viewModel = _recipeViewModel.ViewModels[e.RowIndex];
-            var columnKey = _tableSchema.GetColumnKeyByIndex(e.ColumnIndex);
-            var columnDef = _tableSchema.GetColumnDefinition(e.ColumnIndex);
+            var currentRow = _plcStateMonitor.CurrentLineNumber;
 
-            var actualLineNumber = -1; // todo: get from a source that provides runtime context
-            var stateType = _tablePainter.GetStateType(viewModel, actualLineNumber, columnKey);
-
-            _tablePainter.ApplyState(e.CellStyle, stateType);
-
-            if (columnDef.TableCellType == typeof(DataGridViewComboBoxCell))
-            {
-                if (!columnDef.ComboBoxSource.IsStatic)
-                {
-                    if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
-                    {
-                        var dynamicSource = _dataProvider.GetActionTargetDatasource(viewModel);
-                        if (cell.DataSource != dynamicSource)
-                        {
-                            cell.DataSource = dynamicSource;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (stateType != TablePainter.StateType.Blocked)
-                {
-                    e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
-                }
-            }
+            // var viewModel = _recipeViewModel.ViewModels[e.RowIndex];
+            // var columnKey = _tableSchema.GetColumnKeyByIndex(e.ColumnIndex);
+            // var columnDef = _tableSchema.GetColumnDefinition(e.ColumnIndex);
+            //
+            // var stateType = _tablePainter.GetStateType(viewModel, actualLineNumber, columnKey);
+            //
+            // _tablePainter.ApplyState(e.CellStyle, stateType);
+            //
+            // if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
+            // {
+            //     if (!columnDef.ComboBoxSource.IsStatic)
+            //     {
+            //         var dynamicSource = _dataProvider.GetActionTargetDatasource(viewModel);
+            //         if (cell.DataSource != dynamicSource)
+            //         {
+            //             cell.DataSource = dynamicSource;
+            //         }
+            //         
+            //     }
+            // }
+            // else
+            // {
+            //     if (stateType != TablePainter.StateType.Blocked)
+            //     {
+            //         e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
+            //     }
+            // }
         }
 
         private void Table_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)

@@ -71,15 +71,11 @@ namespace NtoLib.Recipes.MbeTable.Recipe.StepManager;
         
         public Step Build()
         {
-            var step = new Step();
-
-            foreach (var param in _step)
-            {
-                step.SetPropertyWrapper(param.Key, param.Value);
-            }
-            
+            var step = new Step(_actionManager);
+            step.InitializeProperties(new Dictionary<ColumnKey, PropertyWrapper>(_step));
             return step;
         }
+        
         private StepBuilder WithProperty(ColumnKey key, PropertyWrapper property)
         {
             _step[key] = property;

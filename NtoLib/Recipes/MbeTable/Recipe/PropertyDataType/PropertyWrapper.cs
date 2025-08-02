@@ -7,11 +7,11 @@ namespace NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
 
 public class PropertyWrapper
 {
-    private PropertyValue? _propertyValue;
+    private readonly PropertyValue? _propertyValue;
     public bool IsBlocked => _propertyValue == null;
 
     private readonly PropertyDefinitionRegistry _registry;
-    
+
     public PropertyWrapper(PropertyValue propertyValue, PropertyDefinitionRegistry registry)
     {
         _propertyValue = propertyValue ?? throw new ArgumentNullException(nameof(propertyValue));
@@ -29,47 +29,49 @@ public class PropertyWrapper
     {
         if (IsBlocked)
             throw new InvalidOperationException("Перманентно заблокированное свойство не имеет типа.");
-        
+
         return _propertyValue.Type;
     }
 
-    public bool TryChangeValue<T>(T value, out string errorString) where T : notnull
+    public bool TryChangeValue<T>(T value, out PropertyWrapper newPropertyWrapper, out string errorMessage)
+        where T : notnull
     {
-        errorString = string.Empty;
-        
+        newPropertyWrapper = this;
+
         if (value == null)
             throw new ArgumentNullException(nameof(value), @"Значение не может быть null.");
-        
+
         if (IsBlocked)
             throw new InvalidOperationException("Невозможно изменить значение заблокированного свойства.");
-        
+
         var definition = _registry.GetDefinition(_propertyValue.Type);
         if (typeof(T) != definition.SystemType)
         {
             throw new InvalidCastException(
                 $"Неверный тип данных. Свойство '{Type}' ожидает тип '{definition.SystemType.Name}', а был передан '{typeof(T).Name}'.");
         }
-        
-        if (!definition.Validate(value, out var errorMessage))
+
+        if (!definition.Validate(value, out errorMessage))
         {
-            errorString = errorMessage;
             return false;
         }
-        
+
         var newUnionValue = CreateUnionValue(value);
-        _propertyValue = new PropertyValue(newUnionValue, _propertyValue.Type);
-        
+        var newPropertyValue = new PropertyValue(newUnionValue, _propertyValue.Type);
+        newPropertyWrapper = new PropertyWrapper(newPropertyValue, _registry);
         return true;
     }
-    
-    public bool TryChangeValue(object value, out string errorMessage)
+
+    public bool TryChangeValue(object value, out PropertyWrapper newPropertyWrapper, out string errorMessage)
     {
+        newPropertyWrapper = this;
+
         if (value == null)
         {
             errorMessage = "Значение не может быть null.";
             throw new ArgumentNullException(nameof(value), errorMessage);
         }
-        
+
         if (IsBlocked)
         {
             errorMessage = "Невозможно изменить значение заблокированного свойства.";
@@ -87,17 +89,17 @@ public class PropertyWrapper
         catch (Exception ex) when (ex is InvalidCastException || ex is FormatException || ex is OverflowException)
         {
             throw new InvalidCastException(
-                $"Не удалось преобразовать значение '{value}' (тип: {value.GetType().Name}) в целевой тип '{targetType.Name}'.", ex);
+                $"Не удалось преобразовать значение '{value}' (тип: {value.GetType().Name}) в целевой тип '{targetType.Name}'.",
+                ex);
         }
-        
+
         if (!definition.Validate(convertedValue, out errorMessage))
             return false;
-        
-        
+
+
         var newUnionValue = CreateUnionValue(convertedValue);
-        _propertyValue = new PropertyValue(newUnionValue, _propertyValue.Type);
-        
-        errorMessage = string.Empty;
+        var newPropertyValue = new PropertyValue(newUnionValue, _propertyValue.Type);
+        newPropertyWrapper = new PropertyWrapper(newPropertyValue, _registry);
         return true;
     }
 
@@ -105,10 +107,11 @@ public class PropertyWrapper
     {
         if (IsBlocked)
             throw new InvalidOperationException("Невозможно получить значение заблокированного свойства.");
-        
+
         if (_propertyValue.UnionValue.Value is not T typedValue)
-            throw new InvalidOperationException($"Невозможно получить значение типа '{typeof(T).Name}' из свойства типа '{_propertyValue.Type}'.");
-        
+            throw new InvalidOperationException(
+                $"Невозможно получить значение типа '{typeof(T).Name}' из свойства типа '{_propertyValue.Type}'.");
+
         return typedValue;
     }
 
@@ -116,7 +119,7 @@ public class PropertyWrapper
     {
         if (IsBlocked)
             throw new InvalidOperationException("Невозможно получить значение заблокированного свойства.");
-        
+
         return _propertyValue.UnionValue.Value;
     }
 
@@ -129,13 +132,19 @@ public class PropertyWrapper
 
         var definition = _registry.GetDefinition(_propertyValue.Type);
         string formattedValue = definition.FormatValue(_propertyValue.UnionValue.Value);
-        
+
         return $"{formattedValue} {definition.Units}".Trim();
     }
-    
-    public override string ToString() => GetDisplayValue();
-    
-    public bool IsValid(out string errorMessage)
+
+    public override string ToString()
+    {
+        if (IsBlocked)
+            return string.Empty;
+        
+        return _propertyValue.ToString();
+    }
+
+public bool IsValid(out string errorMessage)
     {
         if (IsBlocked)
         {
@@ -144,6 +153,14 @@ public class PropertyWrapper
         
         var definition = _registry.GetDefinition(_propertyValue.Type);
         return definition.Validate(_propertyValue.UnionValue.Value, out errorMessage);
+    }
+    
+    public PropertyWrapper Clone()
+    {
+        if (IsBlocked)
+            return new PropertyWrapper(_registry);
+        
+        return new PropertyWrapper(new PropertyValue(_propertyValue.UnionValue, _propertyValue.Type), _registry);
     }
     
     private OneOf<bool, int, float, string> CreateUnionValue(object value)
