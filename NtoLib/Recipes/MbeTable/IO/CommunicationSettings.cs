@@ -8,8 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EasyModbus;
 using NtoLib.Recipes.MbeTable.PinDataManager;
-using NtoLib.Recipes.MbeTable.Recipe;
-using NtoLib.Recipes.MbeTable.Recipe.StepManager;
+using NtoLib.Recipes.MbeTable.RecipeManager.StepManager;
 
 namespace NtoLib.Recipes.MbeTable.IO
 {

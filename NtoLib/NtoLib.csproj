@@ -113,6 +113,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
+    <Compile Include="Compatibilty.cs" />
     <Compile Include="FocusManager.cs" />
     <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
     <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
@@ -158,43 +159,43 @@
     <Compile Include="Recipes\MbeTable\PinDataManager\IPlcStateMonitor.cs" />
     <Compile Include="Recipes\MbeTable\PinDataManager\PlcLineInfo.cs" />
     <Compile Include="Recipes\MbeTable\PinDataManager\PlcStateMonitor.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionEntry.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionManager.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\Actions\ActionType.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\ActionTarget.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\ActionTargetExtractor.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\ActionTargetViewModel.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\ActionTargets\IFbActionTarget.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\IStepUpdater.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Contracts\IPropertyTypeDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\BoolDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\EnumDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\FloatDefinitionBase.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\FloatGenericDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\FlowDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\IntDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\PercentDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\PowerSpeedDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\StringDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\TemperatureDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\TempSpeedDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\Definitions\TimeDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyDefinitionRegistry.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyWrapper.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyType.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\PropertyDataType\PropertyValue.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\RecipeManager.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\RecipeViewModel.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\DependencyRule.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\DeployDuration.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\IReadOnlyStep.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\ModBusDeserializer.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\Step.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepBuilder.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepCalculationLogic.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepFactory.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\StepManager\StepViewModel.cs" />
-    <Compile Include="Recipes\MbeTable\Recipe\TableLoopManager.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\Actions\ActionEntry.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\Actions\ActionManager.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\Actions\ActionType.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\Analysis\RecipeTimeAnalysis.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\Analysis\RecipeTimeCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Contracts\IPropertyTypeDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\BoolDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\EnumDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\FloatDefinitionBase.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\FloatGenericDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\FlowDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\IntDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\PercentDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\PowerSpeedDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\StringDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\TemperatureDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\TempSpeedDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Definitions\TimeDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\Errors\RecipePropertyErrors.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\PropertyDefinitionRegistry.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\StepProperty.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\PropertyDataType\PropertyType.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\Recipe.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\RecipeEngine.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\RecipeLoopValidator.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\ActionToFactoryMap.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\DependencyRule.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\DeployDuration.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\ModBusDeserializer.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\Step.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\StepBuilder.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\StepCalculationLogic.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepManager\StepFactory.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\StepPropertyCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\TableLoopManager.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\ViewModels\RecipeViewModel.cs" />
+    <Compile Include="Recipes\MbeTable\RecipeManager\ViewModels\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ColumnKey.cs" />
     <Compile Include="Recipes\MbeTable\Schema\ComboBoxSourceInfo.cs" />
@@ -205,10 +206,8 @@
     <Compile Include="Recipes\MbeTable\Status\StatusMessage.cs" />
     <Compile Include="Recipes\MbeTable\Table\CellState.cs" />
     <Compile Include="Recipes\MbeTable\Table\ColorScheme.cs" />
-    <Compile Include="Recipes\MbeTable\Table\ComboBoxDataProvider.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TableCellFormatter.cs" />
+    <Compile Include="Recipes\MbeTable\Table\ComboboxDataProvider.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableColumnManager.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TablePainter.cs" />
     <Compile Include="Recipes\MbeTable\Table\TableTimeManager.cs" />
     <Compile Include="Recipes\MbeTable\Timer\ILineChangeManager.cs" />
     <Compile Include="Recipes\MbeTable\Timer\IRecipeTimer.cs" />
@@ -386,7 +385,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll"
+    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll" "$(TargetDir)System.Collections.Immutable.dll"
 chcp 437 &amp;&amp; xcopy "$(TargetPath)" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(TargetDir)NtoLib.pdb" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I</PostBuildEvent>

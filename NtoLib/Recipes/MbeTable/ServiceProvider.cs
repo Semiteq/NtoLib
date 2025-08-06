@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.PinDataManager;
-using NtoLib.Recipes.MbeTable.Recipe;
-using NtoLib.Recipes.MbeTable.Recipe.Actions;
-using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
-using NtoLib.Recipes.MbeTable.Recipe.StepManager;
+using NtoLib.Recipes.MbeTable.RecipeManager;
+using NtoLib.Recipes.MbeTable.RecipeManager.Actions;
+using NtoLib.Recipes.MbeTable.RecipeManager.Analysis;
+using NtoLib.Recipes.MbeTable.RecipeManager.PropertyDataType;
+using NtoLib.Recipes.MbeTable.RecipeManager.PropertyDataType.Errors;
+using NtoLib.Recipes.MbeTable.RecipeManager.StepManager;
+using NtoLib.Recipes.MbeTable.RecipeManager.ViewModels;
 using NtoLib.Recipes.MbeTable.Schema;
 using NtoLib.Recipes.MbeTable.Status;
 using NtoLib.Recipes.MbeTable.Table;
@@ -20,15 +25,12 @@ namespace NtoLib.Recipes.MbeTable
         public ColorScheme ColorScheme { get; private set; }
         public TableSchema TableSchema { get; private set; }
         public ActionManager ActionManager { get; private set; }
-        public TableCellFormatter TableCellFormatter { get; private set; }
-        public ComboBoxDataProvider DataProvider { get; private set; }
         public RecipeViewModel RecipeViewModel { get; private set; }
         public TableColumnManager TableColumnManager { get; private set; }
-        public TablePainter TablePainter { get; private set; }
         public IStatusManager StatusManager { get; private set; }
         public OpenFileDialog OpenFileDialog { get; private set; }
         public SaveFileDialog SaveFileDialog { get; private set; }
-        public RecipeManager RecipeManager { get; private set; }
+        public Recipe Recipe { get; private set; }
         public StepFactory StepFactory { get; private set; }
         public ModBusDeserializer ModBusDeserializer { get; private set; }
         public PropertyDefinitionRegistry PropertyDefinitionRegistry { get; private set; }
@@ -36,6 +38,12 @@ namespace NtoLib.Recipes.MbeTable
         public IActionTargetProvider ActionTargetProvider { get; private set; }
         public IPlcStateMonitor PlcStateMonitor { get; private set; }
         public ICommunicationSettingsProvider CommunicationSettingsProvider { get; private set; }
+        public ComboboxDataProvider ComboboxDataProvider { get; private set; }
+        public RecipeEngine RecipeEngine { get; private set; }
+        public ActionToFactoryMap ActionToFactoryMap { get; private set; }
+        public StepPropertyCalculator StepPropertyCalculator { get; private set; }
+        public RecipeLoopValidator RecipeLoopValidator { get; private set; }
+        public RecipeTimeCalculator RecipeTimeCalculator { get; private set; }
 
         public void InitializeServices(MbeTableFB mbeTableFb)
         {
@@ -44,24 +52,43 @@ namespace NtoLib.Recipes.MbeTable
             
             TableSchema = new TableSchema();
             ActionManager = new ActionManager();
-            TableCellFormatter = new TableCellFormatter();
             PropertyDefinitionRegistry = new PropertyDefinitionRegistry();
             
             ActionTargetProvider = new ActionTargetProvider();
             PlcStateMonitor = new PlcStateMonitor();
+            StatusManager = new StatusManager();
+            ComboboxDataProvider = new ComboboxDataProvider(ActionManager, ActionTargetProvider);
+            
             CommunicationSettingsProvider = new CommunicationSettingsProvider(MbeTableFb);
             
             ColorScheme = CreateColorScheme();
-
-            StatusManager = new StatusManager();
-            TablePainter = new TablePainter(ColorScheme);
             
             StepFactory = new StepFactory(ActionManager, TableSchema, PropertyDefinitionRegistry);
-            DataProvider = new ComboBoxDataProvider(ActionManager);
             ModBusDeserializer = new ModBusDeserializer(ActionManager, StepFactory);
+
+            ActionToFactoryMap = new ActionToFactoryMap(ActionManager, StepFactory);
+
+            var actionMap = ActionToFactoryMap.StepCreationMap;
+
+            var dependencyRules = ImmutableList.Create(
+                new DependencyRule(
+                    TriggerKeys: ImmutableHashSet.Create(ColumnKey.InitialValue, ColumnKey.Setpoint, ColumnKey.Speed),
+                    OutputKey: ColumnKey.StepDuration,
+                    CalculationFunc: (Func<float, float, float, (float?, CalculationError?)>)StepCalculationLogic.CalculateDurationFromSpeed
+                ),
+                new DependencyRule(
+                    TriggerKeys: ImmutableHashSet.Create(ColumnKey.InitialValue, ColumnKey.Setpoint, ColumnKey.StepDuration),
+                    OutputKey: ColumnKey.Speed,
+                    CalculationFunc: (Func<float, float, float, (float?, CalculationError?)>)StepCalculationLogic.CalculateSpeedFromDuration
+                )
+            );
             
-            RecipeManager = new RecipeManager(TableSchema, StepFactory);
-            RecipeViewModel = new RecipeViewModel(RecipeManager, DataProvider);
+            StepPropertyCalculator = new StepPropertyCalculator(dependencyRules);
+            RecipeLoopValidator = new RecipeLoopValidator(ActionManager);
+            RecipeTimeCalculator = new RecipeTimeCalculator(ActionManager);
+            
+            RecipeEngine = new RecipeEngine(ActionManager, StepFactory, ActionTargetProvider, actionMap, StepPropertyCalculator);
+            RecipeViewModel = new RecipeViewModel(RecipeEngine, RecipeLoopValidator, RecipeTimeCalculator, ComboboxDataProvider, StatusManager, TableSchema);
             
             InitializeUiComponents();
         }

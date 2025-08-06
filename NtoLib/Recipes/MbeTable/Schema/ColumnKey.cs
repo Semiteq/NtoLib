@@ -6,7 +6,7 @@ public enum ColumnKey
     InitialValue,
     Setpoint,
     Speed,
-    Duration,
-    Time,
+    StepDuration,
+    StepStartTime,
     Comment
 }

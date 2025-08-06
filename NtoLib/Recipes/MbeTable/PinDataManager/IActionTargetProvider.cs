@@ -9,4 +9,8 @@ public interface IActionTargetProvider
     IReadOnlyDictionary<int, string> GetNitrogenSourceNames();
 
     void RefreshTargets(MbeTableFB fb);
+
+    public int GetMinimalShutterId();
+    public int GetMinimalHeaterId();
+    public int GetMinimalNitrogenSourceId();
 }

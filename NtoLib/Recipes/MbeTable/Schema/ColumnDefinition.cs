@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
+using NtoLib.Recipes.MbeTable.RecipeManager.PropertyDataType;
 
 namespace NtoLib.Recipes.MbeTable.Schema
 {

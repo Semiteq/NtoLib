@@ -1,6 +1,7 @@
 ﻿using System;
-
+using System.Linq;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.RecipeManager.ViewModels;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Table
@@ -10,14 +11,14 @@ namespace NtoLib.Recipes.MbeTable.Table
         private readonly DataGridView _table;
         private readonly TableSchema _tableSchema;
         private readonly ColorScheme _colorScheme;
-        private readonly ComboBoxDataProvider _dataProvider;
+        private readonly RecipeViewModel _recipeViewModel;
 
-        public TableColumnManager(DataGridView table, TableSchema tableSchema, ColorScheme colorScheme, ComboBoxDataProvider dataProvider)
+        public TableColumnManager(DataGridView table, TableSchema tableSchema, ColorScheme colorScheme, RecipeViewModel recipeViewModel)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema));
             _colorScheme = colorScheme ?? throw new ArgumentNullException(nameof(colorScheme));
-            _dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+            _recipeViewModel = recipeViewModel ?? throw new ArgumentNullException(nameof(recipeViewModel));
         }
 
         public void InitializeHeaders()
@@ -27,9 +28,9 @@ namespace NtoLib.Recipes.MbeTable.Table
             _table.ColumnHeadersDefaultCellStyle.ForeColor = _colorScheme.HeaderTextColor;
             _table.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             _table.RowHeadersVisible = true;
-            _table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
+            _table.RowHeadersWidth = 80;
 
-            _table.EnableHeadersVisualStyles = false; // Prevent windows from reapplying default styles
+            _table.EnableHeadersVisualStyles = false;
         }
 
         public void InitializeTableColumns()
@@ -41,42 +42,27 @@ namespace NtoLib.Recipes.MbeTable.Table
             {
                 DataGridViewColumn column;
 
-                // Comboboxes
-                if (colDef.TableCellType == typeof(DataGridViewComboBoxCell))
-                {
-                    var cboxColumn = new DataGridViewComboBoxColumn();
-                    cboxColumn.ValueMember = "Key";
-                    cboxColumn.DisplayMember = "Value";
-
-                    if (colDef.ComboBoxSource != null && colDef.ComboBoxSource.IsStatic)
-                    {
-                        cboxColumn.DataSource = _dataProvider.GetActionDataSource(colDef.ComboBoxSource.DataSourceKey);
-                    }
-
-                    column = cboxColumn;
-                }
-                else
-                {
-                    column = new DataGridViewTextBoxColumn();
-                }
+                
+                column = new DataGridViewTextBoxColumn();
+                column.DataPropertyName = $"Item[{colDef.Key}]";
+                
 
                 column.Name = colDef.Key.ToString();
                 column.HeaderText = colDef.UiName;
 
-                column.DataPropertyName = colDef.Key.ToString();
 
-                //column.ReadOnly = colDef.ReadOnly;
-                column.ReadOnly = false;
+
+                column.ReadOnly = colDef.ReadOnly;
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
 
-                if (column.Width > 0)
+                if (colDef.Width > 0)
                 {
-                    column.Width = column.Width;
+                    column.Width = colDef.Width;
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
                 }
-                else if (column.Width == -1)
+                else
                 {
-                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    //column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                 }
 
                 column.DefaultCellStyle.Alignment = colDef.Alignment;
@@ -84,14 +70,14 @@ namespace NtoLib.Recipes.MbeTable.Table
                 column.DefaultCellStyle.BackColor = _colorScheme.LineBgColor;
                 column.DefaultCellStyle.ForeColor = _colorScheme.LineTextColor;
 
-                _table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-                _table.AllowUserToAddRows = false;
-                _table.AllowUserToDeleteRows = false;
-                _table.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-                _table.MultiSelect = false;
-
                 _table.Columns.Add(column);
             }
+
+            _table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            _table.AllowUserToAddRows = false;
+            _table.AllowUserToDeleteRows = false;
+            _table.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            _table.MultiSelect = false;
         }
     }
 }

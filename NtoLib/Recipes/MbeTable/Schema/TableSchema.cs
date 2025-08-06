@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Recipe.PropertyDataType;
+using NtoLib.Recipes.MbeTable.RecipeManager.PropertyDataType;
 
 namespace NtoLib.Recipes.MbeTable.Schema
 {
@@ -13,12 +13,12 @@ namespace NtoLib.Recipes.MbeTable.Schema
             new ColumnDefinition
             {
                 Key = ColumnKey.Action,
-                Index = 0, 
-                UiName = "Действие", 
-                PropertyType = PropertyType.Enum, 
+                Index = 0,
+                UiName = "Действие",
+                PropertyType = PropertyType.Enum,
                 Type = typeof(int),
                 TableCellType = typeof(DataGridViewComboBoxCell),
-                Width = 200, 
+                Width = 200,
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleLeft,
                 ComboBoxSource = new ComboBoxSourceInfo { DataSourceKey = "Actions", IsStatic = true }
@@ -26,12 +26,12 @@ namespace NtoLib.Recipes.MbeTable.Schema
             new ColumnDefinition
             {
                 Key = ColumnKey.ActionTarget,
-                Index = 1, 
-                UiName = "Объект", 
-                PropertyType = PropertyType.Enum, 
+                Index = 1,
+                UiName = "Объект",
+                PropertyType = PropertyType.Enum,
                 TableCellType = typeof(DataGridViewComboBoxCell),
                 Type = typeof(int),
-                Width = 150, 
+                Width = 150,
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 ComboBoxSource = new ComboBoxSourceInfo { DataSourceKey = "ActionTargets", IsStatic = false }
@@ -39,25 +39,25 @@ namespace NtoLib.Recipes.MbeTable.Schema
             new ColumnDefinition
             {
                 Key = ColumnKey.InitialValue,
-                Index = 2, 
-                UiName = "Нач.значение", 
+                Index = 2,
+                UiName = "Нач.значение",
                 PropertyType = PropertyType.Float,
                 TableCellType = typeof(DataGridViewTextBoxCell),
                 Type = typeof(float),
                 Width = 200,
-                ReadOnly = false, 
+                ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 ComboBoxSource = null
             },
             new ColumnDefinition
             {
                 Key = ColumnKey.Setpoint,
-                Index = 3, 
-                UiName = "Задание", 
-                PropertyType = PropertyType.Float, 
+                Index = 3,
+                UiName = "Задание",
+                PropertyType = PropertyType.Float,
                 TableCellType = typeof(DataGridViewTextBoxCell),
                 Type = typeof(float),
-                Width = 180, 
+                Width = 180,
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 ComboBoxSource = null
@@ -65,38 +65,38 @@ namespace NtoLib.Recipes.MbeTable.Schema
             new ColumnDefinition
             {
                 Key = ColumnKey.Speed,
-                Index = 4, 
-                UiName = "Скорость", 
+                Index = 4,
+                UiName = "Скорость",
                 PropertyType = PropertyType.Float,
                 TableCellType = typeof(DataGridViewTextBoxCell),
                 Type = typeof(float),
-                Width = 150, 
+                Width = 150,
                 ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 ComboBoxSource = null
             },
             new ColumnDefinition
             {
-                Key = ColumnKey.Duration,
-                Index = 5, 
-                UiName = "Длительность", 
-                PropertyType = PropertyType.Float, 
+                Key = ColumnKey.StepDuration,
+                Index = 5,
+                UiName = "Длительность",
+                PropertyType = PropertyType.Float,
                 TableCellType = typeof(DataGridViewTextBoxCell),
                 Type = typeof(float),
                 Width = 200,
-                ReadOnly = false, 
+                ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 ComboBoxSource = null
             },
             new ColumnDefinition
             {
-                Key = ColumnKey.Time,
-                Index = 6, 
-                UiName = "Время", 
-                PropertyType = PropertyType.Float, 
+                Key = ColumnKey.StepStartTime,
+                Index = 6,
+                UiName = "Время",
+                PropertyType = PropertyType.Float,
                 TableCellType = typeof(DataGridViewTextBoxCell),
                 Type = typeof(float),
-                Width = 150, 
+                Width = 150,
                 ReadOnly = true,
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 ComboBoxSource = null
@@ -104,22 +104,22 @@ namespace NtoLib.Recipes.MbeTable.Schema
             new ColumnDefinition
             {
                 Key = ColumnKey.Comment,
-                Index = 7, 
-                UiName = "Комментарий", 
-                PropertyType = PropertyType.String, 
+                Index = 7,
+                UiName = "Комментарий",
+                PropertyType = PropertyType.String,
                 TableCellType = typeof(DataGridViewTextBoxCell),
                 Type = typeof(string),
                 Width = -1,
-                ReadOnly = false, 
+                ReadOnly = false,
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 ComboBoxSource = null
             }
         };
 
         public int GetColumnCount() => _columns.Count;
-        
+
         public IReadOnlyList<ColumnDefinition> GetReadonlyColumns() => _columns.AsReadOnly();
-        
+
         public Type GetColumnTypeByColumnKey(ColumnKey key)
         {
             var column = _columns.FirstOrDefault(c => c.Key == key);
@@ -127,7 +127,7 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 throw new ArgumentException($"Column with key {key} does not exist.");
             return column.Type;
         }
-        
+
         public string GetColumnUiNameByKey(ColumnKey key)
         {
             var column = _columns.FirstOrDefault(c => c.Key == key);
@@ -135,14 +135,14 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 throw new ArgumentException($"Column with key {key} does not exist.");
             return column.UiName;
         }
-        
+
         public ColumnKey GetColumnKeyByIndex(int index)
         {
             if (index < 0 || index >= _columns.Count)
                 throw new IndexOutOfRangeException("Invalid column index.");
             return _columns[index].Key;
         }
-        
+
         public int GetIndexByColumnKey(ColumnKey key)
         {
             var column = _columns.FirstOrDefault(c => c.Key == key);
@@ -150,16 +150,24 @@ namespace NtoLib.Recipes.MbeTable.Schema
                 throw new ArgumentException($"Column with key {key} does not exist.");
             return column.Index;
         }
-        
+
         public ColumnDefinition GetColumnDefinition(int index)
         {
             if (index < 0 || index >= _columns.Count)
                 throw new IndexOutOfRangeException("Invalid column index.");
-            
+
             if (_columns[index] == null)
                 throw new ArgumentException($"Column at index {index} is null.");
-            
+
             return _columns[index];
+        }
+
+        public ColumnDefinition GetColumnDefinition(ColumnKey key)
+        {
+            var column = _columns.FirstOrDefault(c => c.Key == key);
+            if (column == null)
+                throw new ArgumentException($"Column with key {key} does not exist.");
+            return column;
         }
     }
 }

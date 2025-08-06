@@ -1,11 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FB.VisualFB;
 using NtoLib.Recipes.MbeTable.PinDataManager;
-using NtoLib.Recipes.MbeTable.Recipe;
+using NtoLib.Recipes.MbeTable.RecipeManager.ViewModels;
 using NtoLib.Recipes.MbeTable.Schema;
 using NtoLib.Recipes.MbeTable.Status;
 using NtoLib.Recipes.MbeTable.Table;
@@ -22,13 +24,12 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private RecipeViewModel _recipeViewModel;
         [NonSerialized] private TableSchema _tableSchema;
         [NonSerialized] private IStatusManager _statusManager;
-        [NonSerialized] private TablePainter _tablePainter;
-        [NonSerialized] private TableCellFormatter _tableCellFormatter;
-        [NonSerialized] private ComboBoxDataProvider _dataProvider;
         [NonSerialized] private OpenFileDialog _openFileDialog;
         [NonSerialized] private SaveFileDialog _saveFileDialog;
         [NonSerialized] private ColorScheme _colorScheme;
         [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
+        [NonSerialized] private IActionTargetProvider _actionTargetProvider;
+        [NonSerialized] private ComboboxDataProvider _comboboxDataProvider;
 
         [NonSerialized] private Color _controlBgColor = Color.White;
         [NonSerialized] private Color _tableBgColor = Color.White;
@@ -295,6 +296,7 @@ namespace NtoLib.Recipes.MbeTable
                 UpdateColorScheme();
             }
         }
+
         #endregion
 
         #region Constructor
@@ -323,12 +325,14 @@ namespace NtoLib.Recipes.MbeTable
             _recipeViewModel = _sp.RecipeViewModel;
             _tableSchema = _sp.TableSchema;
             _statusManager = _sp.StatusManager;
-            _tablePainter = _sp.TablePainter;
-            _tableCellFormatter = _sp.TableCellFormatter;
-            _dataProvider = _sp.DataProvider;
             _plcStateMonitor = _sp.PlcStateMonitor;
             _openFileDialog = _sp.OpenFileDialog;
             _saveFileDialog = _sp.SaveFileDialog;
+            _actionTargetProvider = _sp.ActionTargetProvider;
+            _comboboxDataProvider = _sp.ComboboxDataProvider;
+            _colorScheme = _sp.ColorScheme;
+
+            _actionTargetProvider.RefreshTargets(fb);
 
             InitializeUi();
         }
@@ -336,30 +340,38 @@ namespace NtoLib.Recipes.MbeTable
         private void InitializeUi()
         {
             var colorScheme = GetColorSchemeFromProperties();
-            var tableColumnManager = new TableColumnManager(_table, _tableSchema, colorScheme, _dataProvider);
+            var tableColumnManager = new TableColumnManager(_table, _tableSchema, colorScheme, _recipeViewModel);
 
             tableColumnManager.InitializeHeaders();
             tableColumnManager.InitializeTableColumns();
 
+            EnableDoubleBufferDataGridView();
+
             _table.DataSource = _recipeViewModel.ViewModels;
             _table.Invalidate();
 
-            _table.CellFormatting -= Table_CellFormatting;
-            _table.CellFormatting += Table_CellFormatting;
-            _table.CellBeginEdit -= Table_CellBeginEdit;
-            _table.CellBeginEdit += Table_CellBeginEdit;
             _table.DataError -= Table_DataError;
             _table.DataError += Table_DataError;
 
-            _statusManager.StatusUpdated -= OnStatusUpdated;
-            _statusManager.StatusUpdated += OnStatusUpdated;
-            _statusManager.StatusCleared -= OnStatusCleared;
-            _statusManager.StatusCleared += OnStatusCleared;
+            _recipeViewModel.OnUpdateStart += () => _table.SuspendLayout();
+            _recipeViewModel.OnUpdateEnd += () => _table.ResumeLayout();
+
         }
 
         #endregion
 
+        public void BeginUpdate()
+        {
+            _table.SuspendLayout();
+        }
+
+        public void EndUpdate()
+        {
+            _table.ResumeLayout();
+        }
+
         #region Visuals
+
         private void UpdateColorScheme()
         {
             if (_colorScheme == null) return;
@@ -402,6 +414,20 @@ namespace NtoLib.Recipes.MbeTable
                 TableBackgroundColor = this.TableBgColor
             };
         }
+
+        private void EnableDoubleBufferDataGridView()
+        {
+            // Enabling via reflection double buffer
+            // This is essential for reducing glitching of the table
+            // Do not remove!
+            typeof(DataGridView).InvokeMember(
+                "DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+                null,
+                _table,
+                new object[] { true });
+        }
+
         #endregion
 
         private void OnStatusUpdated(string message, StatusMessage statusMessage)
@@ -418,75 +444,23 @@ namespace NtoLib.Recipes.MbeTable
 
         private void Table_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            _sp?.StatusManager.WriteStatusMessage($"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}", StatusMessage.Error);
+            _sp?.StatusManager.WriteStatusMessage(
+                $"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}", StatusMessage.Error);
             e.ThrowException = true;
         }
 
-        private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (_sp == null) return;
-            
-            var rowIndex = e.RowIndex;
-            var columnIndex = e.ColumnIndex;
 
-            var currentRow = _plcStateMonitor.CurrentLineNumber;
+        #region Button Click Handlers
 
-            // var viewModel = _recipeViewModel.ViewModels[e.RowIndex];
-            // var columnKey = _tableSchema.GetColumnKeyByIndex(e.ColumnIndex);
-            // var columnDef = _tableSchema.GetColumnDefinition(e.ColumnIndex);
-            //
-            // var stateType = _tablePainter.GetStateType(viewModel, actualLineNumber, columnKey);
-            //
-            // _tablePainter.ApplyState(e.CellStyle, stateType);
-            //
-            // if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
-            // {
-            //     if (!columnDef.ComboBoxSource.IsStatic)
-            //     {
-            //         var dynamicSource = _dataProvider.GetActionTargetDatasource(viewModel);
-            //         if (cell.DataSource != dynamicSource)
-            //         {
-            //             cell.DataSource = dynamicSource;
-            //         }
-            //         
-            //     }
-            // }
-            // else
-            // {
-            //     if (stateType != TablePainter.StateType.Blocked)
-            //     {
-            //         e.Value = _tableCellFormatter.GetFormattedValue(viewModel, columnKey);
-            //     }
-            // }
-        }
-
-        private void Table_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
-        {
-            if (_sp == null || e.RowIndex < 0) return;
-
-            var columnDef = _tableSchema.GetColumnDefinition(e.ColumnIndex);
-            if (columnDef.TableCellType == typeof(DataGridViewComboBoxCell) && !columnDef.ComboBoxSource.IsStatic)
-            {
-                var viewModel = _recipeViewModel.ViewModels[e.RowIndex];
-                if (_table[e.ColumnIndex, e.RowIndex] is DataGridViewComboBoxCell cell)
-                {
-                    var dynamicSource = _dataProvider.GetActionTargetDatasource(viewModel);
-                    cell.DataSource = new BindingSource(dynamicSource, null);
-                }
-            }
-        }
-
-        #region Обработчики нажатия кнопок
         private void ClickButton_Delete(object sender, EventArgs e)
         {
             if (FBConnector.DesignMode || _sp == null) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? -1;
             if (selectedRowIndex < 0) return;
 
-            if (!_recipeViewModel.RemoveStep(selectedRowIndex, out var errorString))
-            {
-                _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
-            }
+            _recipeViewModel.RemoveStep(selectedRowIndex);
+
+
         }
 
         private void ClickButton_AddLineBefore(object sender, EventArgs e)
@@ -494,10 +468,7 @@ namespace NtoLib.Recipes.MbeTable
             if (FBConnector.DesignMode || _sp == null) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? 0;
 
-            if (!_recipeViewModel.AddNewStep(selectedRowIndex, out var errorString))
-            {
-                _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
-            }
+            _recipeViewModel.AddNewStep(selectedRowIndex);
         }
 
         private void ClickButton_AddLineAfter(object sender, EventArgs e)
@@ -505,10 +476,7 @@ namespace NtoLib.Recipes.MbeTable
             if (FBConnector.DesignMode || _sp == null) return;
             var selectedRowIndex = _table.CurrentRow?.Index ?? 0;
 
-            if (!_recipeViewModel.AddNewStep(selectedRowIndex + 1, out var errorString))
-            {
-                _statusManager.WriteStatusMessage(errorString, StatusMessage.Error);
-            }
+            _recipeViewModel.AddNewStep(selectedRowIndex + 1);
         }
 
         private void ClickButton_Open(object sender, EventArgs e)
@@ -524,6 +492,7 @@ namespace NtoLib.Recipes.MbeTable
                 return;
             // _fileManager.SaveRecipe(sp.SaveFileDialog.FileName);
         }
+
         #endregion
     }
 }

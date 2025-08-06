@@ -25,8 +25,6 @@ namespace NtoLib.Recipes.MbeTable
 
             if (_table != null)
             {
-                _table.CellFormatting -= Table_CellFormatting;
-                _table.CellBeginEdit -= Table_CellBeginEdit;
                 _table.DataError -= Table_DataError;
             }
 
