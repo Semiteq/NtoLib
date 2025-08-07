@@ -1,0 +1,131 @@
+﻿#nullable enable
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.Schema;
+
+namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
+{
+    /// <summary>
+    /// A pure data adapter for a single step, providing calculated data for the UI.
+    /// It delegates all update logic to its owner (RecipeViewModel).
+    /// </summary>
+    public sealed class StepViewModel : INotifyPropertyChanged
+    {
+        private readonly Step _stepRecord;
+        private readonly TableSchema _tableSchema;
+        private readonly Action<ColumnKey, object> _updatePropertyAction;
+        private readonly DebugLogger _debugLogger;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public int NestingLevel { get; }
+
+        public List<KeyValuePair<int, string>> AvailableActionTargets { get; }
+
+        public StepViewModel(
+            Step stepRecord,
+            TableSchema tableSchema,
+            Action<ColumnKey, object> updatePropertyAction,
+            int nestingLevel,
+            TimeSpan startTime,
+            List<KeyValuePair<int, string>>? availableActionTargets,
+            DebugLogger debugLogger)
+        {
+            _stepRecord = stepRecord;
+            _tableSchema = tableSchema;
+            _updatePropertyAction = updatePropertyAction;
+
+            NestingLevel = nestingLevel;
+            StepStartTime = (float)startTime.TotalSeconds;
+
+            AvailableActionTargets = availableActionTargets ?? new List<KeyValuePair<int, string>>();
+            _debugLogger = debugLogger;
+        }
+
+        public int? Action
+        {
+            get => _stepRecord.Properties[ColumnKey.Action]?.GetValue<int>();
+            set
+            {
+                if (value == null || Action == value) return;
+                _updatePropertyAction(ColumnKey.Action, value);
+            }
+        }
+        
+        public int? ActionTarget
+        {
+            get => _stepRecord.Properties[ColumnKey.ActionTarget]?.GetValue<int>();
+            set
+            {
+                if (value == null || ActionTarget == value) return;
+                _updatePropertyAction(ColumnKey.ActionTarget, value);
+            }
+        }
+
+        public float? InitialValue
+        {
+            get => _stepRecord.Properties[ColumnKey.InitialValue]?.GetValue<float>();
+            set
+            {
+                if (value == null || InitialValue == value) return;
+                _updatePropertyAction(ColumnKey.InitialValue, value);
+            }
+        }
+
+        public float? Setpoint
+        {
+            get => _stepRecord.Properties[ColumnKey.Setpoint]?.GetValue<float>();
+            set
+            {
+                if (value == null || Setpoint == value) return;
+                _updatePropertyAction(ColumnKey.Setpoint, value);
+            }
+        }
+
+        public float? Speed
+        {
+            get => _stepRecord.Properties[ColumnKey.Speed]?.GetValue<float>();
+            set
+            {
+                if (value == null || Speed == value) return;
+                _updatePropertyAction(ColumnKey.Speed, value);
+            }
+        }
+
+        public float? StepDuration
+        {
+            get => _stepRecord.Properties[ColumnKey.StepDuration]?.GetValue<float>();
+            set
+            {
+                if (value == null || StepDuration == value) return;
+                _updatePropertyAction(ColumnKey.StepDuration, value);
+            }
+        }
+
+        public float? StepStartTime
+        {
+            get => _stepRecord.Properties[ColumnKey.StepStartTime]?.GetValue<float>() ?? 0;
+            set
+            {
+                if (value == null || StepStartTime == value) return;
+                _updatePropertyAction(ColumnKey.StepStartTime, value);
+            }
+        }
+
+        public string? Comment
+        {
+            get => _stepRecord.Properties[ColumnKey.Comment]?.GetValue<string>();
+            set
+            {
+                if (value == null || Comment == value) return;
+                _updatePropertyAction(ColumnKey.Comment, value);
+            }
+        }
+
+        public bool IsPropertyAvailable(ColumnKey key) => _stepRecord.Properties[key] != null;
+    }
+}

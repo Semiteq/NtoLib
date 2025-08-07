@@ -7,9 +7,8 @@ using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
 using MasterSCADA.Hlp;
-using NtoLib.Recipes.MbeTable.IO;
-using NtoLib.Recipes.MbeTable.PinDataManager;
-using CommunicationSettings = NtoLib.Recipes.MbeTable.IO.CommunicationSettings;
+using NtoLib.Recipes.MbeTable.Composition;
+using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable
 {

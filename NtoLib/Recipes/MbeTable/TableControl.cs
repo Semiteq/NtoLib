@@ -1,16 +1,17 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FB.VisualFB;
-using NtoLib.Recipes.MbeTable.PinDataManager;
-using NtoLib.Recipes.MbeTable.RecipeManager.ViewModels;
+using NtoLib.Recipes.MbeTable.Composition;
+using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+using NtoLib.Recipes.MbeTable.Presentation.Status;
+using NtoLib.Recipes.MbeTable.Presentation.Table;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
 using NtoLib.Recipes.MbeTable.Schema;
-using NtoLib.Recipes.MbeTable.Status;
-using NtoLib.Recipes.MbeTable.Table;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -30,6 +31,7 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
         [NonSerialized] private IActionTargetProvider _actionTargetProvider;
         [NonSerialized] private ComboboxDataProvider _comboboxDataProvider;
+        [NonSerialized] private TableColumnFactoryMap _tableColumnFactoryMap;
 
         [NonSerialized] private Color _controlBgColor = Color.White;
         [NonSerialized] private Color _tableBgColor = Color.White;
@@ -331,6 +333,7 @@ namespace NtoLib.Recipes.MbeTable
             _actionTargetProvider = _sp.ActionTargetProvider;
             _comboboxDataProvider = _sp.ComboboxDataProvider;
             _colorScheme = _sp.ColorScheme;
+            _tableColumnFactoryMap = _sp.TableColumnFactoryMap;
 
             _actionTargetProvider.RefreshTargets(fb);
 
@@ -340,7 +343,12 @@ namespace NtoLib.Recipes.MbeTable
         private void InitializeUi()
         {
             var colorScheme = GetColorSchemeFromProperties();
-            var tableColumnManager = new TableColumnManager(_table, _tableSchema, colorScheme, _recipeViewModel);
+            var tableColumnManager = new TableColumnManager(
+                _table,
+                _tableSchema,
+                _tableColumnFactoryMap.GetMap,
+                colorScheme,
+                _recipeViewModel);
 
             tableColumnManager.InitializeHeaders();
             tableColumnManager.InitializeTableColumns();
@@ -355,7 +363,6 @@ namespace NtoLib.Recipes.MbeTable
 
             _recipeViewModel.OnUpdateStart += () => _table.SuspendLayout();
             _recipeViewModel.OnUpdateEnd += () => _table.ResumeLayout();
-
         }
 
         #endregion
