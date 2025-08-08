@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
@@ -16,11 +17,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
     public class RecipeLoopValidator
     {
         private readonly ActionManager _actionManager;
+        private readonly DebugLogger _debugLogger;
         private readonly int _maxLoopDepth;
 
-        public RecipeLoopValidator(ActionManager actionManager, int maxLoopDepth = 3)
+        public RecipeLoopValidator(ActionManager actionManager, DebugLogger debugLogger, int maxLoopDepth = 3)
         {
             _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
+            _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
             _maxLoopDepth = maxLoopDepth;
         }
 
@@ -38,7 +41,12 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
             {
                 var step = recipe.Steps[i];
                 if (!step.Properties.TryGetValue(ColumnKey.Action, out var actionProperty) || actionProperty == null)
-                    continue;
+                {
+                    var ex = new InvalidOperationException($"Step {i} does not have an action property.");
+                    _debugLogger.LogException(ex);
+                    throw ex;
+                }
+                    
 
                 var actionId = actionProperty.GetValue<int>();
 
@@ -70,30 +78,6 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
                 return new LoopValidationResult("Unmatched 'ForLoop' found, loop was not closed.");
 
             return new LoopValidationResult(nestingLevels.ToImmutableDictionary());
-        }
-    }
-
-    /// <summary>
-    /// Represents the result of a loop validation operation.
-    /// </summary>
-    public class LoopValidationResult
-    {
-        public bool IsValid { get; }
-        public string? ErrorMessage { get; }
-        public IReadOnlyDictionary<int, int> NestingLevels { get; }
-
-        public LoopValidationResult(IReadOnlyDictionary<int, int> nestingLevels)
-        {
-            IsValid = true;
-            NestingLevels = nestingLevels;
-            ErrorMessage = null;
-        }
-
-        public LoopValidationResult(string errorMessage)
-        {
-            IsValid = false;
-            ErrorMessage = errorMessage;
-            NestingLevels = new Dictionary<int, int>();
         }
     }
 }

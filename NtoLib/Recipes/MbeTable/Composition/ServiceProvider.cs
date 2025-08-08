@@ -16,7 +16,6 @@ using NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
-using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Composition
 {
@@ -48,6 +47,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public DependencyRulesMap DependencyRulesMap { get; private set; }
         public DebugLogger DebugLogger { get; private set; }
         public TableColumnFactoryMap TableColumnFactoryMap { get; private set; }
+        public TableCellStateManager TableCellStateManager { get; private set; }
         
         public void InitializeServices(MbeTableFB mbeTableFb)
         {
@@ -69,6 +69,8 @@ namespace NtoLib.Recipes.MbeTable.Composition
             
             ColorScheme = CreateColorScheme();
 
+            TableCellStateManager = new TableCellStateManager(ColorScheme);
+            
             TableColumnFactoryMap = new TableColumnFactoryMap(ComboboxDataProvider);
             StepFactory = new StepFactory(ActionManager, TableSchema, PropertyDefinitionRegistry);
             ModBusDeserializer = new ModBusDeserializer(ActionManager, StepFactory);
@@ -79,7 +81,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
             var dependencyRules = DependencyRulesMap.GetMap;
             
             StepPropertyCalculator = new StepPropertyCalculator(dependencyRules);
-            RecipeLoopValidator = new RecipeLoopValidator(ActionManager);
+            RecipeLoopValidator = new RecipeLoopValidator(ActionManager, DebugLogger);
             RecipeTimeCalculator = new RecipeTimeCalculator(ActionManager);
             
             RecipeEngine = new RecipeEngine(
@@ -96,10 +98,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
                 RecipeTimeCalculator, 
                 ComboboxDataProvider, 
                 StatusManager, 
-                TableSchema,
-                DebugLogger,
-                OpenFileDialog,
-                SaveFileDialog);
+                DebugLogger);
             
             InitializeUiComponents();
         }

@@ -3,9 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.Presentation.Table;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
@@ -17,33 +19,25 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
     public sealed class StepViewModel : INotifyPropertyChanged
     {
         private readonly Step _stepRecord;
-        private readonly TableSchema _tableSchema;
         private readonly Action<ColumnKey, object> _updatePropertyAction;
-        private readonly DebugLogger _debugLogger;
+        private readonly Dictionary<ColumnKey, CellState> _cellStates;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        public int NestingLevel { get; }
 
         public List<KeyValuePair<int, string>> AvailableActionTargets { get; }
 
         public StepViewModel(
             Step stepRecord,
-            TableSchema tableSchema,
             Action<ColumnKey, object> updatePropertyAction,
-            int nestingLevel,
             TimeSpan startTime,
-            List<KeyValuePair<int, string>>? availableActionTargets,
-            DebugLogger debugLogger)
+            List<KeyValuePair<int, string>>? availableActionTargets)
         {
             _stepRecord = stepRecord;
-            _tableSchema = tableSchema;
             _updatePropertyAction = updatePropertyAction;
 
-            NestingLevel = nestingLevel;
             StepStartTime = (float)startTime.TotalSeconds;
 
-            AvailableActionTargets = availableActionTargets ?? new List<KeyValuePair<int, string>>();
-            _debugLogger = debugLogger;
+            AvailableActionTargets = availableActionTargets ?? new List<KeyValuePair<int, string>>(); 
         }
 
         public int? Action

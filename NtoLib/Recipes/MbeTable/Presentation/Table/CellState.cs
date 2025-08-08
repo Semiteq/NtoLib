@@ -2,16 +2,8 @@
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table;
 
-public class CellState
-{
-    public  Font Font { get; set; }
-    public  Color ForeColor { get; set; }
-    public  Color BackColor { get; set; }
-
-    public CellState(Font font, Color foreColor, Color backColor)
-    {
-        Font = font;
-        ForeColor = foreColor;
-        BackColor = backColor;
-    }
-}
+public record CellState(
+    bool IsReadonly,
+    Font Font, 
+    Color ForeColor,
+    Color BackColor);

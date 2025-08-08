@@ -3,12 +3,10 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
@@ -22,54 +20,51 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
     /// </summary>
     public sealed class RecipeViewModel
     {
+        public BindingList<StepViewModel> ViewModels { get; } = new();
+        
         private readonly RecipeEngine _engine;
         private readonly RecipeLoopValidator _loopValidator;
         private readonly RecipeTimeCalculator _timeCalculator;
         private readonly ComboboxDataProvider _dataProvider;
-        private readonly TableSchema _tableSchema;
         private readonly DebugLogger _debugLogger;
-        private readonly OpenFileDialog _openFileDialog;
-        private readonly SaveFileDialog _saveFileDialog;
-
+        private readonly IStatusManager _statusManager;
+        
         private Recipe _recipe;
-        private LoopValidationResult _loopResult;
-        private RecipeTimeAnalysis _timeResult;
         
-        public BindingList<StepViewModel> ViewModels { get; }
-        
-        public IStatusManager StatusManager { get; }
+        private LoopValidationResult _loopResult = new();
+        private RecipeTimeAnalysis _timeResult = new();
 
         public event Action? OnUpdateStart;
         public event Action? OnUpdateEnd;
         
         public RecipeViewModel(
-            RecipeEngine engine, RecipeLoopValidator loopValidator, RecipeTimeCalculator timeCalculator,
-            ComboboxDataProvider dataProvider, IStatusManager statusManager, TableSchema tableSchema,
-            DebugLogger debugLogger, OpenFileDialog openFileDialog, SaveFileDialog saveFileDialog)
+            RecipeEngine engine, 
+            RecipeLoopValidator loopValidator, 
+            RecipeTimeCalculator timeCalculator,
+            ComboboxDataProvider dataProvider, 
+            IStatusManager statusManager,
+            DebugLogger debugLogger)
         {
             _engine = engine;
             _loopValidator = loopValidator;
             _timeCalculator = timeCalculator;
             _dataProvider = dataProvider;
-            StatusManager = statusManager;
-            _tableSchema = tableSchema;
+            _statusManager = statusManager;
             _debugLogger = debugLogger;
-            _openFileDialog = openFileDialog;
-            _saveFileDialog = saveFileDialog;
             
-            ViewModels = new BindingList<StepViewModel>();
             _recipe = _engine.CreateEmptyRecipe();
             
             UpdateRecipeStateAndViewModels(_recipe);
         }
 
-        #region Public Commands (called from View)
+        #region Public Commands
 
         public void AddNewStep(int rowIndex)
         {
+            rowIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
+            
             _debugLogger.Log($"Adding new step at index {rowIndex}");
             var newRecipe = _engine.AddDefaultStep(_recipe, rowIndex);
-            
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Add, rowIndex));
         }
 
@@ -82,19 +77,26 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Remove, rowIndex));
         }
 
-        public void LoadRecipe()
+        public void LoadRecipe(string filePath)
         {
-            if (_openFileDialog.ShowDialog() != DialogResult.OK) return;
         }
 
-        public void SaveRecipe()
+        public void SaveRecipe(string filePath)
         {
-            if (_saveFileDialog.ShowDialog() != DialogResult.OK) return;
         }
 
         #endregion
-        
-        private void    OnStepPropertyChanged(int rowIndex, ColumnKey key, object value)
+
+        #region Private Properties
+        /// <summary>
+        /// Handles updates to a step's property within the recipe, ensuring the recipe remains valid
+        /// and updating the related ViewModels and UI accordingly.
+        /// If the update encounters an error, it resets the affected item and logs the issue.
+        /// </summary>
+        /// <param name="rowIndex">The index of the step being updated.</param>
+        /// <param name="key">The property key of the step being updated (e.g., Action, Setpoint).</param>
+        /// <param name="value">The new value to be assigned to the specified property key.</param>
+        private void OnStepPropertyChanged(int rowIndex, ColumnKey key, object value)
         {
             Recipe newRecipe;
             RecipePropertyError? error;
@@ -112,7 +114,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             if (error != null)
             {
                 _debugLogger.Log($"Step property update failed. Row: {rowIndex}, Key: {key}, Value: '{value}'. Error: {error.Message}");
-                StatusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
+                _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
                 
                 ViewModels.ResetItem(rowIndex);
                 return;
@@ -120,10 +122,18 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Update, rowIndex));
         }
-        
+
+        /// <summary>
+        /// Updates the current recipe state and synchronizes the associated ViewModels.
+        /// This involves updating the internal recipe data, validating the loop,
+        /// recalculating the recipe time, and managing UI updates based on any structural changes in the recipe.
+        /// </summary>
+        /// <param name="newRecipe">The new recipe instance to be updated in the ViewModels.</param>
+        /// <param name="change">An optional structural change object describing changes to the recipe (e.g., addition or removal of a step).</param>
         private void UpdateRecipeStateAndViewModels(Recipe newRecipe, StructuralChange? change = null)
         {
             OnUpdateStart?.Invoke();
+            
             try
             {
                 _recipe = newRecipe;
@@ -131,16 +141,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 _timeResult = _timeCalculator.Calculate(_recipe, _loopResult);
 
                 if (!_loopResult.IsValid)
-                {
-                    StatusManager.WriteStatusMessage(_loopResult.ErrorMessage, StatusMessage.Error);
-                }
+                    _statusManager.WriteStatusMessage(_loopResult.ErrorMessage, StatusMessage.Error);
                 else
-                {
-                    StatusManager.ClearStatusMessage();
-                }
+                    _statusManager.ClearStatusMessage();
 
                 if (change == null || ViewModels.Count != _recipe.Steps.Count && change.Type != ChangeType.Add)
                 {
+                    // Repopulate ViewModel if init or error
                     ViewModels.RaiseListChangedEvents = false;
                     ViewModels.Clear();
                     foreach (var (step, index) in _recipe.Steps.Select((s, i) => (s, i)))
@@ -149,9 +156,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                     }
                     ViewModels.RaiseListChangedEvents = true;
                     ViewModels.ResetBindings();
+                    
+                    _debugLogger.Log("ViewModel was repopulated.");
                 }
                 else
                 {
+                    // Partial update
+                    // ViewModel handles update by itself 
                     switch (change.Type)
                     {
                         case ChangeType.Add:
@@ -176,37 +187,64 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 OnUpdateEnd?.Invoke();
             }
         }
-        
+
+        /// <summary>
+        /// Updates the ViewModels for all steps in the recipe starting from a specified index.
+        /// This ensures that the ViewModels remain synchronized with the underlying recipe
+        /// whenever structural changes, such as addition, removal, or updates to steps, occur.
+        /// First disables UI updates during batch operation, then enables it.
+        /// </summary>
+        /// <param name="startIndex">The zero-based index of the first step to update in the ViewModels.</param>
         private void UpdateSubsequentViewModels(int startIndex)
         {
             ViewModels.RaiseListChangedEvents = false;
+            
             for (int i = startIndex; i < _recipe.Steps.Count; i++)
             {
                 ViewModels[i] = CreateStepViewModel(_recipe.Steps[i], i);
             }
+            
             ViewModels.RaiseListChangedEvents = true;
+            
             ViewModels.ResetBindings();
         }
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="StepViewModel"/> class for a given recipe step.
+        /// This involves initializing the step ViewModel with its associated properties, metadata,
+        /// and dependencies, such as nesting level, start time, and available targets, based on its
+        /// associated action and schema configurations.
+        /// </summary>
+        /// <param name="step">The step entity that needs to be converted into a ViewModel.</param>
+        /// <param name="index">The index of the step within the recipe's step collection.</param>
+        /// <returns>A new <see cref="StepViewModel"/> instance representing the provided step.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the step does not have a valid action ID.</exception>
         private StepViewModel CreateStepViewModel(Step step, int index)
         {
             _loopResult.NestingLevels.TryGetValue(index, out var nestingLevel);
             _timeResult.StepStartTimes.TryGetValue(index, out var startTime);
             
-            var actionId = step.Properties[ColumnKey.Action]?.GetValue<int>() ?? 0;
-            var availableTargets = _dataProvider.GetActionTargets(actionId);
+            var actionId = step.Properties[ColumnKey.Action]?.GetValue<int>();
+            
+            if (!actionId.HasValue)
+            {
+                var ex = new InvalidOperationException($"Step №{index} does not have an action.");
+                _debugLogger.LogException(ex);
+                throw ex;
+            }
+            
+            var availableTargets = _dataProvider.GetActionTargets(actionId.Value);
 
             return new StepViewModel(
                 step,
-                _tableSchema,
                 (key, val) => OnStepPropertyChanged(index, key, val),
-                nestingLevel,
                 startTime,
-                availableTargets,
-                _debugLogger
+                availableTargets
             );
         }
 
+        #endregion
+        
         #region Private Helper Classes
 
         private enum ChangeType { Add, Remove, Update }

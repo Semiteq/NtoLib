@@ -155,6 +155,7 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\DeployDuration.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\DependencyRule.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\DependencyRulesMap.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\LoopValidationResult.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeLoopValidator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeTimeAnalysis.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeTimeCalculator.cs" />
@@ -215,6 +216,7 @@
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\IColumnFactory.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TableColumnFactoryMap.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TextBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\TableCellStateManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\TableColumnManager.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\TableControl.cs">

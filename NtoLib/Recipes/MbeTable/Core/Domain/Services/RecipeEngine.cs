@@ -54,7 +54,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         public Recipe AddDefaultStep(Recipe currentRecipe, int rowIndex)
         {
             _debugLogger.Log("Step added");
-            rowIndex = Math.Max(0, Math.Min(rowIndex, currentRecipe.Steps.Count));
+            
             var minimalShutterId = _actionTargetProvider.GetMinimalShutterId();
             var newStep = _stepFactory.CreateOpenStep(minimalShutterId);
 
@@ -63,7 +63,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
 
         public Recipe RemoveStep(Recipe currentRecipe, int rowIndex)
         {
-            if (rowIndex < 0 || rowIndex >= currentRecipe.Steps.Count) return currentRecipe;
+            _debugLogger.Log("Step removed");
             return new Recipe(Steps: currentRecipe.Steps.RemoveAt(rowIndex));
         }
 
