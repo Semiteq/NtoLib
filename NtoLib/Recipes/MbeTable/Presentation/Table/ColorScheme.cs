@@ -31,4 +31,7 @@ public class ColorScheme
         
     // Buttons
     public Color ButtonsColor;
+    
+    // Sizes
+    public int LineHeight;
 }

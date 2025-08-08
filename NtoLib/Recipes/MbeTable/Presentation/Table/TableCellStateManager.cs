@@ -13,17 +13,34 @@ public class TableCellStateManager
     {
         _states = new Dictionary<string, CellState>
         {
-            { "Default", new CellState(false, colorScheme.LineFont, colorScheme.LineTextColor, colorScheme.LineBgColor) },
-            { "Disabled", new CellState(true, colorScheme.LineFont, Color.DarkGray, Color.LightGray) }
+            { "Default", new CellState(
+                false, 
+                colorScheme.LineFont, 
+                colorScheme.LineTextColor, 
+                colorScheme.LineBgColor) 
+            },
+            { "ReadOnly", new CellState(
+                true, 
+                colorScheme.LineFont, 
+                Color.DarkGray, 
+                Color.LightGray) 
+            },
+            { "Disabled", new CellState(
+                true, 
+                colorScheme.LineFont, 
+                Color.DarkGray, 
+                Color.LightGray) 
+            }
         };
     }
     
     public CellState GetStateForCell(StepViewModel viewModel, ColumnKey columnKey)
     {
-        if (!viewModel.IsPropertyAvailable(columnKey))
-        {
+        if (viewModel.IsPropertyDisabled(columnKey))
             return _states["Disabled"];
-        }
+        
+        if (viewModel.IsPropertyReadonly(columnKey))
+            return _states["ReadOnly"];
         
         return _states["Default"];
     }

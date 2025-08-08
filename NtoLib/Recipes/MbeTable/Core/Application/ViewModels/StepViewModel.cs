@@ -120,6 +120,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public bool IsPropertyAvailable(ColumnKey key) => _stepRecord.Properties[key] != null;
+        public bool IsPropertyDisabled(ColumnKey key) => _stepRecord.Properties[key] != null;
+        public bool IsPropertyReadonly(ColumnKey key) => ColumnKey.StepStartTime == key;
+        
     }
 }

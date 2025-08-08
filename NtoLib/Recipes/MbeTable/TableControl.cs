@@ -49,6 +49,7 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private Color _passedLineTextColor = Color.DarkGray;
         [NonSerialized] private Color _passedLineBgColor = Color.Yellow;
         [NonSerialized] private Color _buttonsColor = Color.LightGray;
+        [NonSerialized] private int _rowHeight = 50;
 
         #region Properties
 
@@ -300,6 +301,23 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
+        [DisplayName("Высота строки")]
+        public int RowLineHeight
+        {
+            get => _rowHeight;
+            set
+            {
+                if (_rowHeight == value) return;
+
+                _rowHeight = value;
+                _table.RowTemplate.Height = value;
+                
+                if (_sp?.ColorScheme != null) _sp.ColorScheme.LineHeight = value;
+
+                UpdateColorScheme();
+            }
+        }
+        
         #endregion
 
         #region Constructor
@@ -403,6 +421,7 @@ namespace NtoLib.Recipes.MbeTable
             _colorScheme.PassedLineBgColor = _passedLineBgColor;
             _colorScheme.ControlBackgroundColor = _controlBgColor;
             _colorScheme.TableBackgroundColor = _tableBgColor;
+            _colorScheme.LineHeight = _rowHeight;
         }
 
         private ColorScheme GetColorSchemeFromProperties()
@@ -423,7 +442,8 @@ namespace NtoLib.Recipes.MbeTable
                 PassedLineTextColor = this.PassedLineTextColor,
                 PassedLineBgColor = this.PassedLineBgColor,
                 ButtonsColor = this.ButtonsColor,
-                TableBackgroundColor = this.TableBgColor
+                TableBackgroundColor = this.TableBgColor,
+                LineHeight = this._rowHeight
             };
         }
 
@@ -469,7 +489,7 @@ namespace NtoLib.Recipes.MbeTable
                 }
             }
         }
-
+        
         private void OnStatusUpdated(string message, StatusMessage statusMessage)
         {
             _labelStatus.Text = message;
