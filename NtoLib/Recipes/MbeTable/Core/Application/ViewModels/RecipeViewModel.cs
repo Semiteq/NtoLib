@@ -21,27 +21,27 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
     public sealed class RecipeViewModel
     {
         public BindingList<StepViewModel> ViewModels { get; } = new();
-        
+
         private readonly RecipeEngine _engine;
         private readonly RecipeLoopValidator _loopValidator;
         private readonly RecipeTimeCalculator _timeCalculator;
         private readonly ComboboxDataProvider _dataProvider;
         private readonly DebugLogger _debugLogger;
         private readonly IStatusManager _statusManager;
-        
+
         private Recipe _recipe;
-        
+
         private LoopValidationResult _loopResult = new();
         private RecipeTimeAnalysis _timeResult = new();
 
         public event Action? OnUpdateStart;
         public event Action? OnUpdateEnd;
-        
+
         public RecipeViewModel(
-            RecipeEngine engine, 
-            RecipeLoopValidator loopValidator, 
+            RecipeEngine engine,
+            RecipeLoopValidator loopValidator,
             RecipeTimeCalculator timeCalculator,
-            ComboboxDataProvider dataProvider, 
+            ComboboxDataProvider dataProvider,
             IStatusManager statusManager,
             DebugLogger debugLogger)
         {
@@ -51,9 +51,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             _dataProvider = dataProvider;
             _statusManager = statusManager;
             _debugLogger = debugLogger;
-            
+
             _recipe = _engine.CreateEmptyRecipe();
-            
+
             UpdateRecipeStateAndViewModels(_recipe);
         }
 
@@ -62,9 +62,10 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         public void AddNewStep(int rowIndex)
         {
             rowIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
-            
+
             _debugLogger.Log($"Adding new step at index {rowIndex}");
             var newRecipe = _engine.AddDefaultStep(_recipe, rowIndex);
+            _debugLogger.Log($"Current step quantity {newRecipe.Steps.Count}");
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Add, rowIndex));
         }
 
@@ -74,6 +75,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
             _debugLogger.Log($"Removing step at index {rowIndex}");
             var newRecipe = _engine.RemoveStep(_recipe, rowIndex);
+            _debugLogger.Log($"Current step quantity {newRecipe.Steps.Count}");
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Remove, rowIndex));
         }
 
@@ -115,11 +117,11 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             {
                 _debugLogger.Log($"Step property update failed. Row: {rowIndex}, Key: {key}, Value: '{value}'. Error: {error.Message}");
                 _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
-                
+
                 ViewModels.ResetItem(rowIndex);
                 return;
             }
-
+            _debugLogger.Log($"Step property updated. Row: {rowIndex}, Key: {key}, Value: '{value}'");
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Update, rowIndex));
         }
 
@@ -133,7 +135,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private void UpdateRecipeStateAndViewModels(Recipe newRecipe, StructuralChange? change = null)
         {
             OnUpdateStart?.Invoke();
-            
+
             try
             {
                 _recipe = newRecipe;
@@ -156,7 +158,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                     }
                     ViewModels.RaiseListChangedEvents = true;
                     ViewModels.ResetBindings();
-                    
+
                     _debugLogger.Log("ViewModel was repopulated.");
                 }
                 else
@@ -170,7 +172,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                             ViewModels.Insert(change.Index, newVm);
                             UpdateSubsequentViewModels(change.Index + 1);
                             break;
-                        
+
                         case ChangeType.Remove:
                             ViewModels.RemoveAt(change.Index);
                             UpdateSubsequentViewModels(change.Index);
@@ -184,6 +186,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
             finally
             {
+                _debugLogger.Log($"Current stepViewModel quantity {ViewModels.Count}");
                 OnUpdateEnd?.Invoke();
             }
         }
@@ -198,14 +201,14 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private void UpdateSubsequentViewModels(int startIndex)
         {
             ViewModels.RaiseListChangedEvents = false;
-            
+
             for (int i = startIndex; i < _recipe.Steps.Count; i++)
             {
                 ViewModels[i] = CreateStepViewModel(_recipe.Steps[i], i);
             }
-            
+
             ViewModels.RaiseListChangedEvents = true;
-            
+
             ViewModels.ResetBindings();
         }
 
@@ -223,16 +226,16 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         {
             _loopResult.NestingLevels.TryGetValue(index, out var nestingLevel);
             _timeResult.StepStartTimes.TryGetValue(index, out var startTime);
-            
+
             var actionId = step.Properties[ColumnKey.Action]?.GetValue<int>();
-            
+
             if (!actionId.HasValue)
             {
                 var ex = new InvalidOperationException($"Step №{index} does not have an action.");
                 _debugLogger.LogException(ex);
                 throw ex;
             }
-            
+
             var availableTargets = _dataProvider.GetActionTargets(actionId.Value);
 
             return new StepViewModel(
@@ -244,7 +247,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         }
 
         #endregion
-        
+
         #region Private Helper Classes
 
         private enum ChangeType { Add, Remove, Update }

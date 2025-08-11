@@ -20,8 +20,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
     {
         private readonly Step _stepRecord;
         private readonly Action<ColumnKey, object> _updatePropertyAction;
-        private readonly Dictionary<ColumnKey, CellState> _cellStates;
 
+        private readonly float _stepStartTimeSeconds;
+        
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public List<KeyValuePair<int, string>> AvailableActionTargets { get; }
@@ -35,9 +36,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             _stepRecord = stepRecord;
             _updatePropertyAction = updatePropertyAction;
 
-            StepStartTime = (float)startTime.TotalSeconds;
+            _stepStartTimeSeconds = (float)startTime.TotalSeconds;
 
-            AvailableActionTargets = availableActionTargets ?? new List<KeyValuePair<int, string>>(); 
+            AvailableActionTargets = availableActionTargets ?? new List<KeyValuePair<int, string>>();
         }
 
         public int? Action
@@ -49,7 +50,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 _updatePropertyAction(ColumnKey.Action, value);
             }
         }
-        
+
         public int? ActionTarget
         {
             get => _stepRecord.Properties[ColumnKey.ActionTarget]?.GetValue<int>();
@@ -100,15 +101,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public float? StepStartTime
-        {
-            get => _stepRecord.Properties[ColumnKey.StepStartTime]?.GetValue<float>() ?? 0;
-            set
-            {
-                if (value == null || StepStartTime == value) return;
-                _updatePropertyAction(ColumnKey.StepStartTime, value);
-            }
-        }
+        public float? StepStartTime => _stepStartTimeSeconds;
 
         public string? Comment
         {
@@ -120,8 +113,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public bool IsPropertyDisabled(ColumnKey key) => _stepRecord.Properties[key] != null;
+        public bool IsPropertyDisabled(ColumnKey key) => _stepRecord.Properties[key] == null;
+
         public bool IsPropertyReadonly(ColumnKey key) => ColumnKey.StepStartTime == key;
-        
     }
 }

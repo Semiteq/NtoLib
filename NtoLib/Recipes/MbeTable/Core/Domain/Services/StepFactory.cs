@@ -207,7 +207,7 @@ public class StepFactory
         string comment = "")
         => new StepBuilder(_tableSchema, _registry)
             .WithAction(_actionManager.ForLoop.Id)
-            .WithSetpoint(setpoint, PropertyType.Int)
+            .WithSetpoint(setpoint, PropertyType.Float)
             .WithComment(comment)
             .WithDeployDuration(DeployDuration.Immediate)
             .Build();

@@ -37,8 +37,14 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table
             _table.ColumnHeadersDefaultCellStyle.BackColor = _colorScheme.HeaderBgColor;
             _table.ColumnHeadersDefaultCellStyle.ForeColor = _colorScheme.HeaderTextColor;
             _table.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+
             _table.RowHeadersVisible = true;
             _table.RowHeadersWidth = 80;
+
+            _table.RowHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            _table.RowHeadersDefaultCellStyle.Font = _colorScheme.HeaderFont;
+            _table.RowHeadersDefaultCellStyle.BackColor = _colorScheme.HeaderBgColor;
+            _table.RowHeadersDefaultCellStyle.ForeColor = _colorScheme.HeaderTextColor;
 
             _table.EnableHeadersVisualStyles = false;
         }
@@ -64,6 +70,12 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table
             _table.AllowUserToDeleteRows = false;
             _table.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             _table.MultiSelect = false;
+        }
+
+        public void InitializeTableRows()
+        {
+            _table.Rows.Clear();
+            _table.RowTemplate.Height = _colorScheme.LineFont.Height + 8;
         }
     }
 }

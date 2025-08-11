@@ -32,7 +32,8 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private IActionTargetProvider _actionTargetProvider;
         [NonSerialized] private ComboboxDataProvider _comboboxDataProvider;
         [NonSerialized] private TableColumnFactoryMap _tableColumnFactoryMap;
-        [NonSerialized] private TableCellStateManager _tableCellStateManager; 
+        [NonSerialized] private TableCellStateManager _tableCellStateManager;
+        [NonSerialized] private TableBehaviorManager _tableBehaviorManager;
 
         [NonSerialized] private Color _controlBgColor = Color.White;
         [NonSerialized] private Color _tableBgColor = Color.White;
@@ -311,13 +312,13 @@ namespace NtoLib.Recipes.MbeTable
 
                 _rowHeight = value;
                 _table.RowTemplate.Height = value;
-                
+
                 if (_sp?.ColorScheme != null) _sp.ColorScheme.LineHeight = value;
 
                 UpdateColorScheme();
             }
         }
-        
+
         #endregion
 
         #region Constructor
@@ -372,6 +373,7 @@ namespace NtoLib.Recipes.MbeTable
 
             tableColumnManager.InitializeHeaders();
             tableColumnManager.InitializeTableColumns();
+            tableColumnManager.InitializeTableRows();
 
             EnableDoubleBufferDataGridView();
 
@@ -381,8 +383,12 @@ namespace NtoLib.Recipes.MbeTable
             _table.DataError -= Table_DataError;
             _table.DataError += Table_DataError;
 
-            _table.CellFormatting -= _table_CellFormatting;
-            _table.CellFormatting += _table_CellFormatting;
+            // _table.CellFormatting -= _table_CellFormatting;
+            // _table.CellFormatting += _table_CellFormatting;
+
+            _tableBehaviorManager?.Detach();
+            _tableBehaviorManager = new TableBehaviorManager(_table, _tableSchema, _tableCellStateManager);
+            _tableBehaviorManager.Attach();
 
             _recipeViewModel.OnUpdateStart += () => _table.SuspendLayout();
             _recipeViewModel.OnUpdateEnd += () => _table.ResumeLayout();
@@ -462,34 +468,23 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
 
-        private void _table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+        // private void _table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        // {
+        //     if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+        //
+        //     var grid = (DataGridView)sender;
+        //     var viewModel = (StepViewModel)grid.Rows[e.RowIndex].DataBoundItem;
+        //     var columnKey = _tableSchema.GetColumnDefinition(e.ColumnIndex).Key;
+        //
+        //     var cellState = _tableCellStateManager.GetStateForCell(viewModel, columnKey);
+        //
+        //     e.CellStyle.Font = cellState.Font;
+        //     e.CellStyle.ForeColor = cellState.ForeColor;
+        //     e.CellStyle.BackColor = cellState.BackColor;
+        //     grid.Rows[e.RowIndex].Cells[e.ColumnIndex].ReadOnly = cellState.IsReadonly;
+        // }
 
-            var grid = (DataGridView)sender;
-            var viewModel = (StepViewModel)grid.Rows[e.RowIndex].DataBoundItem;
-            var columnKey = _tableSchema.GetColumnDefinition(e.ColumnIndex).Key;
 
-            var cellState = _tableCellStateManager.GetStateForCell(viewModel, columnKey);
-
-            e.CellStyle.Font = cellState.Font;
-            e.CellStyle.ForeColor = cellState.ForeColor;
-            e.CellStyle.BackColor = cellState.BackColor;
-            grid.Rows[e.RowIndex].Cells[e.ColumnIndex].ReadOnly = cellState.IsReadonly;
-
-            if (columnKey == ColumnKey.ActionTarget)
-            {
-                var cell = (DataGridViewComboBoxCell)grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
-                var dataSource = viewModel.AvailableActionTargets;
-                if (cell.DataSource != dataSource)
-                {
-                    cell.DataSource = dataSource;
-                    cell.DisplayMember = "Value";
-                    cell.ValueMember = "Key";
-                }
-            }
-        }
-        
         private void OnStatusUpdated(string message, StatusMessage statusMessage)
         {
             _labelStatus.Text = message;

@@ -1,51 +1,53 @@
 ﻿#nullable enable
 
-using System.Collections.Generic;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
-
-public class ActionComboBoxColumnFactory : IColumnFactory
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
 {
-    private readonly ComboboxDataProvider _dataProvider;
-
-    public ActionComboBoxColumnFactory(ComboboxDataProvider dataProvider)
+    public class ActionComboBoxColumnFactory : IColumnFactory
     {
-        _dataProvider = dataProvider;
-    }
+        private readonly ComboboxDataProvider _dataProvider;
 
-    public DataGridViewColumn CreateColumn(ColumnDefinition colDef, ColorScheme colorScheme)
-    {
-        var comboColumn = new DataGridViewComboBoxColumn
+        public ActionComboBoxColumnFactory(ComboboxDataProvider dataProvider)
         {
-            Name = colDef.Key.ToString(),
-            HeaderText = colDef.UiName,
-            DataPropertyName = nameof(StepViewModel.Action),
-            DataSource = _dataProvider.GetActions(),
-            DisplayMember = "Value",
-            ValueMember = "Key",
-            ValueType = typeof(int),
-            DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton,
-        };
+            _dataProvider = dataProvider;
+        }
 
-        comboColumn.DefaultCellStyle.Alignment = colDef.Alignment;
-        comboColumn.DefaultCellStyle.Font = colorScheme.LineFont;
-        comboColumn.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
-        comboColumn.DefaultCellStyle.Font = colorScheme.LineFont;
-        
-        if (colDef.Width > 0)
+        public DataGridViewColumn CreateColumn(ColumnDefinition colDef, ColorScheme colorScheme)
         {
-            comboColumn.Width = colDef.Width;
-            comboColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            var comboColumn = new DataGridViewComboBoxColumn
+            {
+                Name = colDef.Key.ToString(),
+                HeaderText = colDef.UiName,
+                DataPropertyName = nameof(StepViewModel.Action),
+                DataSource = _dataProvider.GetActions(),
+                DisplayMember = "Value",
+                ValueMember = "Key",
+                ValueType = typeof(int?),
+                DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton,
+            };
+
+            comboColumn.DefaultCellStyle.Alignment = colDef.Alignment;
+            comboColumn.DefaultCellStyle.Font = colorScheme.LineFont;
+            comboColumn.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
+            comboColumn.DefaultCellStyle.Font = colorScheme.LineFont;
+
+            comboColumn.MaxDropDownItems = 20;
+            
+            if (colDef.Width > 0)
+            {
+                comboColumn.Width = colDef.Width;
+                comboColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            }
+            else
+            {
+                comboColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            }
+
+            return comboColumn;
         }
-        else
-        {
-            comboColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-        }
-        
-        return comboColumn;
     }
 }

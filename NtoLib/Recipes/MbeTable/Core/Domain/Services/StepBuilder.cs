@@ -19,14 +19,14 @@ public class StepBuilder
     public StepBuilder(TableSchema schema, PropertyDefinitionRegistry registry)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry), @"PropertyDefinitionRegistry cannot be null.");
-        
+
         _properties = new Dictionary<ColumnKey, StepProperty?>();
         foreach (var column in schema.GetColumns())
         {
             _properties[column.Key] = null;
         }
     }
-    
+
     public StepBuilder WithAction(int actionId)
     {
         return WithProperty(ColumnKey.Action, new StepProperty(actionId, PropertyType.Enum, _registry));
@@ -36,7 +36,7 @@ public class StepBuilder
     {
         return WithProperty(ColumnKey.ActionTarget, new StepProperty(target, PropertyType.Enum, _registry));
     }
-    
+
     public StepBuilder WithDeployDuration(DeployDuration duration)
     {
         _deployDuration = duration;
@@ -67,13 +67,16 @@ public class StepBuilder
     {
         return WithProperty(ColumnKey.Comment, new StepProperty(comment, PropertyType.String, _registry));
     }
-    
+
     public Step Build()
     {
+        // Every step must have a start time parameter
+        _properties[ColumnKey.StepStartTime] = new StepProperty(0f, PropertyType.Time, _registry);
+
         var immutableProperties = _properties.ToImmutableDictionary();
         return new Step(immutableProperties, _deployDuration);
     }
-    
+
     private StepBuilder WithProperty(ColumnKey key, StepProperty stepProperty)
     {
         _properties[key] = stepProperty;

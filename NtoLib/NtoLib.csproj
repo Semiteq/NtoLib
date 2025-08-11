@@ -210,12 +210,16 @@
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\CellVisualState.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionComboBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionTargetComboBoxColumn.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionTargetComboBoxColumnFactory .cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\IColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ReadonlyLabelCell.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TableColumnFactoryMap.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TextBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\TableBehaviorManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\TableCellStateManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\TableColumnManager.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
@@ -386,6 +390,7 @@
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Recipes\MbeTable\Presentation\Table\Columns\readme.md" />
     <Content Include="Resources\ImgDelete.bmp" />
   </ItemGroup>
   <ItemGroup>

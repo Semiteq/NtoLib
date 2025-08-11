@@ -122,18 +122,25 @@ namespace NtoLib.Recipes.MbeTable.Composition
         {
             ControlBackgroundColor = Color.White,
             TableBackgroundColor = Color.White,
+            
             HeaderFont = new Font("Arial", 16f, FontStyle.Bold),
             LineFont = new Font("Arial", 14f),
             SelectedLineFont = new Font("Arial", 14f),
             PassedLineFont = new Font("Arial", 14f),
+            BlockedFont = new Font("Arial", 14f),
+            
             LineTextColor = Color.Black,
             SelectedLineTextColor = Color.Black,
             PassedLineTextColor = Color.DarkGray,
+            BlockedTextColor = Color.DarkGray,
+            
             LineBgColor = Color.White,
             SelectedLineBgColor = Color.Green,
             PassedLineBgColor = Color.Yellow,
             HeaderBgColor = Color.LightGray,
             HeaderTextColor = Color.Black,
+            BlockedBgColor = Color.LightGray,
+            
             ButtonsColor = Color.LightGray,
         };
 

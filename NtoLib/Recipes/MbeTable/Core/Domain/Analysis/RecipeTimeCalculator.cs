@@ -1,11 +1,10 @@
 ﻿#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
-using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
@@ -19,6 +18,13 @@ public class RecipeTimeCalculator
         _actionManager = actionManager;
     }
 
+    /// <summary>
+    /// Calculates the total duration and step start times for a given recipe based on its steps
+    /// and their associated properties, such as action types, durations, and loops.
+    /// </summary>
+    /// <param name="recipe">The recipe containing a list of steps to be analyzed for timing information.</param>
+    /// <param name="loopResult">The result of loop validation, providing information on the validity and structure of loops within the recipe.</param>
+    /// <returns>A <see cref="RecipeTimeAnalysis"/> object containing the total duration and start times of each step in the recipe.</returns>
     public RecipeTimeAnalysis Calculate(Recipe recipe, LoopValidationResult loopResult)
     {
         var stepStartTimes = new Dictionary<int, TimeSpan>();
@@ -34,8 +40,8 @@ public class RecipeTimeCalculator
 
             if (actionId == _actionManager.ForLoop.Id)
             {
-                var iterationCount = step.Properties[ColumnKey.Setpoint]?.GetValue<int>() ?? 1;
-                loopStack.Push((iterationCount, accumulatedTime));
+                var iterationCount = step.Properties[ColumnKey.Setpoint]?.GetValue<float>() ?? 1f;
+                loopStack.Push(((int)iterationCount, accumulatedTime));
             }
             else if (actionId == _actionManager.EndForLoop.Id)
             {
@@ -43,7 +49,7 @@ public class RecipeTimeCalculator
                 {
                     var (iterationCount, loopBodyStartTime) = loopStack.Pop();
                     var loopBodyDuration = accumulatedTime - loopBodyStartTime;
-                    
+
                     if (iterationCount > 1)
                     {
                         accumulatedTime += TimeSpan.FromTicks(loopBodyDuration.Ticks * (iterationCount - 1));
@@ -53,9 +59,9 @@ public class RecipeTimeCalculator
             else if (step.DeployDuration == DeployDuration.LongLasting)
             {
                 var durationInSeconds = step.Properties[ColumnKey.StepDuration]?.GetValue<float>() ??
-                                        step.Properties[ColumnKey.Setpoint]?.GetValue<float>() ?? 
+                                        step.Properties[ColumnKey.Setpoint]?.GetValue<float>() ??
                                         0;
-                
+
                 accumulatedTime += TimeSpan.FromSeconds(durationInSeconds);
             }
         }

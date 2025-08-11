@@ -16,19 +16,22 @@ public class ColorScheme
     public Font LineFont;
     public Font SelectedLineFont;
     public Font PassedLineFont;
-
+    public Font BlockedFont;
+    
     // Line text colors
     public Color HeaderTextColor;
     public Color LineTextColor;
     public Color SelectedLineTextColor;
     public Color PassedLineTextColor;
-        
+    public Color BlockedTextColor;
+            
     // Line background colors
     public Color HeaderBgColor;
     public Color LineBgColor;
     public Color SelectedLineBgColor;
     public Color PassedLineBgColor;
-        
+    public Color BlockedBgColor;
+    
     // Buttons
     public Color ButtonsColor;
     
