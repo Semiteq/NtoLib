@@ -8,22 +8,19 @@ public class BoolDefinition : IPropertyTypeDefinition
     public string Units => "";
     public Type SystemType => typeof(bool);
 
-    public bool Validate(object value, out string errorMessage)
+    public (bool Success, string errorMessage) Validate(object value)
     {
-        errorMessage = string.Empty;
-        return value is bool; // Всегда валидно, если тип правильный
+        return (value is bool, ""); // Always valid if bool
     }
         
     public string FormatValue(object value) => value.ToString();
 
-    public bool TryParse(string input, out object value)
+    public (bool Success, object Value) TryParse(string input)
     {
         if (bool.TryParse(input, out var result))
-        {
-            value = result;
-            return true;
-        }
-        value = default(bool);
-        return false;
+            return (true ,result);
+        
+        
+        return (false, false);
     }
 }

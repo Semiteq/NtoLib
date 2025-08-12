@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Recipes.MbeTable.Presentation.Table;
+﻿namespace NtoLib.Recipes.MbeTable.Presentation.Table.State;
 
 public enum CellVisualState
 {

@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table;
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 public class ColorScheme
 {

@@ -3,11 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
-using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Presentation.Table;
 using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
@@ -61,9 +57,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public float? InitialValue
+        public string? InitialValue
         {
-            get => _stepRecord.Properties[ColumnKey.InitialValue]?.GetValue<float>();
+            get => _stepRecord.Properties[ColumnKey.InitialValue]?.GetDisplayValue();
             set
             {
                 if (value == null || InitialValue == value) return;
@@ -71,9 +67,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public float? Setpoint
+        public string? Setpoint
         {
-            get => _stepRecord.Properties[ColumnKey.Setpoint]?.GetValue<float>();
+            get => _stepRecord.Properties[ColumnKey.Setpoint]?.GetDisplayValue();
             set
             {
                 if (value == null || Setpoint == value) return;
@@ -81,9 +77,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public float? Speed
+        public string? Speed
         {
-            get => _stepRecord.Properties[ColumnKey.Speed]?.GetValue<float>();
+            get => _stepRecord.Properties[ColumnKey.Speed]?.GetDisplayValue();
             set
             {
                 if (value == null || Speed == value) return;
@@ -91,9 +87,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public float? StepDuration
+        public string? StepDuration
         {
-            get => _stepRecord.Properties[ColumnKey.StepDuration]?.GetValue<float>();
+            get => _stepRecord.Properties[ColumnKey.StepDuration]?.GetDisplayValue();
             set
             {
                 if (value == null || StepDuration == value) return;
@@ -101,20 +97,41 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
 
-        public float? StepStartTime => _stepStartTimeSeconds;
+        public string? StepStartTime => FormatTime(_stepStartTimeSeconds);
 
         public string? Comment
         {
-            get => _stepRecord.Properties[ColumnKey.Comment]?.GetValue<string>();
+            get => _stepRecord.Properties[ColumnKey.Comment]?.GetDisplayValue();
             set
             {
                 if (value == null || Comment == value) return;
                 _updatePropertyAction(ColumnKey.Comment, value);
             }
         }
+        
+        public bool IsPropertyDisabled(ColumnKey key)
+        {
+            var propMissing = _stepRecord.Properties[key] == null;
+            if (propMissing) return true;
 
-        public bool IsPropertyDisabled(ColumnKey key) => _stepRecord.Properties[key] == null;
+            if (key == ColumnKey.ActionTarget)
+            {
+                if (AvailableActionTargets == null || AvailableActionTargets.Count == 0)
+                    return true;
 
+                if (!ActionTarget.HasValue)
+                    return true;
+            }
+
+            return false;
+        }
+        
         public bool IsPropertyReadonly(ColumnKey key) => ColumnKey.StepStartTime == key;
+        
+        private string FormatTime(float seconds)
+        {
+            var time = TimeSpan.FromSeconds(seconds);
+            return $"{time.Hours:00}:{time.Minutes:00}:{time.Seconds:00}";
+        }
     }
 }

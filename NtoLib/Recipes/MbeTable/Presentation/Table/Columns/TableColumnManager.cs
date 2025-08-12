@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 using NtoLib.Recipes.MbeTable.Schema;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
 {
     public class TableColumnManager
     {

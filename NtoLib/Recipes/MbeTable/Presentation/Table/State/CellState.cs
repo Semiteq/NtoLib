@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table;
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.State;
 
 public record CellState(
     bool IsReadonly,

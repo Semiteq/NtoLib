@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Contracts;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions
@@ -8,43 +9,35 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions
     {
         public abstract string Units { get; }
         public Type SystemType => typeof(float);
+        public abstract float MinValue { get; }
+        public abstract float MaxValue { get; }
+        public abstract string MinMaxErrorMessage { get; }
 
-        protected abstract float MinValue { get; }
-        protected abstract float MaxValue { get; }
-        protected abstract string MinMaxErrorMessage { get; }
-
-        public bool Validate(object value, out string errorMessage)
+        public virtual (bool Success, string errorMessage) Validate(object value)
         {
-            errorMessage = string.Empty;
             if (value is not float floatValue)
-            {
-                errorMessage = "Ожидалось значение типа float.";
-                return false;
-            }
-
+                return (false, "Ожидалось значение типа float.");
+            
             if (floatValue < MinValue || floatValue > MaxValue)
-            {
-                errorMessage = MinMaxErrorMessage;
-                return false;
-            }
+                return (false, MinMaxErrorMessage);
+            
 
-            return true;
+            return (true, "");
         }
 
-        public string FormatValue(object value)
+        public virtual string FormatValue(object value)
         {
             return ((float)value).ToString(CultureInfo.InvariantCulture);
         }
-
-        public bool TryParse(string input, out object value)
+        
+        public virtual (bool Success, object Value) TryParse(string input)
         {
-            if (float.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-            {
-                value = result;
-                return true;
-            }
-            value = default(float);
-            return false;
+            // Drop all non-chars and replace "," with "."
+            var sanitizedInput = new string(input.Trim().Where(c => char.IsDigit(c) || c == ',').ToArray()).Replace(',', '.');
+            
+            return float.TryParse(sanitizedInput, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) 
+                ? (true, result) 
+                : (false, 0f);
         }
     }
 }

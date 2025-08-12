@@ -8,9 +8,9 @@ public interface IPropertyTypeDefinition
 
     Type SystemType { get; }
 
-    bool Validate(object value, out string errorMessage);
+    (bool Success, string errorMessage) Validate(object value);
     
     string FormatValue(object value);
 
-    bool TryParse(string input, out object value);
+    (bool Success, object Value) TryParse(string input);
 }

@@ -12,6 +12,18 @@ namespace NtoLib.Recipes.MbeTable
 
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                try { _table.DataError -= Table_DataError; } catch { /* ignore */ }
+                UnsubscribeRecipeVmUpdateHandlers();
+
+                if (_tableBehaviorManager != null)
+                {
+                    try { _tableBehaviorManager.Dispose(); } catch { /* ignore */ }
+                    _tableBehaviorManager = null;
+                }
+            }
+            
             if (disposing && (components != null))
             {
                 components.Dispose();

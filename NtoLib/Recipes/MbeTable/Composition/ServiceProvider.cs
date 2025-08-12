@@ -13,6 +13,9 @@ using NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
+using NtoLib.Recipes.MbeTable.Presentation.Table.State;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Composition
 {

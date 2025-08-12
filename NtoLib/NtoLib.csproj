@@ -209,19 +209,24 @@
     <Compile Include="Recipes\MbeTable\Presentation\Status\IStatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\CellState.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\CellVisualState.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\ColorScheme.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionComboBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Behavior\TableBehaviorManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ActionTargetComboBoxCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ReadonlyLabelCell.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionTargetComboBoxColumn.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionTargetComboBoxColumnFactory .cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\IColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ReadonlyLabelCell.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TableColumnFactoryMap.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TextBoxColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\TableBehaviorManager.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\TableCellStateManager.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\TableColumnManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionComboBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionTargetComboBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\IColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\StepStartTimeColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\TableColumnFactoryMap.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\TextBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TableColumnManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Editing\ActionTargetEditingControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\Presentation\Table\State\CellState.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\State\CellVisualState.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\State\TableCellStateManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\TableControl.cs">
       <SubType>UserControl</SubType>
@@ -390,12 +395,7 @@
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Recipes\MbeTable\Presentation\Table\Columns\readme.md" />
     <Content Include="Resources\ImgDelete.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Recipes\MbeTable\Core\Application\" />
-    <Folder Include="Recipes\MbeTable\Presentation\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

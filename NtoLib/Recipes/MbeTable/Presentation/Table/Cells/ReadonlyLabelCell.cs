@@ -1,10 +1,12 @@
 ﻿#nullable enable
-using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Cells
 {
+    /// <summary>
+    /// Text cell that ignores selection background and draws with the provided cell style.
+    /// </summary>
     public class ReadonlyLabelCell : DataGridViewTextBoxCell
     {
         protected override void Paint(Graphics graphics,

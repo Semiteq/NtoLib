@@ -56,13 +56,13 @@ public class StepFactory
     public Step CreatePowerWaitStep(
         int target,
         float setpoint = 10f,
-        float speed = 60f,
+        float duration = 60f,
         string comment = "")
         => new StepBuilder(_tableSchema, _registry)
             .WithAction(_actionManager.PowerWait.Id)
             .WithTarget(target)
             .WithSetpoint(setpoint, PropertyType.Percent)
-            .WithSpeed(speed, PropertyType.PowerSpeed)
+            .WithDuration(duration)
             .WithComment(comment)
             .WithDeployDuration(DeployDuration.LongLasting)
             .Build();
@@ -91,7 +91,7 @@ public class StepFactory
             .WithTarget(target)
             .WithInitialValue(initialValue, PropertyType.Temp)
             .WithSetpoint(setpoint, PropertyType.Temp)
-            .WithSpeed(speed, PropertyType.PowerSpeed)
+            .WithSpeed(speed, PropertyType.TempSpeed)
             .WithDuration(duration)
             .WithComment(comment)
             .Build();

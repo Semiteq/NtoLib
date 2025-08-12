@@ -8,23 +8,18 @@ public class StringDefinition : IPropertyTypeDefinition
     public string Units => "";
     public Type SystemType => typeof(string);
 
-    public bool Validate(object value, out string errorMessage)
+    public (bool Success, string errorMessage) Validate(object value)
     {
-        errorMessage = string.Empty;
-        var stringValue = (string)value;
-        if (stringValue.Length is < 0 or > 255)
-        {
-            errorMessage = $"Длина строки должна быть от 0 до 255 символов";
-            return false;
-        }
-        return true;
+        if (value.ToString().Length is < 0 or > 255)
+            return (false, "Длина строки должна быть от 0 до 255 символов");
+        
+        return (true, "");
     }
     
     public string FormatValue(object value) => (string)value;
 
-    public bool TryParse(string input, out object value)
+    public (bool Success, object Value) TryParse(string input)
     {
-        value = input ?? string.Empty;
-        return true; // Строка всегда может быть "распарсена"
+        return (true, "");
     }
 }

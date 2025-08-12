@@ -2,7 +2,7 @@
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Schema;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
 public class TableColumnFactoryMap
 {
@@ -18,7 +18,7 @@ public class TableColumnFactoryMap
             { ColumnKey.Setpoint, new TextBoxColumnFactory() },
             { ColumnKey.Speed, new TextBoxColumnFactory() },
             { ColumnKey.StepDuration, new TextBoxColumnFactory() },
-            { ColumnKey.StepStartTime, new TextBoxColumnFactory() },
+            { ColumnKey.StepStartTime, new StepStartTimeColumnFactory() },
             { ColumnKey.Comment, new TextBoxColumnFactory() }
         };
     }

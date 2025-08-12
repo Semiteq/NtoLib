@@ -9,22 +9,18 @@ public class EnumDefinition : IPropertyTypeDefinition
     public string Units => "";
     public Type SystemType => typeof(int);
 
-    public bool Validate(object value, out string errorMessage)
+    public (bool Success, string errorMessage) Validate(object value)
     {
-        errorMessage = string.Empty;
-        return value is int;
+        return (value is int, "");
     }
         
     public string FormatValue(object value) => value.ToString();
 
-    public bool TryParse(string input, out object value)
+    public (bool Success, object Value) TryParse(string input)
     {
         if (int.TryParse(input, out var result))
-        {
-            value = result;
-            return true;
-        }
-        value = default(int);
-        return false;
+            return (true, result);
+        
+        return (false, 0);
     }
 }

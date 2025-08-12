@@ -1,7 +1,8 @@
 ﻿using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
 public class TextBoxColumnFactory :  IColumnFactory
 {
@@ -20,6 +21,7 @@ public class TextBoxColumnFactory :  IColumnFactory
         column.DefaultCellStyle.Font = colorScheme.LineFont;
         column.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
         column.DefaultCellStyle.Font = colorScheme.LineFont;
+        column.MinimumWidth = 200;
         
         if (colDef.Width > 0)
         {

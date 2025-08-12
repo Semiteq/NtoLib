@@ -3,8 +3,9 @@
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
 {
     public class ActionTargetComboBoxColumnFactory : IColumnFactory
     {
@@ -24,7 +25,8 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
             comboColumn.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
 
             comboColumn.MaxDropDownItems = 20;
-            
+            comboColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
+
             if (colDef.Width > 0)
             {
                 comboColumn.Width = colDef.Width;

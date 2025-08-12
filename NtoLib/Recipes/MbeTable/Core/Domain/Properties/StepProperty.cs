@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Globalization;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 using OneOf;
 
@@ -13,73 +12,112 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
     public record StepProperty
     {
         private record PropertyValue(OneOf<bool, int, float, string> UnionValue, PropertyType Type);
-
         private PropertyValue Value { get; init; }
-        private PropertyDefinitionRegistry Registry { get; init; }
+        private PropertyDefinitionRegistry PropertyRegistry { get; init; }
 
-        internal StepProperty(object initialValue, PropertyType propertyType, PropertyDefinitionRegistry registry)
-        {
-            var definition = registry.GetDefinition(propertyType);
-            if (initialValue.GetType() != definition.SystemType)
-            {
-                throw new ArgumentException(
-                    $"Initial value type '{initialValue.GetType().Name}' does not match the expected system type '{definition.SystemType.Name}' for PropertyType '{propertyType}'.");
-            }
-            if (!definition.Validate(initialValue, out var errorMessage))
-            {
-                throw new ArgumentException($"Initial value '{initialValue}' is invalid for PropertyType '{propertyType}': {errorMessage}");
-            }
-            
-            Registry = registry;
-            Value = new PropertyValue(CreateUnionValue(initialValue), propertyType);
-        }
-
-        private StepProperty(PropertyValue value, PropertyDefinitionRegistry registry)
-        {
-            Value = value;
-            Registry = registry;
-        }
-
+        /// <summary>
+        /// Gets the <see cref="PropertyType"/> of this <see cref="StepProperty"/>.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="PropertyType"/> defines the type of the property, such as
+        /// <c>Int</c>, <c>Float</c>, <c>String</c>, <c>Bool</c>, or other supported
+        /// enumeration values defined in the <see cref="PropertyType"/> enum.
+        /// </remarks>
+        /// <value>
+        /// The type of the property as a <see cref="PropertyType"/>.
+        /// </value>
         public PropertyType Type => Value.Type;
 
+        /// <summary>
+        /// Updates the property with a new value and validates it against its type definition.
+        /// </summary>
+        /// <param name="newValue">The new value to update the property with. Can be unformatted and contain strings.</param>
+        /// <returns>A tuple containing a success flag, the updated StepProperty if successful, and an error object if applicable.</returns>
         public (bool Success, StepProperty NewProperty, RecipePropertyError? Error) WithValue(object newValue)
         {
-            var definition = Registry.GetDefinition(Type);
+            var propertyTypeDefinition = PropertyRegistry.GetDefinition(Type);
             
-            object convertedValue;
-            try
-            {
-                convertedValue = Convert.ChangeType(newValue, definition.SystemType, CultureInfo.InvariantCulture);
-            }
-            catch (Exception)
-            {
-                return (false, this, new ConversionError(newValue.ToString() ?? "", definition.SystemType.Name));
-            }
+            var parsingResult = propertyTypeDefinition.TryParse(newValue.ToString());
+            if (!parsingResult.Success)
+                return (false, this, new ConversionError(newValue.ToString() ?? "", propertyTypeDefinition.SystemType.Name));
             
-            if (!definition.Validate(convertedValue, out var validationMessage))
+            // expecting typed value here wrapped as an object
+            var parsedValue = parsingResult.Value;
+
+            var validationResult = propertyTypeDefinition.Validate(parsedValue);
+            if (!validationResult.Success)
             {
-                return (false, this, new ValidationError(validationMessage));
+                return (false, this, new ValidationError(validationResult.errorMessage));
             }
 
-            var newUnion = CreateUnionValue(convertedValue);
+            var newUnion = CreateUnionValue(parsedValue);
             var newPropertyValue = new PropertyValue(newUnion, Type);
-            var newProperty = new StepProperty(newPropertyValue, Registry);
+            var newProperty = new StepProperty(newPropertyValue, PropertyRegistry);
 
             return (true, newProperty, null);
         }
 
+        /// <summary>
+        /// Retrieves the value stored in the step property and returns it as the specified type.
+        /// </summary>
+        /// <typeparam name="T">The expected type of the value to retrieve.</typeparam>
+        /// <returns>The value of the step property cast to the specified type.</returns>
+        /// <exception cref="InvalidCastException">
+        /// Thrown when the stored value cannot be cast to the specified type.
+        /// </exception>
         public T GetValue<T>() where T : notnull
         {
             if (Value.UnionValue.Value is T typedValue) return typedValue;
             throw new InvalidCastException($"Cannot get value of type '{typeof(T).Name}' from property. Actual type is '{Value.UnionValue.Value.GetType().Name}'.");
         }
-        
+
+        /// <summary>
+        /// Retrieves the value of the property as a generic object.
+        /// </summary>
+        /// <returns>The value of the property represented as an object.</returns>
         public object GetValueAsObject() => Value.UnionValue.Value;
-        
+
+        /// <summary>
+        /// Formats and returns the property value as a string, including its unit if applicable.
+        /// </summary>
+        /// <returns>The formatted value of the property with its unit, or the value alone if no unit is defined.
+        /// Trailing spaces are removed from the result.</returns>
         public string GetDisplayValue()
         {
-            var definition = Registry.GetDefinition(Type);
+            var definition = PropertyRegistry.GetDefinition(Type);
             return $"{definition.FormatValue(Value.UnionValue.Value)} {definition.Units}".Trim();
+        }
+        
+        /// <summary>
+        /// Represents a single, immutable property belonging to a recipe step.
+        /// </summary>
+        internal StepProperty(object initialValue, PropertyType propertyType,
+            PropertyDefinitionRegistry propertyRegistry)
+        {
+            var definition = propertyRegistry.GetDefinition(propertyType);
+            if (initialValue.GetType() != definition.SystemType)
+            {
+                throw new ArgumentException(
+                    $"Initial value type '{initialValue.GetType().Name}' does not match the expected system type '{definition.SystemType.Name}' for PropertyType '{propertyType}'.");
+            }
+            
+            var validationResult = definition.Validate(initialValue);
+            if (!validationResult.Success)
+            {
+                throw new ArgumentException($"Initial value '{initialValue}' is invalid for PropertyType '{propertyType}': {validationResult.errorMessage}");
+            }
+            
+            PropertyRegistry = propertyRegistry;
+            Value = new PropertyValue(CreateUnionValue(initialValue), propertyType);
+        }
+
+        /// <summary>
+        /// Represents a single, immutable property belonging to a recipe step.
+        /// </summary>
+        private StepProperty(PropertyValue value, PropertyDefinitionRegistry propertyRegistry)
+        {
+            Value = value;
+            PropertyRegistry = propertyRegistry;
         }
 
         private static OneOf<bool, int, float, string> CreateUnionValue(object value)

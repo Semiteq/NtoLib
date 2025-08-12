@@ -7,11 +7,14 @@ using FB.VisualFB;
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
-using NtoLib.Recipes.MbeTable.Presentation.Table;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Behavior;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
-using NtoLib.Recipes.MbeTable.Schema;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
+using NtoLib.Recipes.MbeTable.Presentation.Table.State;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable
 {
@@ -34,6 +37,11 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private TableColumnFactoryMap _tableColumnFactoryMap;
         [NonSerialized] private TableCellStateManager _tableCellStateManager;
         [NonSerialized] private TableBehaviorManager _tableBehaviorManager;
+        [NonSerialized] private DebugLogger _debugLogger;
+
+        // Keep references to handlers to properly unsubscribe.
+        [NonSerialized] private Action _onVmUpdateStartHandler;
+        [NonSerialized] private Action _onVmUpdateEndHandler;
 
         [NonSerialized] private Color _controlBgColor = Color.White;
         [NonSerialized] private Color _tableBgColor = Color.White;
@@ -321,7 +329,7 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
 
-        #region Constructor
+        #region Constructor / lifecycle
 
         public TableControl() : base(true)
         {
@@ -355,6 +363,7 @@ namespace NtoLib.Recipes.MbeTable
             _colorScheme = _sp.ColorScheme;
             _tableColumnFactoryMap = _sp.TableColumnFactoryMap;
             _tableCellStateManager = _sp.TableCellStateManager;
+            _debugLogger = _sp.DebugLogger;
 
             _actionTargetProvider.RefreshTargets(fb);
 
@@ -363,6 +372,15 @@ namespace NtoLib.Recipes.MbeTable
 
         private void InitializeUi()
         {
+            // Clean previous subscriptions/manager if re-initializing
+            try { _table.DataError -= Table_DataError; } catch { /* ignore */ }
+            UnsubscribeRecipeVmUpdateHandlers();
+            if (_tableBehaviorManager != null)
+            {
+                try { _tableBehaviorManager.Dispose(); } catch { /* ignore */ }
+                _tableBehaviorManager = null;
+            }
+
             var colorScheme = GetColorSchemeFromProperties();
             var tableColumnManager = new TableColumnManager(
                 _table,
@@ -380,18 +398,37 @@ namespace NtoLib.Recipes.MbeTable
             _table.DataSource = _recipeViewModel.ViewModels;
             _table.Invalidate();
 
-            _table.DataError -= Table_DataError;
-            _table.DataError += Table_DataError;
-
-            // _table.CellFormatting -= _table_CellFormatting;
-            // _table.CellFormatting += _table_CellFormatting;
-
-            _tableBehaviorManager?.Detach();
-            _tableBehaviorManager = new TableBehaviorManager(_table, _tableSchema, _tableCellStateManager);
+            // Attach behavior manager first (it will suppress known DataErrors)
+            _tableBehaviorManager = new TableBehaviorManager(_table, _tableSchema, _tableCellStateManager, _debugLogger);
+            _tableBehaviorManager.TableStyleSetup();
             _tableBehaviorManager.Attach();
 
-            _recipeViewModel.OnUpdateStart += () => _table.SuspendLayout();
-            _recipeViewModel.OnUpdateEnd += () => _table.ResumeLayout();
+            // Fallback DataError (only if not already canceled)
+            _table.DataError += Table_DataError;
+
+            // Subscribe ViewModel update hooks with stable delegates to allow unsubscription
+            _onVmUpdateStartHandler = () => _table.SuspendLayout();
+            _onVmUpdateEndHandler = () => _table.ResumeLayout();
+            _recipeViewModel.OnUpdateStart += _onVmUpdateStartHandler;
+            _recipeViewModel.OnUpdateEnd += _onVmUpdateEndHandler;
+        }
+
+        private void UnsubscribeRecipeVmUpdateHandlers()
+        {
+            if (_recipeViewModel != null)
+            {
+                if (_onVmUpdateStartHandler != null)
+                {
+                    try { _recipeViewModel.OnUpdateStart -= _onVmUpdateStartHandler; } catch { /* ignore */ }
+                    _onVmUpdateStartHandler = null;
+                }
+
+                if (_onVmUpdateEndHandler != null)
+                {
+                    try { _recipeViewModel.OnUpdateEnd -= _onVmUpdateEndHandler; } catch { /* ignore */ }
+                    _onVmUpdateEndHandler = null;
+                }
+            }
         }
 
         #endregion
@@ -468,23 +505,6 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
 
-        // private void _table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        // {
-        //     if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-        //
-        //     var grid = (DataGridView)sender;
-        //     var viewModel = (StepViewModel)grid.Rows[e.RowIndex].DataBoundItem;
-        //     var columnKey = _tableSchema.GetColumnDefinition(e.ColumnIndex).Key;
-        //
-        //     var cellState = _tableCellStateManager.GetStateForCell(viewModel, columnKey);
-        //
-        //     e.CellStyle.Font = cellState.Font;
-        //     e.CellStyle.ForeColor = cellState.ForeColor;
-        //     e.CellStyle.BackColor = cellState.BackColor;
-        //     grid.Rows[e.RowIndex].Cells[e.ColumnIndex].ReadOnly = cellState.IsReadonly;
-        // }
-
-
         private void OnStatusUpdated(string message, StatusMessage statusMessage)
         {
             _labelStatus.Text = message;
@@ -499,11 +519,15 @@ namespace NtoLib.Recipes.MbeTable
 
         private void Table_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
+            // Behavior manager may have already handled and canceled the error.
+            if (e.Cancel) return;
+
             _sp?.StatusManager.WriteStatusMessage(
                 $"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception.Message}", StatusMessage.Error);
-            e.ThrowException = true;
-        }
 
+            // Fallback handler does not throw to avoid breaking UX.
+            e.ThrowException = false;
+        }
 
         #region Button Click Handlers
 
@@ -580,4 +604,5 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
     }
+
 }
