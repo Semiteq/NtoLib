@@ -14,6 +14,7 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
+using NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
@@ -39,6 +40,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
         private LoopValidationResult _loopResult = new();
         private RecipeTimeAnalysis _timeResult = new();
+        private readonly IRecipePlcService _recipePlcService;
 
         public event Action? OnUpdateStart;
         public event Action? OnUpdateEnd;
@@ -47,20 +49,22 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             RecipeEngine engine,
             RecipeFileWriter recipeFileWriter,
             RecipeFileReader recipeFileReader,
+            IRecipePlcService recipePlcService,
             RecipeLoopValidator loopValidator,
             RecipeTimeCalculator timeCalculator,
             ComboboxDataProvider dataProvider,
             IStatusManager statusManager,
             DebugLogger debugLogger)
         {
-            _engine = engine;
-            _recipeFileWriter = recipeFileWriter;
-            _recipeFileReader = recipeFileReader;
-            _loopValidator = loopValidator;
-            _timeCalculator = timeCalculator;
-            _dataProvider = dataProvider;
-            _statusManager = statusManager;
-            _debugLogger = debugLogger;
+            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            _recipeFileWriter = recipeFileWriter ?? throw new ArgumentNullException(nameof(recipeFileWriter));
+            _recipeFileReader = recipeFileReader ?? throw new ArgumentNullException(nameof(recipeFileReader));
+            _recipePlcService = recipePlcService ?? throw new ArgumentNullException(nameof(recipePlcService));;
+            _loopValidator = loopValidator ?? throw new ArgumentNullException(nameof(loopValidator));
+            _timeCalculator = timeCalculator ?? throw new ArgumentNullException(nameof(timeCalculator));
+            _dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+            _statusManager = statusManager ?? throw new ArgumentNullException(nameof(statusManager));;
+            _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));;
 
             _recipe = _engine.CreateEmptyRecipe();
 
@@ -129,6 +133,11 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             
             _debugLogger.Log($"Successfully saved file");
             _statusManager.WriteStatusMessage($"Файл сохранен: {filePath}", StatusMessage.Info);
+        }
+
+        public void WriteRecipeToPlc()
+        {
+            _debugLogger.Log("Writing recipe to PLC");
         }
 
         #endregion

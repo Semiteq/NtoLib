@@ -1,337 +1,255 @@
 ﻿#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using EasyModbus;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
-namespace NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication
+namespace NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
+
+/// <summary>
+/// V1 Modbus communicator using EasyModbus and control registers handshake.
+/// </summary>
+public sealed class ModbusCommunicatorV1 : IModbusCommunicator
 {
-    public class ModbusCommunicator : IModbusCommunicator
+    private const ushort StateIdle = 1;
+    private const ushort StateWritingAllowed = 2;
+    private const ushort StateWritingBlocked = 3;
+
+    private const ushort CmdWritingNotActive = 1;
+    private const ushort CmdWritingRequest = 2;
+
+    private const int MaxChunkSize = 123;
+
+    private readonly IPlcRecipeMapper _mapper;
+    private readonly ILogger _logger;
+
+    public ModbusCommunicatorV1(IPlcRecipeMapper mapper, ILogger logger)
     {
-        // Controller states
-        private const ushort StateIdle = 1;
-        private const ushort StateWritingAllowed = 2;
-        private const ushort StateWritingBlocked = 3;
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        // Writing command codes
-        private const ushort CmdWritingNotActive = 1;
-        private const ushort CmdWritingRequest = 2;
-
-        // Maximum registers per Modbus request chunk (calculation: 256 bytes / 2 - overhead)
-        private const int MaxChunkSize = 123;
-
-        private const int MaxRetryAttempts = 3; 
-        private const int InitialDelayMs = 200;
-        
-        public bool CheckConnection(PinDataManager.CommunicationSettings settings)
+    /// <summary>
+    /// Verifies the connectivity to a PLC using the provided communication settings.
+    /// </summary>
+    /// <param name="settings">The communication settings, including IP address and port, used to establish the connection to the PLC.</param>
+    /// <returns>True if the connection to the PLC is successful; otherwise, false.</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during connection establishment or communication with the PLC.</exception>
+    public bool CheckConnection(PinDataManager.CommunicationSettings settings)
+    {
+        var ip = BuildIp(settings);
+        var client = new ModbusClient(ip, (int)settings.Port);
+        try
         {
-            var ip = BuildIpString(settings);
-            var modbusClient = new ModbusClient(ip, (int)settings.Port);
-            try
-            {
-                Debug.WriteLine($"[CheckConnection] Attempting connection to {ip}:{settings.Port}");
-                modbusClient.Connect();
-                // Try reading a single register to verify connection
-                modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1);
-                Debug.WriteLine("[CheckConnection] Connection successful.");
-            }
-            catch (Exception ex)
-            {
-                // Log error with stack trace and rethrow
-                Debug.WriteLine($"[CheckConnection] Exception during connection: {ex}");
-                throw;
-            }
-            finally
-            {
-                modbusClient.Disconnect();
-            }
+            _logger.Log($"[CheckConnection] {ip}:{settings.Port}");
+            client.Connect();
+            client.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1);
             return true;
         }
-        
-        public async Task<bool> CheckConnectionWithRetryAsync(PinDataManager.CommunicationSettings settings)
+        catch (Exception ex)
         {
-            int attempt = 0;
-            int delay = InitialDelayMs;
-
-            Debug.WriteLine($"[CheckConnectionWithRetryAsync] Starting connection check with retries for {settings.Ip1}.{settings.Ip2}.{settings.Ip3}.{settings.Ip4}:{settings.Port}");
-            
-            while (attempt < MaxRetryAttempts)
-            {
-                try
-                {
-                    var ip = BuildIpString(settings);
-                    var success = await Task.Run(() =>
-                    {
-                        var modbusClient = new ModbusClient(ip, (int)settings.Port);
-                        modbusClient.Connect();
-                        modbusClient.ReadHoldingRegisters(0, 1);
-                        modbusClient.Disconnect();
-                        return true;
-                    });
-                    if (success) return true;
-                }
-                catch (Exception ex) when (ex is IOException || ex is SocketException || ex.InnerException is SocketException)
-                {
-                    attempt++;
-                    if (attempt >= MaxRetryAttempts)
-                    {
-                        return false;
-                    }
-
-                    await Task.Delay(delay);
-                    delay *= 2;
-                }
-            }
-            return false;
+            _logger.LogException(ex);
+            Debug.WriteLine($"[CheckConnection] Exception: {ex}");
+            throw;
         }
-
-        public bool WriteRecipeToPlc(List<Step> recipe, PinDataManager.CommunicationSettings settings)
+        finally
         {
-            var ip = BuildIpString(settings);
-            var modbusClient = new ModbusClient(ip, (int)settings.Port);
-            try
-            {
-                Debug.WriteLine($"[WriteRecipeToPlc] Connecting to IO at {ip}:{settings.Port}");
-                modbusClient.Connect();
-
-                // Request permission for writing
-                RequestWritePermission(settings, modbusClient);
-                Debug.WriteLine("[WriteRecipeToPlc] Write permission granted.");
-
-                // Write recipe data to IO
-                WriteRecipeData(settings, modbusClient, recipe);
-                Debug.WriteLine("[WriteRecipeToPlc] Recipe data written successfully.");
-
-                // Complete writing process by informing IO about new recipe count
-                CompleteWriteProcess(settings, modbusClient, recipe.Count);
-                Debug.WriteLine("[WriteRecipeToPlc] Write process completed.");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[WriteRecipeToPlc] Exception during write process: {ex}");
-                throw;
-            }
-            finally
-            {
-                modbusClient.Disconnect();
-            }
-            return true;
+            try { client.Disconnect(); } catch { /* ignore */ }
         }
+    }
 
-        public List<Step> LoadRecipeFromPlc(PinDataManager.CommunicationSettings settings)
+    /// <summary>
+    /// Writes the provided recipe to the PLC using the specified communication settings.
+    /// </summary>
+    /// <param name="recipe">The recipe represented as a list of steps to be written to the PLC.</param>
+    /// <param name="settings">The communication settings used to establish a connection to the PLC for recipe transmission.</param>
+    /// <returns>True if the recipe is successfully written to the PLC; otherwise, false.</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during connection establishment, communication, or data transmission to the PLC.</exception>
+    public bool WriteRecipeToPlc(List<Step> recipe, PinDataManager.CommunicationSettings settings)
+    {
+        var ip = BuildIp(settings);
+        var client = new ModbusClient(ip, (int)settings.Port);
+        try
         {
-            var ip = BuildIpString(settings);
-            var modbusClient = new ModbusClient(ip, (int)settings.Port);
-            try
-            {
-                Debug.WriteLine($"[LoadRecipeFromPlc] Connecting to IO at {ip}:{settings.Port}");
-                modbusClient.Connect();
-                var recipeLines = ReadRecipeData(settings, modbusClient);
-                Debug.WriteLine($"[LoadRecipeFromPlc] Loaded {recipeLines.Count} recipe lines.");
-                return recipeLines;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[LoadRecipeFromPlc] Exception during read process: {ex}");
-                throw;
-            }
-            finally
-            {
-                modbusClient.Disconnect();
-            }
-        }
+            _logger.Log($"[WriteRecipeToPlc] Connect {ip}:{settings.Port}");
+            client.Connect();
 
-        // Helper method to build IP address string from settings
-        private string BuildIpString(PinDataManager.CommunicationSettings settings)
-        {
-            return $"{settings.Ip1}.{settings.Ip2}.{settings.Ip3}.{settings.Ip4}";
-        }
+            RequestWritePermission(settings, client);
 
-        // Request write permission from the controller. Throws exception if not allowed.
-        private void RequestWritePermission(PinDataManager.CommunicationSettings settings, ModbusClient modbusClient)
-        {
-            const int maxAttempts = 5;
-            const int retryDelay = 50;
-            Debug.WriteLine("[RequestWritePermission] Requesting write permission.");
-
-            for (var attempt = 0; attempt < maxAttempts; attempt++)
-            {
-                try
-                {
-                    // Request write permission 
-                    modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingRequest);
-                    Thread.Sleep(retryDelay * attempt);
-
-                    // Check controller state to see if writing is allowed
-                    var state = modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 1)[0];
-
-                    if (state == StateWritingAllowed)
-                    {
-                        // Clear previous recipe count if write permission granted
-                        modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), 0);
-                        Debug.WriteLine("[RequestWritePermission] Write permission granted, previous recipe count cleared.");
-                        return;
-                    }
-
-                    Debug.WriteLine($"[RequestWritePermission] Attempt {attempt + 1} failed, controller state: {state}");
-                    Thread.Sleep(retryDelay);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[RequestWritePermission] Communication error on attempt {attempt + 1}: {ex.Message}");
-                    if (attempt == maxAttempts - 1) throw;
-                }
-            }
-
-            throw new Exception("[RequestWritePermission] Write permission denied: maximum attempts exceeded");
-        }
-
-        // Write recipe data to IO with chunked register writing
-        private void WriteRecipeData(PinDataManager.CommunicationSettings settings, ModbusClient modbusClient, List<Step> recipe)
-        {
-            var (intArray, floatArray, boolArray) = PrepareRecipeData(settings, recipe);
+            var (intArray, floatArray, boolArray) = _mapper.ToRegisters(recipe);
 
             if (intArray.Length > settings.IntAreaSize)
-                throw new Exception($"[WriteRecipeData] IO Int area size exceeded: {intArray.Length} > {settings.IntAreaSize}");
-
+                throw new Exception($"INT area exceeded: {intArray.Length} > {settings.IntAreaSize}");
             if (floatArray.Length > settings.FloatAreaSize)
-                throw new Exception($"[WriteRecipeData] IO Float area size exceeded: {floatArray.Length} > {settings.FloatAreaSize}");
-
+                throw new Exception($"FLOAT area exceeded: {floatArray.Length} > {settings.FloatAreaSize}");
             if (boolArray.Length > settings.BoolAreaSize)
-                throw new Exception($"[WriteRecipeData] IO Bool area size exceeded: {boolArray.Length} > {settings.BoolAreaSize}");
+                throw new Exception($"BOOL area exceeded: {boolArray.Length} > {settings.BoolAreaSize}");
 
             if (intArray.Length > 0)
-                TryWriteRegistersChunked(modbusClient, (int)settings.IntBaseAddr, intArray);
-
+                WriteChunked(client, (int)settings.IntBaseAddr, intArray);
             if (floatArray.Length > 0)
-                TryWriteRegistersChunked(modbusClient, (int)settings.FloatBaseAddr, floatArray);
-
+                WriteChunked(client, (int)settings.FloatBaseAddr, floatArray);
             if (boolArray.Length > 0)
-                TryWriteRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolArray);
-        }
+                WriteChunked(client, (int)settings.BoolBaseAddr, boolArray);
 
-        // Write registers in chunks to avoid exceeding Modbus request size
-        private void TryWriteRegistersChunked(ModbusClient modbusClient, int baseAddress, int[] values)
+            CompleteWrite(settings, client, recipe.Count);
+            _logger.Log("[WriteRecipeToPlc] Done");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex);
+            Debug.WriteLine($"[WriteRecipeToPlc] Exception: {ex}");
+            throw;
+        }
+        finally
+        {
+            try { client.Disconnect(); } catch { /* ignore */ }
+        }
+    }
+
+    /// <summary>
+    /// Loads a recipe from the PLC using the provided communication settings.
+    /// </summary>
+    /// <param name="settings">The communication settings used to establish a connection to the PLC and retrieve the recipe data.</param>
+    /// <returns>A list of steps representing the recipe data retrieved from the PLC.</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during communication or data retrieval from the PLC.</exception>
+    public List<Step> LoadRecipeFromPlc(PinDataManager.CommunicationSettings settings)
+    {
+        var ip = BuildIp(settings);
+        var client = new ModbusClient(ip, (int)settings.Port);
+        try
+        {
+            _logger.Log($"[LoadRecipeFromPlc] Connect {ip}:{settings.Port}");
+            client.Connect();
+
+            var ctrl = client.ReadHoldingRegisters((int)settings.ControlBaseAddr, 3);
+            var state = ctrl[0];
+            var rowCount = ctrl[2];
+
+            if (state != StateIdle && state != StateWritingBlocked)
+                throw new Exception($"Controller state not ready: {state}");
+
+            if (rowCount <= 0) return new List<Step>();
+
+            var intQty = rowCount * PinDataManager.CommunicationSettings.IntColumNum;
+            var floatQty = rowCount * PinDataManager.CommunicationSettings.FloatColumNum * 2;
+            var boolQty = rowCount * PinDataManager.CommunicationSettings.BoolColumNum / 16
+                          + (rowCount * PinDataManager.CommunicationSettings.BoolColumNum % 16 > 0 ? 1 : 0);
+
+            var intData = intQty > 0 ? ReadChunked(client, (int)settings.IntBaseAddr, intQty) : Array.Empty<int>();
+            var floatData = floatQty > 0 ? ReadChunked(client, (int)settings.FloatBaseAddr, floatQty) : Array.Empty<int>();
+            _ = boolQty; // not used in V1
+
+            var steps = _mapper.FromRegisters(intData, floatData, rowCount);
+            _logger.Log($"[LoadRecipeFromPlc] Rows: {steps.Count}");
+            return steps;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex);
+            Debug.WriteLine($"[LoadRecipeFromPlc] Exception: {ex}");
+            throw;
+        }
+        finally
+        {
+            try { client.Disconnect(); } catch { /* ignore */ }
+        }
+    }
+
+    private static string BuildIp(PinDataManager.CommunicationSettings s)
+        => $"{s.Ip1}.{s.Ip2}.{s.Ip3}.{s.Ip4}";
+
+    /// <summary>
+    /// Sends a write permission request to the PLC and waits for approval before proceeding.
+    /// </summary>
+    /// <param name="s">The communication settings containing control base addresses and configurations specific to the PLC.</param>
+    /// <param name="c">The Modbus client used to communicate with the PLC for performing the write request.</param>
+    /// <exception cref="Exception">Thrown when write permission cannot be obtained from the PLC after multiple attempts.</exception>
+    private void RequestWritePermission(PinDataManager.CommunicationSettings s, ModbusClient c)
+    {
+        const int maxAttempts = 5;
+        const int retryDelay = 50;
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             try
             {
-                var totalRegisters = values.Length;
-                var currentIndex = 0;
+                c.WriteSingleRegister((int)(s.ControlBaseAddr + 1U), CmdWritingRequest);
+                Thread.Sleep(retryDelay * attempt);
 
-                while (currentIndex < totalRegisters)
+                var state = c.ReadHoldingRegisters((int)s.ControlBaseAddr, 1)[0];
+                if (state == StateWritingAllowed)
                 {
-                    var chunkSize = Math.Min(MaxChunkSize, totalRegisters - currentIndex);
-                    var chunk = new int[chunkSize];
-                    Array.Copy(values, currentIndex, chunk, 0, chunkSize);
-
-                    modbusClient.WriteMultipleRegisters(baseAddress + currentIndex, chunk);
-                    Debug.WriteLine($"[TryWriteRegistersChunked] Written chunk at address {baseAddress + currentIndex} with {chunkSize} registers.");
-                    currentIndex += chunkSize;
+                    c.WriteSingleRegister((int)(s.ControlBaseAddr + 2U), 0);
+                    return;
                 }
+
+                Thread.Sleep(retryDelay);
             }
             catch (Exception ex)
             {
-                throw new Exception($"[TryWriteRegistersChunked] Error writing data in chunks: {ex.Message}");
+                if (attempt == maxAttempts - 1) throw;
+                _logger.Log($"[RequestWritePermission] Attempt {attempt + 1} error: {ex.Message}");
             }
         }
 
-        // Complete the write process by setting recipe count and resetting write command
-        private void CompleteWriteProcess(PinDataManager.CommunicationSettings settings, ModbusClient modbusClient, int recipeCount)
+        throw new Exception("Write permission denied");
+    }
+
+    /// <summary>
+    /// Completes the write operation to the PLC by updating the control registers.
+    /// </summary>
+    /// <param name="s">The communication settings containing base addresses and configuration data.</param>
+    /// <param name="c">The Modbus client used to communicate with the PLC.</param>
+    /// <param name="rows">The number of data rows written to the PLC.</param>
+    private void CompleteWrite(PinDataManager.CommunicationSettings s, ModbusClient c, int rows)
+    {
+        c.WriteSingleRegister((int)(s.ControlBaseAddr + 2U), (ushort)rows);
+        c.WriteSingleRegister((int)(s.ControlBaseAddr + 1U), CmdWritingNotActive);
+    }
+
+    /// <summary>
+    /// Writes data to a Modbus server in chunks to handle large arrays efficiently.
+    /// </summary>
+    /// <param name="c">The Modbus client used to communicate with the server.</param>
+    /// <param name="baseAddress">The starting address in the Modbus server where data will be written.</param>
+    /// <param name="values">The array of integer values to be written to the Modbus server.</param>
+    private void WriteChunked(ModbusClient c, int baseAddress, int[] values)
+    {
+        var total = values.Length;
+        var index = 0;
+        while (index < total)
         {
-            Debug.WriteLine("[CompleteWriteProcess] Completing write process.");
-            modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 2U), (ushort)recipeCount);
-            modbusClient.WriteSingleRegister((int)(settings.ControlBaseAddr + 1U), CmdWritingNotActive);
+            var size = Math.Min(MaxChunkSize, total - index);
+            var chunk = new int[size];
+            Array.Copy(values, index, chunk, 0, size);
+            c.WriteMultipleRegisters(baseAddress + index, chunk);
+            index += size;
         }
+    }
 
-        // Prepare data arrays from the recipe for writing to IO
-        private (int[] intArray, int[] floatArray, int[] boolArray) PrepareRecipeData(PinDataManager.CommunicationSettings settings, List<Step> recipe)
+    /// <summary>
+    /// Reads registers from a Modbus server in chunks, allowing handling of large data quantities.
+    /// </summary>
+    /// <param name="c">The Modbus client used to communicate with the server.</param>
+    /// <param name="baseAddress">The starting address of the registers to be read.</param>
+    /// <param name="totalRegisters">The total number of registers to read.</param>
+    /// <returns>An array of integers containing the values read from the Modbus server.</returns>
+    private int[] ReadChunked(ModbusClient c, int baseAddress, int totalRegisters)
+    {
+        var result = new int[totalRegisters];
+        var index = 0;
+        while (index < totalRegisters)
         {
-            // Note: boolArray remains empty; data preparation for boolean values should be implemented.
-            var floatArray = new int[recipe.Count * PinDataManager.CommunicationSettings.FloatColumNum * 2];
-            var intArray = new int[recipe.Count * PinDataManager.CommunicationSettings.IntColumNum];
-            var boolArray = new int[recipe.Count * PinDataManager.CommunicationSettings.BoolColumNum / 16 
-                                    + (recipe.Count * PinDataManager.CommunicationSettings.BoolColumNum % 16 > 0 ? 1 : 0)];
-
-            var floatIndex = 0;
-            var intIndex = 0;
-            foreach (var line in recipe)
-            {
-                // // Assuming first two cells are int values
-                // intArray[intIndex++] = (ushort)line.ActionProperty;
-                // intArray[intIndex++] = (ushort)line.TargetActionProperty;
-                //
-                // // Next cells are float values converted to two 16-bit values each
-                // var bytes2 = BitConverter.GetBytes(line.InitialValueProperty);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 0);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes2, 2);
-                //
-                // var bytes3 = BitConverter.GetBytes(line.SetpointProperty);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 0);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes3, 2);
-                //
-                // var bytes4 = BitConverter.GetBytes(line.SpeedProperty);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 0);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes4, 2);
-                //
-                // var bytes5 = BitConverter.GetBytes(line.StartTimeProperty);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 0);
-                // floatArray[floatIndex++] = BitConverter.ToUInt16(bytes5, 2);
-            }
-
-            return (intArray, floatArray, boolArray);
+            var size = Math.Min(MaxChunkSize, totalRegisters - index);
+            var chunk = c.ReadHoldingRegisters(baseAddress + index, size);
+            Array.Copy(chunk, 0, result, index, size);
+            index += size;
         }
-
-        // Read recipe data from IO, including int, float and bool arrays
-        private List<Step> ReadRecipeData(PinDataManager.CommunicationSettings settings, ModbusClient modbusClient)
-        {
-            Debug.WriteLine("[ReadRecipeData] Reading control data.");
-            var controlData = modbusClient.ReadHoldingRegisters((int)settings.ControlBaseAddr, 3);
-
-            if (controlData[0] != StateIdle && controlData[0] != StateWritingBlocked)
-                throw new Exception($"[ReadRecipeData] Controller not ready for reading, state: {controlData[0]}");
-
-            var capacity = controlData[2];
-            var data = new List<Step>(capacity);
-
-            if (capacity <= 0)
-                return data;
-
-            var intQuantity = capacity * PinDataManager.CommunicationSettings.IntColumNum;
-            var floatQuantity = capacity * PinDataManager.CommunicationSettings.FloatColumNum * 2;
-            var boolQuantity = capacity * PinDataManager.CommunicationSettings.BoolColumNum / 16 + (capacity * PinDataManager.CommunicationSettings.BoolColumNum % 16 > 0 ? 1 : 0);
-
-            Debug.WriteLine($"[ReadRecipeData] Reading {intQuantity} int, {floatQuantity} float and {boolQuantity} bool registers.");
-            var intData = intQuantity > 0 ? ReadRegistersChunked(modbusClient, (int)settings.IntBaseAddr, intQuantity) : Array.Empty<int>();
-            var floatData = floatQuantity > 0 ? ReadRegistersChunked(modbusClient, (int)settings.FloatBaseAddr, floatQuantity) : Array.Empty<int>();
-            var boolData = boolQuantity > 0 ? ReadRegistersChunked(modbusClient, (int)settings.BoolBaseAddr, boolQuantity) : Array.Empty<int>();
-
-            for (var i = 0; i < capacity; i++)
-            {
-                // data.Add(RecipeLineFactory.NewLine(intData, floatData, boolData, i));
-            }
-            return data;
-        }
-
-        // Read registers in chunks
-        private int[] ReadRegistersChunked(ModbusClient modbusClient, int baseAddress, int totalRegisters)
-        {
-            var result = new int[totalRegisters];
-            var currentIndex = 0;
-
-            while (currentIndex < totalRegisters)
-            {
-                var chunkSize = Math.Min(MaxChunkSize, totalRegisters - currentIndex);
-                var chunk = modbusClient.ReadHoldingRegisters(baseAddress + currentIndex, chunkSize);
-                Array.Copy(chunk, 0, result, currentIndex, chunkSize);
-                Debug.WriteLine($"[ReadRegistersChunked] Read chunk from address {baseAddress + currentIndex} of size {chunkSize}.");
-                currentIndex += chunkSize;
-            }
-            return result;
-        }
+        return result;
     }
 }

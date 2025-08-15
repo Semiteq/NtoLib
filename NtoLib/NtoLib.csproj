@@ -241,9 +241,14 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcLineInfo.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcStateMonitor.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IModbusCommunicator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IPlcRecipeMapper.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IRecipeComparator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IRecipePlcService.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\ModbusCommunicator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\PlcCapacityCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\PlcRecipeMapper.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\RecipeComparator.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\TableFileManager.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\RecipePlcServiceV1.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\IStatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />

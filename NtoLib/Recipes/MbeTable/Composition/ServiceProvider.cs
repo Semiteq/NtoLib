@@ -15,6 +15,7 @@ using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Fingerprints;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+using NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.State;
@@ -68,6 +69,13 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public SchemaFingerprintUtil SchemaFingerprintUtil { get; private set; }
         public ActionsFingerprintUtil ActionsFingerprintUtil { get; private set; }
         public TargetAvailabilityValidator TargetAvailabilityValidator { get; private set; }
+        
+        // --- Modbus ---
+        public IRecipePlcService RecipePlcServiceV1 { get; private set; }
+        public IPlcRecipeMapper PlcRecipeMapper { get; private set; }
+        public IModbusCommunicator ModbusCommunicatorV1 { get; private set; }
+        public IRecipeComparator RecipeComparator { get; private set; }
+        public PlcCapacityCalculator PlcCapacityCalculator { get; private set; }
 
         // --- UI Components ---
         public OpenFileDialog OpenFileDialog { get; private set; }
@@ -137,12 +145,24 @@ namespace NtoLib.Recipes.MbeTable.Composition
 
             RecipeFileReader = new RecipeFileReader(RecipeCsvSerializerV1);
             RecipeFileWriter = new RecipeFileWriter(RecipeCsvSerializerV1);
+            
+            // --- Modbus ---
+            PlcCapacityCalculator = new PlcCapacityCalculator();
+            RecipeComparator = new RecipeComparator(DebugLogger);
+            PlcRecipeMapper = new PlcRecipeMapper(StepFactory, ActionManager);
+            ModbusCommunicatorV1 = new ModbusCommunicatorV1(PlcRecipeMapper, DebugLogger);
+            RecipePlcServiceV1 = new RecipePlcServiceV1(
+                ModbusCommunicatorV1,
+                RecipeComparator,
+                PlcCapacityCalculator,
+                DebugLogger);
 
             // --- ViewModel ---
             RecipeViewModel = new RecipeViewModel(
                 RecipeEngine,
                 RecipeFileWriter,
                 RecipeFileReader,
+                RecipePlcServiceV1,
                 RecipeLoopValidator,
                 RecipeTimeCalculator,
                 ComboboxDataProvider,

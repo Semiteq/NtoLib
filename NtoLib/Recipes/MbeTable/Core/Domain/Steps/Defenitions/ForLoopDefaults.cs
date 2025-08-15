@@ -17,6 +17,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps.Defenitions
         {
             return new Dictionary<ColumnKey, StepProperty>
             {
+                // "Feature" setpoint should be int, but it would be impossible to parse in IO
                 [ColumnKey.Setpoint] = new StepProperty(1f, PropertyType.Float, _registry),
                 [ColumnKey.Comment] = new StepProperty("", PropertyType.String, _registry)
             };
