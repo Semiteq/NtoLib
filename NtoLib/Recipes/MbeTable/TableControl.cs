@@ -386,8 +386,7 @@ namespace NtoLib.Recipes.MbeTable
                 _table,
                 _tableSchema,
                 _tableColumnFactoryMap.GetMap,
-                colorScheme,
-                _recipeViewModel);
+                colorScheme);
 
             tableColumnManager.InitializeHeaders();
             tableColumnManager.InitializeTableColumns();
@@ -398,7 +397,7 @@ namespace NtoLib.Recipes.MbeTable
             _table.DataSource = _recipeViewModel.ViewModels;
             _table.Invalidate();
 
-            // Attach behavior manager first (it will suppress known DataErrors)
+            // Attach a behavior manager first (it will suppress known DataErrors)
             _tableBehaviorManager = new TableBehaviorManager(_table, _tableSchema, _tableCellStateManager, _debugLogger);
             _tableBehaviorManager.TableStyleSetup();
             _tableBehaviorManager.Attach();
@@ -411,6 +410,9 @@ namespace NtoLib.Recipes.MbeTable
             _onVmUpdateEndHandler = () => _table.ResumeLayout();
             _recipeViewModel.OnUpdateStart += _onVmUpdateStartHandler;
             _recipeViewModel.OnUpdateEnd += _onVmUpdateEndHandler;
+            _statusManager.StatusUpdated += OnStatusUpdated;
+            _statusManager.StatusCleared += OnStatusCleared;
+            
         }
 
         private void UnsubscribeRecipeVmUpdateHandlers()
@@ -431,17 +433,40 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                try { _table.DataError -= Table_DataError; } catch { /* ignore */ }
+                UnsubscribeRecipeVmUpdateHandlers();
+
+                if (_tableBehaviorManager != null)
+                {
+                    try { _tableBehaviorManager.Dispose(); } catch { /* ignore */ }
+                    _tableBehaviorManager = null;
+                }
+            }
+
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+
+            if (_statusManager != null)
+            {
+                _statusManager.StatusUpdated -= OnStatusUpdated;
+                _statusManager.StatusCleared -= OnStatusCleared;
+            }
+
+            if (_table != null)
+            {
+                _table.DataError -= Table_DataError;
+            }
+
+            base.Dispose(disposing);
+        }
+
         #endregion
-
-        public void BeginUpdate()
-        {
-            _table.SuspendLayout();
-        }
-
-        public void EndUpdate()
-        {
-            _table.ResumeLayout();
-        }
 
         #region Visuals
 
@@ -573,7 +598,7 @@ namespace NtoLib.Recipes.MbeTable
             {
                 _recipeViewModel.LoadRecipe(filePath);
             }
-            catch (Exception ex)
+            catch (Exception ex) // todo: is it needed?
             {
                 _statusManager?.WriteStatusMessage($"Ошибка загрузки файла: {ex.Message}", StatusMessage.Error);
             }
@@ -604,5 +629,4 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
     }
-
 }

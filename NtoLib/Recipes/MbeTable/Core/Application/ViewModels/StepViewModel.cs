@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 {
@@ -29,8 +29,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             TimeSpan startTime,
             List<KeyValuePair<int, string>>? availableActionTargets)
         {
-            _stepRecord = stepRecord;
-            _updatePropertyAction = updatePropertyAction;
+            _stepRecord = stepRecord ?? throw new ArgumentNullException(nameof(stepRecord));
+            _updatePropertyAction = updatePropertyAction ?? throw new ArgumentNullException(nameof(updatePropertyAction));
 
             _stepStartTimeSeconds = (float)startTime.TotalSeconds;
 

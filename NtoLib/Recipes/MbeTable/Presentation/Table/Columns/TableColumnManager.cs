@@ -5,7 +5,6 @@ using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
-using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
 {
@@ -14,22 +13,18 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
         private readonly DataGridView _table;
         private readonly TableSchema _tableSchema;
         private readonly ColorScheme _colorScheme;
-        private readonly RecipeViewModel _recipeViewModel;
         
         private readonly IReadOnlyDictionary<ColumnKey, IColumnFactory> _factories;
 
         public TableColumnManager(DataGridView table, 
             TableSchema tableSchema, 
             IReadOnlyDictionary<ColumnKey, IColumnFactory> factories,
-            ColorScheme colorScheme, 
-            RecipeViewModel recipeViewModel)
+            ColorScheme colorScheme)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema));
             _factories  = factories ?? throw new ArgumentNullException(nameof(factories));
             _colorScheme = colorScheme ?? throw new ArgumentNullException(nameof(colorScheme));
-            _recipeViewModel = recipeViewModel ?? throw new ArgumentNullException(nameof(recipeViewModel));
-            
         }
 
         public void InitializeHeaders()

@@ -1,16 +1,20 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Linq;
+using InSAT.Library.Linq;
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
-using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 {
@@ -28,6 +32,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private readonly ComboboxDataProvider _dataProvider;
         private readonly DebugLogger _debugLogger;
         private readonly IStatusManager _statusManager;
+        private readonly RecipeFileWriter _recipeFileWriter;
+        private readonly RecipeFileReader _recipeFileReader;
 
         private Recipe _recipe;
 
@@ -39,6 +45,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
         public RecipeViewModel(
             RecipeEngine engine,
+            RecipeFileWriter recipeFileWriter,
+            RecipeFileReader recipeFileReader,
             RecipeLoopValidator loopValidator,
             RecipeTimeCalculator timeCalculator,
             ComboboxDataProvider dataProvider,
@@ -46,6 +54,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             DebugLogger debugLogger)
         {
             _engine = engine;
+            _recipeFileWriter = recipeFileWriter;
+            _recipeFileReader = recipeFileReader;
             _loopValidator = loopValidator;
             _timeCalculator = timeCalculator;
             _dataProvider = dataProvider;
@@ -81,10 +91,44 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
         public void LoadRecipe(string filePath)
         {
+            _debugLogger.Log($"Loading recipe from file: {filePath}");
+
+            var (recipe, errors) = _recipeFileReader.Read(filePath);
+
+            if (errors.IsEmpty() && recipe != null)
+            {
+                var newRecipe = recipe;
+                _debugLogger.Log($"Successfully loaded file");
+                UpdateRecipeStateAndViewModels(newRecipe);
+                _statusManager.WriteStatusMessage($"Файл загружен: {filePath}", StatusMessage.Info);
+            }
+            else
+            {
+                _debugLogger.Log($"Failed to load recipe from file: {filePath}. Errors: {errors}");
+
+                var multilineErrors = MultilineErrors(errors);
+                
+                _statusManager.WriteStatusMessage($"Найдены ошибки при чтении ({errors.Count}): \r\n{multilineErrors}", StatusMessage.Error);
+            }
         }
 
         public void SaveRecipe(string filePath)
         {
+            _debugLogger.Log($"Saving recipe to file: {filePath}");
+
+            var errors = _recipeFileWriter.Write(_recipe, filePath);
+            
+            if (!errors.IsEmpty())
+            {
+                _debugLogger.Log($"Failed to save recipe to file: {filePath}. Errors: {errors}");
+                
+                var multilineErrors = MultilineErrors(errors);
+                
+                _statusManager.WriteStatusMessage($"Найдены ошибки при сохранении ({errors.Count}): \r\n{multilineErrors}", StatusMessage.Error);
+            }
+            
+            _debugLogger.Log($"Successfully saved file");
+            _statusManager.WriteStatusMessage($"Файл сохранен: {filePath}", StatusMessage.Info);
         }
 
         #endregion
@@ -244,6 +288,12 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 startTime,
                 availableTargets
             );
+        }
+
+        private static string MultilineErrors(IImmutableList<RecipeFileError> errors)
+        {
+            return string.Join(Environment.NewLine, 
+                errors.Select((error, index) => $"[{index + 1}/{errors.Count}] {error}"));
         }
 
         #endregion

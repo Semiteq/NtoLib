@@ -91,7 +91,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
         /// <summary>
         /// Represents a single, immutable property belonging to a recipe step.
         /// </summary>
-        internal StepProperty(object initialValue, PropertyType propertyType,
+        public StepProperty(object initialValue, PropertyType propertyType,
             PropertyDefinitionRegistry propertyRegistry)
         {
             var definition = propertyRegistry.GetDefinition(propertyType);

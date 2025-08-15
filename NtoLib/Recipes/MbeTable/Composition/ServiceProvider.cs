@@ -7,12 +7,15 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
+using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Fingerprints;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
-using NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
-using NtoLib.Recipes.MbeTable.Presentation.Table;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.State;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
@@ -43,7 +46,6 @@ namespace NtoLib.Recipes.MbeTable.Composition
 
         // --- Factories & Maps ---
         public StepFactory StepFactory { get; private set; }
-        public ActionToFactoryMap ActionToFactoryMap { get; private set; }
         public TableColumnFactoryMap TableColumnFactoryMap { get; private set; }
 
         // --- Analysis & Engine ---
@@ -51,10 +53,21 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public RecipeLoopValidator RecipeLoopValidator { get; private set; }
         public RecipeTimeCalculator RecipeTimeCalculator { get; private set; }
         public RecipeEngine RecipeEngine { get; private set; }
-        public ModBusDeserializer ModBusDeserializer { get; private set; }
 
         // --- ViewModels ---
         public RecipeViewModel RecipeViewModel { get; private set; }
+
+        // --- IO ---
+        public RecipeFileReader RecipeFileReader { get; private set; }
+        public RecipeFileWriter RecipeFileWriter { get; private set; }
+        public RecipeCsvSerializerV1 RecipeCsvSerializerV1 { get; private set; }
+        public CsvHelperFactory CsvHelperFactory { get; private set; }
+        public CsvStepMapper CsvStepMapper { get; private set; }
+        public CsvHeaderBinder CsvHeaderBinder { get; private set; }
+        public RecipeFileMetadataSerializer RecipeFileMetadataSerializer { get; private set; }
+        public SchemaFingerprintUtil SchemaFingerprintUtil { get; private set; }
+        public ActionsFingerprintUtil ActionsFingerprintUtil { get; private set; }
+        public TargetAvailabilityValidator TargetAvailabilityValidator { get; private set; }
 
         // --- UI Components ---
         public OpenFileDialog OpenFileDialog { get; private set; }
@@ -82,9 +95,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
             ComboboxDataProvider = new ComboboxDataProvider(ActionManager, ActionTargetProvider);
             TableCellStateManager = new TableCellStateManager(ColorScheme);
             TableColumnFactoryMap = new TableColumnFactoryMap(ComboboxDataProvider);
-            StepFactory = new StepFactory(ActionManager, TableSchema, PropertyDefinitionRegistry);
-            ModBusDeserializer = new ModBusDeserializer(ActionManager, StepFactory);
-            ActionToFactoryMap = new ActionToFactoryMap(ActionManager, StepFactory);
+            StepFactory = new StepFactory(ActionManager, PropertyDefinitionRegistry, TableSchema);
 
             // --- Analysis services ---
             var dependencyRules = DependencyRulesMap.GetMap;
@@ -93,18 +104,45 @@ namespace NtoLib.Recipes.MbeTable.Composition
             RecipeTimeCalculator = new RecipeTimeCalculator(ActionManager);
 
             // --- Core engine ---
-            var actionMap = ActionToFactoryMap.GetMap;
             RecipeEngine = new RecipeEngine(
                 ActionManager,
                 StepFactory,
                 ActionTargetProvider,
-                actionMap,
                 StepPropertyCalculator,
                 DebugLogger);
+
+            // --- IO ---
+            CsvHelperFactory = new CsvHelperFactory();
+            CsvHeaderBinder = new CsvHeaderBinder();
+            RecipeFileMetadataSerializer = new RecipeFileMetadataSerializer();
+            SchemaFingerprintUtil = new SchemaFingerprintUtil();
+            ActionsFingerprintUtil = new ActionsFingerprintUtil();
+            TargetAvailabilityValidator = new TargetAvailabilityValidator();
+
+            CsvStepMapper = new CsvStepMapper(StepFactory, ActionManager);
+
+            RecipeCsvSerializerV1 = new RecipeCsvSerializerV1(
+                TableSchema,
+                ActionManager,
+                CsvHelperFactory,
+                RecipeFileMetadataSerializer,
+                SchemaFingerprintUtil,
+                ActionsFingerprintUtil,
+                CsvHeaderBinder,
+                CsvStepMapper,
+                RecipeLoopValidator,
+                TargetAvailabilityValidator,
+                ActionTargetProvider
+            );
+
+            RecipeFileReader = new RecipeFileReader(RecipeCsvSerializerV1);
+            RecipeFileWriter = new RecipeFileWriter(RecipeCsvSerializerV1);
 
             // --- ViewModel ---
             RecipeViewModel = new RecipeViewModel(
                 RecipeEngine,
+                RecipeFileWriter,
+                RecipeFileReader,
                 RecipeLoopValidator,
                 RecipeTimeCalculator,
                 ComboboxDataProvider,
@@ -125,25 +163,25 @@ namespace NtoLib.Recipes.MbeTable.Composition
         {
             ControlBackgroundColor = Color.White,
             TableBackgroundColor = Color.White,
-            
+
             HeaderFont = new Font("Arial", 16f, FontStyle.Bold),
             LineFont = new Font("Arial", 14f),
             SelectedLineFont = new Font("Arial", 14f),
             PassedLineFont = new Font("Arial", 14f),
             BlockedFont = new Font("Arial", 14f),
-            
+
             LineTextColor = Color.Black,
             SelectedLineTextColor = Color.Black,
             PassedLineTextColor = Color.DarkGray,
             BlockedTextColor = Color.DarkGray,
-            
+
             LineBgColor = Color.White,
             SelectedLineBgColor = Color.Green,
             PassedLineBgColor = Color.Yellow,
             HeaderBgColor = Color.LightGray,
             HeaderTextColor = Color.Black,
             BlockedBgColor = Color.LightGray,
-            
+
             ButtonsColor = Color.LightGray,
         };
 

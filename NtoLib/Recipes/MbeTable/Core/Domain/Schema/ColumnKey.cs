@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Recipes.MbeTable.Schema;
+﻿namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 public enum ColumnKey
 {
     Action,

@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Composition;
-using NtoLib.Recipes.MbeTable.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
 public class TableColumnFactoryMap
 {
-    private Dictionary<ColumnKey, IColumnFactory> _map;
+    private readonly Dictionary<ColumnKey, IColumnFactory> _map;
     
     public TableColumnFactoryMap(ComboboxDataProvider dataProvider)
     {

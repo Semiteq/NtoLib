@@ -6,8 +6,8 @@
 // using System.Windows.Forms;
 // using NtoLib.Recipes.MbeTable.IO;
 // using NtoLib.Recipes.MbeTable.PLC;
-// using NtoLib.Recipes.MbeTable.Recipe;
-// using NtoLib.Recipes.MbeTable.Recipe.StepManager;
+// using NtoLib.Recipes.MbeTable.RecipeFile;
+// using NtoLib.Recipes.MbeTable.RecipeFile.StepManager;
 // using NtoLib.Recipes.MbeTable.RecipeLines;
 // using NtoLib.Recipes.MbeTable.Table;
 // using NtoLib.Recipes.MbeTable.Table.UI.StatusManager;

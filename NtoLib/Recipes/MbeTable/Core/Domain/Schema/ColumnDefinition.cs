@@ -1,20 +1,29 @@
 ﻿using System;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
 {
-    public class ColumnDefinition
-    {
-        public ColumnKey Key { get; set; } // Unique identifier for the column
-        public int Index { get; set; } // Index in the table schema, used for ordering
-        public string UiName { get; set; } 
-        public PropertyType PropertyType { get; set; }
-        public Type Type { get; set; } // Type of the property, e.g., int, float, string
-        public Type TableCellType { get; set; } // Type of the cell in the DataGridView, e.g., DataGridViewTextBoxCell, DataGridViewComboBoxCell
-        public int Width { get; set; } // -1 for auto width
-        public bool ReadOnly { get; set; }
-        public DataGridViewContentAlignment Alignment { get; set; }
-    }
+    /// <summary>
+    /// Represents the definition of a column in a data grid or table. This record holds metadata
+    /// necessary to construct and configure a column, such as its key, index, display name, type,
+    /// width, and alignment.
+    /// </summary>
+    /// <param name="Key">The unique column key that identifies a column. Represented as an enum.</param>
+    /// <param name="Index">The zero-based position of the column in the table.</param>
+    /// <param name="Code">A string that may serve as an internal identifier or code for the column, for IO purposes.</param>
+    /// <param name="UiName">The user-facing name of the column, Displayed as the column header text in a table.</param>
+    /// <param name="SystemType">The data type associated with the values stored in the column. This defines the kind of data the column accepts.</param>
+    /// <param name="Width">Specifies the width of the column in pixels. -1 for auto</param>
+    /// <param name="ReadOnly">Indicates whether the column is read-only, meaning the column is computed only.</param>
+    /// <param name="Alignment">Defines the alignment of content within each cell in the column, such as Left, Center, or Right alignment.</param>
+    public record ColumnDefinition(
+        ColumnKey Key,
+        int Index,
+        string Code,
+        string UiName,
+        Type SystemType,
+        int Width,
+        bool ReadOnly,
+        DataGridViewContentAlignment Alignment
+    );
 }

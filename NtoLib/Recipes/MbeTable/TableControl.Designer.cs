@@ -10,39 +10,6 @@ namespace NtoLib.Recipes.MbeTable
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                try { _table.DataError -= Table_DataError; } catch { /* ignore */ }
-                UnsubscribeRecipeVmUpdateHandlers();
-
-                if (_tableBehaviorManager != null)
-                {
-                    try { _tableBehaviorManager.Dispose(); } catch { /* ignore */ }
-                    _tableBehaviorManager = null;
-                }
-            }
-            
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-
-            if (_statusManager != null)
-            {
-                _statusManager.StatusUpdated -= OnStatusUpdated;
-                _statusManager.StatusCleared -= OnStatusCleared;
-            }
-
-            if (_table != null)
-            {
-                _table.DataError -= Table_DataError;
-            }
-
-            base.Dispose(disposing);
-        }
-
         private void InitializeComponent()
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();

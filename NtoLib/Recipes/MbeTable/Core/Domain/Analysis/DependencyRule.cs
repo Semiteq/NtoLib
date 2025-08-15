@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Immutable;
-using NtoLib.Recipes.MbeTable.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
 {

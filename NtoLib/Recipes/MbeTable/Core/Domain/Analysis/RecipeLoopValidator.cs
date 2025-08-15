@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
 {
@@ -18,13 +18,12 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
     {
         private readonly ActionManager _actionManager;
         private readonly DebugLogger _debugLogger;
-        private readonly int _maxLoopDepth;
+        private const int MaxLoopDepth = 3;
 
-        public RecipeLoopValidator(ActionManager actionManager, DebugLogger debugLogger, int maxLoopDepth = 3)
+        public RecipeLoopValidator(ActionManager actionManager, DebugLogger debugLogger)
         {
             _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
             _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
-            _maxLoopDepth = maxLoopDepth;
         }
 
         /// <summary>
@@ -54,8 +53,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
 
                 if (actionType == _actionManager.ForLoop)
                 {
-                    if (currentDepth >= _maxLoopDepth)
-                        return new LoopValidationResult($"Exceeded max loop depth of {_maxLoopDepth}.");
+                    if (currentDepth >= MaxLoopDepth)
+                        return new LoopValidationResult($"Exceeded max loop depth of {MaxLoopDepth}.");
 
                     nestingLevels[i] = currentDepth;
                     currentDepth++;

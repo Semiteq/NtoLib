@@ -1,130 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#nullable enable
+
+using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
+using System.Text;
+using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
-/* public interface IRecipeFileReader
- {
 
- }
+/// <summary>
+/// Provides functionality to read recipe files from the filesystem and deserialize them into domain entities.
+/// </summary>
+public class RecipeFileReader : IRecipeFileReader
+{
+    private readonly IRecipeSerializer _serializer;
+    public RecipeFileReader(IRecipeSerializer serializer) => _serializer = serializer;
 
-  public class RecipeFileReader : IRecipeFileReader
- {
-     private const char CsvSeparator = ';';
+    /// <summary>
+    /// Reads a recipe file from the specified path, deserializes its content, and returns a tuple containing the recipe
+    /// and a list of any errors encountered during the operation.
+    /// </summary>
+    /// <param name="path">The file system path to the recipe file to be read.</param>
+    /// <param name="encoding">The text encoding to be used when reading the file. If null, UTF-8 encoding will be applied by default.</param>
+    /// <returns>
+    /// A tuple containing the following:
+    /// - Recipe: The deserialized <see cref="Recipe"/> object, or null if an error occurred.
+    /// - Errors: An immutable list of <see cref="RecipeFileError"/> objects indicating any issues encountered during reading or deserialization.
+    /// </returns>
+    public (Recipe? Recipe, IImmutableList<RecipeFileError> Errors) Read(string path, Encoding? encoding = null)
+    {
+        if (!File.Exists(path))
+        {
+            return (null, ImmutableList<RecipeFileError>.Empty.Add(
+                new RecipeFileError(0, null, $"File not found: {path}")));
+        }
 
-     public List<Step> Read(string FilePath)
-     {
-         if (!File.Exists(FilePath))
-         {
-             throw new Exception($"Файл не найден: {FilePath}");
-         }
-
-         try
-         {
-             var parsedRecipes = ParseFile(FilePath);
-
-             if (!CheckRecipeCycles(parsedRecipes))
-                 throw new Exception($"Ошибка синтаксиса For/EndFor");
-
-             return parsedRecipes;
-         }
-         catch (Exception ex)
-         {
-             throw new Exception($"Ошибка при загрузке файла: {ex.Message}");
-         }
-     }
-
-     private List<Step> ParseFile(string filePath)
-     {
-         var lines = File.ReadAllLines(filePath).Skip(1); // Skip header
-         var result = new List<Step>();
-
-         foreach (var (csvLine, index) in lines.Select((value, i) => (value, i)))
-         {
-             if (string.IsNullOrWhiteSpace(csvLine)) continue;
-
-             try
-             {
-                 result.Add(ParseLine(csvLine));
-             }
-             catch (Exception ex)
-             {
-                 throw new Exception($"Ошибка в строке {index + 1}/{lines.Count()}: {ex.Message}");
-             }
-         }
-
-         return result;
-     }
-
-     private Step ParseLine(string csvLine)
-     {
-         var textLine = csvLine.Split(CsvSeparator)
-             .Select(x => x.Trim())
-             .ToArray();
-
-         if (textLine.Length < TableSchema.Columns.Count)
-         {
-             throw new ArgumentException(
-                 $"Недостаточно колонок. Ожидалось: {TableSchema.Columns.Count}, получено: {textLine.Length}");
-         }
-
-         return RecipeLineFactory.NewLine(
-             ParseCommand(textLine, 0),
-             ParseInt(textLine, 1),
-             ParseFloat(textLine, 2),
-             ParseFloat(textLine, 3),
-             ParseFloat(textLine, 4),
-             ParseFloat(textLine, 5),
-             ParseString(textLine, 7)
-         );
-     }
-
-     private string ParseCommand(string[] textLine, int index)
-     {
-         if (!int.TryParse(textLine[index], out var commandId))
-         {
-             throw new FormatException($"Некорректный формат действия: {textLine[index]}");
-         }
-
-         return ActionManager.GetActionNameById(commandId)
-                ?? throw new ArgumentException($"Неизвестный код действия: {commandId}");
-     }
-
-     private static int ParseInt(string[] textLine, int index) =>
-         string.IsNullOrEmpty(textLine[index]) ? 0 :
-         int.TryParse(textLine[index], out var result) ? result :
-         throw new FormatException($"Некорректное значение поля '{Params.ColumnNames[index]}': {textLine}");
-
-     private static float ParseFloat(string[] textLine, int index) =>
-         string.IsNullOrEmpty(textLine[index]) ? 0f :
-         float.TryParse(textLine[index], out var result) ? result :
-         throw new FormatException($"Некорректное значение поля '{Params.ColumnNames[index]}': {textLine}");
-
-     private static string ParseString(string[] textLine, int index) =>
-         textLine.Length > index ? textLine[index] : string.Empty;
-
-     private bool CheckRecipeCycles(List<Step> recipe)
-     {
-         var cycleDepth = 0;
-
-         foreach (var line in recipe)
-         {
-             if (cycleDepth > Params.MaxLoopCount)
-                 return false;
-
-             cycleDepth += line switch
-             {
-                 ForLoop => 1,
-                 EndForLoop when cycleDepth > 0 => -1,
-                 EndForLoop => throw new InvalidOperationException("Найден EndFor без соответствующего For"),
-                 _ => 0
-             };
-
-             line.NestingLevel = cycleDepth;
-         }
-
-         return cycleDepth == 0;
-     }
- }
-*/
+        using var stream = File.OpenRead(path);
+        using var reader = new StreamReader(stream, encoding ?? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true, throwOnInvalidBytes: true));
+        return _serializer.Deserialize(reader);
+    }
+}

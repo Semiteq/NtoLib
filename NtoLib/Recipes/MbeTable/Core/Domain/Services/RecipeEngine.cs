@@ -7,9 +7,10 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
+using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
-using NtoLib.Recipes.MbeTable.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
 {
@@ -23,15 +24,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         private readonly ActionManager _actionManager;
         private readonly StepFactory _stepFactory;
         private readonly IActionTargetProvider _actionTargetProvider;
-        private readonly IReadOnlyDictionary<int, Func<int, Step>> _actionToFactoryMap;
         private readonly StepPropertyCalculator _stepPropertyCalculator;
         private readonly IImmutableSet<int> _smoothActionIds;
         private readonly DebugLogger _debugLogger;
 
-        public RecipeEngine(ActionManager actionManager, 
+        public RecipeEngine(ActionManager actionManager,
             StepFactory stepFactory,
-            IActionTargetProvider actionTargetProvider, 
-            IReadOnlyDictionary<int, Func<int, Step>> actionToFactoryMap,
+            IActionTargetProvider actionTargetProvider,
             StepPropertyCalculator stepPropertyCalculator,
             DebugLogger debugLogger)
         {
@@ -39,8 +38,6 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
             _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
             _actionTargetProvider =
                 actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));
-            _actionToFactoryMap = actionToFactoryMap ??
-                                  throw new ArgumentNullException(nameof(actionToFactoryMap));
             _stepPropertyCalculator = stepPropertyCalculator ??
                                       throw new ArgumentNullException(nameof(stepPropertyCalculator));
 
@@ -54,9 +51,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         public Recipe AddDefaultStep(Recipe currentRecipe, int rowIndex)
         {
             _debugLogger.Log("Step added");
-            
+
             var minimalShutterId = _actionTargetProvider.GetMinimalShutterId();
-            var newStep = _stepFactory.CreateOpenStep(minimalShutterId);
+            var newStep = _stepFactory.For(_actionManager.Open.Id).WithOptionalTarget(minimalShutterId).Build();
 
             return new Recipe(Steps: currentRecipe.Steps.Insert(rowIndex, newStep));
         }
@@ -74,17 +71,10 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         {
             if (rowIndex < 0 || rowIndex >= currentRecipe.Steps.Count) return currentRecipe;
 
-            if (!_actionToFactoryMap.TryGetValue(newActionId, out var creationFunc))
-            {
-                var ex = new InvalidOperationException($"No step creation function found for action ID {newActionId}. Check application startup configuration.");
-                _debugLogger.LogException(ex);
-                throw ex;
-            }
-
             var actionType = _actionManager.GetActionTypeById(newActionId);
             var targetId = GetDefaultTargetForActionType(actionType);
 
-            var newDefaultStep = creationFunc(targetId);
+            var newDefaultStep = _stepFactory.For(newActionId).WithOptionalTarget(targetId).Build();
 
             var newSteps = currentRecipe.Steps.SetItem(rowIndex, newDefaultStep);
             return new Recipe(Steps: newSteps);
