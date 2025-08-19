@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using CsvHelper;
 using CsvHelper.Configuration;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 
@@ -11,10 +12,10 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 /// A factory class responsible for creating instances of <see cref="CsvReader"/> and <see cref="CsvWriter"/>
 /// with predefined configurations for handling CSV data.
 /// </summary>
-public sealed class CsvHelperFactory
+public sealed class CsvHelperFactory : ICsvHelperFactory
 {
     public char Separator { get; }
-    private CultureInfo Culture { get; init; }
+    public CultureInfo Culture { get; init; }
     
     public CsvHelperFactory(CultureInfo? culture = null, char separator = ';')
     {

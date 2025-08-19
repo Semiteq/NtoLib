@@ -3,5 +3,6 @@
 public enum StatusMessage
 {
     Error,
+    Success,
     Info
 }

@@ -1,4 +1,5 @@
 ﻿#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ public class DebugLogger : ILogger
 #endif
     }
 
-    private static string SerializeContext(object contextData)
+    private string SerializeContext(object contextData)
     {
         try
         {
@@ -56,7 +57,7 @@ public class DebugLogger : ILogger
         }
     }
 
-    private static string SerializeObject(object? obj, int depth)
+    private string SerializeObject(object? obj, int depth)
     {
         if (depth > 3) return "..."; // Prevent infinite recursion
         if (obj == null) return "null";

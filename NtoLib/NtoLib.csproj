@@ -52,6 +52,9 @@
     <Reference Include="FB">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\FB.dll</HintPath>
     </Reference>
+    <Reference Include="FluentResults, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentResults.4.0.0\lib\netstandard2.0\FluentResults.dll</HintPath>
+    </Reference>
     <Reference Include="InSAT.Library">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\InSAT.Library.dll</HintPath>
     </Reference>
@@ -69,6 +72,9 @@
     </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="OneOf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -154,6 +160,7 @@
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
     <Compile Include="Recipes\MbeTable\Composition\ComboboxDataProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\IComboboxDataProvider.cs" />
     <Compile Include="Recipes\MbeTable\Composition\ServiceProvider.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\StepViewModel.cs" />
@@ -163,6 +170,8 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\DeployDuration.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\DependencyRule.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\DependencyRulesMap.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\IRecipeLoopValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\IRecipeTimeCalculator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\LoopValidationResult.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeLoopValidator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeTimeAnalysis.cs" />
@@ -171,6 +180,7 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\StepPropertyCalculator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Entities\Recipe.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Entities\Step.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\IRecipeEngine.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Contracts\IPropertyTypeDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\BoolDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\EnumDefinition.cs" />
@@ -188,49 +198,65 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyDefinitionRegistry.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyType.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\StepProperty.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\RecipeEngine.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Schema\ColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Schema\ColumnKey.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Schema\TableSchema.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Services\IRecipeTimer.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeEngine.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeTimer.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\CloseAllDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\CloseDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\EndForLoopDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\ForLoopDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\NitrogenRunSourceDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\NitrogenSourceCloseDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\NitrogenSourceVentDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\OpenDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\OpenTimeDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\PauseDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\PowerDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\PowerSmoothDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\PowerWaitDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\TemperatureDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\TemperatureSmoothDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\TemperatureWaitDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Defenitions\WaitDefaults.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepCreator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseAllDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\EndForLoopDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\ForLoopDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\IStepDefaultsProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\NitrogenRunSourceDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\NitrogenSourceCloseDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\NitrogenSourceVentDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\OpenDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\OpenTimeDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\PauseDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\PowerDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\PowerSmoothDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\PowerWaitDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\TemperatureDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\TemperatureSmoothDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\TemperatureWaitDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\WaitDefaults.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepBuilder.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepFactory.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IModbusTransport.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcProtocol.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcRecipeSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\IRecipePlcSender.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcProtocolV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcRecipeSerializerV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Services\RecipePlcSender.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Transport\ModbusTransportV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\IRecipeComparator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\PlcCapacityCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\RecipeComparatorV1.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Logging\DegugLogger.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Logging\ILogger.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\IRecipeFileReader.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\IRecipeFileWriter.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\IRecipeSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\IActionsFingerprintUtil.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\ICsvHeaderBinder.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\ICsvHelperFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\ICsvStepMapper.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\ISchemaFingerprintUtil.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\CsvHeaderBinder.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\CsvHelperFactory.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\Fingerprints\ActionsFingerprintUtil.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\Fingerprints\SchemaFingerprintUtil.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\Hasher\BodyIntegrityHasher.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\CsvStepMapper.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeCsvSerializerV1.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFileReader.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFileWriter.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\IRecipeFileReader.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\IRecipeFileWriter.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\IRecipeSerializer.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeFileError.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeFileMetadata.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeFileMetadataSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeCsvSerializerV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeFileReader.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeFileWriter.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Validation\TargetAvailabilityValidator.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\ActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\CommunicationSettings.cs" />
@@ -240,15 +266,9 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPlcStateMonitor.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcLineInfo.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcStateMonitor.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IModbusCommunicator.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IPlcRecipeMapper.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IRecipeComparator.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\IRecipePlcService.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\ModbusCommunicator.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\PlcCapacityCalculator.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\PlcRecipeMapper.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\RecipeComparator.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\PlcCommunication\RecipePlcServiceV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\WordOrder.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Services\IRecipeTimer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Services\RecipeTimer.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\IStatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
@@ -278,6 +298,7 @@
       <DependentUpon>TableControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Spectrometer\SpectrometerFB.cs" />
+    <Compile Include="Utils\ButtonOrientation.cs" />
     <Compile Include="Utils\ReadResult.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
@@ -322,7 +343,6 @@
     <Compile Include="Render\Valves\ValveBaseRenderer.cs" />
     <Compile Include="Render\Valves\SlideGateRenderer.cs" />
     <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
-    <Compile Include="ButtonOrientation.cs" />
     <Compile Include="Utils\SymbolType.cs" />
     <Compile Include="Utils\TextBoxFloat.cs">
       <SubType>Component</SubType>
@@ -442,7 +462,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll" "$(TargetDir)System.Collections.Immutable.dll" "$(TargetDir)CsvHelper.dll" 
+    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll" "$(TargetDir)System.Collections.Immutable.dll" "$(TargetDir)CsvHelper.dll" "$(TargetDir)FluentResults.dll" "$(TargetDir)Microsoft.Extensions.Logging.Abstractions.dll"
 chcp 437 &amp;&amp; xcopy "$(TargetPath)" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(TargetDir)NtoLib.pdb" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I</PostBuildEvent>

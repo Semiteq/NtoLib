@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 
@@ -11,7 +12,7 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 /// A utility class to bind CSV file headers to a specified <see cref="TableSchema"/>,
 /// enabling validation and mapping of column headers to domain-specific column definitions.
 /// </summary>
-public sealed class CsvHeaderBinder
+public sealed class CsvHeaderBinder : ICsvHeaderBinder
 {
     public sealed record Binding(
         IReadOnlyList<string> FileTokens,

@@ -2,20 +2,26 @@
 using System.Drawing;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
-using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
+using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
+using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Contracts;
+using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Protocol;
+using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Services;
+using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Transport;
+using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Utils;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Fingerprints;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
-using NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.State;
@@ -43,7 +49,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public TableSchema TableSchema { get; private set; }
         public PropertyDefinitionRegistry PropertyDefinitionRegistry { get; private set; }
         public DependencyRulesMap DependencyRulesMap { get; private set; }
-        public ComboboxDataProvider ComboboxDataProvider { get; private set; }
+        public IComboboxDataProvider ComboboxDataProvider { get; private set; }
 
         // --- Factories & Maps ---
         public StepFactory StepFactory { get; private set; }
@@ -53,7 +59,8 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public StepPropertyCalculator StepPropertyCalculator { get; private set; }
         public RecipeLoopValidator RecipeLoopValidator { get; private set; }
         public RecipeTimeCalculator RecipeTimeCalculator { get; private set; }
-        public RecipeEngine RecipeEngine { get; private set; }
+        public IRecipeEngine RecipeEngine { get; private set; }
+        public StepCalculationLogic StepCalculationLogic { get; private set; }
 
         // --- ViewModels ---
         public RecipeViewModel RecipeViewModel { get; private set; }
@@ -62,20 +69,21 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public RecipeFileReader RecipeFileReader { get; private set; }
         public RecipeFileWriter RecipeFileWriter { get; private set; }
         public RecipeCsvSerializerV1 RecipeCsvSerializerV1 { get; private set; }
-        public CsvHelperFactory CsvHelperFactory { get; private set; }
-        public CsvStepMapper CsvStepMapper { get; private set; }
-        public CsvHeaderBinder CsvHeaderBinder { get; private set; }
+        public ICsvHelperFactory CsvHelperFactory { get; private set; }
+        public ICsvStepMapper CsvStepMapper { get; private set; }
+        public ICsvHeaderBinder CsvHeaderBinder { get; private set; }
         public RecipeFileMetadataSerializer RecipeFileMetadataSerializer { get; private set; }
         public SchemaFingerprintUtil SchemaFingerprintUtil { get; private set; }
-        public ActionsFingerprintUtil ActionsFingerprintUtil { get; private set; }
+        public IActionsFingerprintUtil ActionsFingerprintUtil { get; private set; }
         public TargetAvailabilityValidator TargetAvailabilityValidator { get; private set; }
         
         // --- Modbus ---
-        public IRecipePlcService RecipePlcServiceV1 { get; private set; }
-        public IPlcRecipeMapper PlcRecipeMapper { get; private set; }
-        public IModbusCommunicator ModbusCommunicatorV1 { get; private set; }
+        public IPlcRecipeSerializer PlcRecipeSerializer { get; private set; }
         public IRecipeComparator RecipeComparator { get; private set; }
+        public IRecipePlcSender RecipePlcSender { get; private set; }
         public PlcCapacityCalculator PlcCapacityCalculator { get; private set; }
+        public IPlcProtocol PlcProtocol { get; private set; }
+        public IModbusTransport ModbusTransport { get; private set; }
 
         // --- UI Components ---
         public OpenFileDialog OpenFileDialog { get; private set; }
@@ -91,7 +99,8 @@ namespace NtoLib.Recipes.MbeTable.Composition
             TableSchema = new TableSchema();
             ActionManager = new ActionManager();
             PropertyDefinitionRegistry = new PropertyDefinitionRegistry();
-            DependencyRulesMap = new DependencyRulesMap();
+            StepCalculationLogic = new StepCalculationLogic();
+            DependencyRulesMap = new DependencyRulesMap(StepCalculationLogic);
             ActionTargetProvider = new ActionTargetProvider();
             PlcStateMonitor = new PlcStateMonitor();
             StatusManager = new StatusManager();
@@ -148,26 +157,33 @@ namespace NtoLib.Recipes.MbeTable.Composition
             
             // --- Modbus ---
             PlcCapacityCalculator = new PlcCapacityCalculator();
-            RecipeComparator = new RecipeComparator(DebugLogger);
-            PlcRecipeMapper = new PlcRecipeMapper(StepFactory, ActionManager);
-            ModbusCommunicatorV1 = new ModbusCommunicatorV1(PlcRecipeMapper, DebugLogger);
-            RecipePlcServiceV1 = new RecipePlcServiceV1(
-                ModbusCommunicatorV1,
-                RecipeComparator,
-                PlcCapacityCalculator,
-                DebugLogger);
+            
+            ModbusTransport = new ModbusTransportV1(CommunicationSettingsProvider, DebugLogger);
+            PlcProtocol = new PlcProtocolV1(ModbusTransport, CommunicationSettingsProvider, DebugLogger);
+            PlcRecipeSerializer = new PlcRecipeSerializerV1(StepFactory, ActionManager, CommunicationSettingsProvider);
+            RecipeComparator = new RecipeComparatorV1(DebugLogger, CommunicationSettingsProvider);
 
-            // --- ViewModel ---
+            RecipePlcSender = new RecipePlcSender(
+                PlcProtocol, 
+                PlcRecipeSerializer, 
+                RecipeComparator,
+                PlcCapacityCalculator, 
+                CommunicationSettingsProvider, 
+                DebugLogger
+            );
+            
+            // --- ViewModels ---
             RecipeViewModel = new RecipeViewModel(
                 RecipeEngine,
                 RecipeFileWriter,
                 RecipeFileReader,
-                RecipePlcServiceV1,
+                RecipePlcSender,
                 RecipeLoopValidator,
                 RecipeTimeCalculator,
                 ComboboxDataProvider,
                 StatusManager,
-                DebugLogger);
+                DebugLogger
+            );
 
             // --- UI Components ---
             InitializeUiComponents();

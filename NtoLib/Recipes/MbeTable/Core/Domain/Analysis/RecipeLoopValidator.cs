@@ -14,7 +14,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
     /// Provides validation and analysis of loop structures within a recipe.
     /// This is a stateless service that operates on immutable recipe data.
     /// </summary>
-    public class RecipeLoopValidator
+    public class RecipeLoopValidator : IRecipeLoopValidator
     {
         private readonly ActionManager _actionManager;
         private readonly DebugLogger _debugLogger;

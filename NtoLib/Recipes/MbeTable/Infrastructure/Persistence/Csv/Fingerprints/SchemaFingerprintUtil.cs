@@ -2,10 +2,11 @@
 using System.Security.Cryptography;
 using System.Text;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Fingerprints;
 
-public class SchemaFingerprintUtil
+public class SchemaFingerprintUtil : ISchemaFingerprintUtil
 {
     public string BuildNormalized(TableSchema schema)
     {

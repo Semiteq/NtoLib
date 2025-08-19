@@ -120,7 +120,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
             PropertyRegistry = propertyRegistry;
         }
 
-        private static OneOf<bool, int, float, string> CreateUnionValue(object value)
+        private OneOf<bool, int, float, string> CreateUnionValue(object value)
         {
             return value switch
             {

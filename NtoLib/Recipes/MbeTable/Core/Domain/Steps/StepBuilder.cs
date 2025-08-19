@@ -8,20 +8,21 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
 {
     /// <summary>
     /// Provides functionality for building and configuring step instances for usage in the domain context.
     /// </summary>
-    public sealed class StepBuilder
+    public sealed class StepBuilder : IStepBuilder
     {
         private readonly PropertyDefinitionRegistry _registry;
         private readonly TableSchema _schema;
         private readonly Dictionary<ColumnKey, StepProperty?> _properties;
         private DeployDuration _deployDuration;
-
-        internal StepBuilder(int actionId, IStepDefaultsProvider defaultsProvider, PropertyDefinitionRegistry registry, TableSchema schema)
+        
+        public StepBuilder(int actionId, IStepDefaultsProvider defaultsProvider, PropertyDefinitionRegistry registry, TableSchema schema)
         {
             _registry = registry ?? throw new ArgumentNullException(nameof(registry));
             _properties = defaultsProvider.GetDefaultParameters() ?? throw new ArgumentNullException(nameof(defaultsProvider));
@@ -31,7 +32,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
             InitializeStep();
         }
 
-        private void InitializeStep()
+        public void InitializeStep()
         {
             var schemaKeys = _schema.GetColumns()
                 .Select(c => c.Key).ToArray();
@@ -45,7 +46,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
             }
         }
 
-        private void SetAction(int actionId)
+        public void SetAction(int actionId)
         {
             _properties[ColumnKey.Action] = new StepProperty(actionId, PropertyType.Enum, _registry);
         }
@@ -107,13 +108,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
             return new Step(_properties.ToImmutableDictionary(), _deployDuration);
         }
 
-        private StepBuilder WithProperty(ColumnKey key, object value, PropertyType type)
+        public StepBuilder WithProperty(ColumnKey key, object value, PropertyType type)
         {
             _properties[key] = new StepProperty(value, type, _registry);
             return this;
         }
 
-        private StepBuilder WithOptionalDynamic(ColumnKey key, object value)
+        public StepBuilder WithOptionalDynamic(ColumnKey key, object value)
         {
             if (!_properties.TryGetValue(key, out var existingProperty) || existingProperty is null)
             {

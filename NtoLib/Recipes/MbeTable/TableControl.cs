@@ -33,15 +33,15 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private ColorScheme _colorScheme;
         [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
         [NonSerialized] private IActionTargetProvider _actionTargetProvider;
-        [NonSerialized] private ComboboxDataProvider _comboboxDataProvider;
+        [NonSerialized] private IComboboxDataProvider _comboboxDataProvider;
         [NonSerialized] private TableColumnFactoryMap _tableColumnFactoryMap;
         [NonSerialized] private TableCellStateManager _tableCellStateManager;
         [NonSerialized] private TableBehaviorManager _tableBehaviorManager;
         [NonSerialized] private DebugLogger _debugLogger;
 
-        // Keep references to handlers to properly unsubscribe.
         [NonSerialized] private Action _onVmUpdateStartHandler;
         [NonSerialized] private Action _onVmUpdateEndHandler;
+        [NonSerialized] private Action<bool> _onForbidWrite;
 
         [NonSerialized] private Color _controlBgColor = Color.White;
         [NonSerialized] private Color _tableBgColor = Color.White;
@@ -408,8 +408,14 @@ namespace NtoLib.Recipes.MbeTable
             // Subscribe ViewModel update hooks with stable delegates to allow unsubscription
             _onVmUpdateStartHandler = () => _table.SuspendLayout();
             _onVmUpdateEndHandler = () => _table.ResumeLayout();
+            
             _recipeViewModel.OnUpdateStart += _onVmUpdateStartHandler;
             _recipeViewModel.OnUpdateEnd += _onVmUpdateEndHandler;
+            
+            _onForbidWrite = (value) => _buttonWrite.Enabled = value;
+            
+            _recipeViewModel.TogglePermissionToSendRecipe += _onForbidWrite;
+            
             _statusManager.StatusUpdated += OnStatusUpdated;
             _statusManager.StatusCleared += OnStatusCleared;
             
@@ -533,7 +539,13 @@ namespace NtoLib.Recipes.MbeTable
         private void OnStatusUpdated(string message, StatusMessage statusMessage)
         {
             _labelStatus.Text = message;
-            _labelStatus.BackColor = statusMessage == StatusMessage.Error ? Color.OrangeRed : _controlBgColor;
+            _labelStatus.BackColor = statusMessage switch
+            {
+                StatusMessage.Error => Color.OrangeRed,
+                StatusMessage.Success => Color.DarkSeaGreen,
+                StatusMessage.Info => Color.AliceBlue,
+                _ => _controlBgColor,
+            };
         }
 
         private void OnStatusCleared()
@@ -624,6 +636,28 @@ namespace NtoLib.Recipes.MbeTable
             catch (Exception ex)
             {
                 _statusManager?.WriteStatusMessage($"Ошибка сохранения файла: {ex.Message}", StatusMessage.Error);
+            }
+        }
+
+        private async void ClickButton_Send(object sender, EventArgs e)
+        {
+            if (FBConnector.DesignMode || _sp == null) return;
+
+            try
+            {
+                // Disable button to prevent multiple clicks
+                _buttonWrite.Enabled = false;
+        
+                await _recipeViewModel.WriteRecipeToPlc();
+            }
+            catch (Exception ex)
+            {
+                _statusManager?.WriteStatusMessage($"Ошибка отправки рецепта: {ex.Message}", StatusMessage.Error);
+                _debugLogger?.LogException(ex);
+            }
+            finally
+            {
+                _buttonWrite.Enabled = true;
             }
         }
 

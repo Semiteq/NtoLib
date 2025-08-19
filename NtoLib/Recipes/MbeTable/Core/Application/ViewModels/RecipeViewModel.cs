@@ -4,17 +4,18 @@ using System;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using InSAT.Library.Linq;
 using NtoLib.Recipes.MbeTable.Composition;
+using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
-using NtoLib.Recipes.MbeTable.Core.Domain.Services;
+using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
-using NtoLib.Recipes.MbeTable.Infrastructure.PlcCommunication;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
@@ -27,46 +28,47 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
     {
         public BindingList<StepViewModel> ViewModels { get; } = new();
 
-        private readonly RecipeEngine _engine;
-        private readonly RecipeLoopValidator _loopValidator;
-        private readonly RecipeTimeCalculator _timeCalculator;
-        private readonly ComboboxDataProvider _dataProvider;
+        private readonly IRecipeEngine _recipeEngine;
+        private readonly RecipeLoopValidator _recipeLoopValidator;
+        private readonly RecipeTimeCalculator _recipeTimeCalculator;
+        private readonly IComboboxDataProvider _comboboxDataProvider;
         private readonly DebugLogger _debugLogger;
         private readonly IStatusManager _statusManager;
         private readonly RecipeFileWriter _recipeFileWriter;
         private readonly RecipeFileReader _recipeFileReader;
-
+        private readonly IRecipePlcSender _recipePlcSender;
+        
         private Recipe _recipe;
 
         private LoopValidationResult _loopResult = new();
         private RecipeTimeAnalysis _timeResult = new();
-        private readonly IRecipePlcService _recipePlcService;
+        
 
         public event Action? OnUpdateStart;
         public event Action? OnUpdateEnd;
-
+        public event Action<bool>? TogglePermissionToSendRecipe;
         public RecipeViewModel(
-            RecipeEngine engine,
+            IRecipeEngine recipeEngine,
             RecipeFileWriter recipeFileWriter,
             RecipeFileReader recipeFileReader,
-            IRecipePlcService recipePlcService,
-            RecipeLoopValidator loopValidator,
-            RecipeTimeCalculator timeCalculator,
-            ComboboxDataProvider dataProvider,
+            IRecipePlcSender recipePlcSender,
+            RecipeLoopValidator recipeLoopValidator,
+            RecipeTimeCalculator recipeTimeCalculator,
+            IComboboxDataProvider comboboxDataProvider,
             IStatusManager statusManager,
             DebugLogger debugLogger)
         {
-            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            _recipeEngine = recipeEngine ?? throw new ArgumentNullException(nameof(recipeEngine));
             _recipeFileWriter = recipeFileWriter ?? throw new ArgumentNullException(nameof(recipeFileWriter));
             _recipeFileReader = recipeFileReader ?? throw new ArgumentNullException(nameof(recipeFileReader));
-            _recipePlcService = recipePlcService ?? throw new ArgumentNullException(nameof(recipePlcService));;
-            _loopValidator = loopValidator ?? throw new ArgumentNullException(nameof(loopValidator));
-            _timeCalculator = timeCalculator ?? throw new ArgumentNullException(nameof(timeCalculator));
-            _dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+            _recipePlcSender = recipePlcSender ?? throw new ArgumentNullException(nameof(recipePlcSender));
+            _recipeLoopValidator = recipeLoopValidator ?? throw new ArgumentNullException(nameof(recipeLoopValidator));
+            _recipeTimeCalculator = recipeTimeCalculator ?? throw new ArgumentNullException(nameof(recipeTimeCalculator));
+            _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
             _statusManager = statusManager ?? throw new ArgumentNullException(nameof(statusManager));;
             _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));;
 
-            _recipe = _engine.CreateEmptyRecipe();
+            _recipe = _recipeEngine.CreateEmptyRecipe();
 
             UpdateRecipeStateAndViewModels(_recipe);
         }
@@ -78,7 +80,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             rowIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
 
             _debugLogger.Log($"Adding new step at index {rowIndex}");
-            var newRecipe = _engine.AddDefaultStep(_recipe, rowIndex);
+            var newRecipe = _recipeEngine.AddDefaultStep(_recipe, rowIndex);
             _debugLogger.Log($"Current step quantity {newRecipe.Steps.Count}");
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Add, rowIndex));
         }
@@ -88,7 +90,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             if (rowIndex < 0 || rowIndex >= ViewModels.Count) return;
 
             _debugLogger.Log($"Removing step at index {rowIndex}");
-            var newRecipe = _engine.RemoveStep(_recipe, rowIndex);
+            var newRecipe = _recipeEngine.RemoveStep(_recipe, rowIndex);
             _debugLogger.Log($"Current step quantity {newRecipe.Steps.Count}");
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Remove, rowIndex));
         }
@@ -135,9 +137,16 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             _statusManager.WriteStatusMessage($"Файл сохранен: {filePath}", StatusMessage.Info);
         }
 
-        public void WriteRecipeToPlc()
+        public async Task WriteRecipeToPlc()
         {
             _debugLogger.Log("Writing recipe to PLC");
+            var plcSendResult = await _recipePlcSender.UploadAndVerifyAsync(_recipe);
+            if (plcSendResult.IsFailed)
+            {
+                var errorMessages = string.Join(Environment.NewLine, plcSendResult.Errors.Select(e => e.Message));
+                _statusManager.WriteStatusMessage(errorMessages, StatusMessage.Error);
+            }
+            _statusManager.WriteStatusMessage("Рецепт передан в контроллер без ошибок.", StatusMessage.Info);
         }
 
         #endregion
@@ -158,12 +167,12 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
             if (key == ColumnKey.Action && value is int newActionId)
             {
-                newRecipe = _engine.ReplaceStepWithNewDefault(_recipe, rowIndex, newActionId);
+                newRecipe = _recipeEngine.ReplaceStepWithNewDefault(_recipe, rowIndex, newActionId);
                 error = null;
             }
             else
             {
-                (newRecipe, error) = _engine.UpdateStepProperty(_recipe, rowIndex, key, value);
+                (newRecipe, error) = _recipeEngine.UpdateStepProperty(_recipe, rowIndex, key, value);
             }
 
             if (error != null)
@@ -192,13 +201,19 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             try
             {
                 _recipe = newRecipe;
-                _loopResult = _loopValidator.Validate(_recipe);
-                _timeResult = _timeCalculator.Calculate(_recipe, _loopResult);
+                _loopResult = _recipeLoopValidator.Validate(_recipe);
+                _timeResult = _recipeTimeCalculator.Calculate(_recipe, _loopResult);
 
                 if (!_loopResult.IsValid)
+                {
+                    TogglePermissionToSendRecipe?.Invoke(false);
                     _statusManager.WriteStatusMessage(_loopResult.ErrorMessage, StatusMessage.Error);
+                }
                 else
+                {
+                    TogglePermissionToSendRecipe?.Invoke(true);
                     _statusManager.ClearStatusMessage();
+                }
 
                 if (change == null || ViewModels.Count != _recipe.Steps.Count && change.Type != ChangeType.Add)
                 {
@@ -289,7 +304,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 throw ex;
             }
 
-            var availableTargets = _dataProvider.GetActionTargets(actionId.Value);
+            var availableTargets = _comboboxDataProvider.GetActionTargets(actionId.Value);
 
             return new StepViewModel(
                 step,

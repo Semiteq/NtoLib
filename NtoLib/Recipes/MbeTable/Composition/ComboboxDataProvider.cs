@@ -2,14 +2,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable.Composition;
 
-public class ComboboxDataProvider
+public class ComboboxDataProvider : IComboboxDataProvider
 {
     private readonly ActionManager _actionManager;
     private readonly IActionTargetProvider _actionTargetProvider;

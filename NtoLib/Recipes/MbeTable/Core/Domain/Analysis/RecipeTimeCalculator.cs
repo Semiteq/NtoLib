@@ -9,7 +9,7 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 
-public class RecipeTimeCalculator
+public class RecipeTimeCalculator : IRecipeTimeCalculator
 {
     private readonly ActionManager _actionManager;
 

@@ -2,10 +2,11 @@
 using System.Security.Cryptography;
 using System.Text;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Fingerprints;
 
-public class ActionsFingerprintUtil
+public class ActionsFingerprintUtil : IActionsFingerprintUtil
 {
     public string Compute(ActionManager actionManager)
     {

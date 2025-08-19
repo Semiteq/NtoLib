@@ -289,12 +289,15 @@ namespace NtoLib.Recipes.MbeTable
             FirePinSpaceChanged();
         }
         
-        private void CleanupServices()
+        public bool IsRecipeActive()
         {
-            _plcStateMonitor = null;
-            _actionTargetProvider = null;
-            _serviceProvider = null; 
+            if (GetPinQuality(IdRecipeActive) is OpcQuality.Good)
+                return GetPinValue<bool>(IdRecipeActive);
+            // For safety reason if failed to read, then consider the recipe is running
+            return true;
         }
+        
+        public int GetLineNumber() => GetPinQuality(IdRecipeActive) is OpcQuality.Good ? GetPinValue<int>(IdActualLineNumber) : -1;
 
         public Dictionary<int, string> GetShutterNames()
         {
@@ -331,6 +334,13 @@ namespace NtoLib.Recipes.MbeTable
             }
 
             return pinGroup;
+        }
+        
+        private void CleanupServices()
+        {
+            _plcStateMonitor = null;
+            _actionTargetProvider = null;
+            _serviceProvider = null; 
         }
     }
 }

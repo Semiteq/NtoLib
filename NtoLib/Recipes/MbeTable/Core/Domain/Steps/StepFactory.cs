@@ -2,15 +2,15 @@
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
-using NtoLib.Recipes.MbeTable.Core.Domain.Steps.Defenitions;
+using NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
 {
-    public class StepFactory
+    public sealed class StepFactory : IStepFactory
     {
         private readonly IReadOnlyDictionary<int, IStepDefaultsProvider> _defaultsProviders;
         private readonly PropertyDefinitionRegistry _registry;
-        private TableSchema _tableSchema;
+        private readonly TableSchema _tableSchema;
 
         public StepFactory(ActionManager actionManager, PropertyDefinitionRegistry registry, TableSchema tableSchema)
         {
@@ -38,7 +38,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
             };
         }
 
-        public StepBuilder For(int actionId)
+        public StepBuilder ForAction(int actionId)
         {
             if (!_defaultsProviders.TryGetValue(actionId, out var provider))
             {

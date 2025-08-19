@@ -1,26 +1,35 @@
 ﻿namespace NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager
 {
-    public class CommunicationSettings
+    public record CommunicationSettings
     {
-        public uint FloatBaseAddr;
-        public uint IntBaseAddr;
-        public uint BoolBaseAddr;
+        public bool IsRecipeActive;
+        public int LineNumber;
 
-        public uint ControlBaseAddr;
-        
-        public const int FloatColumNum = 2;
-        public const int IntColumNum = 4;
-        public const int BoolColumNum = 0;
+        public int FloatBaseAddr;
+        public int IntBaseAddr;
+        public int BoolBaseAddr;
 
-        public uint FloatAreaSize;
-        public uint IntAreaSize;
-        public uint BoolAreaSize;
+        public int ControlBaseAddr;
 
-        public uint Ip1;
-        public uint Ip2;
-        public uint Ip3;
-        public uint Ip4;
-        
-        public uint Port;
+        public int IntColumNum = 2;
+        public int FloatColumNum = 4;
+        public int BoolColumNum = 0;
+
+        public int FloatAreaSize;
+        public int IntAreaSize;
+        public int BoolAreaSize;
+
+        public int Ip1;
+        public int Ip2;
+        public int Ip3;
+        public int Ip4;
+
+        public int Port;
+
+        public WordOrder WordOrder;
+
+        public int VerifyDelayMs = 200;
+
+        public float Epsilon = 1e-2f;
     }
 }

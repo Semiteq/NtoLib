@@ -72,6 +72,7 @@ namespace NtoLib.Recipes.MbeTable
             this._buttonWrite.TabIndex = 15;
             this._buttonWrite.Text = "write";
             this._buttonWrite.UseVisualStyleBackColor = true;
+            this._buttonWrite.Click += new System.EventHandler(this.ClickButton_Send);
             // 
             // _buttonOpen
             // 

@@ -10,9 +10,9 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
 {
     public class ActionComboBoxColumnFactory : IColumnFactory
     {
-        private readonly ComboboxDataProvider _dataProvider;
+        private readonly IComboboxDataProvider _dataProvider;
 
-        public ActionComboBoxColumnFactory(ComboboxDataProvider dataProvider)
+        public ActionComboBoxColumnFactory(IComboboxDataProvider dataProvider)
         {
             _dataProvider = dataProvider;
         }

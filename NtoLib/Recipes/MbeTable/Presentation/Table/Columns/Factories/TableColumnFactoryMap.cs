@@ -8,7 +8,7 @@ public class TableColumnFactoryMap
 {
     private readonly Dictionary<ColumnKey, IColumnFactory> _map;
     
-    public TableColumnFactoryMap(ComboboxDataProvider dataProvider)
+    public TableColumnFactoryMap(IComboboxDataProvider dataProvider)
     {
         _map = new Dictionary<ColumnKey, IColumnFactory>()
         {

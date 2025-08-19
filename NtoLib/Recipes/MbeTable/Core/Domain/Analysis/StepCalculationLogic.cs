@@ -6,13 +6,13 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
 {
     /// <summary>
-    /// Contains pure, static functions for business logic calculations.
+    /// Contains functions for business logic calculations.
     /// These methods are deterministic and have no side effects.
     /// They do not handle data extraction or validation, only the core math.
     /// </summary>
-    public static class StepCalculationLogic
+    public class StepCalculationLogic
     {
-        public static (float? Value, CalculationError? Error) CalculateDurationFromSpeed(float speed, float initialValue, float setpoint)
+        public (float? Value, CalculationError? Error) CalculateDurationFromSpeed(float speed, float initialValue, float setpoint)
         {
             if (speed <= 1e-6f)
             {
@@ -23,7 +23,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
             return (duration, null);
         }
 
-        public static (float? Value, CalculationError? Error) CalculateSpeedFromDuration(float duration, float initialValue, float setpoint)
+        public (float? Value, CalculationError? Error) CalculateSpeedFromDuration(float duration, float initialValue, float setpoint)
         {
             if (duration <= 1e-6f)
             {
