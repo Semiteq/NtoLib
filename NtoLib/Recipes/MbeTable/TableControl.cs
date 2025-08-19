@@ -408,17 +408,17 @@ namespace NtoLib.Recipes.MbeTable
             // Subscribe ViewModel update hooks with stable delegates to allow unsubscription
             _onVmUpdateStartHandler = () => _table.SuspendLayout();
             _onVmUpdateEndHandler = () => _table.ResumeLayout();
-            
+
             _recipeViewModel.OnUpdateStart += _onVmUpdateStartHandler;
             _recipeViewModel.OnUpdateEnd += _onVmUpdateEndHandler;
-            
+
             _onForbidWrite = (value) => _buttonWrite.Enabled = value;
-            
+
             _recipeViewModel.TogglePermissionToSendRecipe += _onForbidWrite;
-            
+
             _statusManager.StatusUpdated += OnStatusUpdated;
             _statusManager.StatusCleared += OnStatusCleared;
-            
+
         }
 
         private void UnsubscribeRecipeVmUpdateHandlers()
@@ -647,7 +647,7 @@ namespace NtoLib.Recipes.MbeTable
             {
                 // Disable button to prevent multiple clicks
                 _buttonWrite.Enabled = false;
-        
+
                 await _recipeViewModel.WriteRecipeToPlc();
             }
             catch (Exception ex)

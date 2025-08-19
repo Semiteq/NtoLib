@@ -458,7 +458,14 @@
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\ImgDelete.bmp" />
+    <EmbeddedResource Include="Resources\ImgDelete.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ImgInsertAfter.bmp" />
+    <EmbeddedResource Include="Resources\ImgInsertBefore.bmp" />
+    <EmbeddedResource Include="Resources\ImgOpen.bmp" />
+    <EmbeddedResource Include="Resources\ImgSave.bmp" />
+    <EmbeddedResource Include="Resources\ImgWrite.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -64,78 +64,78 @@ namespace NtoLib.Recipes.MbeTable
             // _buttonWrite
             // 
             this._buttonWrite.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonWrite.BackgroundImage = global::NtoLib.Properties.Resources.ImgWrite;
             this._buttonWrite.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonWrite.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this._buttonWrite.Location = new System.Drawing.Point(922, 491);
             this._buttonWrite.Name = "_buttonWrite";
             this._buttonWrite.Size = new System.Drawing.Size(40, 40);
             this._buttonWrite.TabIndex = 15;
-            this._buttonWrite.Text = "write";
             this._buttonWrite.UseVisualStyleBackColor = true;
             this._buttonWrite.Click += new System.EventHandler(this.ClickButton_Send);
             // 
             // _buttonOpen
             // 
             this._buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonOpen.BackgroundImage = global::NtoLib.Properties.Resources.ImgOpen;
             this._buttonOpen.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonOpen.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this._buttonOpen.Location = new System.Drawing.Point(826, 491);
             this._buttonOpen.Name = "_buttonOpen";
             this._buttonOpen.Size = new System.Drawing.Size(40, 40);
             this._buttonOpen.TabIndex = 8;
-            this._buttonOpen.Text = "opn";
             this._buttonOpen.UseVisualStyleBackColor = true;
             this._buttonOpen.Click += new System.EventHandler(this.ClickButton_Open);
             // 
             // _buttonAddAfter
             // 
             this._buttonAddAfter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonAddAfter.BackgroundImage = global::NtoLib.Properties.Resources.ImgInsertAfter;
             this._buttonAddAfter.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonAddAfter.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this._buttonAddAfter.Location = new System.Drawing.Point(778, 491);
             this._buttonAddAfter.Name = "_buttonAddAfter";
             this._buttonAddAfter.Size = new System.Drawing.Size(40, 40);
             this._buttonAddAfter.TabIndex = 13;
-            this._buttonAddAfter.Text = "+>";
             this._buttonAddAfter.UseVisualStyleBackColor = true;
             this._buttonAddAfter.Click += new System.EventHandler(this.ClickButton_AddLineAfter);
             // 
             // _buttonSave
             // 
             this._buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonSave.BackgroundImage = global::NtoLib.Properties.Resources.ImgSave;
             this._buttonSave.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonSave.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this._buttonSave.Location = new System.Drawing.Point(874, 491);
             this._buttonSave.Name = "_buttonSave";
             this._buttonSave.Size = new System.Drawing.Size(40, 40);
             this._buttonSave.TabIndex = 9;
-            this._buttonSave.Text = "cls";
             this._buttonSave.UseVisualStyleBackColor = true;
             this._buttonSave.Click += new System.EventHandler(this.ClickButton_Save);
             // 
             // _buttonAddBefore
             // 
             this._buttonAddBefore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonAddBefore.BackgroundImage = global::NtoLib.Properties.Resources.ImgInsertBefore;
             this._buttonAddBefore.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonAddBefore.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this._buttonAddBefore.Location = new System.Drawing.Point(730, 491);
             this._buttonAddBefore.Name = "_buttonAddBefore";
             this._buttonAddBefore.Size = new System.Drawing.Size(40, 40);
             this._buttonAddBefore.TabIndex = 12;
-            this._buttonAddBefore.Text = "<+";
             this._buttonAddBefore.UseVisualStyleBackColor = true;
             this._buttonAddBefore.Click += new System.EventHandler(this.ClickButton_AddLineBefore);
             // 
             // _buttonDel
             // 
             this._buttonDel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._buttonDel.BackgroundImage = global::NtoLib.Properties.Resources.ImgDelete;
             this._buttonDel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonDel.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this._buttonDel.Location = new System.Drawing.Point(682, 491);
             this._buttonDel.Name = "_buttonDel";
             this._buttonDel.Size = new System.Drawing.Size(40, 40);
             this._buttonDel.TabIndex = 11;
-            this._buttonDel.Text = "Delete";
             this._buttonDel.UseVisualStyleBackColor = true;
             this._buttonDel.Click += new System.EventHandler(this.ClickButton_Delete);
             // 
