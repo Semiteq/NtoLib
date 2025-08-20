@@ -11,9 +11,9 @@ using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Behavior;
+using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
-using NtoLib.Recipes.MbeTable.Presentation.Table.State;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable
@@ -37,11 +37,16 @@ namespace NtoLib.Recipes.MbeTable
         [NonSerialized] private TableColumnFactoryMap _tableColumnFactoryMap;
         [NonSerialized] private TableCellStateManager _tableCellStateManager;
         [NonSerialized] private TableBehaviorManager _tableBehaviorManager;
+        [NonSerialized] private IPlcRecipeStatusProvider _plcRecipeStatusProvider;
         [NonSerialized] private DebugLogger _debugLogger;
 
         [NonSerialized] private Action _onVmUpdateStartHandler;
         [NonSerialized] private Action _onVmUpdateEndHandler;
         [NonSerialized] private Action<bool> _onForbidWrite;
+        // Новые поля для агрегирования разрешений записи
+        [NonSerialized] private Action<PlcRecipeAvailable> _onAvailabilityChanged;
+        [NonSerialized] private bool _vmCanSend;     // разрешение со стороны VM
+        [NonSerialized] private bool _plcAllowsSend; // разрешение со стороны ПЛК
 
         [NonSerialized] private Color _controlBgColor = Color.White;
         [NonSerialized] private Color _tableBgColor = Color.White;
@@ -364,6 +369,7 @@ namespace NtoLib.Recipes.MbeTable
             _tableColumnFactoryMap = _sp.TableColumnFactoryMap;
             _tableCellStateManager = _sp.TableCellStateManager;
             _debugLogger = _sp.DebugLogger;
+            _plcRecipeStatusProvider = _sp.PlcRecipeStatusProvider;
 
             _actionTargetProvider.RefreshTargets(fb);
 
@@ -375,6 +381,7 @@ namespace NtoLib.Recipes.MbeTable
             // Clean previous subscriptions/manager if re-initializing
             try { _table.DataError -= Table_DataError; } catch { /* ignore */ }
             UnsubscribeRecipeVmUpdateHandlers();
+            UnsubscribeWritePermissionHandlers();
             if (_tableBehaviorManager != null)
             {
                 try { _tableBehaviorManager.Dispose(); } catch { /* ignore */ }
@@ -397,28 +404,49 @@ namespace NtoLib.Recipes.MbeTable
             _table.DataSource = _recipeViewModel.ViewModels;
             _table.Invalidate();
 
-            // Attach a behavior manager first (it will suppress known DataErrors)
             _tableBehaviorManager = new TableBehaviorManager(_table, _tableSchema, _tableCellStateManager, _debugLogger);
             _tableBehaviorManager.TableStyleSetup();
             _tableBehaviorManager.Attach();
 
-            // Fallback DataError (only if not already canceled)
             _table.DataError += Table_DataError;
 
-            // Subscribe ViewModel update hooks with stable delegates to allow unsubscription
             _onVmUpdateStartHandler = () => _table.SuspendLayout();
             _onVmUpdateEndHandler = () => _table.ResumeLayout();
 
             _recipeViewModel.OnUpdateStart += _onVmUpdateStartHandler;
             _recipeViewModel.OnUpdateEnd += _onVmUpdateEndHandler;
 
-            _onForbidWrite = (value) => _buttonWrite.Enabled = value;
-
+            // VM permission to send recipe
+            _onForbidWrite = (value) =>
+            {
+                _vmCanSend = value;
+                UpdateWriteButtonEnabled();
+            };
             _recipeViewModel.TogglePermissionToSendRecipe += _onForbidWrite;
+
+            // PLC permission to send recipe            
+            _onAvailabilityChanged = availability =>
+            {
+                _plcAllowsSend = availability.IsEnaSend && !availability.IsRecipeActive;
+                SafeUi(UpdateWriteButtonEnabled);
+            };
+            _plcRecipeStatusProvider.AvailabilityChanged += _onAvailabilityChanged;
+
+            try
+            {
+                var availability = _plcRecipeStatusProvider.GetAvailability();
+                _plcAllowsSend = availability.IsEnaSend && !availability.IsRecipeActive;
+            }
+            catch
+            {
+                _plcAllowsSend = false;
+            }
+            
+            _vmCanSend = false;
+            UpdateWriteButtonEnabled();
 
             _statusManager.StatusUpdated += OnStatusUpdated;
             _statusManager.StatusCleared += OnStatusCleared;
-
         }
 
         private void UnsubscribeRecipeVmUpdateHandlers()
@@ -439,12 +467,28 @@ namespace NtoLib.Recipes.MbeTable
             }
         }
 
+        private void UnsubscribeWritePermissionHandlers()
+        {
+            if (_recipeViewModel != null && _onForbidWrite != null)
+            {
+                try { _recipeViewModel.TogglePermissionToSendRecipe -= _onForbidWrite; } catch { /* ignore */ }
+                _onForbidWrite = null;
+            }
+
+            if (_plcRecipeStatusProvider != null && _onAvailabilityChanged != null)
+            {
+                try { _plcRecipeStatusProvider.AvailabilityChanged -= _onAvailabilityChanged; } catch { /* ignore */ }
+                _onAvailabilityChanged = null;
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
                 try { _table.DataError -= Table_DataError; } catch { /* ignore */ }
                 UnsubscribeRecipeVmUpdateHandlers();
+                UnsubscribeWritePermissionHandlers();
 
                 if (_tableBehaviorManager != null)
                 {
@@ -657,10 +701,35 @@ namespace NtoLib.Recipes.MbeTable
             }
             finally
             {
-                _buttonWrite.Enabled = true;
+                // Пересчитать доступность с учётом VM и ПЛК
+                UpdateWriteButtonEnabled();
             }
         }
 
         #endregion
+
+        // Агрегатор доступности кнопки записи
+        private void UpdateWriteButtonEnabled()
+        {
+            if (_buttonWrite == null) return;
+            var enabled = _vmCanSend && _plcAllowsSend;
+            _buttonWrite.Enabled = enabled;
+        }
+
+        private void SafeUi(Action action)
+        {
+            try
+            {
+                if (IsHandleCreated && InvokeRequired)
+                    BeginInvoke(action);
+                else
+                    action();
+            }
+            catch
+            {
+                // ignore UI disposal races
+            }
+        }
     }
+
 }

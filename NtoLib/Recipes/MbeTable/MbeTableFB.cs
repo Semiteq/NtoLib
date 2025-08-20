@@ -21,27 +21,28 @@ namespace NtoLib.Recipes.MbeTable
     [Serializable]
     public class MbeTableFB : VisualFBBase
     {
-        [NonSerialized]
-        private ServiceProvider _serviceProvider; 
         public ServiceProvider ServiceProvider => _serviceProvider ??= new ServiceProvider();
         
+        [NonSerialized] private ServiceProvider _serviceProvider; 
         [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
         [NonSerialized] private IActionTargetProvider _actionTargetProvider;
         [NonSerialized] private ICommunicationSettingsProvider _commSettingsProvider;
-        
-        // Pin IDs
+        [NonSerialized] private IPlcRecipeStatusProvider _plcRecipeStatusProvider;
+
+        #region Numerical Properties
+        // Pin ID's
         private const int IdRecipeActive = 1;
         private const int IdRecipePaused = 2;
-        private const int IdActualLineNumber = 3;
+        private const int IdCurrentLine = 3;
         private const int IdStepCurrentTime = 4;
         private const int IdForLoopCount1 = 5;
         private const int IdForLoopCount2 = 6;
         private const int IdForLoopCount3 = 7;
-        private const int IdEnaLoad = 8;
+        private const int IdEnaSend = 8;
         private const int IdTotalTimeLeft = 101;
         private const int IdLineTimeLeft = 102;
 
-        // ActionProperty pins
+        // ActionProperty pin ID's
         private const int ShutterNamesGroupId = 200;
         private const int HeaterNamesGroupId = 300;
         private const int NitrogenSourcesGroupId = 400;
@@ -54,7 +55,7 @@ namespace NtoLib.Recipes.MbeTable
         private const int HeaterNameQuantity = 32;
         private const int NitrogenSourceNameQuantity = 3;
 
-        // Communication pins
+        // Communication pin ID's
         private const int IdHmiFloatBaseAddr = 1003;
         private const int IdHmiFloatAreaSize = 1004;
         private const int IdHmiIntBaseAddr = 1005;
@@ -67,7 +68,8 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdHmiIp3 = 1012;
         private const int IdHmiIp4 = 1013;
         private const int IdHmiPort = 1014;
-
+        
+        // Default values
         private uint _uFloatBaseAddr = 8100;
         private uint _uFloatAreaSize = 19600;
 
@@ -85,7 +87,8 @@ namespace NtoLib.Recipes.MbeTable
         private uint _controllerIp4 = 141;
 
         private uint _controllerTcpPort = 502;
-
+        #endregion
+        
         #region VisualProperties
         
         [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
@@ -186,30 +189,30 @@ namespace NtoLib.Recipes.MbeTable
 
         #endregion
         
+        public Dictionary<int, string> GetShutterNames() => ReadPinGroup(IdFirstShutterName, ShutterNameQuantity);
+        public Dictionary<int, string> GetHeaterNames() => ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity);
+        public Dictionary<int, string> GetNitrogenSourceNames() => ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity);
+        
         protected override void UpdateData()
         {
             base.UpdateData();
-
-            var stepCurrentTime = GetPinValue<float>(IdStepCurrentTime);
-            var lineNumber = GetPinValue<int>(IdActualLineNumber);
-            var forLoopCount1 = GetPinValue<int>(IdForLoopCount1);
-            var forLoopCount2 = GetPinValue<int>(IdForLoopCount2);
-            var forLoopCount3 = GetPinValue<int>(IdForLoopCount3);
+            
+            var stepCurrentTime = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<float>(IdStepCurrentTime) : -1f;
+            var lineNumber = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdCurrentLine) : -1;
+            var forLoopCount1 = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdForLoopCount1) : -1;
+            var forLoopCount2 = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdForLoopCount2) : -1;
+            var forLoopCount3 = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdForLoopCount3) : -1;
             
             _plcStateMonitor.UpdateState(lineNumber, forLoopCount1, forLoopCount2, forLoopCount3, stepCurrentTime);
             
-            UpdateUiConnectionPins();
-        }
-        
-        private void InitializeServices()
-        {
-            _serviceProvider = ServiceProvider;
-            _serviceProvider.InitializeServices(this); 
-
-            _plcStateMonitor = _serviceProvider.PlcStateMonitor;
-            _actionTargetProvider = _serviceProvider.ActionTargetProvider;
+            // For safety reason if failed to read, then consider the recipe is running
+            var isRecipeActive = GetPinQuality(IdRecipeActive) is OpcQuality.Good && GetPinValue<bool>(IdRecipeActive);
+            var curentLine = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdCurrentLine) : -1;
+            var isEnaSend = GetPinQuality(IdEnaSend) is OpcQuality.Good && GetPinValue<bool>(IdEnaSend);
             
-            _actionTargetProvider.RefreshTargets(this);
+            _plcRecipeStatusProvider.UpdateStatus(isRecipeActive, isEnaSend, curentLine);
+            
+            UpdateUiConnectionPins();
         }
         
         protected override void ToDesign()
@@ -217,22 +220,6 @@ namespace NtoLib.Recipes.MbeTable
             base.ToDesign();
             InitializeServices();
             CleanupServices();
-        }
-        
-        private void UpdateUiConnectionPins()
-        {
-            VisualPins.SetValue<uint>(IdHmiFloatBaseAddr, UFloatBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiFloatAreaSize, UFloatAreaSize);
-            VisualPins.SetValue<uint>(IdHmiIntBaseAddr, UIntBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiIntAreaSize, UIntAreaSize);
-            VisualPins.SetValue<uint>(IdHmiBoolBaseAddr, UBoolBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiBoolAreaSize, UBoolAreaSize);
-            VisualPins.SetValue<uint>(IdHmiControlBaseAddr, UControlBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiIp1, ControllerIp1);
-            VisualPins.SetValue<uint>(IdHmiIp2, ControllerIp2);
-            VisualPins.SetValue<uint>(IdHmiIp3, ControllerIp3);
-            VisualPins.SetValue<uint>(IdHmiIp4, ControllerIp4);
-            VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
         }
         
         protected override void ToRuntime()
@@ -246,6 +233,7 @@ namespace NtoLib.Recipes.MbeTable
             }
             
             _plcStateMonitor = _serviceProvider.PlcStateMonitor;
+            _plcRecipeStatusProvider = _serviceProvider.PlcRecipeStatusProvider;
             _actionTargetProvider = _serviceProvider.ActionTargetProvider;
             
             _actionTargetProvider.RefreshTargets(this);
@@ -288,32 +276,34 @@ namespace NtoLib.Recipes.MbeTable
 
             FirePinSpaceChanged();
         }
-        
-        public bool IsRecipeActive()
-        {
-            if (GetPinQuality(IdRecipeActive) is OpcQuality.Good)
-                return GetPinValue<bool>(IdRecipeActive);
-            // For safety reason if failed to read, then consider the recipe is running
-            return true;
-        }
-        
-        public int GetLineNumber() => GetPinQuality(IdRecipeActive) is OpcQuality.Good ? GetPinValue<int>(IdActualLineNumber) : -1;
 
-        public Dictionary<int, string> GetShutterNames()
+        private void InitializeServices()
         {
-            return ReadPinGroup(IdFirstShutterName, ShutterNameQuantity);
-        }
-        
-        public Dictionary<int, string> GetHeaterNames()
-        {
-            return ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity);
-        }
-        
-        public Dictionary<int, string> GetNitrogenSourceNames()
-        {
-            return ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity);
-        }
+            _serviceProvider = ServiceProvider;
+            _serviceProvider.InitializeServices(this); 
 
+            _plcStateMonitor = _serviceProvider.PlcStateMonitor;
+            _actionTargetProvider = _serviceProvider.ActionTargetProvider;
+            
+            _actionTargetProvider.RefreshTargets(this);
+        }
+        
+        private void UpdateUiConnectionPins()
+        {
+            VisualPins.SetValue<uint>(IdHmiFloatBaseAddr, UFloatBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiFloatAreaSize, UFloatAreaSize);
+            VisualPins.SetValue<uint>(IdHmiIntBaseAddr, UIntBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiIntAreaSize, UIntAreaSize);
+            VisualPins.SetValue<uint>(IdHmiBoolBaseAddr, UBoolBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiBoolAreaSize, UBoolAreaSize);
+            VisualPins.SetValue<uint>(IdHmiControlBaseAddr, UControlBaseAddr);
+            VisualPins.SetValue<uint>(IdHmiIp1, ControllerIp1);
+            VisualPins.SetValue<uint>(IdHmiIp2, ControllerIp2);
+            VisualPins.SetValue<uint>(IdHmiIp3, ControllerIp3);
+            VisualPins.SetValue<uint>(IdHmiIp4, ControllerIp4);
+            VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
+        }
+        
         private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
         {
             if (quantity <= 0)
@@ -343,4 +333,5 @@ namespace NtoLib.Recipes.MbeTable
             _serviceProvider = null; 
         }
     }
+
 }

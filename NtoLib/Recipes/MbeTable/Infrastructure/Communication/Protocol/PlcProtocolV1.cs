@@ -29,8 +29,6 @@ public sealed class PlcProtocolV1 : IPlcProtocol
     {
         try
         {
-            if (Settings.IsRecipeActive)
-                return Result.Fail($"Рецепт уже исполняется на ПЛК");
             return _modbusTransport.CheckConnection();
         }
         catch (Exception ex)

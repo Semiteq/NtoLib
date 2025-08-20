@@ -198,10 +198,12 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyDefinitionRegistry.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyType.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\StepProperty.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\RecipeEngine.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Schema\ColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Schema\ColumnKey.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Schema\TableSchema.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\IRecipeTimer.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeEngine.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeTimer.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseAllDefaults.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseDefaults.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\EndForLoopDefaults.cs" />
@@ -263,12 +265,14 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\CommunicationSettingsProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\ICommunicationSettingsProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPlcRecipeStatusProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPlcStateMonitor.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcLineInfo.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeAvailable.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeStatusProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcStateMonitor.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeStatus.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\WordOrder.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Services\IRecipeTimer.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Services\RecipeTimer.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\IStatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
@@ -286,9 +290,9 @@
     <Compile Include="Recipes\MbeTable\Presentation\Table\Editing\ActionTargetEditingControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Recipes\MbeTable\Presentation\Table\State\CellState.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\State\CellVisualState.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\State\TableCellStateManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\CellStatusDescription.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellState.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellStateManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\TableControl.cs">

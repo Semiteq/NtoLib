@@ -13,9 +13,6 @@ public class CommunicationSettingsProvider : ICommunicationSettingsProvider
     {
         return new CommunicationSettings
         {
-            IsRecipeActive = _fb.IsRecipeActive(),
-            LineNumber = _fb.GetLineNumber(),
-            
             FloatBaseAddr = (int)_fb.UFloatBaseAddr,
             IntBaseAddr = (int)_fb.UIntBaseAddr,
             BoolBaseAddr = (int)_fb.UBoolBaseAddr,
@@ -31,7 +28,7 @@ public class CommunicationSettingsProvider : ICommunicationSettingsProvider
             Ip3 = (int)_fb.ControllerIp3,
             Ip4 = (int)_fb.ControllerIp4,
             
-            Port = (int)_fb.ControllerTcpPort,
+            Port = (int)_fb.ControllerTcpPort
         };
         
     }

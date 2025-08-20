@@ -30,8 +30,6 @@ public sealed class ModbusTransportV1 : IModbusTransport
         try
         {
             Connect();
-            
-            
             return Result.Ok();
         }
         catch (Exception ex)

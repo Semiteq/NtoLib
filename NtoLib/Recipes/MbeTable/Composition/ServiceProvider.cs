@@ -7,6 +7,7 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
 using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Contracts;
@@ -23,8 +24,8 @@ using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
+using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
-using NtoLib.Recipes.MbeTable.Presentation.Table.State;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Composition
@@ -42,6 +43,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public ColorScheme ColorScheme { get; private set; }
         public TableCellStateManager TableCellStateManager { get; private set; }
         public IActionTargetProvider ActionTargetProvider { get; private set; }
+        public IPlcRecipeStatusProvider PlcRecipeStatusProvider { get; private set; }
         public ICommunicationSettingsProvider CommunicationSettingsProvider { get; private set; }
         public MbeTableFB MbeTableFb { get; private set; }
 
@@ -110,7 +112,8 @@ namespace NtoLib.Recipes.MbeTable.Composition
             // --- Services with simple dependencies ---
             CommunicationSettingsProvider = new CommunicationSettingsProvider(MbeTableFb);
             ComboboxDataProvider = new ComboboxDataProvider(ActionManager, ActionTargetProvider);
-            TableCellStateManager = new TableCellStateManager(ColorScheme);
+            PlcRecipeStatusProvider = new PlcRecipeStatusProvider();
+            TableCellStateManager = new TableCellStateManager(PlcRecipeStatusProvider,ColorScheme);
             TableColumnFactoryMap = new TableColumnFactoryMap(ComboboxDataProvider);
             StepFactory = new StepFactory(ActionManager, PropertyDefinitionRegistry, TableSchema);
 

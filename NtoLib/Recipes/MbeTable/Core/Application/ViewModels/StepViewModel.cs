@@ -122,7 +122,6 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 if (!ActionTarget.HasValue)
                     return true;
             }
-
             return false;
         }
         

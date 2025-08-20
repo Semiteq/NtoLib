@@ -7,7 +7,7 @@
 			<!-- Flag if a recipe is currently running.  -->
 			<Pin ID="1" Name="RecipeActive"			Type="Логический" DefaultValue="false"/>
 			
-			<!-- Flag if a recipe is paused. (Not Implemented)  -->
+			<!-- Flag if a recipe is paused.  -->
 			<Pin ID="2" Name="RecipePaused"			Type="Логический" DefaultValue="false"/>
 			
 			<!-- Current recipe line number in operation mode. -->
@@ -21,8 +21,8 @@
 			<Pin ID="6" Name="ForLoopCount2"		Type="Целый"/>
 			<Pin ID="7" Name="ForLoopCount3"		Type="Целый"/>
 
-			<!-- Permission to open new a recipe. -->
-			<Pin ID="8" Name="EnaLoad"				Type="Логический" DefaultValue="true"/>
+			<!-- Permission to write a recipe to PLC. -->
+			<Pin ID="8" Name="EnaSend"              Type="Логический" DefaultValue="true"/>
 
 			<!-- Total time left till the end of a recipe. -->
 			<Pout ID="101" Name="TotalTimeLeft"		Type="Вещественный"/>

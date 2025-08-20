@@ -11,7 +11,7 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
-namespace NtoLib.Recipes.MbeTable.Core.Domain
+namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
 {
     /// <summary>
     /// A stateless service that encapsulates all business logic for recipe manipulation.

@@ -1,10 +1,13 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Presentation.Table.State;
+using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 {
@@ -86,7 +89,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             if (row.DataBoundItem is not StepViewModel vm) return;
 
             var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            var cellState = _stateManager.GetStateForCell(vm, columnKey);
+            var cellState = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
 
             // Cheap path: always set on e.CellStyle
             e.CellStyle.Font = cellState.Font;
@@ -103,7 +106,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             var s = cell.Style;
             bool changed = false;
 
-            if (s.Font != cellState.Font) { s.Font = cellState.Font; changed = true; }
+            if (!Equals(s.Font, cellState.Font)) { s.Font = cellState.Font; changed = true; }
             if (s.ForeColor != cellState.ForeColor) { s.ForeColor = cellState.ForeColor; changed = true; }
             if (s.BackColor != cellState.BackColor) { s.BackColor = cellState.BackColor; changed = true; }
 
@@ -134,7 +137,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
                 if (comboCell.DisplayStyle != desired)
                 {
                     comboCell.DisplayStyle = desired;
-                    _debugLogger?.Log($"[OnCellFormatting] updated r{e.RowIndex} c{columnKey} readonly={cellState.IsReadonly}");
+                    _debugLogger?.Log($"Updated row:{e.RowIndex} column:{columnKey} readonly={cellState.IsReadonly}");
                 }
             }
         }
@@ -145,12 +148,12 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
             var grid = (DataGridView)sender!;
             var row = grid.Rows[e.RowIndex];
-            if (row.DataBoundItem is not StepViewModel vm) return;
+            if (row.DataBoundItem is not StepViewModel stepViewModel) return;
 
             var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
             if (columnKey != ColumnKey.ActionTarget) return;
 
-            var state = _stateManager.GetStateForCell(vm, columnKey);
+            var state = _stateManager.GetStateForCell(stepViewModel, columnKey, e.RowIndex);
             if (!state.IsReadonly) return;
 
             using (var back = new SolidBrush(state.BackColor))
@@ -186,7 +189,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
                 // Suppress common "value is not valid" when the list changes under the cell.
                 e.ThrowException = false;
                 e.Cancel = true;
-                _debugLogger?.Log($"[OnDataError] ActionTarget r{e.RowIndex} suppressed: {e.Exception?.Message}");
+                _debugLogger?.Log($"ActionTarget r{e.RowIndex} suppressed: {e.Exception?.Message}");
             }
         }
 
@@ -195,10 +198,10 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             var grid = (DataGridView)sender!;
             var row = grid.Rows[e.RowIndex];
-            if (row.DataBoundItem is not StepViewModel vm) return;
+            if (row.DataBoundItem is not StepViewModel stepViewModel) return;
 
             var key = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            var state = _stateManager.GetStateForCell(vm, key);
+            var state = _stateManager.GetStateForCell(stepViewModel, key, e.RowIndex);
 
             if (state.IsReadonly)
                 e.Cancel = true;
@@ -207,7 +210,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
         private void OnRowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
         {
             var grid = (DataGridView)sender!;
-            string indexText = (e.RowIndex + 1).ToString();
+            var indexText = (e.RowIndex + 1).ToString();
 
             var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
 
@@ -215,7 +218,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             var font = style?.Font ?? grid.Font;
             var fore = style?.ForeColor.IsEmpty == false ? style.ForeColor : grid.ForeColor;
 
-            TextFormatFlags flags = TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;
+            var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;
 
             TextRenderer.DrawText(e.Graphics, indexText, font, headerBounds, fore, flags);
         }

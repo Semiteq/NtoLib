@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 
-namespace NtoLib.Recipes.MbeTable.Infrastructure.Services
+namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
 {
     public class RecipeTimer : IRecipeTimer
     {
