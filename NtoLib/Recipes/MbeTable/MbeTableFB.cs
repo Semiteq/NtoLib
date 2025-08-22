@@ -22,8 +22,8 @@ namespace NtoLib.Recipes.MbeTable
     public class MbeTableFB : VisualFBBase
     {
         public ServiceProvider ServiceProvider => _serviceProvider ??= new ServiceProvider();
-        
-        [NonSerialized] private ServiceProvider _serviceProvider; 
+
+        [NonSerialized] private ServiceProvider _serviceProvider;
         [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
         [NonSerialized] private IActionTargetProvider _actionTargetProvider;
         [NonSerialized] private ICommunicationSettingsProvider _commSettingsProvider;
@@ -46,7 +46,7 @@ namespace NtoLib.Recipes.MbeTable
         private const int ShutterNamesGroupId = 200;
         private const int HeaterNamesGroupId = 300;
         private const int NitrogenSourcesGroupId = 400;
-        
+
         private const int IdFirstShutterName = 201;
         private const int IdFirstHeaterName = 301;
         private const int IdFirstNitrogenSourceName = 401;
@@ -68,7 +68,7 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdHmiIp3 = 1012;
         private const int IdHmiIp4 = 1013;
         private const int IdHmiPort = 1014;
-        
+
         // Default values
         private uint _uFloatBaseAddr = 8100;
         private uint _uFloatAreaSize = 19600;
@@ -88,9 +88,9 @@ namespace NtoLib.Recipes.MbeTable
 
         private uint _controllerTcpPort = 502;
         #endregion
-        
+
         #region VisualProperties
-        
+
         [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
         [DisplayName(" 1.  Базовый адрес хранения данных типа Real (Float)")]
         public uint UFloatBaseAddr
@@ -188,63 +188,64 @@ namespace NtoLib.Recipes.MbeTable
         }
 
         #endregion
-        
+
         public Dictionary<int, string> GetShutterNames() => ReadPinGroup(IdFirstShutterName, ShutterNameQuantity);
         public Dictionary<int, string> GetHeaterNames() => ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity);
         public Dictionary<int, string> GetNitrogenSourceNames() => ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity);
-        
+
         protected override void UpdateData()
         {
             base.UpdateData();
-            
+
             var stepCurrentTime = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<float>(IdStepCurrentTime) : -1f;
             var lineNumber = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdCurrentLine) : -1;
             var forLoopCount1 = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdForLoopCount1) : -1;
             var forLoopCount2 = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdForLoopCount2) : -1;
             var forLoopCount3 = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdForLoopCount3) : -1;
-            
+
             _plcStateMonitor.UpdateState(lineNumber, forLoopCount1, forLoopCount2, forLoopCount3, stepCurrentTime);
-            
+
             // For safety reason if failed to read, then consider the recipe is running
             var isRecipeActive = GetPinQuality(IdRecipeActive) is OpcQuality.Good && GetPinValue<bool>(IdRecipeActive);
             var curentLine = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdCurrentLine) : -1;
             var isEnaSend = GetPinQuality(IdEnaSend) is OpcQuality.Good && GetPinValue<bool>(IdEnaSend);
-            
+
             _plcRecipeStatusProvider.UpdateStatus(isRecipeActive, isEnaSend, curentLine);
-            
+
             UpdateUiConnectionPins();
         }
-        
+
         protected override void ToDesign()
         {
             base.ToDesign();
             InitializeServices();
             CleanupServices();
         }
-        
+
         protected override void ToRuntime()
         {
             base.ToRuntime();
-            
-            if (_serviceProvider == null)
+
+            // May occur in case ToDesign() was called before ToRuntime()
+            if (_serviceProvider is null || !_serviceProvider.IsInitialized)
             {
                 _serviceProvider = new ServiceProvider();
                 _serviceProvider.InitializeServices(this);
             }
-            
+
             _plcStateMonitor = _serviceProvider.PlcStateMonitor;
             _plcRecipeStatusProvider = _serviceProvider.PlcRecipeStatusProvider;
             _actionTargetProvider = _serviceProvider.ActionTargetProvider;
-            
-            _actionTargetProvider.RefreshTargets(this);
+
+            _actionTargetProvider.RefreshTargets();
         }
-        
+
         public override void Dispose()
         {
             CleanupServices();
             base.Dispose();
         }
-        
+
         protected override void CreatePinMap(bool newObject)
         {
             base.CreatePinMap(newObject);
@@ -255,7 +256,7 @@ namespace NtoLib.Recipes.MbeTable
 
             for (var i = 0; i < ShutterNameQuantity; i++)
             {
-                var pinId = IdFirstShutterName + i; 
+                var pinId = IdFirstShutterName + i;
                 var pinName = $"Shutter{i + 1}";
                 shutterGroup.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
             }
@@ -279,15 +280,14 @@ namespace NtoLib.Recipes.MbeTable
 
         private void InitializeServices()
         {
-            _serviceProvider = ServiceProvider;
-            _serviceProvider.InitializeServices(this); 
+            _serviceProvider.InitializeServices(this);
 
             _plcStateMonitor = _serviceProvider.PlcStateMonitor;
             _actionTargetProvider = _serviceProvider.ActionTargetProvider;
-            
-            _actionTargetProvider.RefreshTargets(this);
+
+            _actionTargetProvider.RefreshTargets();
         }
-        
+
         private void UpdateUiConnectionPins()
         {
             VisualPins.SetValue<uint>(IdHmiFloatBaseAddr, UFloatBaseAddr);
@@ -303,7 +303,7 @@ namespace NtoLib.Recipes.MbeTable
             VisualPins.SetValue<uint>(IdHmiIp4, ControllerIp4);
             VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
         }
-        
+
         private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
         {
             if (quantity <= 0)
@@ -325,13 +325,12 @@ namespace NtoLib.Recipes.MbeTable
 
             return pinGroup;
         }
-        
+
         private void CleanupServices()
         {
             _plcStateMonitor = null;
             _actionTargetProvider = null;
-            _serviceProvider = null; 
+            _serviceProvider = null;
         }
     }
-
 }

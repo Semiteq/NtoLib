@@ -11,13 +11,22 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.CellState
     /// </summary>
     public class TableCellStateManager
     {
-        private readonly IReadOnlyDictionary<TableCellState, CellStatusDescription> _states;
+        private IReadOnlyDictionary<TableCellState, CellStatusDescription> _states;
         private readonly IPlcRecipeStatusProvider _plcRecipeStatusProvider;
 
-        public TableCellStateManager(IPlcRecipeStatusProvider plcRecipeStatusProvider, ColorScheme colorScheme)
+        public TableCellStateManager(IPlcRecipeStatusProvider plcRecipeStatusProvider)
         {
-            _plcRecipeStatusProvider = plcRecipeStatusProvider;
-            _states = new Dictionary<TableCellState, CellStatusDescription>
+            _plcRecipeStatusProvider = plcRecipeStatusProvider ?? throw new System.ArgumentNullException(nameof(plcRecipeStatusProvider));
+        }
+        
+        public void UpdateColorScheme(ColorScheme colorScheme)
+        {
+            _states = UpdateStates(colorScheme);
+        }
+
+        private Dictionary<TableCellState, CellStatusDescription> UpdateStates(ColorScheme colorScheme)
+        {
+            return new Dictionary<TableCellState, CellStatusDescription>()
             {
                 {
                     TableCellState.Default, new CellStatusDescription(
@@ -68,27 +77,27 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.CellState
         {
             var status = _plcRecipeStatusProvider.GetStatus();
             var attribute = GetCellState(stepViewModel, columnKey, rowIndex, status);
-            
+
             if (status.IsRecipeActive)
                 return _states[attribute] with { IsReadonly = true };
-            
-                return _states[attribute];
+
+            return _states[attribute];
         }
 
         private TableCellState GetCellState(StepViewModel stepViewModel, ColumnKey columnKey, int rowIndex, PlcRecipeStatus status)
         {
+            if (rowIndex < status.CurrentLine)
+                return TableCellState.Passed;
+
+            if (rowIndex == status.CurrentLine)
+                return TableCellState.Current;
+
             if (stepViewModel.IsPropertyDisabled(columnKey))
                 return TableCellState.Disabled;
 
             if (stepViewModel.IsPropertyReadonly(columnKey))
                 return TableCellState.ReadOnly;
 
-            if (rowIndex < status.CurrentLine)
-                return TableCellState.Passed;
-
-            if (rowIndex == status.CurrentLine)
-                return TableCellState.Current;
-            
             return TableCellState.Default;
         }
     }

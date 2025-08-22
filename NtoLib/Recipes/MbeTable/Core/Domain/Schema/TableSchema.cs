@@ -16,7 +16,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
                 "action",
                 "Действие",
                 typeof(int),
-                200,
+                150,
                 false,
                 DataGridViewContentAlignment.MiddleLeft
             ),
@@ -27,7 +27,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
                 "action-target",
                 "Объект",
                 typeof(int),
-                150,
+                130,
                 false,
                 DataGridViewContentAlignment.MiddleCenter
             ),
@@ -38,7 +38,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
                 "initial-value",
                 "Нач.значение",
                 typeof(float),
-                200,
+                140,
                 false,
                 DataGridViewContentAlignment.MiddleCenter
             ),
@@ -49,7 +49,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
                 "setpoint",
                 "Задание",
                 typeof(float),
-                180,
+                100,
                 false,
                 DataGridViewContentAlignment.MiddleCenter
             ),
@@ -60,7 +60,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
                 "speed",
                 "Скорость",
                 typeof(float),
-                150,
+                120,
                 false,
                 DataGridViewContentAlignment.MiddleCenter
             ),
@@ -71,7 +71,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
                 "step-duration",
                 "Длительность",
                 typeof(float),
-                200,
+                150,
                 false,
                 DataGridViewContentAlignment.MiddleCenter
             ),
@@ -82,7 +82,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Schema
                 "step-start-time",
                 "Время",
                 typeof(float),
-                150,
+                100,
                 true,
                 DataGridViewContentAlignment.MiddleCenter
             ),

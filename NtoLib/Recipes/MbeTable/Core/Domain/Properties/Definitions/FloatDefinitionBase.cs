@@ -17,27 +17,32 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions
         {
             if (value is not float floatValue)
                 return (false, "Ожидалось значение типа float.");
-            
+
             if (floatValue < MinValue || floatValue > MaxValue)
                 return (false, MinMaxErrorMessage);
-            
+
 
             return (true, "");
         }
 
         public virtual string FormatValue(object value)
         {
-            return ((float)value).ToString(CultureInfo.InvariantCulture);
+            var floatValue = (float)value;
+            return floatValue % 1 == 0
+                ? floatValue.ToString("F0", CultureInfo.InvariantCulture)
+                : floatValue.ToString("G", CultureInfo.InvariantCulture);
         }
-        
+
         public virtual (bool Success, object Value) TryParse(string input)
         {
             // Drop all non-chars and replace "," with "."
-            var sanitizedInput = new string(input.Trim().Where(c => char.IsDigit(c) || c == ',').ToArray()).Replace(',', '.');
-            
-            return float.TryParse(sanitizedInput, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) 
-                ? (true, result) 
-                : (false, 0f);
+            var sanitizedInput = new string(input.Trim().Where(c => char.IsDigit(c) || c == '.' || c == ',').ToArray())
+                .Replace(',', '.');
+
+            if (float.TryParse(sanitizedInput, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
+                return (true, result);
+
+            return (false, 0f);
         }
     }
 }

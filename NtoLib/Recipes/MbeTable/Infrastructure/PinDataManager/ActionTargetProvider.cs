@@ -9,12 +9,18 @@ public class ActionTargetProvider : IActionTargetProvider
     private Dictionary<int, string> _shutterNames = new();
     private Dictionary<int, string> _heaterNames = new();
     private Dictionary<int, string> _nitrogenSourceNames = new();
+    private readonly MbeTableFB _fb;
 
-    public void RefreshTargets(MbeTableFB fb)
+    public ActionTargetProvider(MbeTableFB fb)
     {
-        _shutterNames = fb.GetShutterNames();
-        _heaterNames = fb.GetHeaterNames();
-        _nitrogenSourceNames = fb.GetNitrogenSourceNames();
+        _fb = fb ?? throw new ArgumentNullException(nameof(fb));
+    }
+    
+    public void RefreshTargets()
+    {
+        _shutterNames = _fb.GetShutterNames();
+        _heaterNames = _fb.GetHeaterNames();
+        _nitrogenSourceNames = _fb.GetNitrogenSourceNames();
     }
     
     public Dictionary<int, string> GetShutterNames() => _shutterNames;

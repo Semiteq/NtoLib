@@ -21,7 +21,6 @@ public class TextBoxColumnFactory :  IColumnFactory
         column.DefaultCellStyle.Font = colorScheme.LineFont;
         column.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
         column.DefaultCellStyle.Font = colorScheme.LineFont;
-        column.MinimumWidth = 200;
         
         if (colDef.Width > 0)
         {
@@ -30,6 +29,7 @@ public class TextBoxColumnFactory :  IColumnFactory
         }
         else
         {
+            column.MinimumWidth = 50;
             column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         }
         

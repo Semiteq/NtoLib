@@ -2,39 +2,36 @@
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
-public class ColorScheme
-{
-    // User can only change UI parameters when changing "To Design" => "To Runtime" state.
-    // No defaults are applied dew to UI stores the default values.
-    
+public record ColorScheme(
     // Table background colors
-    public Color ControlBackgroundColor;
-    public Color TableBackgroundColor;
-        
+    Color ControlBackgroundColor,
+    Color TableBackgroundColor,
+
     // Table fonts
-    public Font HeaderFont;
-    public Font LineFont;
-    public Font SelectedLineFont;
-    public Font PassedLineFont;
-    public Font BlockedFont;
-    
+    Font HeaderFont,
+    Font LineFont,
+    Font SelectedLineFont,
+    Font PassedLineFont,
+    Font BlockedFont,
+
     // Line text colors
-    public Color HeaderTextColor;
-    public Color LineTextColor;
-    public Color SelectedLineTextColor;
-    public Color PassedLineTextColor;
-    public Color BlockedTextColor;
-            
+    Color HeaderTextColor,
+    Color LineTextColor,
+    Color SelectedLineTextColor,
+    Color PassedLineTextColor,
+    Color BlockedTextColor,
+
     // Line background colors
-    public Color HeaderBgColor;
-    public Color LineBgColor;
-    public Color SelectedLineBgColor;
-    public Color PassedLineBgColor;
-    public Color BlockedBgColor;
-    
+    Color HeaderBgColor,
+    Color LineBgColor,
+    Color SelectedLineBgColor,
+    Color PassedLineBgColor,
+    Color BlockedBgColor,
+
     // Buttons
-    public Color ButtonsColor;
-    
+    Color ButtonsColor,
+    Color BlockedButtonsColor,
+
     // Sizes
-    public int LineHeight;
-}
+    int LineHeight
+);

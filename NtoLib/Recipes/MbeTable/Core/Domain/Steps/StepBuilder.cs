@@ -56,7 +56,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
 
         // Check whether a column can be set for this action
         public bool Supports(ColumnKey key) =>
-            _properties.TryGetValue(key, out var prop) && prop is not null;
+            _properties.ContainsKey(key);
 
         public StepBuilder WithOptionalTarget(int? target)
         {

@@ -78,7 +78,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
             var newSteps = currentRecipe.Steps.SetItem(rowIndex, newDefaultStep);
             return new Recipe(Steps: newSteps);
         }
-        
+
         public (Recipe NewRecipe, RecipePropertyError? Error) UpdateStepProperty(
             Recipe currentRecipe, int rowIndex, ColumnKey columnKey, object value)
         {

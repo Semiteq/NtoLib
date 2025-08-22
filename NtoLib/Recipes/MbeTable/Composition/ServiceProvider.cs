@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Drawing;
+using System.Drawing; // added for ColorScheme defaults
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
@@ -35,17 +36,23 @@ namespace NtoLib.Recipes.MbeTable.Composition
     /// </summary>
     public class ServiceProvider
     {
+        public bool IsInitialized { get; private set; }
+
         // --- Core Services & Managers ---
         public IPlcStateMonitor PlcStateMonitor { get; private set; }
         public IStatusManager StatusManager { get; private set; }
         public ActionManager ActionManager { get; private set; }
         public DebugLogger DebugLogger { get; private set; }
         public ColorScheme ColorScheme { get; private set; }
+        public bool HasColorScheme => ColorScheme != null;
         public TableCellStateManager TableCellStateManager { get; private set; }
         public IActionTargetProvider ActionTargetProvider { get; private set; }
         public IPlcRecipeStatusProvider PlcRecipeStatusProvider { get; private set; }
         public ICommunicationSettingsProvider CommunicationSettingsProvider { get; private set; }
         public MbeTableFB MbeTableFb { get; private set; }
+        public AppStateMachine AppStateMachine { get; private set; }
+        public AppStateUiProjector AppStateUiProjector { get; private set; }
+        public IUiDispatcher UiDispatcher { get; private set; }
 
         // --- Data & Schema ---
         public TableSchema TableSchema { get; private set; }
@@ -78,7 +85,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public SchemaFingerprintUtil SchemaFingerprintUtil { get; private set; }
         public IActionsFingerprintUtil ActionsFingerprintUtil { get; private set; }
         public TargetAvailabilityValidator TargetAvailabilityValidator { get; private set; }
-        
+
         // --- Modbus ---
         public IPlcRecipeSerializer PlcRecipeSerializer { get; private set; }
         public IRecipeComparator RecipeComparator { get; private set; }
@@ -90,6 +97,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
         // --- UI Components ---
         public OpenFileDialog OpenFileDialog { get; private set; }
         public SaveFileDialog SaveFileDialog { get; private set; }
+        public RecipeEffectsHandler RecipeEffectsHandler { get; private set; }
 
         public void InitializeServices(MbeTableFB mbeTableFb)
         {
@@ -103,18 +111,20 @@ namespace NtoLib.Recipes.MbeTable.Composition
             PropertyDefinitionRegistry = new PropertyDefinitionRegistry();
             StepCalculationLogic = new StepCalculationLogic();
             DependencyRulesMap = new DependencyRulesMap(StepCalculationLogic);
-            ActionTargetProvider = new ActionTargetProvider();
+            ActionTargetProvider = new ActionTargetProvider(MbeTableFb);
             PlcStateMonitor = new PlcStateMonitor();
             StatusManager = new StatusManager();
             DebugLogger = new DebugLogger();
-            ColorScheme = CreateColorScheme();
+            AppStateMachine = new AppStateMachine(DebugLogger);
+            AppStateUiProjector = new AppStateUiProjector();
+            UiDispatcher = new ImmediateUiDispatcher();
 
             // --- Services with simple dependencies ---
+            PlcRecipeStatusProvider = new PlcRecipeStatusProvider();
             CommunicationSettingsProvider = new CommunicationSettingsProvider(MbeTableFb);
             ComboboxDataProvider = new ComboboxDataProvider(ActionManager, ActionTargetProvider);
-            PlcRecipeStatusProvider = new PlcRecipeStatusProvider();
-            TableCellStateManager = new TableCellStateManager(PlcRecipeStatusProvider,ColorScheme);
             TableColumnFactoryMap = new TableColumnFactoryMap(ComboboxDataProvider);
+            TableCellStateManager = new TableCellStateManager(PlcRecipeStatusProvider);
             StepFactory = new StepFactory(ActionManager, PropertyDefinitionRegistry, TableSchema);
 
             // --- Analysis services ---
@@ -157,39 +167,55 @@ namespace NtoLib.Recipes.MbeTable.Composition
 
             RecipeFileReader = new RecipeFileReader(RecipeCsvSerializerV1);
             RecipeFileWriter = new RecipeFileWriter(RecipeCsvSerializerV1);
-            
+
             // --- Modbus ---
             PlcCapacityCalculator = new PlcCapacityCalculator();
-            
+
             ModbusTransport = new ModbusTransportV1(CommunicationSettingsProvider, DebugLogger);
             PlcProtocol = new PlcProtocolV1(ModbusTransport, CommunicationSettingsProvider, DebugLogger);
             PlcRecipeSerializer = new PlcRecipeSerializerV1(StepFactory, ActionManager, CommunicationSettingsProvider);
             RecipeComparator = new RecipeComparatorV1(DebugLogger, CommunicationSettingsProvider);
 
             RecipePlcSender = new RecipePlcSender(
-                PlcProtocol, 
-                PlcRecipeSerializer, 
+                PlcProtocol,
+                PlcRecipeSerializer,
                 RecipeComparator,
-                PlcCapacityCalculator, 
-                CommunicationSettingsProvider, 
+                PlcCapacityCalculator,
+                CommunicationSettingsProvider,
                 DebugLogger
             );
-            
+
             // --- ViewModels ---
             RecipeViewModel = new RecipeViewModel(
                 RecipeEngine,
-                RecipeFileWriter,
-                RecipeFileReader,
-                RecipePlcSender,
                 RecipeLoopValidator,
                 RecipeTimeCalculator,
                 ComboboxDataProvider,
                 StatusManager,
-                DebugLogger
+                DebugLogger,
+                AppStateMachine
             );
 
-            // --- UI Components ---
+            RecipeEffectsHandler = new RecipeEffectsHandler(
+                AppStateMachine,
+                RecipeViewModel,
+                RecipePlcSender,
+                RecipeFileReader,
+                RecipeFileWriter
+            );
+
+            AppStateMachine.InitializeEffects(RecipeEffectsHandler);
+            
             InitializeUiComponents();
+            
+            IsInitialized = true;
+        }
+
+        public void AttachUiDispatcher(IUiDispatcher dispatcher)
+        {
+            UiDispatcher = dispatcher ?? new ImmediateUiDispatcher();
+            // propagate to VM if already created
+            RecipeViewModel?.SetUiDispatcher(UiDispatcher);
         }
 
         private void InitializeUiComponents()
@@ -198,33 +224,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
             SaveFileDialog = CreateSaveFileDialog();
         }
 
-        private ColorScheme CreateColorScheme() => new ColorScheme
-        {
-            ControlBackgroundColor = Color.White,
-            TableBackgroundColor = Color.White,
-
-            HeaderFont = new Font("Arial", 16f, FontStyle.Bold),
-            LineFont = new Font("Arial", 14f),
-            SelectedLineFont = new Font("Arial", 14f),
-            PassedLineFont = new Font("Arial", 14f),
-            BlockedFont = new Font("Arial", 14f),
-
-            LineTextColor = Color.Black,
-            SelectedLineTextColor = Color.Black,
-            PassedLineTextColor = Color.DarkGray,
-            BlockedTextColor = Color.DarkGray,
-
-            LineBgColor = Color.White,
-            SelectedLineBgColor = Color.Green,
-            PassedLineBgColor = Color.Yellow,
-            HeaderBgColor = Color.LightGray,
-            HeaderTextColor = Color.Black,
-            BlockedBgColor = Color.LightGray,
-
-            ButtonsColor = Color.LightGray,
-        };
-
-        private OpenFileDialog CreateOpenFileDialog() => new OpenFileDialog
+        private OpenFileDialog CreateOpenFileDialog() => new()
         {
             Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
             AddExtension = true,
@@ -233,12 +233,26 @@ namespace NtoLib.Recipes.MbeTable.Composition
             RestoreDirectory = true
         };
 
-        private SaveFileDialog CreateSaveFileDialog() => new SaveFileDialog
+        private SaveFileDialog CreateSaveFileDialog() => new()
         {
             Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
             AddExtension = true,
             Title = @"Сохраните файл рецепта",
             RestoreDirectory = true
         };
+
+        public void InitializeColorScheme(ColorScheme scheme)
+        {
+            if (scheme == null) throw new ArgumentNullException(nameof(scheme));
+            if (ColorScheme != null) return; 
+            ColorScheme = scheme;
+            TableCellStateManager.UpdateColorScheme(ColorScheme);
+        }
+
+        public void SetColorScheme(ColorScheme scheme)
+        {
+            ColorScheme = scheme ?? throw new ArgumentNullException(nameof(scheme));
+            TableCellStateManager.UpdateColorScheme(ColorScheme);
+        }
     }
 }

@@ -45,8 +45,20 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
         public void TableStyleSetup()
         {
             _table.EditMode = DataGridViewEditMode.EditOnEnter;
-            _table.DefaultCellStyle.SelectionBackColor = _table.DefaultCellStyle.BackColor;
-            _table.DefaultCellStyle.SelectionForeColor = _table.DefaultCellStyle.ForeColor;
+            // Disable visual highlight by making selection colors equal to normal colors.
+            _table.EnableHeadersVisualStyles = false;
+            var d = _table.DefaultCellStyle;
+            d.SelectionBackColor = d.BackColor;
+            d.SelectionForeColor = d.ForeColor;
+            var rd = _table.RowsDefaultCellStyle;
+            rd.SelectionBackColor = rd.BackColor;
+            rd.SelectionForeColor = rd.ForeColor;
+            var ch = _table.ColumnHeadersDefaultCellStyle;
+            ch.SelectionBackColor = ch.SelectionBackColor;
+            ch.SelectionForeColor = ch.SelectionBackColor;
+            var rh = _table.RowHeadersDefaultCellStyle;
+            rh.SelectionBackColor = rh.SelectionBackColor;
+            rh.SelectionForeColor = rh.SelectionForeColor;
         }
 
         public void Attach()
@@ -91,17 +103,15 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
             var cellState = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
 
-            // Cheap path: always set on e.CellStyle
+            // Apply base style
             e.CellStyle.Font = cellState.Font;
             e.CellStyle.ForeColor = cellState.ForeColor;
             e.CellStyle.BackColor = cellState.BackColor;
-            if (cellState.IsReadonly)
-            {
-                e.CellStyle.SelectionBackColor = cellState.BackColor;
-                e.CellStyle.SelectionForeColor = cellState.ForeColor;
-            }
+            // Force selection colors identical (disable highlight)
+            e.CellStyle.SelectionBackColor = cellState.BackColor;
+            e.CellStyle.SelectionForeColor = cellState.ForeColor;
 
-            // Expensive path: only touch cell.Style when values actually differ
+            // Fine-grained update only if differs
             var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
             var s = cell.Style;
             bool changed = false;
@@ -109,17 +119,8 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             if (!Equals(s.Font, cellState.Font)) { s.Font = cellState.Font; changed = true; }
             if (s.ForeColor != cellState.ForeColor) { s.ForeColor = cellState.ForeColor; changed = true; }
             if (s.BackColor != cellState.BackColor) { s.BackColor = cellState.BackColor; changed = true; }
-
-            if (cellState.IsReadonly)
-            {
-                if (s.SelectionBackColor != cellState.BackColor) { s.SelectionBackColor = cellState.BackColor; changed = true; }
-                if (s.SelectionForeColor != cellState.ForeColor) { s.SelectionForeColor = cellState.ForeColor; changed = true; }
-            }
-            else
-            {
-                if (s.SelectionBackColor != Color.Empty) { s.SelectionBackColor = Color.Empty; changed = true; }
-                if (s.SelectionForeColor != Color.Empty) { s.SelectionForeColor = Color.Empty; changed = true; }
-            }
+            if (s.SelectionBackColor != cellState.BackColor) { s.SelectionBackColor = cellState.BackColor; changed = true; }
+            if (s.SelectionForeColor != cellState.ForeColor) { s.SelectionForeColor = cellState.ForeColor; changed = true; }
 
             if (changed)
                 cell.Style = s;

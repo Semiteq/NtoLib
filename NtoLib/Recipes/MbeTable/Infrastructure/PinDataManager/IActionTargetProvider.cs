@@ -4,11 +4,11 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 public interface IActionTargetProvider
 {
-    Dictionary<int, string> GetShutterNames();
-    Dictionary<int, string> GetHeaterNames();
-    Dictionary<int, string> GetNitrogenSourceNames();
+    public Dictionary<int, string> GetShutterNames();
+    public Dictionary<int, string> GetHeaterNames();
+    public Dictionary<int, string> GetNitrogenSourceNames();
 
-    void RefreshTargets(MbeTableFB fb);
+    public void RefreshTargets();
 
     public int GetMinimalShutterId();
     public int GetMinimalHeaterId();

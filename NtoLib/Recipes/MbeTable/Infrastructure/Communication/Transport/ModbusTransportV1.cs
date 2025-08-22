@@ -16,7 +16,7 @@ public sealed class ModbusTransportV1 : IModbusTransport
     private ModbusClient? _modbusClient;
 
     private const int AvailabilityWaitSpan = 100; //[ms]
-    
+
     public ModbusTransportV1(ICommunicationSettingsProvider communicationSettingsProvider, ILogger logger)
     {
         _communicationSettingsProvider = communicationSettingsProvider ?? throw new ArgumentNullException(nameof(communicationSettingsProvider));
@@ -24,7 +24,7 @@ public sealed class ModbusTransportV1 : IModbusTransport
     }
 
     private CommunicationSettings Settings => _communicationSettingsProvider.GetSettings();
-    
+
     public Result CheckConnection()
     {
         try
@@ -45,15 +45,15 @@ public sealed class ModbusTransportV1 : IModbusTransport
 
     public Result Connect()
     {
-        if (_modbusClient is { Connected: true }) 
+        if (_modbusClient is { Connected: true })
             return Result.Ok();
-        
+
         var ip = $"{Settings.Ip1}.{Settings.Ip2}.{Settings.Ip3}.{Settings.Ip4}";
-        
+
         _modbusClient = new ModbusClient(ip, Settings.Port);
-        
+
         _debugLogger.Log($"Connecting to {ip}:{Settings.Port}");
-        
+
         _modbusClient.Connect();
         if (!_modbusClient.Available(AvailabilityWaitSpan))
         {
@@ -84,14 +84,15 @@ public sealed class ModbusTransportV1 : IModbusTransport
 
     public void WriteSingleRegister(int address, int value)
     {
-        if (_modbusClient is null) 
+        if (_modbusClient is null)
             throw new InvalidOperationException("Not connected");
         _modbusClient.WriteSingleRegister(address, value);
+        //todo: if not written - check
     }
 
     public void WriteMultipleRegistersChunked(int baseAddress, int[] values, int chunkMax)
     {
-        if (_modbusClient is null) 
+        if (_modbusClient is null)
             throw new InvalidOperationException("Not connected");
         var total = values.Length;
         var index = 0;
@@ -107,14 +108,14 @@ public sealed class ModbusTransportV1 : IModbusTransport
 
     public int[] ReadHoldingRegisters(int address, int length)
     {
-        if (_modbusClient is null) 
+        if (_modbusClient is null)
             throw new InvalidOperationException("Not connected");
         return _modbusClient.ReadHoldingRegisters(address, length);
     }
 
     public int[] ReadHoldingRegistersChunked(int baseAddress, int totalRegisters, int chunkMax)
     {
-        if (_modbusClient is null) 
+        if (_modbusClient is null)
             throw new InvalidOperationException("Not connected");
         var result = new int[totalRegisters];
         var index = 0;

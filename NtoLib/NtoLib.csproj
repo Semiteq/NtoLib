@@ -162,6 +162,15 @@
     <Compile Include="Recipes\MbeTable\Composition\ComboboxDataProvider.cs" />
     <Compile Include="Recipes\MbeTable\Composition\IComboboxDataProvider.cs" />
     <Compile Include="Recipes\MbeTable\Composition\ServiceProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\AppCommand.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\AppEffect.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\AppStateMachine.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\AppStateModels.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\AppStateUiProjector.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\ImmediateUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\IUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\RecipeEffectsHandler.cs" />
+    <Compile Include="Recipes\MbeTable\Composition\StateMachine\WinFormsUiDispatcher.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ActionEntry.cs" />
@@ -293,6 +302,7 @@
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\CellStatusDescription.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellState.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellStateManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ButtonStateStyler.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\TableControl.cs">

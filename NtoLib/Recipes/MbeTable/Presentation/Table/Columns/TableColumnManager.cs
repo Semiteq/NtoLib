@@ -35,7 +35,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
             _table.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 
             _table.RowHeadersVisible = true;
-            _table.RowHeadersWidth = 80;
 
             _table.RowHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             _table.RowHeadersDefaultCellStyle.Font = _colorScheme.HeaderFont;
