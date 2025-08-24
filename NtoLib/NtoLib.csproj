@@ -213,6 +213,7 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\IRecipeTimer.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeEngine.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeTimer.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\TimerService.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseAllDefaults.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseDefaults.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\EndForLoopDefaults.cs" />

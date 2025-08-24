@@ -23,9 +23,8 @@ public class RecipeTimeCalculator : IRecipeTimeCalculator
     /// and their associated properties, such as action types, durations, and loops.
     /// </summary>
     /// <param name="recipe">The recipe containing a list of steps to be analyzed for timing information.</param>
-    /// <param name="loopResult">The result of loop validation, providing information on the validity and structure of loops within the recipe.</param>
     /// <returns>A <see cref="RecipeTimeAnalysis"/> object containing the total duration and start times of each step in the recipe.</returns>
-    public RecipeTimeAnalysis Calculate(Recipe recipe, LoopValidationResult loopResult)
+    public RecipeTimeAnalysis Calculate(Recipe recipe)
     {
         var stepStartTimes = new Dictionary<int, TimeSpan>();
         var accumulatedTime = TimeSpan.Zero;

@@ -44,7 +44,6 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public ActionManager ActionManager { get; private set; }
         public DebugLogger DebugLogger { get; private set; }
         public ColorScheme ColorScheme { get; private set; }
-        public bool HasColorScheme => ColorScheme != null;
         public TableCellStateManager TableCellStateManager { get; private set; }
         public IActionTargetProvider ActionTargetProvider { get; private set; }
         public IPlcRecipeStatusProvider PlcRecipeStatusProvider { get; private set; }
@@ -53,6 +52,8 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public AppStateMachine AppStateMachine { get; private set; }
         public AppStateUiProjector AppStateUiProjector { get; private set; }
         public IUiDispatcher UiDispatcher { get; private set; }
+        public TimerService TimerService { get; private set; }
+        
 
         // --- Data & Schema ---
         public TableSchema TableSchema { get; private set; }
@@ -115,6 +116,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
             PlcStateMonitor = new PlcStateMonitor();
             StatusManager = new StatusManager();
             DebugLogger = new DebugLogger();
+            TimerService = new TimerService(PlcStateMonitor);
             AppStateMachine = new AppStateMachine(DebugLogger);
             AppStateUiProjector = new AppStateUiProjector();
             UiDispatcher = new ImmediateUiDispatcher();
@@ -191,9 +193,10 @@ namespace NtoLib.Recipes.MbeTable.Composition
                 RecipeLoopValidator,
                 RecipeTimeCalculator,
                 ComboboxDataProvider,
+                AppStateMachine,
+                TimerService,
                 StatusManager,
-                DebugLogger,
-                AppStateMachine
+                DebugLogger
             );
 
             RecipeEffectsHandler = new RecipeEffectsHandler(

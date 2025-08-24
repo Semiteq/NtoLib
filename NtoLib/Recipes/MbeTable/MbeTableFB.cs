@@ -8,6 +8,7 @@ using InSAT.Library.Interop;
 using InSAT.OPC;
 using MasterSCADA.Hlp;
 using NtoLib.Recipes.MbeTable.Composition;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable
@@ -24,6 +25,7 @@ namespace NtoLib.Recipes.MbeTable
         public ServiceProvider ServiceProvider => _serviceProvider ??= new ServiceProvider();
 
         [NonSerialized] private ServiceProvider _serviceProvider;
+        [NonSerialized] private TimerService _timerService;
         [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
         [NonSerialized] private IActionTargetProvider _actionTargetProvider;
         [NonSerialized] private ICommunicationSettingsProvider _commSettingsProvider;
@@ -70,30 +72,30 @@ namespace NtoLib.Recipes.MbeTable
         private const int IdHmiPort = 1014;
 
         // Default values
-        private uint _uFloatBaseAddr = 8100;
-        private uint _uFloatAreaSize = 19600;
+        private int _uFloatBaseAddr = 8100;
+        private int _uFloatAreaSize = 19600;
 
-        private uint _uIntBaseAddr = 27700;
-        private uint _uIntAreaSize = 1400;
+        private int _uIntBaseAddr = 27700;
+        private int _uIntAreaSize = 1400;
 
-        private uint _uBoolBaseAddr = 29100;
-        private uint _uBoolAreaSize = 50;
+        private int _uBoolBaseAddr = 29100;
+        private int _uBoolAreaSize = 50;
 
-        private uint _uControlBaseAddr = 8000;
+        private int _uControlBaseAddr = 8000;
 
-        private uint _controllerIp1 = 192;
-        private uint _controllerIp2 = 168;
-        private uint _controllerIp3 = 0;
-        private uint _controllerIp4 = 141;
+        private int _controllerIp1 = 192;
+        private int _controllerIp2 = 168;
+        private int _controllerIp3 = 0;
+        private int _controllerIp4 = 141;
 
-        private uint _controllerTcpPort = 502;
+        private int _controllerTcpPort = 502;
         #endregion
 
         #region VisualProperties
 
         [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
         [DisplayName(" 1.  Базовый адрес хранения данных типа Real (Float)")]
-        public uint UFloatBaseAddr
+        public int UFloatBaseAddr
         {
             get => _uFloatBaseAddr;
             set => _uFloatBaseAddr = value;
@@ -101,7 +103,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [Description("Определяет размер области для данных типа 'вещественный'.")]
         [DisplayName(" 2.  Размер области хранения данных типа Real (Float)")]
-        public uint UFloatAreaSize
+        public int UFloatAreaSize
         {
             get => _uFloatAreaSize;
             set => _uFloatAreaSize = value;
@@ -109,7 +111,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [Description("Определяет начальный адрес, куда помещаются данные типа 'целый 16 бит'")]
         [DisplayName(" 3.  Базовый адрес хранения данных типа Int")]
-        public uint UIntBaseAddr
+        public int UIntBaseAddr
         {
             get => _uIntBaseAddr;
             set => _uIntBaseAddr = value;
@@ -117,7 +119,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [DisplayName(" 4.  Размер области хранения данных типа Int")]
         [Description("Определяет размер области для данных типа 'целый 16 бит'")]
-        public uint UIntAreaSize
+        public int UIntAreaSize
         {
             get => _uIntAreaSize;
             set => _uIntAreaSize = value;
@@ -125,7 +127,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [DisplayName(" 5.  Базовый адрес хранения данных типа Boolean")]
         [Description("Определяет начальный адрес, куда помещаются данные типа 'логический'.")]
-        public uint UBoolBaseAddr
+        public int UBoolBaseAddr
         {
             get => _uBoolBaseAddr;
             set => _uBoolBaseAddr = value;
@@ -133,7 +135,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [Description("Определяет размер области для данных типа 'логический'.")]
         [DisplayName(" 6.  Размер области хранения данных типа Boolean")]
-        public uint UBoolAreaSize
+        public int UBoolAreaSize
         {
             get => _uBoolAreaSize;
             set => _uBoolAreaSize = value;
@@ -141,7 +143,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [DisplayName(" 7.  Базовый адрес контрольной области")]
         [Description("Определяет начальный адрес, где располагается зона контрольных данных (3 слова)")]
-        public uint UControlBaseAddr
+        public int UControlBaseAddr
         {
             get => _uControlBaseAddr;
             set => _uControlBaseAddr = value;
@@ -149,7 +151,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [Description("IP адрес контроллера байт 1")]
         [DisplayName("8.  IP адрес контроллера байт 1")]
-        public uint ControllerIp1
+        public int ControllerIp1
         {
             get => _controllerIp1;
             set => _controllerIp1 = value;
@@ -157,7 +159,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [DisplayName("9.  IP адрес контроллера байт 2")]
         [Description("IP адрес контроллера байт 2")]
-        public uint ControllerIp2
+        public int ControllerIp2
         {
             get => _controllerIp2;
             set => _controllerIp2 = value;
@@ -165,7 +167,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [Description("IP адрес контроллера байт 3")]
         [DisplayName("10.  IP адрес контроллера байт 3")]
-        public uint ControllerIp3
+        public int ControllerIp3
         {
             get => _controllerIp3;
             set => _controllerIp3 = value;
@@ -173,7 +175,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [Description("IP адрес контроллера байт 4")]
         [DisplayName("11.  IP адрес контроллера байт 4")]
-        public uint ControllerIp4
+        public int ControllerIp4
         {
             get => _controllerIp4;
             set => _controllerIp4 = value;
@@ -181,7 +183,7 @@ namespace NtoLib.Recipes.MbeTable
 
         [DisplayName("12.  TCP порт")]
         [Description("TCP порт")]
-        public uint ControllerTcpPort
+        public int ControllerTcpPort
         {
             get => _controllerTcpPort;
             set => _controllerTcpPort = value;
@@ -212,6 +214,8 @@ namespace NtoLib.Recipes.MbeTable
 
             _plcRecipeStatusProvider.UpdateStatus(isRecipeActive, isEnaSend, curentLine);
 
+            _timerService?.Update();
+            
             UpdateUiConnectionPins();
         }
 
@@ -233,19 +237,39 @@ namespace NtoLib.Recipes.MbeTable
                 _serviceProvider.InitializeServices(this);
             }
 
+            _timerService = _serviceProvider.TimerService;
             _plcStateMonitor = _serviceProvider.PlcStateMonitor;
             _plcRecipeStatusProvider = _serviceProvider.PlcRecipeStatusProvider;
             _actionTargetProvider = _serviceProvider.ActionTargetProvider;
 
             _actionTargetProvider.RefreshTargets();
+            
+            _timerService.TimesUpdated += OnTimesUpdated;
         }
 
         public override void Dispose()
         {
+            if (_timerService != null)
+            {
+                _timerService.TimesUpdated -= OnTimesUpdated; // <-- Отписаться
+            }
             CleanupServices();
             base.Dispose();
         }
 
+        private void OnTimesUpdated(TimeSpan stepTimeLeft, TimeSpan totalTimeLeft)
+        {
+            if (GetPinQuality(IdLineTimeLeft) != OpcQuality.Good || GetPinValue<float>(IdLineTimeLeft) != (float)stepTimeLeft.TotalSeconds)
+            {
+                SetPinValue(IdLineTimeLeft, (float)stepTimeLeft.TotalSeconds);
+            }
+
+            if (GetPinQuality(IdTotalTimeLeft) != OpcQuality.Good || GetPinValue<float>(IdTotalTimeLeft) != (float)totalTimeLeft.TotalSeconds)
+            {
+                SetPinValue(IdTotalTimeLeft, (float)totalTimeLeft.TotalSeconds);
+            }
+        }
+        
         protected override void CreatePinMap(bool newObject)
         {
             base.CreatePinMap(newObject);
@@ -290,18 +314,18 @@ namespace NtoLib.Recipes.MbeTable
 
         private void UpdateUiConnectionPins()
         {
-            VisualPins.SetValue<uint>(IdHmiFloatBaseAddr, UFloatBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiFloatAreaSize, UFloatAreaSize);
-            VisualPins.SetValue<uint>(IdHmiIntBaseAddr, UIntBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiIntAreaSize, UIntAreaSize);
-            VisualPins.SetValue<uint>(IdHmiBoolBaseAddr, UBoolBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiBoolAreaSize, UBoolAreaSize);
-            VisualPins.SetValue<uint>(IdHmiControlBaseAddr, UControlBaseAddr);
-            VisualPins.SetValue<uint>(IdHmiIp1, ControllerIp1);
-            VisualPins.SetValue<uint>(IdHmiIp2, ControllerIp2);
-            VisualPins.SetValue<uint>(IdHmiIp3, ControllerIp3);
-            VisualPins.SetValue<uint>(IdHmiIp4, ControllerIp4);
-            VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
+            VisualPins.SetValue<int>(IdHmiFloatBaseAddr, UFloatBaseAddr);
+            VisualPins.SetValue<int>(IdHmiFloatAreaSize, UFloatAreaSize);
+            VisualPins.SetValue<int>(IdHmiIntBaseAddr, UIntBaseAddr);
+            VisualPins.SetValue<int>(IdHmiIntAreaSize, UIntAreaSize);
+            VisualPins.SetValue<int>(IdHmiBoolBaseAddr, UBoolBaseAddr);
+            VisualPins.SetValue<int>(IdHmiBoolAreaSize, UBoolAreaSize);
+            VisualPins.SetValue<int>(IdHmiControlBaseAddr, UControlBaseAddr);
+            VisualPins.SetValue<int>(IdHmiIp1, ControllerIp1);
+            VisualPins.SetValue<int>(IdHmiIp2, ControllerIp2);
+            VisualPins.SetValue<int>(IdHmiIp3, ControllerIp3);
+            VisualPins.SetValue<int>(IdHmiIp4, ControllerIp4);
+            VisualPins.SetValue<int>(IdHmiPort, ControllerTcpPort);
         }
 
         private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)

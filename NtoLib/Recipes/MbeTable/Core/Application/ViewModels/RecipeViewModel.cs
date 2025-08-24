@@ -11,6 +11,7 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
@@ -34,6 +35,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private readonly DebugLogger _debugLogger;
         private readonly IStatusManager _statusManager;
         private readonly AppStateMachine _appStateMachine;
+        private readonly TimerService _timerService;
 
         private IUiDispatcher _uiDispatcher = new ImmediateUiDispatcher();
         
@@ -50,17 +52,19 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             RecipeLoopValidator recipeLoopValidator,
             RecipeTimeCalculator recipeTimeCalculator,
             IComboboxDataProvider comboboxDataProvider,
+            AppStateMachine appStateMachine,
+            TimerService timerService,
             IStatusManager statusManager,
-            DebugLogger debugLogger,
-            AppStateMachine appStateMachine)
+            DebugLogger debugLogger)
         {
             _recipeEngine = recipeEngine;
             _recipeLoopValidator = recipeLoopValidator;
             _recipeTimeCalculator = recipeTimeCalculator;
             _comboboxDataProvider = comboboxDataProvider;
+            _appStateMachine = appStateMachine;
+            _timerService = timerService;
             _statusManager = statusManager;
             _debugLogger = debugLogger;
-            _appStateMachine = appStateMachine;
 
             _recipe = _recipeEngine.CreateEmptyRecipe();
             // Initial populate must run on UI thread as soon as dispatcher is attached by TableControl.
@@ -143,7 +147,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             // Compute domain results off-UI thread (safe)
             _recipe = newRecipe;
             _loopResult = _recipeLoopValidator.Validate(_recipe);
-            _timeResult = _recipeTimeCalculator.Calculate(_recipe, _loopResult);
+            _timeResult = _recipeTimeCalculator.Calculate(_recipe);
+            
+            _timerService.SetTimeAnalysisData(_timeResult);
 
             _appStateMachine.Dispatch(new VmLoopValidChanged(_loopResult.IsValid));
 
