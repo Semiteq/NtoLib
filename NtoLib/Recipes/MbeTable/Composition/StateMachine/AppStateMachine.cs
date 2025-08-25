@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
 {
@@ -22,7 +21,7 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         {
             _debugLogger = debugLogger;
         }
-        
+
         public void InitializeEffects(RecipeEffectsHandler handler)
         {
             _effectsHandler = handler ?? throw new ArgumentNullException(nameof(handler));
@@ -49,7 +48,7 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
             {
                 foreach (var eff in effects)
                 {
-                    _debugLogger.Log($"Effect scheduled: {eff.GetType().Name} opId={eff.OpId}");
+                    _debugLogger.Log($"Effect scheduled: {eff.GetType().Name} opId={eff.OpId}", nameof(Dispatch));
                     _effectsHandler.RunEffect(eff);
                 }
             }
@@ -64,16 +63,83 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
             switch (command)
             {
                 case EnterEditor:
-                    return AppState.Initial(AppMode.Editor);
+                {
+                    var busy = state.Busy is BusyKind.Loading or BusyKind.Saving or BusyKind.Transferring
+                        ? state.Busy
+                        : BusyKind.Idle;
+                    return state with
+                    {
+                        Mode = AppMode.Editor,
+                        Busy = busy,
+                        ActiveOperationId = state.ActiveOperationId,
+                        ActiveFilePath = state.ActiveFilePath
+                    };
+                }
 
                 case EnterRuntime:
-                    return AppState.Initial(AppMode.Runtime);
+                {
+                    var busy = state.Busy is BusyKind.Loading or BusyKind.Saving or BusyKind.Transferring
+                        ? state.Busy
+                        : (state.RecipeActive ? BusyKind.Executing : BusyKind.Idle);
+
+                    var next = state with
+                    {
+                        Mode = AppMode.Runtime,
+                        Busy = busy,
+                        ActiveOperationId = state.ActiveOperationId,
+                        ActiveFilePath = state.ActiveFilePath
+                    };
+
+                    // Авто‑чтение при входе в Runtime, если контроллер уже доступен
+                    if (ShouldAutoRead(next))
+                    {
+                        var opId = Guid.NewGuid();
+                        _debugLogger.Log($"Auto-start ReadRecipe on EnterRuntime: opId={opId}", nameof(EnterRuntime));
+                        next = next with
+                        {
+                            Busy = BusyKind.Transferring,
+                            ActiveOperationId = opId,
+                            ActiveFilePath = null
+                        };
+                    }
+
+                    return next;
+                }
 
                 case VmLoopValidChanged(var vmOk):
                     return OnVmLoopValidChanged(state, vmOk);
 
                 case PlcAvailabilityChanged(var avail):
-                    return OnPlcAvailabilityChanged(state, avail);
+                {
+                    var isExecuting = avail.IsRecipeActive;
+                    var newBusy = state.Busy is BusyKind.Loading or BusyKind.Saving or BusyKind.Transferring
+                        ? state.Busy
+                        : (isExecuting ? BusyKind.Executing : BusyKind.Idle);
+
+                    var tmp = state with
+                    {
+                        EnaSendOk = avail.IsEnaSend,
+                        RecipeActive = isExecuting,
+                        Busy = newBusy
+                    };
+
+                    _debugLogger.Log($"[Reduce] PLC availability changed: {avail.IsRecipeActive}, {avail.IsEnaSend}");
+
+                    // Авто‑чтение при смене доступности (если уже в Runtime и условия выполняются)
+                    if (ShouldAutoRead(tmp))
+                    {
+                        var opId = Guid.NewGuid();
+                        _debugLogger.Log($"Auto-start ReadRecipe on PlcAvailabilityChanged: opId={opId}");
+                        tmp = tmp with
+                        {
+                            Busy = BusyKind.Transferring,
+                            ActiveOperationId = opId,
+                            ActiveFilePath = null
+                        };
+                    }
+
+                    return tmp;
+                }
 
                 case LoadRecipeRequested(var filePath):
                     if (!CanStartOperation(state))
@@ -105,6 +171,16 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
                         ActiveFilePath = null
                     };
 
+                case ReadRecipeRequested:
+                    if (!CanStartOperation(state))
+                        return DenyNewOpWithMessage(state, "Операция уже выполняется.");
+                    return state with
+                    {
+                        Busy = BusyKind.Transferring,
+                        ActiveOperationId = Guid.NewGuid(),
+                        ActiveFilePath = null
+                    };
+
                 case LoadRecipeCompleted(var opId, var success, var msg, var errors):
                     return OnOperationCompleted(state, opId, success, msg, success ? MessageTag.LoadSuccess : MessageTag.LoadError, errors);
 
@@ -113,6 +189,9 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
 
                 case SendRecipeCompleted(var opIdT, var successT, var msgT, var errorsT):
                     return OnOperationCompleted(state, opIdT, successT, msgT, successT ? MessageTag.TransferSuccess : MessageTag.TransferError, errorsT);
+
+                case ReadRecipeCompleted(var opIdR, var successR, var msgR, var errorsR):
+                    return OnOperationCompleted(state, opIdR, successR, msgR, successR ? MessageTag.TransferSuccess : MessageTag.TransferError, errorsR);
 
                 case PostMessage(var msg):
                     return state with { Message = msg };
@@ -131,6 +210,20 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         private static bool CanStartOperation(AppState s)
         {
             return s.Busy is BusyKind.Idle or BusyKind.Executing && s.ActiveOperationId is null;
+        }
+
+        private bool ShouldAutoRead(AppState s)
+        {
+            var noActiveOp = s.ActiveOperationId is null;
+            var notBusyOp = s.Busy is BusyKind.Idle or BusyKind.Executing;
+            var should = s.Mode == AppMode.Runtime
+                         && s.EnaSendOk
+                         && !s.RecipeActive
+                         && noActiveOp
+                         && notBusyOp;
+
+            _debugLogger.Log($"ShouldAutoRead: mode={s.Mode}, ena={s.EnaSendOk}, exec={s.RecipeActive}, busy={s.Busy}, opId={(s.ActiveOperationId?.ToString() ?? "null")} => {should}", nameof(ShouldAutoRead));
+            return should;
         }
 
         private AppState DenyNewOpWithMessage(AppState s, string text)
@@ -159,22 +252,6 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
                 };
             }
             return newState;
-        }
-
-        private AppState OnPlcAvailabilityChanged(AppState state, PlcRecipeAvailable avail)
-        {
-            var isExecuting = avail.IsRecipeActive;
-            var newBusy = state.Busy is BusyKind.Loading or BusyKind.Saving or BusyKind.Transferring
-                ? state.Busy
-                : (isExecuting ? BusyKind.Executing : BusyKind.Idle);
-
-            _debugLogger.Log($"PLC availability changed: {avail.IsRecipeActive}, {avail.IsEnaSend}");
-            return state with
-            {
-                EnaSendOk = avail.IsEnaSend,
-                RecipeActive = isExecuting,
-                Busy = newBusy
-            };
         }
 
         private AppState OnOperationCompleted(AppState state, Guid opId, bool success, string message, MessageTag tag, IReadOnlyList<string>? errors)
@@ -210,12 +287,12 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
 
         private AppState RecalculateDerivedState(AppState baseState)
         {
-            var isBusyWithFile = baseState.Busy is BusyKind.Loading or BusyKind.Saving or BusyKind.Transferring;
+            var isBusyWithOp = baseState.Busy is BusyKind.Loading or BusyKind.Saving or BusyKind.Transferring;
             var isExecuting = baseState.RecipeActive;
-            
+
             var canWrite = baseState.Mode == AppMode.Runtime && baseState.VmOk && baseState.EnaSendOk && !isExecuting && baseState.Busy == BusyKind.Idle;
-            var canEditRecipe = baseState.Mode == AppMode.Runtime && !isBusyWithFile && !isExecuting;
-            var canSaveFile = baseState.Mode == AppMode.Runtime && !isBusyWithFile;
+            var canEditRecipe = baseState.Mode == AppMode.Runtime && !isBusyWithOp && !isExecuting;
+            var canSaveFile = baseState.Mode == AppMode.Runtime && !isBusyWithOp;
 
             var permissions = new UiPermissions(
                 CanWriteRecipe: canWrite,
@@ -247,6 +324,18 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
             else if (cmd is SendRecipeRequested && next.Busy == BusyKind.Transferring && next.ActiveOperationId is Guid op3)
             {
                 list.Add(new SendRecipeEffect(op3));
+            }
+            else if (cmd is ReadRecipeRequested && next.Busy == BusyKind.Transferring && next.ActiveOperationId is Guid op4)
+            {
+                list.Add(new ReadRecipeEffect(op4));
+            }
+            else if (cmd is PlcAvailabilityChanged && next.Busy == BusyKind.Transferring && next.ActiveOperationId is Guid opAuto1 && prev.ActiveOperationId != next.ActiveOperationId)
+            {
+                list.Add(new ReadRecipeEffect(opAuto1));
+            }
+            else if (cmd is EnterRuntime && next.Busy == BusyKind.Transferring && next.ActiveOperationId is Guid opAuto2 && prev.ActiveOperationId != next.ActiveOperationId)
+            {
+                list.Add(new ReadRecipeEffect(opAuto2));
             }
 
             return list;

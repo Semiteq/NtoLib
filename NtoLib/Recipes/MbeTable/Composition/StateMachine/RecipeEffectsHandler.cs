@@ -48,6 +48,10 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
                 case SendRecipeEffect(var opIdT):
                     Task.Run(async () => await DoSendRecipeAsync(opIdT));
                     break;
+
+                case ReadRecipeEffect(var opIdR):
+                    Task.Run(async () => await DoReadRecipeAsync(opIdR));
+                    break;
             }
         }
 
@@ -104,6 +108,28 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
             catch (Exception ex)
             {
                 _stateMachine.Dispatch(new SendRecipeCompleted(opId, false, $"Критическая ошибка: {ex.Message}", new[] { ex.Message }));
+            }
+        }
+
+        private async Task DoReadRecipeAsync(Guid opId)
+        {
+            try
+            {
+                var result = await _recipePlcSender.DownloadAsync();
+                if (result.IsSuccess)
+                {
+                    _recipeViewModel.SetRecipe(result.Value);
+                    _stateMachine.Dispatch(new ReadRecipeCompleted(opId, true, "Рецепт прочитан из контроллера."));
+                }
+                else
+                {
+                    var first = result.Errors.FirstOrDefault()?.Message ?? "Неизвестная ошибка при чтении рецепта";
+                    _stateMachine.Dispatch(new ReadRecipeCompleted(opId, false, $"Ошибка чтения: {first}", new[] { first }));
+                }
+            }
+            catch (Exception ex)
+            {
+                _stateMachine.Dispatch(new ReadRecipeCompleted(opId, false, $"Критическая ошибка: {ex.Message}", new[] { ex.Message }));
             }
         }
     }

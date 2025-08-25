@@ -484,7 +484,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll" "$(TargetDir)System.Collections.Immutable.dll" "$(TargetDir)CsvHelper.dll" "$(TargetDir)FluentResults.dll" "$(TargetDir)Microsoft.Extensions.Logging.Abstractions.dll"
+    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll" "$(TargetDir)System.Collections.Immutable.dll" "$(TargetDir)CsvHelper.dll" "$(TargetDir)FluentResults.dll" "$(TargetDir)Microsoft.Extensions.Logging.Abstractions.dll" "$(TartgetDir)System.Resources.Extensions.dll"
 chcp 437 &amp;&amp; xcopy "$(TargetPath)" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(TargetDir)NtoLib.pdb" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
 chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I</PostBuildEvent>

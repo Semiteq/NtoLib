@@ -27,28 +27,32 @@ namespace NtoLib.Recipes.MbeTable;
 [Guid("8161DF32-8D80-4B81-AF52-3021AE0AD293")]
 public partial class TableControl : VisualControlBase
 {
+    // DI and services
     [NonSerialized] private ServiceProvider _sp;
-
     [NonSerialized] private RecipeViewModel _recipeViewModel;
     [NonSerialized] private TableSchema _tableSchema;
     [NonSerialized] private IStatusManager _statusManager;
-    [NonSerialized] private OpenFileDialog _openFileDialog;
-    [NonSerialized] private SaveFileDialog _saveFileDialog;
-    [NonSerialized] private ColorScheme _colorScheme;
     [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
     [NonSerialized] private IActionTargetProvider _actionTargetProvider;
     [NonSerialized] private IComboboxDataProvider _comboboxDataProvider;
     [NonSerialized] private TableColumnFactoryMap _tableColumnFactoryMap;
     [NonSerialized] private TableCellStateManager _tableCellStateManager;
-    [NonSerialized] private TableBehaviorManager _tableBehaviorManager;
     [NonSerialized] private IPlcRecipeStatusProvider _plcRecipeStatusProvider;
     [NonSerialized] private DebugLogger _debugLogger;
     [NonSerialized] private AppStateMachine _appStateMachine;
     [NonSerialized] private AppStateUiProjector _uiProjector;
-    [NonSerialized] private ButtonStateStyler _buttonStyler;
 
+    // UI artifacts
+    [NonSerialized] private TableBehaviorManager _tableBehaviorManager;
+    [NonSerialized] private ButtonStateStyler _buttonStyler;
+    [NonSerialized] private OpenFileDialog _openFileDialog;
+    [NonSerialized] private SaveFileDialog _saveFileDialog;
+    [NonSerialized] private ColorScheme _colorScheme;
+
+    // Subscriptions container
     [NonSerialized] private readonly List<IDisposable> _eventSubscriptions = new();
 
+    // Appearance (design-time props)
     [NonSerialized] private Color _controlBgColor = Color.Gray;
     [NonSerialized] private Color _tableBgColor = Color.Gray;
     [NonSerialized] private Font _headerFont = new("Arial", 14f, FontStyle.Bold);
@@ -67,16 +71,21 @@ public partial class TableControl : VisualControlBase
     [NonSerialized] private int _rowHeight = 40;
     [NonSerialized] private Color _statusBgColor = Color.LightGray;
 
+    public TableControl() : base(true)
+    {
+        InitializeComponent();
+        // DI setup happens in OnFBLinkChanged
+    }
+
     public override void put_DesignMode(int bDesignMode)
     {
         base.put_DesignMode(bDesignMode);
+        // Idempotent mode switch (reducer keeps state)
         AppCommand cmd = FBConnector.DesignMode ? new EnterEditor() : new EnterRuntime();
         _appStateMachine?.Dispatch(cmd);
     }
 
-    #region Properties
-    // Properties are initialized before OnFBLinkChanged
-    // Null check is mandatory
+    #region Design-time properties
 
     [DisplayName("Цвет фона")]
     public Color ControlBgColor
@@ -90,7 +99,7 @@ public partial class TableControl : VisualControlBase
             UpdateColorScheme();
         }
     }
-    
+
     [DisplayName("Цвет статуса")]
     public Color StatusBgColor
     {
@@ -98,6 +107,7 @@ public partial class TableControl : VisualControlBase
         set
         {
             if (_statusBgColor == value) return;
+            _statusBgColor = value;
             if (_labelStatus != null) _labelStatus.BackColor = value;
             UpdateColorScheme();
         }
@@ -290,36 +300,49 @@ public partial class TableControl : VisualControlBase
             UpdateColorScheme();
         }
     }
+
     #endregion
 
-    #region Constructor / lifecycle
-
-    public TableControl() : base(true)
-    {
-        InitializeComponent();
-        // Initializing only by OnFBLinkChanged, so the DI is passed by MbeTableFB
-    }
+    #region Lifecycle
 
     protected override void OnFBLinkChanged()
     {
         base.OnFBLinkChanged();
-        if (FBConnector.Fb != null)
-            InitializeServicesAndEvents();
+
+        try
+        {
+            if (FBConnector.Fb != null)
+                InitializeServicesAndEvents();
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("Не могу найти child с Name"))
+        {
+            MessageBox.Show(
+                "Не удалось установить связь блока интерфейса с блоком логики ФБ. " +
+                "Нужно целиком удалить ФБ из дерева и добавить заново для реинициализации в SCADA.",
+                "Ошибка",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+        catch
+        {
+            throw;
+        }
     }
 
     private void InitializeServicesAndEvents()
     {
-        var fb = FBConnector.Fb as MbeTableFB ?? throw new NullReferenceException(
-            "No connection between MbeTableFB and TableControl was  established");
+        var fb = FBConnector.Fb as MbeTableFB
+                 ?? throw new NullReferenceException("No connection between MbeTableFB and TableControl was established");
 
         _sp = fb.ServiceProvider;
 
-        // MbeTableFB is not initialized in DesignMode.
-        // In this case skipping table initialization.
+        // Some environments instantiate control in designer without initializing ServiceProvider
         if (!_sp.IsInitialized) return;
 
+        // Attach UI dispatcher before any VM/UI work
         _sp.AttachUiDispatcher(new WinFormsUiDispatcher(this));
 
+        // Resolve services
         _recipeViewModel = _sp.RecipeViewModel;
         _tableSchema = _sp.TableSchema;
         _statusManager = _sp.StatusManager;
@@ -337,8 +360,7 @@ public partial class TableControl : VisualControlBase
         _colorScheme = _sp.ColorScheme;
 
         UpdateColorScheme();
-
-        _actionTargetProvider?.RefreshTargets();
+        _actionTargetProvider.RefreshTargets();
 
         InitializeUi();
         InitializeAppState();
@@ -347,6 +369,7 @@ public partial class TableControl : VisualControlBase
     private void InitializeUi()
     {
         ClearSubscriptions();
+
         InitButtonStyling();
         EnableDoubleBufferDataGridView();
 
@@ -355,7 +378,7 @@ public partial class TableControl : VisualControlBase
         tableColumnManager.InitializeTableColumns();
         tableColumnManager.InitializeTableRows();
 
-        _table.RowHeadersWidth = 50; 
+        _table.RowHeadersWidth = 50;
         _table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
         _table.DataSource = _recipeViewModel.ViewModels;
         _table.Invalidate();
@@ -364,49 +387,78 @@ public partial class TableControl : VisualControlBase
         _tableBehaviorManager.TableStyleSetup();
         _tableBehaviorManager.Attach();
 
+        // UI + VM subscriptions (auto-unsubscribe on Dispose)
         Subscribe(() => _table.DataError += Table_DataError,
-            () => _table.DataError -= Table_DataError);
+                  () => _table.DataError -= Table_DataError);
 
         Subscribe(() => _recipeViewModel.OnUpdateStart += OnVmUpdateStart,
-            () => _recipeViewModel.OnUpdateStart -= OnVmUpdateStart);
+                  () => _recipeViewModel.OnUpdateStart -= OnVmUpdateStart);
 
         Subscribe(() => _recipeViewModel.OnUpdateEnd += OnVmUpdateEnd,
-            () => _recipeViewModel.OnUpdateEnd -= OnVmUpdateEnd);
+                  () => _recipeViewModel.OnUpdateEnd -= OnVmUpdateEnd);
 
         Subscribe(() => _statusManager.StatusUpdated += OnStatusUpdated,
-            () => _statusManager.StatusUpdated -= OnStatusUpdated);
+                  () => _statusManager.StatusUpdated -= OnStatusUpdated);
 
         Subscribe(() => _statusManager.StatusCleared += OnStatusCleared,
-            () => _statusManager.StatusCleared -= OnStatusCleared);
+                  () => _statusManager.StatusCleared -= OnStatusCleared);
     }
 
     private void InitializeAppState()
     {
-        Subscribe(() => _appStateMachine.StateChanged += OnAppStateChanged,
-            () => _appStateMachine.StateChanged -= OnAppStateChanged);
+        if (_appStateMachine == null) return;
 
-        Subscribe(() => _plcRecipeStatusProvider.AvailabilityChanged += OnPlcAvailabilityChanged,
-            () => _plcRecipeStatusProvider.AvailabilityChanged -= OnPlcAvailabilityChanged);
+        // State machine projection updates
+        Subscribe(() => _appStateMachine.StateChanged += OnAppStateChanged,
+                  () => _appStateMachine.StateChanged -= OnAppStateChanged);
+
+        // PLC availability relay to state machine
+        Action<PlcRecipeAvailable> handler = avail => _appStateMachine.Dispatch(new PlcAvailabilityChanged(avail));
+        Subscribe(() => _plcRecipeStatusProvider.AvailabilityChanged += handler,
+                  () => _plcRecipeStatusProvider.AvailabilityChanged -= handler);
+
+        // Mode first, then initial availability (so PLC flags are not wiped)
+        _appStateMachine.Dispatch(FBConnector.DesignMode ? new EnterEditor() : new EnterRuntime());
 
         try
         {
-            var initialAvailability = _plcRecipeStatusProvider.GetAvailability();
-            _appStateMachine.Dispatch(new PlcAvailabilityChanged(initialAvailability));
+            var initial = _plcRecipeStatusProvider.GetAvailability();
+            _appStateMachine.Dispatch(new PlcAvailabilityChanged(initial));
         }
         catch
         {
             _appStateMachine.Dispatch(new PlcAvailabilityChanged(new PlcRecipeAvailable(false, false)));
         }
-
-        _appStateMachine.Dispatch(FBConnector.DesignMode ? new EnterEditor() : new EnterRuntime());
-
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // Unsubscribe all events safely
+            ClearSubscriptions();
+
+            // Dispose helpers and components
+            try { _buttonStyler?.Dispose(); } catch { /* ignore */ }
+            try { _tableBehaviorManager?.Dispose(); } catch { /* ignore */ }
+            try { components?.Dispose(); } catch { /* ignore */ }
+
+            // Fonts are owned by control when set from designer
+            TryDisposeFont(_headerFont);
+            TryDisposeFont(_lineFont);
+            TryDisposeFont(_selectedLineFont);
+            TryDisposeFont(_passedLineFont);
+        }
+
+        base.Dispose(disposing);
+    }
+
+    #endregion
+
+    #region Event handlers
 
     private void OnVmUpdateStart() => _table.SuspendLayout();
     private void OnVmUpdateEnd() => _table.ResumeLayout();
-
-    private void OnPlcAvailabilityChanged(PlcRecipeAvailable avail)
-        => _appStateMachine.Dispatch(new PlcAvailabilityChanged(avail));
 
     private void OnStatusUpdated(string message, StatusMessage statusMessage)
     {
@@ -415,8 +467,8 @@ public partial class TableControl : VisualControlBase
         {
             StatusMessage.Error => Color.OrangeRed,
             StatusMessage.Success => Color.DarkSeaGreen,
-            StatusMessage.Info => Color.AliceBlue,
-            _ => _controlBgColor,
+            StatusMessage.Info => Color.PaleTurquoise,
+            _ => _statusBgColor
         };
     }
 
@@ -445,90 +497,7 @@ public partial class TableControl : VisualControlBase
         });
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            ClearSubscriptions();
-
-            try { _buttonStyler?.Dispose(); } catch { /* ignore */ }
-            try { _tableBehaviorManager?.Dispose(); } catch { /* ignore */ }
-            try { components?.Dispose(); } catch { /* ignore */ }
-
-            TryDisposeFont(_headerFont);
-            TryDisposeFont(_lineFont);
-            TryDisposeFont(_selectedLineFont);
-            TryDisposeFont(_passedLineFont);
-        }
-        base.Dispose(disposing);
-    }
-    #endregion
-
-    #region Visuals
-
-    private void UpdateColorScheme()
-    {
-        if (_sp == null || !_sp.IsInitialized) return;
-        var newScheme = new ColorScheme(
-            ControlBackgroundColor: _controlBgColor,
-            TableBackgroundColor: _tableBgColor,
-            HeaderFont: _headerFont,
-            LineFont: _lineFont,
-            SelectedLineFont: _selectedLineFont,
-            PassedLineFont: _passedLineFont,
-            BlockedFont: _lineFont,
-            HeaderTextColor: _headerTextColor,
-            LineTextColor: _lineTextColor,
-            SelectedLineTextColor: _selectedLineTextColor,
-            PassedLineTextColor: _passedLineTextColor,
-            BlockedTextColor: _passedLineTextColor,
-            HeaderBgColor: _headerBgColor,
-            LineBgColor: _lineBgColor,
-            SelectedLineBgColor: _selectedLineBgColor,
-            PassedLineBgColor: _passedLineBgColor,
-            BlockedBgColor: _headerBgColor,
-            ButtonsColor: _buttonsColor,
-            BlockedButtonsColor: Darken(_buttonsColor),
-            LineHeight: _rowHeight
-        );
-        _sp.SetColorScheme(newScheme);
-        _colorScheme = newScheme;
-        // ApplySchemeToUi();
-    }
-
-    private static Color Darken(Color c)
-    {
-        const int d = 40;
-        int clamp(int v) => v < 0 ? 0 : (v > 255 ? 255 : v);
-        return Color.FromArgb(c.A, clamp(c.R - d), clamp(c.G - d), clamp(c.B - d));
-    }
-
-    private void ApplySchemeToUi()
-    {
-        if (_table == null || _colorScheme == null) return;
-        _table.ColumnHeadersDefaultCellStyle.Font = _colorScheme.HeaderFont;
-        _table.RowHeadersDefaultCellStyle.Font = _colorScheme.HeaderFont;
-        _table.BackgroundColor = _colorScheme.TableBackgroundColor;
-        _table.RowTemplate.Height = _colorScheme.LineHeight;
-        foreach (DataGridViewColumn c in _table.Columns)
-            c.DefaultCellStyle.Font = _colorScheme.LineFont;
-        _table.Invalidate();
-    }
-
-    private void EnableDoubleBufferDataGridView()
-    {
-        typeof(DataGridView).InvokeMember(
-            "DoubleBuffered",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
-            System.Reflection.BindingFlags.SetProperty,
-            null,
-            _table,
-            new object[] { true });
-    }
-
-    #endregion
-
-    private void Table_DataError(object sender, DataGridViewDataErrorEventArgs e)
+    private void Table_DataError(object? sender, DataGridViewDataErrorEventArgs e)
     {
         if (e.Cancel) return;
         _sp.StatusManager.WriteStatusMessage(
@@ -536,7 +505,9 @@ public partial class TableControl : VisualControlBase
         e.ThrowException = false;
     }
 
-    #region Button Click Handlers
+    #endregion
+
+    #region Button click handlers
 
     private void ClickButton_Delete(object sender, EventArgs e)
     {
@@ -578,12 +549,16 @@ public partial class TableControl : VisualControlBase
         _appStateMachine?.Dispatch(new SendRecipeRequested());
     }
 
+    #endregion
+
+    #region Visual helpers
+
     private void InitButtonStyling()
     {
         _buttonStyler?.Dispose();
         _buttonStyler = new ButtonStateStyler
         {
-            DisabledBackColor = Color.FromArgb(70, 70, 70),
+            DisabledBackColor = Color.FromArgb(170, 170, 170),
             DisabledForeColor = Color.Gainsboro
         };
 
@@ -595,13 +570,59 @@ public partial class TableControl : VisualControlBase
         _buttonStyler.Register(_buttonWrite);
     }
 
+    private void EnableDoubleBufferDataGridView()
+    {
+        typeof(DataGridView).InvokeMember(
+            "DoubleBuffered",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.SetProperty,
+            null,
+            _table,
+            new object[] { true });
+    }
+
+    private void UpdateColorScheme()
+    {
+        if (_sp == null || !_sp.IsInitialized) return;
+
+        var newScheme = new ColorScheme(
+            ControlBackgroundColor: _controlBgColor,
+            TableBackgroundColor: _tableBgColor,
+            HeaderFont: _headerFont,
+            LineFont: _lineFont,
+            SelectedLineFont: _selectedLineFont,
+            PassedLineFont: _passedLineFont,
+            BlockedFont: _lineFont,
+            HeaderTextColor: _headerTextColor,
+            LineTextColor: _lineTextColor,
+            SelectedLineTextColor: _selectedLineTextColor,
+            PassedLineTextColor: _passedLineTextColor,
+            BlockedTextColor: _passedLineTextColor,
+            HeaderBgColor: _headerBgColor,
+            LineBgColor: _lineBgColor,
+            SelectedLineBgColor: _selectedLineBgColor,
+            PassedLineBgColor: _passedLineBgColor,
+            BlockedBgColor: _headerBgColor,
+            ButtonsColor: _buttonsColor,
+            BlockedButtonsColor: Darken(_buttonsColor),
+            LineHeight: _rowHeight
+        );
+
+        _sp.SetColorScheme(newScheme);
+        _colorScheme = newScheme;
+    }
+
+    private static Color Darken(Color c)
+    {
+        const int d = 40;
+        int Clamp(int v) => v < 0 ? 0 : (v > 255 ? 255 : v);
+        return Color.FromArgb(c.A, Clamp(c.R - d), Clamp(c.G - d), Clamp(c.B - d));
+    }
+
     #endregion
 
-    /// <summary>
-    /// Safely executes the specified action on the UI thread. Ensures that the action is executed
-    /// on the correct thread in a thread-safe manner, suppressing any exceptions that may occur.
-    /// </summary>
-    /// <param name="action">The action to be executed on the UI thread.</param>
+    #region Infrastructure helpers
+
     private void SafeUi(Action action)
     {
         try
@@ -613,7 +634,7 @@ public partial class TableControl : VisualControlBase
         }
         catch
         {
-            /* ignore */
+            // ignore
         }
     }
 
@@ -628,18 +649,11 @@ public partial class TableControl : VisualControlBase
     private void ClearSubscriptions()
     {
         if (_eventSubscriptions.Count == 0) return;
+
         for (int i = _eventSubscriptions.Count - 1; i >= 0; i--)
         {
-            try
-            {
-                _eventSubscriptions[i]?.Dispose();
-            }
-            catch
-            {
-                /* ignore */
-            }
+            try { _eventSubscriptions[i]?.Dispose(); } catch { /* ignore */ }
         }
-
         _eventSubscriptions.Clear();
     }
 
@@ -648,9 +662,6 @@ public partial class TableControl : VisualControlBase
         try { f?.Dispose(); } catch { /* ignore */ }
     }
 
-    /// <summary>
-    /// Represents an action that will be executed when the instance is disposed.
-    /// </summary>
     private sealed class DisposableAction : IDisposable
     {
         private Action? _dispose;
@@ -664,4 +675,6 @@ public partial class TableControl : VisualControlBase
             d();
         }
     }
+
+    #endregion
 }

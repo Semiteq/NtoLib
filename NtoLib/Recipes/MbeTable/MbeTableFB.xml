@@ -11,7 +11,7 @@
 			<Pin ID="2" Name="RecipePaused"			Type="Логический" DefaultValue="false"/>
 			
 			<!-- Current recipe line number in operation mode. -->
-			<Pin ID="3" Name="ActualLineNumber"		Type="Целый"/>
+			<Pin ID="3" Name="ActualLineNumber"		Type="Целый" DefaultValue="-1"/>
 
 			<!-- Current recipe execution time.  -->
 			<Pin ID="4" Name="StepCurrentTime"		Type="Вещественный"/>

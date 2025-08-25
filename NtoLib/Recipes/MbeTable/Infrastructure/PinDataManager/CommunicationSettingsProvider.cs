@@ -13,15 +13,15 @@ public class CommunicationSettingsProvider : ICommunicationSettingsProvider
     {
         return new CommunicationSettings
         {
-            FloatBaseAddr = _fb.UFloatBaseAddr,
-            IntBaseAddr = _fb.UIntBaseAddr,
-            BoolBaseAddr = _fb.UBoolBaseAddr,
+            FloatBaseAddr = _fb.FloatBaseAddr,
+            IntBaseAddr = _fb.IntBaseAddr,
+            BoolBaseAddr = _fb.BoolBaseAddr,
             
-            ControlBaseAddr = _fb.UControlBaseAddr,
+            ControlBaseAddr = _fb.ControlBaseAddr,
             
-            FloatAreaSize = _fb.UFloatAreaSize,
-            IntAreaSize = _fb.UIntAreaSize,
-            BoolAreaSize = _fb.UBoolAreaSize,
+            FloatAreaSize = _fb.FloatAreaSize,
+            IntAreaSize = _fb.IntAreaSize,
+            BoolAreaSize = _fb.BoolAreaSize,
             
             Ip1 = _fb.ControllerIp1,
             Ip2 = _fb.ControllerIp2,

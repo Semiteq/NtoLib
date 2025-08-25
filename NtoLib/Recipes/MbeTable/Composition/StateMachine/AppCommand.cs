@@ -18,11 +18,13 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
     public sealed record LoadRecipeRequested(string FilePath) : AppCommand;
     public sealed record SaveRecipeRequested(string FilePath) : AppCommand;
     public sealed record SendRecipeRequested : AppCommand;
+    public sealed record ReadRecipeRequested : AppCommand;
 
     // Completion (from effects)
     public sealed record LoadRecipeCompleted(Guid OpId, bool Success, string Message, IReadOnlyList<string>? Errors = null) : AppCommand;
     public sealed record SaveRecipeCompleted(Guid OpId, bool Success, string Message, IReadOnlyList<string>? Errors = null) : AppCommand;
     public sealed record SendRecipeCompleted(Guid OpId, bool Success, string Message, IReadOnlyList<string>? Errors = null) : AppCommand;
+    public sealed record ReadRecipeCompleted(Guid OpId, bool Success, string Message, IReadOnlyList<string>? Errors = null) : AppCommand;
 
     // Messages
     public sealed record PostMessage(UiMessage Msg) : AppCommand;

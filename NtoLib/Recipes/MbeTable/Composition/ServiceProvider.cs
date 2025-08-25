@@ -179,6 +179,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
             RecipeComparator = new RecipeComparatorV1(DebugLogger, CommunicationSettingsProvider);
 
             RecipePlcSender = new RecipePlcSender(
+                ModbusTransport,
                 PlcProtocol,
                 PlcRecipeSerializer,
                 RecipeComparator,

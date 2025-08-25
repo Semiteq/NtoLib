@@ -24,99 +24,69 @@ public sealed class PlcProtocolV1 : IPlcProtocol
     }
 
     private CommunicationSettings Settings => _communicationSettingsProvider.GetSettings();
-    
-    public Result CheckConnection()
-    {
-        try
-        {
-            return _modbusTransport.CheckConnection();
-        }
-        catch (Exception ex)
-        {
-            _debugLogger.Log($"Connection check error: {ex.Message}");
-            return Result.Fail("Ошибка при проверке соединения с ПЛК.");
-        }
-    }
 
     public Result WriteAllAreas(int[] intData, int[] floatData, int[] boolData, int rowCount)
     {
-        try
+        if (intData.Length > 0)
         {
-            var connectionResult = _modbusTransport.Connect();
-            if (connectionResult.IsFailed)
-                return Result.Fail(connectionResult.Errors);
-
-            if (intData.Length > 0)
-            {
-                _debugLogger.Log($"Writing int data: [{string.Join(",", intData)}]");
-                _modbusTransport.WriteMultipleRegistersChunked(Settings.IntBaseAddr, intData, MaxChunkSize);
-            }
-
-            if (floatData.Length > 0)
-            {
-                _debugLogger.Log($"Writing float data: [{string.Join(",", floatData)}]");
-                _modbusTransport.WriteMultipleRegistersChunked(Settings.FloatBaseAddr, floatData, MaxChunkSize);
-            }
-
-            if (boolData.Length > 0)
-            {
-                _debugLogger.Log($"Writing bool data: [{string.Join(",", boolData)}]");
-                _modbusTransport.WriteMultipleRegistersChunked(Settings.BoolBaseAddr, boolData, MaxChunkSize);
-            }
-
-            // LineCount
-            _modbusTransport.WriteSingleRegister(Settings.ControlBaseAddr + 2, rowCount);
-
-            return Result.Ok();
+            _debugLogger.Log($"Writing int data...");
+            var writeResult = _modbusTransport.WriteMultipleRegistersChunked(Settings.IntBaseAddr, intData, MaxChunkSize);
+            if (writeResult.IsFailed) return writeResult;
         }
-        catch (Exception ex)
+
+        if (floatData.Length > 0)
         {
-            _debugLogger.Log($"Write error: {ex.Message}");
-            return Result.Fail("Ошибка при записи данных рецепта в ПЛК.");
+            _debugLogger.Log($"Writing float data...");
+            var writeResult = _modbusTransport.WriteMultipleRegistersChunked(Settings.FloatBaseAddr, floatData, MaxChunkSize);
+            if (writeResult.IsFailed) return writeResult;
         }
-        finally
+
+        if (boolData.Length > 0)
         {
-            _modbusTransport.TryDisconnect();
+            _debugLogger.Log($"Writing bool data...");
+            var writeResult = _modbusTransport.WriteMultipleRegistersChunked(Settings.BoolBaseAddr, boolData, MaxChunkSize);
+            if (writeResult.IsFailed) return writeResult;
         }
+
+        var writeRowCountResult = _modbusTransport.WriteSingleRegister(Settings.ControlBaseAddr + 2, rowCount);
+        if (writeRowCountResult.IsFailed) return writeRowCountResult;
+
+        return Result.Ok();
     }
 
     public Result<(int[] IntData, int[] FloatData, int RowCount)> ReadAllAreas()
     {
-        try
+        var rowCountReadingResult = _modbusTransport.ReadHoldingRegisters(Settings.ControlBaseAddr + 2, 1);
+        if (rowCountReadingResult.IsFailed)
+            return rowCountReadingResult.ToResult<(int[], int[], int)>();
+        
+        var rowCount = rowCountReadingResult.Value[0];
+
+        if (rowCount <= 0)
+            return Result.Fail<(int[], int[], int)>("Некорректное число строк рецепта в ПЛК.");
+
+        var intQty = rowCount * Settings.IntColumNum;
+        var floatQty = rowCount * Settings.FloatColumNum * 2;
+        var boolQty = rowCount * Settings.BoolColumNum;
+
+        var intReadingResult = Array.Empty<int>();
+        if (intQty > 0)
         {
-            var connectionResult = _modbusTransport.Connect();
-            if (connectionResult.IsFailed)
-                return Result.Fail(connectionResult.Errors);
-
-            var rowCount = _modbusTransport.ReadHoldingRegisters(Settings.ControlBaseAddr + 2, 1)[0];
-
-            if (rowCount <= 0)
-                return Result.Fail<(int[], int[], int)>("Некорректное число строк рецепта в ПЛК.");
-
-            var intQty = rowCount * Settings.IntColumNum;
-            var floatQty = rowCount * Settings.FloatColumNum * 2;
-            var boolQty = rowCount * Settings.BoolColumNum;
-
-            var ints = intQty > 0
-                ? _modbusTransport.ReadHoldingRegistersChunked(Settings.IntBaseAddr, intQty, MaxChunkSize)
-                : Array.Empty<int>();
-
-            var floats = floatQty > 0
-                ? _modbusTransport.ReadHoldingRegistersChunked(Settings.FloatBaseAddr, floatQty, MaxChunkSize)
-                : Array.Empty<int>();
-
-            _ = boolQty;
-
-            return Result.Ok((ints, floats, rowCount));
+            var result = _modbusTransport.ReadHoldingRegistersChunked(Settings.IntBaseAddr, intQty, MaxChunkSize);
+            if (result.IsFailed) return result.ToResult<(int[], int[], int)>();
+            intReadingResult = result.Value;
         }
-        catch (Exception ex)
+
+        var floatReadingResult = Array.Empty<int>();
+        if (floatQty > 0)
         {
-            _debugLogger.Log($"Read error: {ex.Message}");
-            return Result.Fail<(int[], int[], int)>("Ошибка при чтении данных рецепта из ПЛК.");
+            var result = _modbusTransport.ReadHoldingRegistersChunked(Settings.FloatBaseAddr, floatQty, MaxChunkSize);
+            if (result.IsFailed) return result.ToResult<(int[], int[], int)>();
+            floatReadingResult = result.Value;
         }
-        finally
-        {
-            _modbusTransport.TryDisconnect();
-        }
+
+        _ = boolQty;
+
+        return Result.Ok((intReadingResult, floatReadingResult, rowCount));
     }
 }

@@ -28,6 +28,10 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions
         public virtual string FormatValue(object value)
         {
             var floatValue = (float)value;
+
+            if (floatValue != 0 && (Math.Abs(floatValue) < 0.001 || Math.Abs(floatValue) > 10000))
+                return floatValue.ToString("0.##E+0", CultureInfo.InvariantCulture);
+
             return floatValue % 1 == 0
                 ? floatValue.ToString("F0", CultureInfo.InvariantCulture)
                 : floatValue.ToString("G", CultureInfo.InvariantCulture);
