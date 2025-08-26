@@ -67,8 +67,8 @@
     <Reference Include="MasterSCADALib">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADALib.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.8\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
@@ -94,6 +94,9 @@
     <Reference Include="System.Formats.Nrbf, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Formats.Nrbf.9.0.7\lib\net462\System.Formats.Nrbf.dll</HintPath>
     </Reference>
+    <Reference Include="System.IO.Pipelines, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Pipelines.9.0.8\lib\net462\System.IO.Pipelines.dll</HintPath>
+    </Reference>
     <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
@@ -112,6 +115,12 @@
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Text.Encodings.Web, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.9.0.8\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.9.0.8\lib\net462\System.Text.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
@@ -177,6 +186,12 @@
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\OperationRequestReducer.cs" />
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\ThreadDispatcher\ImmediateUiDispatcher.cs" />
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\ThreadDispatcher\WinFormsUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\Config\ColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\ColumnIdentifier.cs" />
+    <Compile Include="Recipes\MbeTable\Config\ITableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\TableSchema.cs" />
+    <Compile Include="Recipes\MbeTable\Config\TableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\WellKnownColumns.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ActionEntry.cs" />
@@ -213,12 +228,7 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyDefinitionRegistry.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyType.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\StepProperty.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Schema\ColumnDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Schema\ColumnKey.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Schema\TableSchema.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Services\IRecipeTimer.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeEngine.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeTimer.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\TimerService.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseAllDefaults.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\Definitions\CloseDefaults.cs" />
@@ -285,6 +295,7 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcStateMonitor.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeStatus.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\WordOrder.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\DynamicBindingList.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\IStatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
@@ -305,6 +316,7 @@
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\CellStatusDescription.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellState.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellStateManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\StepPropertyDescriptor.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ButtonStateStyler.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />

@@ -7,9 +7,6 @@
 			<!-- Flag if a recipe is currently running.  -->
 			<Pin ID="1" Name="RecipeActive"			Type="Логический" DefaultValue="false"/>
 			
-			<!-- Flag if a recipe is paused.  -->
-			<Pin ID="2" Name="RecipePaused"			Type="Логический" DefaultValue="false"/>
-			
 			<!-- Current recipe line number in operation mode. -->
 			<Pin ID="3" Name="ActualLineNumber"		Type="Целый" DefaultValue="-1"/>
 
@@ -30,7 +27,7 @@
 			<!-- Total time left till the end of the line. -->
 			<Pout ID="102" Name="LineTimeLeft"		Type="Вещественный"/>
 
-            <!-- ActionTarget pins are added automatically in MbeTableFb -->
+            <!-- ActionTarget pins are added automatically in MbeTableFb.cs -->
             
 		</Items>
 	</Map>

@@ -2,8 +2,8 @@
 
 using System;
 using System.Collections.Immutable;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 
@@ -14,15 +14,15 @@ public record DependencyRulesMap
     {
         Map = ImmutableList.Create(
             new DependencyRule(
-                TriggerKeys: ImmutableHashSet.Create(ColumnKey.InitialValue, ColumnKey.Setpoint, ColumnKey.Speed),
-                OutputKey: ColumnKey.StepDuration,
+                TriggerKeys: ImmutableHashSet.Create(WellKnownColumns.InitialValue, WellKnownColumns.Setpoint, WellKnownColumns.Speed),
+                OutputKey: WellKnownColumns.StepDuration,
                 CalculationFunc: (Func<float, float, float, (float?, CalculationError?)>)stepCalculationLogic
                     .CalculateDurationFromSpeed
             ),
             new DependencyRule(
-                TriggerKeys: ImmutableHashSet.Create(ColumnKey.InitialValue, ColumnKey.Setpoint,
-                    ColumnKey.StepDuration),
-                OutputKey: ColumnKey.Speed,
+                TriggerKeys: ImmutableHashSet.Create(WellKnownColumns.InitialValue, WellKnownColumns.Setpoint,
+                    WellKnownColumns.StepDuration),
+                OutputKey: WellKnownColumns.Speed,
                 CalculationFunc: (Func<float, float, float, (float?, CalculationError?)>)stepCalculationLogic
                     .CalculateSpeedFromDuration
             )

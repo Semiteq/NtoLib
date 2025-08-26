@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
@@ -38,7 +38,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
             };
         }
 
-        public StepBuilder ForAction(int actionId)
+        public IStepBuilder ForAction(int actionId)
         {
             if (!_defaultsProviders.TryGetValue(actionId, out var provider))
             {

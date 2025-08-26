@@ -2,5 +2,5 @@
 
 public interface IStepFactory
 {
-    StepBuilder ForAction(int actionId);
+    IStepBuilder ForAction(int actionId);
 }

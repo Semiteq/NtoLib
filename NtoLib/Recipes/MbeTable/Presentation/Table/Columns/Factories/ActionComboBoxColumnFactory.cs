@@ -2,8 +2,7 @@
 
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Composition;
-using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
@@ -23,7 +22,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
             {
                 Name = colDef.Key.ToString(),
                 HeaderText = colDef.UiName,
-                DataPropertyName = nameof(StepViewModel.Action),
                 DataSource = _dataProvider.GetActions(),
                 DisplayMember = "Value",
                 ValueMember = "Key",

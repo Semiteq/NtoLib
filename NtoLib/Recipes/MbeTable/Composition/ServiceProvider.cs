@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Drawing; // added for ColorScheme defaults
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
@@ -59,9 +58,10 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public PropertyDefinitionRegistry PropertyDefinitionRegistry { get; private set; }
         public DependencyRulesMap DependencyRulesMap { get; private set; }
         public IComboboxDataProvider ComboboxDataProvider { get; private set; }
+        public ITableSchemaLoader TableSchemaLoader { get; private set; }
 
         // --- Factories & Maps ---
-        public StepFactory StepFactory { get; private set; }
+        public IStepFactory StepFactory { get; private set; }
         public TableColumnFactoryMap TableColumnFactoryMap { get; private set; }
 
         // --- Analysis & Engine ---
@@ -104,7 +104,8 @@ namespace NtoLib.Recipes.MbeTable.Composition
                 @"FbConnector cannot be null. Ensure that the VisualFBConnector is properly initialized.");
 
             // --- Independent core services & registries ---
-            TableSchema = new TableSchema();
+            TableSchemaLoader = new TableSchemaLoader();
+            TableSchema = new TableSchema(TableSchemaLoader.LoadSchema());
             ActionManager = new ActionManager();
             PropertyDefinitionRegistry = new PropertyDefinitionRegistry();
             StepCalculationLogic = new StepCalculationLogic();
@@ -190,7 +191,8 @@ namespace NtoLib.Recipes.MbeTable.Composition
                 AppStateMachine,
                 TimerService,
                 StatusManager,
-                DebugLogger
+                DebugLogger,
+                TableSchema
             );
 
             RecipeEffectsHandler = new RecipeEffectsHandler(
@@ -237,14 +239,6 @@ namespace NtoLib.Recipes.MbeTable.Composition
             Title = @"Сохраните файл рецепта",
             RestoreDirectory = true
         };
-
-        public void InitializeColorScheme(ColorScheme scheme)
-        {
-            if (scheme == null) throw new ArgumentNullException(nameof(scheme));
-            if (ColorScheme != null) return;
-            ColorScheme = scheme;
-            TableCellStateManager.UpdateColorScheme(ColorScheme);
-        }
 
         public void SetColorScheme(ColorScheme scheme)
         {

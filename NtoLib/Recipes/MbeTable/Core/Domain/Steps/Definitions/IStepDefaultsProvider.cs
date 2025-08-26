@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System.Collections.Generic;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions
 {
     public interface IStepDefaultsProvider
     {
-        Dictionary<ColumnKey, StepProperty> GetDefaultParameters();
+        Dictionary<ColumnIdentifier, StepProperty?> GetDefaultParameters();
     }
 }

@@ -1,8 +1,8 @@
 ﻿#nullable enable
 
 using System.Collections.Generic;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions
 {
@@ -15,16 +15,16 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions
             _registry = registry;
         }
 
-        public Dictionary<ColumnKey, StepProperty?> GetDefaultParameters()
+        public Dictionary<ColumnIdentifier, StepProperty?> GetDefaultParameters()
         {
-            return new Dictionary<ColumnKey, StepProperty?>
+            return new Dictionary<ColumnIdentifier, StepProperty?>
             {
-                [ColumnKey.ActionTarget] = null,
-                [ColumnKey.InitialValue] = new StepProperty(10f, PropertyType.Percent, _registry),
-                [ColumnKey.Setpoint] = new StepProperty(20f, PropertyType.Percent, _registry),
-                [ColumnKey.Speed] = new StepProperty(1f, PropertyType.PowerSpeed, _registry),
-                [ColumnKey.StepDuration] = new StepProperty(600f, PropertyType.Time, _registry),
-                [ColumnKey.Comment] = new StepProperty("", PropertyType.String, _registry)
+                [WellKnownColumns.ActionTarget] = null,
+                [WellKnownColumns.InitialValue] = new StepProperty(10f, PropertyType.Percent, _registry),
+                [WellKnownColumns.Setpoint] = new StepProperty(20f, PropertyType.Percent, _registry),
+                [WellKnownColumns.Speed] = new StepProperty(1f, PropertyType.PowerSpeed, _registry),
+                [WellKnownColumns.StepDuration] = new StepProperty(600f, PropertyType.Time, _registry),
+                [WellKnownColumns.Comment] = new StepProperty("", PropertyType.String, _registry)
             };
         }
     }

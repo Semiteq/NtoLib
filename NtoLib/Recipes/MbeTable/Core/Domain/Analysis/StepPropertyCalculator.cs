@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
 {
@@ -18,7 +18,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
     public class StepPropertyCalculator
     {
         private readonly IImmutableList<DependencyRule> _rules;
-        private readonly IImmutableSet<ColumnKey> _linkedColumns;
+        private readonly IImmutableSet<ColumnIdentifier> _linkedColumns;
 
         public StepPropertyCalculator(IImmutableList<DependencyRule> rules)
         {
@@ -27,19 +27,19 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
                 .ToImmutableHashSet();
         }
 
-        public bool IsRecalculationRequired(Step step, ColumnKey changedKey, IImmutableSet<int> smoothActionIds)
+        public bool IsRecalculationRequired(Step step, ColumnIdentifier changedKey, IImmutableSet<int> smoothActionIds)
         {
-            var actionId = step.Properties[ColumnKey.Action]?.GetValue<int>();
+            var actionId = step.Properties[WellKnownColumns.Action]?.GetValue<int>();
             return actionId.HasValue && smoothActionIds.Contains(actionId.Value) &&
                    _linkedColumns.Contains(changedKey);
         }
 
         public (Step NewStep, RecipePropertyError? Error) CalculateDependencies(
             Step currentStep,
-            ColumnKey triggerKey,
+            ColumnIdentifier triggerKey,
             StepProperty newTriggerProperty)
         {
-            var pendingChanges = new Dictionary<ColumnKey, StepProperty> { [triggerKey] = newTriggerProperty };
+            var pendingChanges = new Dictionary<ColumnIdentifier, StepProperty> { [triggerKey] = newTriggerProperty };
             var affectedRules = _rules.Where(rule => rule.TriggerKeys.Contains(triggerKey));
 
             foreach (var rule in affectedRules)
@@ -49,19 +49,19 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
                 // Todo: This part is still complex and could be improved by refactoring DependencyRule
                 // to encapsulate the function signature and parameter mapping.
                 // For now, we keep the existing logic but contained within this class.
-                context.TryGetValue(ColumnKey.InitialValue, out var initialValue);
-                context.TryGetValue(ColumnKey.Setpoint, out var setpoint);
-                context.TryGetValue(ColumnKey.StepDuration, out var duration);
-                context.TryGetValue(ColumnKey.Speed, out var speed);
+                context.TryGetValue(WellKnownColumns.InitialValue, out var initialValue);
+                context.TryGetValue(WellKnownColumns.Setpoint, out var setpoint);
+                context.TryGetValue(WellKnownColumns.StepDuration, out var duration);
+                context.TryGetValue(WellKnownColumns.Speed, out var speed);
 
                 (float? calculatedValue, CalculationError? calcError) result;
-                if (rule.OutputKey == ColumnKey.StepDuration && speed is not null && initialValue is not null &&
+                if (rule.OutputKey == WellKnownColumns.StepDuration && speed is not null && initialValue is not null &&
                     setpoint is not null)
                 {
                     var func = (Func<float, float, float, (float?, CalculationError?)>)rule.CalculationFunc;
                     result = func(speed.GetValue<float>(), initialValue.GetValue<float>(), setpoint.GetValue<float>());
                 }
-                else if (rule.OutputKey == ColumnKey.Speed && duration is not null && initialValue is not null &&
+                else if (rule.OutputKey == WellKnownColumns.Speed && duration is not null && initialValue is not null &&
                          setpoint is not null)
                 {
                     var func = (Func<float, float, float, (float?, CalculationError?)>)rule.CalculationFunc;
@@ -94,12 +94,11 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
             return (currentStep with { Properties = finalProperties }, null);
         }
 
-        private IReadOnlyDictionary<ColumnKey, StepProperty?> CreateCalculationContext(
-            IImmutableDictionary<ColumnKey, StepProperty?> currentProperties,
-            IReadOnlyDictionary<ColumnKey, StepProperty> pendingChanges)
+        private IReadOnlyDictionary<ColumnIdentifier, StepProperty?> CreateCalculationContext(
+            IImmutableDictionary<ColumnIdentifier, StepProperty?> currentProperties,
+            IReadOnlyDictionary<ColumnIdentifier, StepProperty> pendingChanges)
         {
             return currentProperties.SetItems(pendingChanges);
         }
     }
 }
-

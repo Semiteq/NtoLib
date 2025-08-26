@@ -2,11 +2,11 @@
 
 using System;
 using System.Collections.Immutable;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
@@ -21,14 +21,14 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
     public sealed class RecipeEngine : IRecipeEngine
     {
         private readonly ActionManager _actionManager;
-        private readonly StepFactory _stepFactory;
+        private readonly IStepFactory _stepFactory;
         private readonly IActionTargetProvider _actionTargetProvider;
         private readonly StepPropertyCalculator _stepPropertyCalculator;
         private readonly IImmutableSet<int> _smoothActionIds;
         private readonly DebugLogger _debugLogger;
 
         public RecipeEngine(ActionManager actionManager,
-            StepFactory stepFactory,
+            IStepFactory stepFactory,
             IActionTargetProvider actionTargetProvider,
             StepPropertyCalculator stepPropertyCalculator,
             DebugLogger debugLogger)
@@ -80,7 +80,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         }
 
         public (Recipe NewRecipe, RecipePropertyError? Error) UpdateStepProperty(
-            Recipe currentRecipe, int rowIndex, ColumnKey columnKey, object value)
+            Recipe currentRecipe, int rowIndex, ColumnIdentifier columnKey, object value)
         {
             if (rowIndex < 0 || rowIndex >= currentRecipe.Steps.Count)
                 return (currentRecipe, new ValidationError("Row index is out of range."));
@@ -106,18 +106,18 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         }
 
         private (Step NewStep, RecipePropertyError? Error) ApplyUpdateToStep(
-            Step currentStep, ColumnKey columnKey, object value)
+            Step currentStep, ColumnIdentifier columnKey, object value)
         {
             if (!currentStep.Properties.TryGetValue(columnKey, out var propertyToUpdate) || propertyToUpdate == null)
             {
-                _debugLogger.Log($"Error: Attempted to update non-existent property '{columnKey}' on a step.", "ApplyUpdateToStep");
-                return (currentStep, new ValidationError($"Property {columnKey} is not available."));
+                _debugLogger.Log($"Error: Attempted to update non-existent property '{columnKey.Value}' on a step.", "ApplyUpdateToStep");
+                return (currentStep, new ValidationError($"Property {columnKey.Value} is not available."));
             }
 
             var (success, newProperty, error) = propertyToUpdate.WithValue(value);
             if (!success)
             {
-                _debugLogger.Log($"Property validation failed for '{columnKey}' with value '{value}'. Reason: {error?.Message}", "ApplyUpdateToStep");
+                _debugLogger.Log($"Property validation failed for '{columnKey.Value}' with value '{value}'. Reason: {error?.Message}", "ApplyUpdateToStep");
                 return (currentStep, error);
             }
 

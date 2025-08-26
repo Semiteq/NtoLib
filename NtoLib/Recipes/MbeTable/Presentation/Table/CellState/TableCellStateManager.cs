@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
@@ -73,7 +73,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.CellState
             };
         }
 
-        public CellStatusDescription GetStateForCell(StepViewModel stepViewModel, ColumnKey columnKey, int rowIndex)
+        public CellStatusDescription GetStateForCell(StepViewModel stepViewModel, ColumnIdentifier columnKey, int rowIndex)
         {
             var status = _plcRecipeStatusProvider.GetStatus();
             var attribute = GetCellState(stepViewModel, columnKey, rowIndex, status);
@@ -84,7 +84,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.CellState
             return _states[attribute];
         }
 
-        private TableCellState GetCellState(StepViewModel stepViewModel, ColumnKey columnKey, int rowIndex, PlcRecipeStatus status)
+        private TableCellState GetCellState(StepViewModel stepViewModel, ColumnIdentifier columnKey, int rowIndex, PlcRecipeStatus status)
         {
             if (rowIndex < status.CurrentLine)
                 return TableCellState.Passed;

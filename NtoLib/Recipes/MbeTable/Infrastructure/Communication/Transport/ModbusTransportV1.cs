@@ -37,8 +37,7 @@ public sealed class ModbusTransportV1 : IModbusTransport, IDisposable
     }
 
     private CommunicationSettings Settings => _communicationSettingsProvider.GetSettings();
-
-    /// <inheritdoc />
+    
     public Result Connect()
     {
         lock (_lock)
@@ -79,7 +78,6 @@ public sealed class ModbusTransportV1 : IModbusTransport, IDisposable
         }
     }
     
-    /// <inheritdoc />
     public void TryDisconnect()
     {
         lock (_lock)

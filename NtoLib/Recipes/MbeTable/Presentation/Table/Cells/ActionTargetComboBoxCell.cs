@@ -3,8 +3,8 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Editing;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Cells
@@ -79,7 +79,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Cells
             if (vm == null)
                 return base.GetFormattedValue(value, rowIndex, ref cellStyle, valueTypeConverter, formattedValueTypeConverter, context);
 
-            if (vm.IsPropertyDisabled(ColumnKey.ActionTarget))
+            if (vm.IsPropertyDisabled(WellKnownColumns.ActionTarget))
                 return string.Empty;
 
             int? key = null;

@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using EasyModbus;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Contracts;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
@@ -13,12 +13,12 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Protocol;
 
 public sealed class PlcRecipeSerializerV1 : IPlcRecipeSerializer
 {
-    private readonly StepFactory _stepFactory;
+    private readonly IStepFactory _stepFactory;
     private readonly ActionManager _actionManager;
     private readonly ModbusClient.RegisterOrder _registerOrder;
     private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
 
-    public PlcRecipeSerializerV1(StepFactory stepFactory, ActionManager actionManager, ICommunicationSettingsProvider communicationSettingsProvider)
+    public PlcRecipeSerializerV1(IStepFactory stepFactory, ActionManager actionManager, ICommunicationSettingsProvider communicationSettingsProvider)
     {
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
         _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
@@ -48,14 +48,14 @@ public sealed class PlcRecipeSerializerV1 : IPlcRecipeSerializer
             var s = steps[row];
             var iBase = row * intCols;
 
-            intArray[iBase + 0] = GetInt(s, ColumnKey.Action) ?? 0;
-            if (intCols > 1) intArray[iBase + 1] = GetInt(s, ColumnKey.ActionTarget) ?? 0;
+            intArray[iBase + 0] = GetInt(s, WellKnownColumns.Action) ?? 0;
+            if (intCols > 1) intArray[iBase + 1] = GetInt(s, WellKnownColumns.ActionTarget) ?? 0;
 
             var fBase = row * floatCols * 2;
-            if (floatCols > 0) WriteFloat(floatArray, fBase + 0, GetFloat(s, ColumnKey.InitialValue) ?? 0f);
-            if (floatCols > 1) WriteFloat(floatArray, fBase + 2, GetFloat(s, ColumnKey.Setpoint) ?? 0f);
-            if (floatCols > 2) WriteFloat(floatArray, fBase + 4, GetFloat(s, ColumnKey.Speed) ?? 0f);
-            if (floatCols > 3) WriteFloat(floatArray, fBase + 6, GetFloat(s, ColumnKey.StepDuration) ?? 0f);
+            if (floatCols > 0) WriteFloat(floatArray, fBase + 0, GetFloat(s, WellKnownColumns.InitialValue) ?? 0f);
+            if (floatCols > 1) WriteFloat(floatArray, fBase + 2, GetFloat(s, WellKnownColumns.Setpoint) ?? 0f);
+            if (floatCols > 2) WriteFloat(floatArray, fBase + 4, GetFloat(s, WellKnownColumns.Speed) ?? 0f);
+            if (floatCols > 3) WriteFloat(floatArray, fBase + 6, GetFloat(s, WellKnownColumns.StepDuration) ?? 0f);
 
             if (boolCols > 0)
             {
@@ -101,11 +101,11 @@ public sealed class PlcRecipeSerializerV1 : IPlcRecipeSerializer
         return steps;
     }
 
-    public int? GetInt(Step step, ColumnKey key) 
+    public int? GetInt(Step step, ColumnIdentifier key) 
         => step.Properties.TryGetValue(key, out var prop) 
             ? prop?.GetValue<int>() 
             : null;
-    public float? GetFloat(Step step, ColumnKey key) 
+    public float? GetFloat(Step step, ColumnIdentifier key) 
         => step.Properties.TryGetValue(key, out var prop) 
             ? prop?.GetValue<float>() 
             : null;

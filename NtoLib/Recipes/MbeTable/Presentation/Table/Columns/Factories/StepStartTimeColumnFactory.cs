@@ -1,8 +1,7 @@
 ﻿#nullable enable
 
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Cells;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
@@ -16,7 +15,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
             {
                 Name = colDef.Key.ToString(),
                 HeaderText = colDef.UiName,
-                DataPropertyName = nameof(StepViewModel.StepStartTime),
+                //DataPropertyName = nameof(StepViewModel.StepStartTime),
                 ReadOnly = true,
                 SortMode = DataGridViewColumnSortMode.NotSortable
             };

@@ -3,10 +3,9 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
@@ -138,7 +137,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
                 if (comboCell.DisplayStyle != desired)
                 {
                     comboCell.DisplayStyle = desired;
-                    _debugLogger?.Log($"Updated row:{e.RowIndex} column:{columnKey} readonly={cellState.IsReadonly}");
+                    _debugLogger?.Log($"Updated row:{e.RowIndex} column:{columnKey.Value} readonly={cellState.IsReadonly}");
                 }
             }
         }
@@ -152,7 +151,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             if (row.DataBoundItem is not StepViewModel stepViewModel) return;
 
             var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            if (columnKey != ColumnKey.ActionTarget) return;
+            if (columnKey != WellKnownColumns.ActionTarget) return;
 
             var state = _stateManager.GetStateForCell(stepViewModel, columnKey, e.RowIndex);
             if (!state.IsReadonly) return;
@@ -185,7 +184,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
 
             var colKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            if (colKey == ColumnKey.ActionTarget)
+            if (colKey == WellKnownColumns.ActionTarget)
             {
                 // Suppress common "value is not valid" when the list changes under the cell.
                 e.ThrowException = false;

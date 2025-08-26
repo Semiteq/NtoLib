@@ -1,8 +1,8 @@
 ﻿#nullable enable
 
 using System.Collections.Generic;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions;
 
@@ -15,13 +15,13 @@ public class PowerDefaults : IStepDefaultsProvider
         _registry = registry;
     }
 
-    public Dictionary<ColumnKey, StepProperty?> GetDefaultParameters()
+    public Dictionary<ColumnIdentifier, StepProperty?> GetDefaultParameters()
     {
-        return new Dictionary<ColumnKey, StepProperty?>
+        return new Dictionary<ColumnIdentifier, StepProperty?>
         {
-            [ColumnKey.ActionTarget] = null,
-            [ColumnKey.Setpoint] = new StepProperty(10f, PropertyType.Percent, _registry),
-            [ColumnKey.Comment] = new StepProperty("", PropertyType.String, _registry)
+            [WellKnownColumns.ActionTarget] = null,
+            [WellKnownColumns.Setpoint] = new StepProperty(10f, PropertyType.Percent, _registry),
+            [WellKnownColumns.Comment] = new StepProperty("", PropertyType.String, _registry)
         };
     }
 }

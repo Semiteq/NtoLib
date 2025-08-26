@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
@@ -19,15 +19,17 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
     {
         private readonly PropertyDefinitionRegistry _registry;
         private readonly TableSchema _schema;
-        private readonly Dictionary<ColumnKey, StepProperty?> _properties;
+        private readonly Dictionary<ColumnIdentifier, StepProperty?> _properties;
         private DeployDuration _deployDuration;
+        private IStepDefaultsProvider _defaultsProvider;
         
         public StepBuilder(int actionId, IStepDefaultsProvider defaultsProvider, PropertyDefinitionRegistry registry, TableSchema schema)
         {
             _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+            _defaultsProvider = defaultsProvider ?? throw new ArgumentNullException(nameof(defaultsProvider));
             _properties = defaultsProvider.GetDefaultParameters() ?? throw new ArgumentNullException(nameof(defaultsProvider));
             _schema = schema ?? throw new ArgumentNullException(nameof(schema));
-
+            
             SetAction(actionId);
             InitializeStep();
         }
@@ -36,9 +38,10 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
         {
             var schemaKeys = _schema.GetColumns()
                 .Select(c => c.Key).ToArray();
+
             foreach (var key in schemaKeys)
             {
-                if (key == ColumnKey.Action) continue;
+                if (key == WellKnownColumns.Action) continue;
                 if (!_properties.ContainsKey(key))
                 {
                     _properties[key] = null;
@@ -48,52 +51,52 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
 
         public void SetAction(int actionId)
         {
-            _properties[ColumnKey.Action] = new StepProperty(actionId, PropertyType.Enum, _registry);
+            _properties[WellKnownColumns.Action] = new StepProperty(actionId, PropertyType.Enum, _registry);
         }
 
-        public IReadOnlyCollection<ColumnKey> NonNullKeys =>
+        public IReadOnlyCollection<ColumnIdentifier> NonNullKeys =>
             _properties.Where(kv => kv.Value is not null).Select(kv => kv.Key).ToArray();
 
         // Check whether a column can be set for this action
-        public bool Supports(ColumnKey key) =>
-            _properties.ContainsKey(key);
+        public bool Supports(ColumnIdentifier key) =>
+            _defaultsProvider.GetDefaultParameters().ContainsKey(key);
 
         public StepBuilder WithOptionalTarget(int? target)
         {
             if (target is null) return this;
-            return Supports(ColumnKey.ActionTarget)
-                ? WithProperty(ColumnKey.ActionTarget, target.Value, PropertyType.Enum)
+            return Supports(WellKnownColumns.ActionTarget)
+                ? WithProperty(WellKnownColumns.ActionTarget, target.Value, PropertyType.Enum)
                 : this;
         }
 
         public StepBuilder WithOptionalInitialValue(float? value)
         {
             if (value is null) return this;
-            return WithOptionalDynamic(ColumnKey.InitialValue, value.Value);
+            return WithOptionalDynamic(WellKnownColumns.InitialValue, value.Value);
         }
 
         public StepBuilder WithOptionalSetpoint(float? value)
         {
             if (value is null) return this;
-            return WithOptionalDynamic(ColumnKey.Setpoint, value.Value);
+            return WithOptionalDynamic(WellKnownColumns.Setpoint, value.Value);
         }
 
         public StepBuilder WithOptionalSpeed(float? value)
         {
             if (value is null) return this;
-            return WithOptionalDynamic(ColumnKey.Speed, value.Value);
+            return WithOptionalDynamic(WellKnownColumns.Speed, value.Value);
         }
 
         public StepBuilder WithOptionalDuration(float? value)
         {
             if (value is null) return this;
-            return WithOptionalDynamic(ColumnKey.StepDuration, value.Value);
+            return WithOptionalDynamic(WellKnownColumns.StepDuration, value.Value);
         }
 
         public StepBuilder WithOptionalComment(string? comment)
         {
             if (comment is null) return this;
-            return WithOptionalDynamic(ColumnKey.Comment, comment);
+            return WithOptionalDynamic(WellKnownColumns.Comment, comment);
         }
 
         public StepBuilder WithDeployDuration(DeployDuration duration)
@@ -104,17 +107,17 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
 
         public Step Build()
         {
-            _properties[ColumnKey.StepStartTime] = new StepProperty(0f, PropertyType.Time, _registry);
+            _properties[WellKnownColumns.StepStartTime] = new StepProperty(0f, PropertyType.Time, _registry);
             return new Step(_properties.ToImmutableDictionary(), _deployDuration);
         }
 
-        public StepBuilder WithProperty(ColumnKey key, object value, PropertyType type)
+        public StepBuilder WithProperty(ColumnIdentifier key, object value, PropertyType type)
         {
             _properties[key] = new StepProperty(value, type, _registry);
             return this;
         }
 
-        public StepBuilder WithOptionalDynamic(ColumnKey key, object value)
+        public StepBuilder WithOptionalDynamic(ColumnIdentifier key, object value)
         {
             if (!_properties.TryGetValue(key, out var existingProperty) || existingProperty is null)
             {

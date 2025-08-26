@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;

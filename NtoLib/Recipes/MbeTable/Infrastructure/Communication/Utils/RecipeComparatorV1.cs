@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using FluentResults;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
@@ -50,7 +50,7 @@ public sealed class RecipeComparatorV1 : IRecipeComparator
 
     public Result CompareSteps(Step a, Step b)
     {
-        var excluded = new HashSet<ColumnKey> { ColumnKey.StepStartTime, ColumnKey.Comment };
+        var excluded = new HashSet<ColumnIdentifier> { WellKnownColumns.StepStartTime, WellKnownColumns.Comment };
         var keys = a.Properties.Keys
             .Union(b.Properties.Keys)
             .Where(k => !excluded.Contains(k))
@@ -66,7 +66,7 @@ public sealed class RecipeComparatorV1 : IRecipeComparator
 
             if (!ValueEquals(va, vb))
             {
-                return Result.Fail($"Key={key}, A='{Format(va)}', B='{Format(vb)}'");
+                return Result.Fail($"Key={key.Value}, A='{Format(va)}', B='{Format(vb)}'");
             }
         }
 

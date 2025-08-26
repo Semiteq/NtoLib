@@ -3,9 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
@@ -39,14 +39,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
             for (var i = 0; i < recipe.Steps.Count; i++)
             {
                 var step = recipe.Steps[i];
-                if (!step.Properties.TryGetValue(ColumnKey.Action, out var actionProperty) || actionProperty == null)
+                if (!step.Properties.TryGetValue(WellKnownColumns.Action, out var actionProperty) || actionProperty == null)
                 {
                     var ex = new InvalidOperationException($"Step {i} does not have an action property.");
                     _debugLogger.LogException(ex);
                     throw ex;
                 }
                     
-
                 var actionId = actionProperty.GetValue<int>();
 
                 var actionType = _actionManager.GetActionEntryById(actionId);

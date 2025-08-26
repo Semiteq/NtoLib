@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;

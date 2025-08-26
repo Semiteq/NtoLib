@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
@@ -14,11 +14,11 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
         private readonly TableSchema _tableSchema;
         private readonly ColorScheme _colorScheme;
         
-        private readonly IReadOnlyDictionary<ColumnKey, IColumnFactory> _factories;
+        private readonly IReadOnlyDictionary<ColumnIdentifier, IColumnFactory> _factories;
 
         public TableColumnManager(DataGridView table, 
             TableSchema tableSchema, 
-            IReadOnlyDictionary<ColumnKey, IColumnFactory> factories,
+            IReadOnlyDictionary<ColumnIdentifier, IColumnFactory> factories,
             ColorScheme colorScheme)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
@@ -57,6 +57,11 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
                 factory ??= defaultFactory;
                 
                 var column = factory.CreateColumn(colDef, _colorScheme);
+
+                // Устанавливаем DataPropertyName динамически из ключа колонки.
+                // Это свяжет колонку с индексатором в StepViewModel.
+                column.DataPropertyName = colDef.Key.Value;
+                
                 _table.Columns.Add(column);
             }
 

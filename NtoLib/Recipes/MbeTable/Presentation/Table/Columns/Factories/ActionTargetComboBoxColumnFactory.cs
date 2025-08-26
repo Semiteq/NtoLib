@@ -1,8 +1,7 @@
 ﻿#nullable enable
 
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
@@ -13,9 +12,8 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
         {
             var comboColumn = new ActionTargetComboBoxColumn
             {
-                Name = colDef.Key.ToString(),
+                Name = colDef.Key.Value,
                 HeaderText = colDef.UiName,
-                DataPropertyName = nameof(StepViewModel.ActionTarget),
                 DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton,
                 DisplayStyleForCurrentCellOnly = true
             };

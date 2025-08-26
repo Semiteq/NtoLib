@@ -1,5 +1,5 @@
 ﻿using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
@@ -10,8 +10,7 @@ public class TextBoxColumnFactory :  IColumnFactory
     {
         var column = new DataGridViewTextBoxColumn
         {
-            DataPropertyName = colDef.Key.ToString(),
-            Name = colDef.Key.ToString(),
+            Name = colDef.Key.Value,
             HeaderText = colDef.UiName,
             ReadOnly = colDef.ReadOnly,
             SortMode = DataGridViewColumnSortMode.NotSortable
@@ -20,7 +19,6 @@ public class TextBoxColumnFactory :  IColumnFactory
         column.DefaultCellStyle.Alignment = colDef.Alignment;
         column.DefaultCellStyle.Font = colorScheme.LineFont;
         column.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
-        column.DefaultCellStyle.Font = colorScheme.LineFont;
         
         if (colDef.Width > 0)
         {

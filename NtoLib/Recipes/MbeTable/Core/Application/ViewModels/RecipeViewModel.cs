@@ -6,16 +6,14 @@ using System.ComponentModel;
 using System.Linq;
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
-using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
+using NtoLib.Recipes.MbeTable.Presentation;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
@@ -26,7 +24,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
     /// </summary>
     public sealed class RecipeViewModel
     {
-        public BindingList<StepViewModel> ViewModels { get; } = new();
+        public DynamicBindingList ViewModels { get; }
 
         private readonly IRecipeEngine _recipeEngine;
         private readonly RecipeLoopValidator _recipeLoopValidator;
@@ -38,9 +36,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private readonly TimerService _timerService;
 
         private IUiDispatcher _uiDispatcher = new ImmediateUiDispatcher();
-
         private Recipe _recipe;
-
         private LoopValidationResult _loopResult = new();
         private RecipeTimeAnalysis _timeResult = new();
 
@@ -55,7 +51,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             AppStateMachine appStateMachine,
             TimerService timerService,
             IStatusManager statusManager,
-            DebugLogger debugLogger)
+            DebugLogger debugLogger,
+            TableSchema tableSchema)
         {
             _recipeEngine = recipeEngine;
             _recipeLoopValidator = recipeLoopValidator;
@@ -66,9 +63,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             _statusManager = statusManager;
             _debugLogger = debugLogger;
 
+            ViewModels = new DynamicBindingList(tableSchema);
             _recipe = _recipeEngine.CreateEmptyRecipe();
-            // Initial populate must run on UI thread as soon as dispatcher is attached by TableControl.
-            // For now just compute, actual ViewModels binding will be updated after dispatcher is set.
         }
 
         /// <summary>
@@ -110,12 +106,12 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
         #region Private Methods
 
-        private void OnStepPropertyChanged(int rowIndex, ColumnKey key, object value)
+        private void OnStepPropertyChanged(int rowIndex, ColumnIdentifier key, object value)
         {
             Recipe newRecipe;
             RecipePropertyError? error;
 
-            if (key == ColumnKey.Action && value is int newActionId)
+            if (key == WellKnownColumns.Action && value is int newActionId)
             {
                 newRecipe = _recipeEngine.ReplaceStepWithNewDefault(_recipe, rowIndex, newActionId);
                 error = null;
@@ -127,7 +123,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
             if (error != null)
             {
-                _debugLogger.Log($"Step property update failed. Row: {rowIndex}, Key: {key}, Value: '{value}'. Error: {error.Message}");
+                _debugLogger.Log($"Step property update failed. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'. Error: {error.Message}");
                 _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
 
                 // UI-bound list reset must run on UI thread
@@ -138,7 +134,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 return;
             }
 
-            _debugLogger.Log($"Step property updated. Row: {rowIndex}, Key: {key}, Value: '{value}'");
+            _debugLogger.Log($"Step property updated. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'");
             UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Update, rowIndex));
         }
 
@@ -211,15 +207,18 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private void UpdateSubsequentViewModels(int startIndex)
         {
             ViewModels.RaiseListChangedEvents = false;
-
-            for (int i = startIndex; i < _recipe.Steps.Count; i++)
+            try
             {
-                ViewModels[i] = CreateStepViewModel(_recipe.Steps[i], i);
+                for (int i = startIndex; i < _recipe.Steps.Count; i++)
+                {
+                    ViewModels[i] = CreateStepViewModel(_recipe.Steps[i], i);
+                }
             }
-
-            ViewModels.RaiseListChangedEvents = true;
-
-            ViewModels.ResetBindings();
+            finally
+            {
+                 ViewModels.RaiseListChangedEvents = true;
+                 ViewModels.ResetBindings();
+            }
         }
 
         private StepViewModel CreateStepViewModel(Step step, int index)
@@ -227,7 +226,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             _loopResult.NestingLevels.TryGetValue(index, out var nestingLevel);
             _timeResult.StepStartTimes.TryGetValue(index, out var startTime);
 
-            var actionId = step.Properties[ColumnKey.Action]?.GetValue<int>();
+            var actionId = step.Properties[WellKnownColumns.Action]?.GetValue<int>();
 
             if (!actionId.HasValue)
             {
@@ -242,7 +241,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 step,
                 (key, val) => OnStepPropertyChanged(index, key, val),
                 startTime,
-                availableTargets
+                availableTargets,
+                _debugLogger
             );
         }
 

@@ -34,7 +34,6 @@ namespace NtoLib.Recipes.MbeTable
         
         // Pin ID's
         private const int IdRecipeActive = 1;
-        private const int IdRecipePaused = 2;
         private const int IdCurrentLine = 3;
         private const int IdStepCurrentTime = 4;
         private const int IdForLoopCount1 = 5;

@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 
@@ -18,26 +17,14 @@ public sealed class RecipeError : Error
     public int LineNumber { get; }
 
     /// <summary>
-    /// Gets the key of the column associated with the error, if applicable.
-    /// </summary>
-    public ColumnKey? Column { get; }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="RecipeError"/> class.
     /// </summary>
     /// <param name="message">The error message.</param>
     /// <param name="lineNumber">The line number where the error occurred.</param>
-    /// <param name="column">The column key related to the error, if any.</param>
-    public RecipeError(string message, int lineNumber = 0, ColumnKey? column = null)
+    public RecipeError(string message, int lineNumber = 0)
         : base(message)
     {
         LineNumber = lineNumber;
-        Column = column;
-
         Metadata.Add(nameof(LineNumber), lineNumber);
-        if (column.HasValue)
-        {
-            Metadata.Add(nameof(Column), column.Value);
-        }
     }
 }

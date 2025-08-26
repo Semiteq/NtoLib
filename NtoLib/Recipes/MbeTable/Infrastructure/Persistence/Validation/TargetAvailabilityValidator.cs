@@ -3,9 +3,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentResults;
+using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
@@ -28,8 +28,8 @@ public class TargetAvailabilityValidator
 
         foreach (var (index, step) in recipe.Steps.Select((s, i) => (i, s)))
         {
-            var actionId = step.Properties[ColumnKey.Action]?.GetValue<int>() ?? 0;
-            var targetId = step.Properties[ColumnKey.ActionTarget]?.GetValue<int>() ?? 0;
+            var actionId = step.Properties[WellKnownColumns.Action]?.GetValue<int>() ?? 0;
+            var targetId = step.Properties[WellKnownColumns.ActionTarget]?.GetValue<int>() ?? 0;
             if (targetId == 0) continue;
 
             var actionType = actionManager.GetActionTypeById(actionId);

@@ -2,13 +2,13 @@
 
 using System;
 using System.Collections.Immutable;
-using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
+using NtoLib.Recipes.MbeTable.Config;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
 {
     public record DependencyRule(
-        IImmutableSet<ColumnKey> TriggerKeys,
-        ColumnKey OutputKey,
+        IImmutableSet<ColumnIdentifier> TriggerKeys,
+        ColumnIdentifier OutputKey,
         Delegate CalculationFunc
     );
 }
