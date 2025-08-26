@@ -6,13 +6,13 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Fingerprints;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Hasher;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
@@ -29,8 +29,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
     private readonly ActionManager _actionManager;
     private readonly ICsvHelperFactory _csvHelperFactory;
     private readonly RecipeFileMetadataSerializer _recipeFileMetadataSerializer;
-    private readonly SchemaFingerprintUtil _schemaFingerprintUtil;
-    private readonly IActionsFingerprintUtil _actionsFingerprintUtil;
     private readonly ICsvHeaderBinder _csvHeaderBinder;
     private readonly ICsvStepMapper _csvStepMapper;
     private readonly RecipeLoopValidator _recipeLoopValidator;
@@ -42,8 +40,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         ActionManager actionManager,
         ICsvHelperFactory csvFactory,
         RecipeFileMetadataSerializer metaSerializer,
-        SchemaFingerprintUtil schemaFingerprintUtil,
-        IActionsFingerprintUtil actionsFingerprintUtil,
         ICsvHeaderBinder headerBinder,
         ICsvStepMapper csvStepMapper,
         RecipeLoopValidator loopValidator,
@@ -54,8 +50,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
         _csvHelperFactory = csvFactory ?? throw new ArgumentNullException(nameof(csvFactory));
         _recipeFileMetadataSerializer = metaSerializer ?? throw new ArgumentNullException(nameof(metaSerializer));
-        _schemaFingerprintUtil = schemaFingerprintUtil ?? throw new ArgumentNullException(nameof(schemaFingerprintUtil));
-        _actionsFingerprintUtil = actionsFingerprintUtil ?? throw new ArgumentNullException(nameof(actionsFingerprintUtil));
         _csvHeaderBinder = headerBinder ?? throw new ArgumentNullException(nameof(headerBinder));
         _csvStepMapper = csvStepMapper ?? throw new ArgumentNullException(nameof(csvStepMapper));
         _recipeLoopValidator = loopValidator ?? throw new ArgumentNullException(nameof(loopValidator));
@@ -68,24 +62,22 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
     /// and performing validation checks for the recipe structure and content integrity.
     /// </summary>
     /// <param name="reader">The text reader containing the serialized recipe data.</param>
-    /// <returns>A tuple containing the deserialized recipe object if successful and a list of parsing or validation errors.</returns>
-    public (Recipe? Recipe, IImmutableList<RecipeFileError> Errors) Deserialize(TextReader reader)
+    /// <returns>A <see cref="Result{T}"/> containing the deserialized recipe object if successful, or a list of errors.</returns>
+    public Result<Recipe> Deserialize(TextReader reader)
     {
         var fullText = reader.ReadToEnd();
-        var errors = ImmutableList.CreateBuilder<RecipeFileError>();
 
         // Metadata
         var (meta, metaLines, signatureFound, versionFound) = _recipeFileMetadataSerializer.ReadAllMeta(fullText);
 
         if (!signatureFound)
-            errors.Add(new RecipeFileError(0, null, "Missing or invalid signature line (expected '# MBE-RECIPE v=...')"));
+            return Result.Fail(new RecipeError("Missing or invalid signature line (expected '# MBE-RECIPE v=...')"));
 
         if (!versionFound)
-            errors.Add(new RecipeFileError(0, null, "Missing version in signature line (expected 'v=...')"));
-        else if (meta.Version != 1)
-            errors.Add(new RecipeFileError(0, null, $"Unsupported version {meta.Version}"));
-
-        if (errors.Count > 0) return (null, errors.ToImmutable());
+            return Result.Fail(new RecipeError("Missing version in signature line (expected 'v=...')"));
+        
+        if (meta.Version != 1)
+            return Result.Fail(new RecipeError($"Unsupported version {meta.Version}"));
 
         // Body as text
         var bodyText = ExtractBodyText(fullText, metaLines);
@@ -93,19 +85,18 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         // CSV parsing (header + data)
         using var csv = _csvHelperFactory.CreateReader(new StringReader(bodyText));
         if (!csv.Read())
-            return (null, errors.ToImmutable().Add(new RecipeFileError(0, null, "Missing header")));
+            return Result.Fail(new RecipeError("Missing header"));
 
         csv.ReadHeader();
         var headerTokens = csv.HeaderRecord ?? Array.Empty<string>();
-        var (binding, bindErr) = _csvHeaderBinder.Bind(headerTokens, _schema);
-        if (bindErr is not null)
-            return (null, errors.ToImmutable().Add(new RecipeFileError(1, null, bindErr)));
+        var bindResult = _csvHeaderBinder.Bind(headerTokens, _schema);
+        if (bindResult.IsFailed)
+            return bindResult.ToResult();
 
         // Check separator
         if (meta.Separator != _csvHelperFactory.Separator)
-            return (null,
-                errors.ToImmutable().Add(new RecipeFileError(0, null,
-                    $"Separator mismatch: meta='{meta.Separator}' vs expected='{_csvHelperFactory.Separator}'")));
+            return Result.Fail(new RecipeError(
+                $"Separator mismatch: meta='{meta.Separator}' vs expected='{_csvHelperFactory.Separator}'"));
 
         // Read rows and compute hash on the fly to avoid storing all rows in memory
         var steps = ImmutableList.CreateBuilder<Step>();
@@ -123,67 +114,45 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
             bodyHasher.AppendDataRow(canonicalRow);
             rowsCount++;
 
-            var (step, rowErrors) = _csvStepMapper.FromRecord(lineNo, record, binding!);
+            var stepResult = _csvStepMapper.FromRecord(lineNo, record, bindResult.Value);
+            if (stepResult.IsFailed)
+                return stepResult.ToResult();
 
-            if (rowErrors.Count > 0)
-            {
-                errors.AddRange(rowErrors);
-                return (null, errors.ToImmutable());
-            }
-
-            if (step is not null) steps.Add(step);
+            steps.Add(stepResult.Value);
         }
 
         var recipe = new Recipe(steps.ToImmutable());
 
         // Check consistency ROWS + HASH
         if (meta.Rows != 0 && meta.Rows != rowsCount)
-            return (null,
-                errors.ToImmutable().Add(new RecipeFileError(0, null,
-                    $"Rows mismatch: meta={meta.Rows}, actual={rowsCount}")));
+            return Result.Fail(new RecipeError($"Rows mismatch: meta={meta.Rows}, actual={rowsCount}"));
 
         if (!string.IsNullOrWhiteSpace(meta.BodyHashBase64))
         {
             var computed = bodyHasher.ComputeBase64();
             if (!string.Equals(computed, meta.BodyHashBase64, StringComparison.Ordinal))
-                return (null, errors.ToImmutable().Add(new RecipeFileError(0, null, "Body hash mismatch")));
+                return Result.Fail(new RecipeError("Body hash mismatch"));
         }
-
-        // Chek fingerprint
-        var expectedSchemaFp =
-            _schemaFingerprintUtil.ComputeSha256Base64(_schemaFingerprintUtil.BuildNormalized(_schema));
-        if (!string.IsNullOrEmpty(meta.SchemaFingerprint) &&
-            !string.Equals(expectedSchemaFp, meta.SchemaFingerprint, StringComparison.Ordinal))
-            return (null, errors.ToImmutable().Add(new RecipeFileError(0, null, "Schema fingerprint mismatch")));
-
-        var expectedActionsFp = _actionsFingerprintUtil.Compute(_actionManager);
-        if (!string.IsNullOrEmpty(meta.ActionsFingerprint) &&
-            !string.Equals(expectedActionsFp, meta.ActionsFingerprint, StringComparison.Ordinal))
-            return (null, errors.ToImmutable().Add(new RecipeFileError(0, null, "Actions fingerprint mismatch")));
 
         // Validation
         var loopRes = _recipeLoopValidator.Validate(recipe);
         if (!loopRes.IsValid)
-            return (null,
-                errors.ToImmutable()
-                    .Add(new RecipeFileError(0, null, loopRes.ErrorMessage ?? "Loop structure invalid")));
+            return Result.Fail(new RecipeError(loopRes.ErrorMessage ?? "Loop structure invalid"));
 
-        var (okTargets, tgtErr) = _targetAvailabilityValidator.Validate(recipe, _actionManager, _actionTargetProvider);
-        if (!okTargets)
-            return (null, errors.ToImmutable().Add(new RecipeFileError(0, null, tgtErr ?? "Missing targets")));
+        var targetsResult = _targetAvailabilityValidator.Validate(recipe, _actionManager, _actionTargetProvider);
+        if (targetsResult.IsFailed)
+            return targetsResult;
 
-        return (recipe, errors.ToImmutable());
+        return Result.Ok(recipe);
     }
 
     /// <summary>
     /// Serializes the given recipe into CSV format and writes it to the provided text writer.
-    /// This includes generating metadata, computing body integrity hashes, and formatting
-    /// the data into a canonical structure for export.
     /// </summary>
     /// <param name="recipe">The recipe to be serialized into CSV format.</param>
     /// <param name="writer">The text writer to which the serialized CSV data will be written.</param>
-    /// <returns>A list of errors encountered during the serialization process, if any.</returns>
-    public IImmutableList<RecipeFileError> Serialize(Recipe recipe, TextWriter writer)
+    /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
+    public Result Serialize(Recipe recipe, TextWriter writer)
     {
         var (bodyText, canonicalRowsCount) = BuildBodyText(recipe);
 
@@ -203,9 +172,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
             Signature = "MBE-RECIPE",
             Version = 1,
             Separator = _csvHelperFactory.Separator,
-            SchemaFingerprint =
-                _schemaFingerprintUtil.ComputeSha256Base64(_schemaFingerprintUtil.BuildNormalized(_schema)),
-            ActionsFingerprint = _actionsFingerprintUtil.Compute(_actionManager),
             Rows = canonicalRowsCount,
             BodyHashBase64 = bodyHash,
             Extras = new Dictionary<string, string> { ["ExportedAtUtc"] = DateTime.UtcNow.ToString("O") }
@@ -214,16 +180,9 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         _recipeFileMetadataSerializer.Write(writer, meta);
         writer.Write(bodyText);
 
-        return ImmutableList<RecipeFileError>.Empty;
+        return Result.Ok();
     }
 
-    /// <summary>
-    /// Extracts the body text by removing the specified number of metadata lines
-    /// from the beginning of the input text while preserving the remaining content.
-    /// </summary>
-    /// <param name="fullText">The full text containing both metadata and body content.</param>
-    /// <param name="metaLines">The number of metadata lines to exclude from the beginning of the text.</param>
-    /// <returns>The body text after removing the specified metadata lines.</returns>
     private string ExtractBodyText(string fullText, int metaLines)
     {
         using var sr = new StringReader(fullText);
@@ -245,12 +204,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         return sb.ToString();
     }
 
-    /// <summary>
-    /// Builds the body text of a recipe by generating a CSV format representation
-    /// of its structured data, including headers and rows, based on the recipe's steps.
-    /// </summary>
-    /// <param name="recipe">The recipe containing steps to be serialized into body text.</param>
-    /// <returns>A tuple containing the generated CSV body text and the total number of rows written.</returns>
     private (string BodyText, int RowsCount) BuildBodyText(Recipe recipe)
     {
         var bodySb = new StringBuilder();
@@ -280,11 +233,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         return (bodySb.ToString(), rows);
     }
 
-    /// <summary>
-    /// Extracts only the data block (excluding the header) from the provided body text while retaining the trailing CRLF.
-    /// </summary>
-    /// <param name="bodyText">The body text containing both header and data from which the data block will be extracted.</param>
-    /// <returns>A string representing the extracted data block with rows separated by CRLF and ending with CRLF, or an empty string if no data block is found.</returns>
     private string ExtractDataOnly(string bodyText)
     {
         var nlIdx = bodyText.IndexOf("\r\n", StringComparison.Ordinal);
@@ -292,11 +240,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         return bodyText.Substring(nlIdx + 2);
     }
 
-    /// <summary>
-    /// Splits the provided CSV data into individual rows, based on the standard end-of-line character sequence.
-    /// </summary>
-    /// <param name="dataOnly">The CSV-formatted string containing data rows separated by '\r\n'.</param>
-    /// <returns>An enumerable collection of individual rows as strings, excluding the final empty row if present.</returns>
     private IEnumerable<string> SplitRows(string dataOnly)
     {
         var parts = dataOnly.Split(new[] { "\r\n" }, StringSplitOptions.None);
@@ -304,11 +247,6 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
             yield return parts[i];
     }
 
-    /// <summary>
-    /// Constructs a canonical row string from the given array of record fields using CSV formatting.
-    /// </summary>
-    /// <param name="record">An array of strings representing the fields of a single CSV record.</param>
-    /// <returns>A string containing the CSV-formatted row constructed from the provided fields, with any trailing newline or carriage return characters removed.</returns>
     private string BuildCanonicalRowLine(string[] record)
     {
         var sb = new StringBuilder();

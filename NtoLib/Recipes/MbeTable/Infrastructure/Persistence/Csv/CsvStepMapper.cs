@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
@@ -16,10 +16,7 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 
 /// <summary>
 /// A utility class responsible for mapping step records between their
-/// CSV representation and the domain model. This class adheres to a
-/// strategy defined by actions, where the applicable fields are determined
-/// by the action set. It ensures safe reading, validation of extra fields,
-/// and step construction.
+/// CSV representation and the domain model.
 /// </summary>
 public sealed class CsvStepMapper : ICsvStepMapper
 {
@@ -39,24 +36,22 @@ public sealed class CsvStepMapper : ICsvStepMapper
     /// <param name="record">The CSV record as an array of strings.</param>
     /// <param name="binding">The header binding that maps column keys to record indices.</param>
     /// <returns>
-    /// A tuple containing the mapped <see cref="Step"/> object (or null if mapping fails) and a list of errors encountered during mapping.
+    /// A <see cref="Result{T}"/> containing the mapped <see cref="Step"/> object on success, or an error on failure.
     /// </returns>
-    public (Step? Step, IImmutableList<RecipeFileError> Errors) FromRecord(
+    public Result<Step> FromRecord(
         int lineNumber,
         string[] record,
         CsvHeaderBinder.Binding binding)
     {
-        var errors = ImmutableList.CreateBuilder<RecipeFileError>();
-
-        // actionId if mandatory
+        // ActionId is mandatory.
         var actionIdx = FindFileIndex(binding, ColumnKey.Action);
         if (actionIdx < 0 || actionIdx >= record.Length)
-            return (null, errors.ToImmutable().Add(new RecipeFileError(lineNumber, null, "Missing 'Action' column")));
+            return Result.Fail(new RecipeError("Missing 'Action' column", lineNumber));
 
         if (!int.TryParse(record[actionIdx], NumberStyles.Integer, CultureInfo.InvariantCulture, out var actionId))
-            return (null, errors.ToImmutable().Add(new RecipeFileError(lineNumber, ColumnKey.Action, $"Invalid action id '{record[actionIdx]}'")));
+            return Result.Fail(new RecipeError($"Invalid action id '{record[actionIdx]}'", lineNumber, ColumnKey.Action));
 
-        // builder with defaults
+        // Builder with defaults.
         StepBuilder builder;
         try
         {
@@ -64,44 +59,54 @@ public sealed class CsvStepMapper : ICsvStepMapper
         }
         catch (Exception ex)
         {
-            return (null, errors.ToImmutable().Add(new RecipeFileError(lineNumber, ColumnKey.Action, $"Unknown action id '{actionId}'", ex)));
+            return Result.Fail(new RecipeError($"Unknown action id '{actionId}'", lineNumber, ColumnKey.Action)
+                .CausedBy(ex));
         }
         
-        // todo: bind to action properties
-        // parsing and applying properteis
-        var target = TryParseInt(binding, record, ColumnKey.ActionTarget, errors, lineNumber);
-        var initialValue = TryParseFloat(binding, record, ColumnKey.InitialValue, errors, lineNumber);
-        var setpoint = TryParseFloat(binding, record, ColumnKey.Setpoint, errors, lineNumber);
-        var speed = TryParseFloat(binding, record, ColumnKey.Speed, errors, lineNumber);
-        var duration = TryParseFloat(binding, record, ColumnKey.StepDuration, errors, lineNumber);
+        // Parsing and applying properties.
+        var targetResult = TryParseInt(binding, record, ColumnKey.ActionTarget, lineNumber);
+        if (targetResult.IsFailed) return targetResult.ToResult();
+        
+        var initialValueResult = TryParseFloat(binding, record, ColumnKey.InitialValue, lineNumber);
+        if (initialValueResult.IsFailed) return initialValueResult.ToResult();
+
+        var setpointResult = TryParseFloat(binding, record, ColumnKey.Setpoint, lineNumber);
+        if (setpointResult.IsFailed) return setpointResult.ToResult();
+        
+        var speedResult = TryParseFloat(binding, record, ColumnKey.Speed, lineNumber);
+        if (speedResult.IsFailed) return speedResult.ToResult();
+
+        var durationResult = TryParseFloat(binding, record, ColumnKey.StepDuration, lineNumber);
+        if (durationResult.IsFailed) return durationResult.ToResult();
+        
         var comment = TryGetRaw(binding, record, ColumnKey.Comment);
 
-        if (errors.Count > 0) return (null, errors.ToImmutable());
-
         builder = builder
-            .WithOptionalTarget(target)
-            .WithOptionalInitialValue(initialValue)
-            .WithOptionalSetpoint(setpoint)
-            .WithOptionalSpeed(speed)
-            .WithOptionalDuration(duration)
+            .WithOptionalTarget(targetResult.Value)
+            .WithOptionalInitialValue(initialValueResult.Value)
+            .WithOptionalSetpoint(setpointResult.Value)
+            .WithOptionalSpeed(speedResult.Value)
+            .WithOptionalDuration(durationResult.Value)
             .WithOptionalComment(comment)
             .WithDeployDuration(_actionManager.GetActionEntryById(actionId).DeployDuration);
 
-        // validation
+        // Validation of extra fields.
         var supported = builder.NonNullKeys.ToHashSet();
         foreach (var (i, value) in EnumerateIndexValues(record))
         {
             var key = binding.FileIndexToColumn[i].Key;
             if (key is ColumnKey.Action or ColumnKey.StepStartTime) continue;
+            
             if (!supported.Contains(key) && !string.IsNullOrWhiteSpace(value))
             {
-                return (null, errors.ToImmutable().Add(new RecipeFileError(
-                    lineNumber, key, $"Column '{key}' is not applicable for action {actionId} but has value '{value}'")));
+                return Result.Fail(new RecipeError(
+                    $"Column '{key}' is not applicable for action {actionId} but has value '{value}'",
+                    lineNumber, 
+                    key));
             }
         }
 
-        var step = builder.Build();
-        return (step, errors.ToImmutable());
+        return Result.Ok(builder.Build());
     }
 
     /// <summary>
@@ -121,7 +126,8 @@ public sealed class CsvStepMapper : ICsvStepMapper
             if (col.Key == ColumnKey.StepStartTime || !step.Properties.TryGetValue(col.Key, out var prop) ||
                 prop is null)
             {
-                result[i] = string.Empty; continue; 
+                result[i] = string.Empty; 
+                continue; 
             }
 
             result[i] = prop.GetValueAsObject() switch
@@ -138,50 +144,42 @@ public sealed class CsvStepMapper : ICsvStepMapper
     private int FindFileIndex(CsvHeaderBinder.Binding binding, ColumnKey key)
     {
         foreach (var kv in binding.FileIndexToColumn)
+        {
             if (kv.Value.Key == key) return kv.Key;
+        }
         return -1;
     }
     
-    private int? TryParseInt(CsvHeaderBinder.Binding binding, string[] record, ColumnKey key,
-        ImmutableList<RecipeFileError>.Builder errors, int lineNumber)
+    private Result<int?> TryParseInt(CsvHeaderBinder.Binding binding, string[] record, ColumnKey key, int lineNumber)
     {
         var idx = FindFileIndex(binding, key);
-        
         if (idx < 0 || idx >= record.Length) 
-            return null;
+            return Result.Ok<int?>(null);
         
         var raw = record[idx];
-        
         if (string.IsNullOrWhiteSpace(raw)) 
-            return null;
+            return Result.Ok<int?>(null);
 
         if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue))
-            return parsedValue;
+            return Result.Ok<int?>(parsedValue);
         
-        errors.Add(new RecipeFileError(lineNumber, key, $"Invalid int '{raw}'"));
-        return null;
+        return Result.Fail(new RecipeError($"Invalid int '{raw}'", lineNumber, key));
     }
     
-    private float? TryParseFloat(CsvHeaderBinder.Binding binding, string[] record, ColumnKey key, 
-        ImmutableList<RecipeFileError>.Builder errors, int lineNumber)
+    private Result<float?> TryParseFloat(CsvHeaderBinder.Binding binding, string[] record, ColumnKey key, int lineNumber)
     {
         var idx = FindFileIndex(binding, key);
-        
         if (idx < 0 || idx >= record.Length) 
-            return null;
+            return Result.Ok<float?>(null);
         
         var raw = record[idx];
-        
         if (string.IsNullOrWhiteSpace(raw)) 
-            return null;
+            return Result.Ok<float?>(null);
 
         if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedValue))
-            return parsedValue;
+            return Result.Ok<float?>(parsedValue);
         
-        
-        errors.Add(new RecipeFileError(lineNumber, key, $"Invalid float '{raw}'"));
-        return null;
-        
+        return Result.Fail(new RecipeError($"Invalid float '{raw}'", lineNumber, key));
     }
     
     private string? TryGetRaw(CsvHeaderBinder.Binding binding, string[] record, ColumnKey key)

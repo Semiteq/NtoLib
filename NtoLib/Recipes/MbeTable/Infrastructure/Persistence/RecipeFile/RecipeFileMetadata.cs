@@ -1,11 +1,12 @@
 ﻿#nullable enable
+
 using System.Collections.Generic;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 
 /// <summary>
 /// Represents metadata for a recipe file, including signature, version information,
-/// separator details, schema and action fingerprints, row count, body hash, and any extra data.
+/// separator details, row count, body hash, and any extra data.
 /// </summary>
 public sealed record RecipeFileMetadata
 {
@@ -23,17 +24,7 @@ public sealed record RecipeFileMetadata
     /// CSV separator
     /// </summary>
     public char Separator { get; init; } = ';';
-    
-    /// <summary>
-    /// SHA-256 hash of normalized column definitions (id|code pairs)
-    /// </summary> 
-    public string SchemaFingerprint { get; init; } = "";
-    
-    /// <summary>
-    /// SHA-256 hash of action definitions used during file creation
-    /// </summary>
-    public string ActionsFingerprint { get; init; } = "";
-    
+
     /// <summary>
     /// Total number of data rows
     /// </summary>

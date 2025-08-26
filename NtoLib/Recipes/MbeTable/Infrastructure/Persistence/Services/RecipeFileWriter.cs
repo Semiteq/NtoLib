@@ -1,8 +1,9 @@
 ﻿#nullable enable
 
-using System.Collections.Immutable;
+using System;
 using System.IO;
 using System.Text;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 
@@ -16,35 +17,63 @@ public sealed class RecipeFileWriter : IRecipeFileWriter
     private readonly IRecipeSerializer _serializer;
     public RecipeFileWriter(IRecipeSerializer serializer) => _serializer = serializer;
 
-    public IImmutableList<RecipeFileError> Write(Recipe recipe, string path, Encoding? encoding = null)
+    /// <summary>
+    /// Writes a recipe to the specified path.
+    /// </summary>
+    /// <param name="recipe">The recipe to write.</param>
+    /// <param name="path">The file system path to write to.</param>
+    /// <param name="encoding">The text encoding to use. Defaults to UTF-8 with BOM.</param>
+    /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
+    public Result WriteRecipe(Recipe recipe, string path, Encoding? encoding = null)
     {
-        var dir = Path.GetDirectoryName(path);
-        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
         var tempPath = path + ".tmp";
 
-        using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
-        using (var writer = new StreamWriter(fs, encoding ?? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)))
+        try
         {
-            var errors = _serializer.Serialize(recipe, writer);
-            writer.Flush();
-            fs.Flush(true);
+            var dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
-            if (errors.Count > 0)
+            using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var writer = new StreamWriter(fs, encoding ?? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)))
             {
-                return errors;
+                var serializeResult = _serializer.Serialize(recipe, writer);
+                if (serializeResult.IsFailed)
+                {
+                    return serializeResult;
+                }
+                
+                writer.Flush();
+                fs.Flush(true);
+            }
+
+            if (File.Exists(path))
+            {
+                File.Replace(tempPath, path, null);
+            }
+            else
+            {
+                File.Move(tempPath, path);
+            }
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail(new RecipeError($"Failed to write file to '{path}'").CausedBy(ex));
+        }
+        finally
+        {
+            if (File.Exists(tempPath))
+            {
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch
+                {
+                    // suppress
+                }
             }
         }
 
-        if (File.Exists(path))
-        {
-            File.Replace(tempPath, path, null);
-        }
-        else
-        {
-            File.Move(tempPath, path);
-        }
-
-        return ImmutableList<RecipeFileError>.Empty;
+        return Result.Ok();
     }
 }

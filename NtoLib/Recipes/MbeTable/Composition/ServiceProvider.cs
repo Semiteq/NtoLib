@@ -19,7 +19,6 @@ using NtoLib.Recipes.MbeTable.Infrastructure.Communication.Utils;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Fingerprints;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
@@ -53,7 +52,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public AppStateUiProjector AppStateUiProjector { get; private set; }
         public IUiDispatcher UiDispatcher { get; private set; }
         public TimerService TimerService { get; private set; }
-        
+
 
         // --- Data & Schema ---
         public TableSchema TableSchema { get; private set; }
@@ -83,8 +82,6 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public ICsvStepMapper CsvStepMapper { get; private set; }
         public ICsvHeaderBinder CsvHeaderBinder { get; private set; }
         public RecipeFileMetadataSerializer RecipeFileMetadataSerializer { get; private set; }
-        public SchemaFingerprintUtil SchemaFingerprintUtil { get; private set; }
-        public IActionsFingerprintUtil ActionsFingerprintUtil { get; private set; }
         public TargetAvailabilityValidator TargetAvailabilityValidator { get; private set; }
 
         // --- Modbus ---
@@ -147,8 +144,6 @@ namespace NtoLib.Recipes.MbeTable.Composition
             CsvHelperFactory = new CsvHelperFactory();
             CsvHeaderBinder = new CsvHeaderBinder();
             RecipeFileMetadataSerializer = new RecipeFileMetadataSerializer();
-            SchemaFingerprintUtil = new SchemaFingerprintUtil();
-            ActionsFingerprintUtil = new ActionsFingerprintUtil();
             TargetAvailabilityValidator = new TargetAvailabilityValidator();
 
             CsvStepMapper = new CsvStepMapper(StepFactory, ActionManager);
@@ -158,8 +153,6 @@ namespace NtoLib.Recipes.MbeTable.Composition
                 ActionManager,
                 CsvHelperFactory,
                 RecipeFileMetadataSerializer,
-                SchemaFingerprintUtil,
-                ActionsFingerprintUtil,
                 CsvHeaderBinder,
                 CsvStepMapper,
                 RecipeLoopValidator,
@@ -209,9 +202,9 @@ namespace NtoLib.Recipes.MbeTable.Composition
             );
 
             AppStateMachine.InitializeEffects(RecipeEffectsHandler);
-            
+
             InitializeUiComponents();
-            
+
             IsInitialized = true;
         }
 
@@ -248,7 +241,7 @@ namespace NtoLib.Recipes.MbeTable.Composition
         public void InitializeColorScheme(ColorScheme scheme)
         {
             if (scheme == null) throw new ArgumentNullException(nameof(scheme));
-            if (ColorScheme != null) return; 
+            if (ColorScheme != null) return;
             ColorScheme = scheme;
             TableCellStateManager.UpdateColorScheme(ColorScheme);
         }

@@ -37,8 +37,8 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         {
             switch (effect)
             {
-                case LoadRecipeEffect(var opId, var path):
-                    Task.Run(async () => await DoLoadRecipeAsync(opId, path));
+                case ReadRecipeEffect(var opId, var path):
+                    Task.Run(async () => await DoReadRecipeAsync(opId, path));
                     break;
 
                 case SaveRecipeEffect(var opIdS, var pathS):
@@ -49,23 +49,24 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
                     Task.Run(async () => await DoSendRecipeAsync(opIdT));
                     break;
 
-                case ReadRecipeEffect(var opIdR):
-                    Task.Run(async () => await DoReadRecipeAsync(opIdR));
+                case ReceiveRecipeEffect(var opIdR):
+                    Task.Run(async () => await DoReceiveRecipeAsync(opIdR));
                     break;
             }
         }
 
-        private async Task DoLoadRecipeAsync(Guid opId, string filePath)
+        private async Task DoReadRecipeAsync(Guid opId, string filePath)
         {
-            var (recipe, errors) = _recipeFileReader.Read(filePath);
-            if (recipe != null && !errors.Any())
+            var readResult = _recipeFileReader.ReadRecipe(filePath);
+            
+            if (readResult.IsSuccess)
             {
-                _recipeViewModel.SetRecipe(recipe);
+                _recipeViewModel.SetRecipe(readResult.Value);
                 _stateMachine.Dispatch(new LoadRecipeCompleted(opId, true, $"Файл загружен: {filePath}"));
             }
             else
             {
-                var list = errors?.Select(e => e.Message).ToList() ?? new System.Collections.Generic.List<string> { "Неизвестная ошибка" };
+                var list = readResult.Errors.Select(e => e.Message).ToList();
                 var errorMsg = string.Join("; ", list);
                 _stateMachine.Dispatch(new LoadRecipeCompleted(opId, false, $"Ошибка загрузки: {errorMsg}", list));
             }
@@ -74,15 +75,15 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         private async Task DoSaveRecipeAsync(Guid opId, string filePath)
         {
             var recipe = _recipeViewModel.GetCurrentRecipe();
-            var errors = _recipeFileWriter.Write(recipe, filePath);
+            var writeResult = _recipeFileWriter.WriteRecipe(recipe, filePath);
 
-            if (!errors.Any())
+            if (writeResult.IsSuccess)
             {
                 _stateMachine.Dispatch(new SaveRecipeCompleted(opId, true, $"Файл сохранён: {filePath}"));
             }
             else
             {
-                var list = errors.Select(e => e.Message).ToList();
+                var list = writeResult.Errors.Select(e => e.Message).ToList();
                 var errorMsg = string.Join("; ", list);
                 _stateMachine.Dispatch(new SaveRecipeCompleted(opId, false, $"Ошибка сохранения: {errorMsg}", list));
             }
@@ -93,16 +94,17 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
             try
             {
                 var recipe = _recipeViewModel.GetCurrentRecipe();
-                var result = await _recipePlcSender.UploadAndVerifyAsync(recipe);
+                var sendResult = await _recipePlcSender.SendAndVerifyRecipeAsync(recipe);
 
-                if (result.IsSuccess)
+                if (sendResult.IsSuccess)
                 {
                     _stateMachine.Dispatch(new SendRecipeCompleted(opId, true, "Рецепт передан в контроллер."));
                 }
                 else
                 {
-                    var first = result.Errors.FirstOrDefault()?.Message ?? "Неизвестная ошибка отправки";
-                    _stateMachine.Dispatch(new SendRecipeCompleted(opId, false, $"Ошибка отправки: {first}", new[] { first }));
+                    var list = sendResult.Errors.Select(e => e.Message).ToList();
+                    var errorMsg = string.Join("; ", list);
+                    _stateMachine.Dispatch(new SendRecipeCompleted(opId, false, $"Ошибка отправки: {errorMsg}", list));
                 }
             }
             catch (Exception ex)
@@ -111,11 +113,11 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
             }
         }
 
-        private async Task DoReadRecipeAsync(Guid opId)
+        private async Task DoReceiveRecipeAsync(Guid opId)
         {
             try
             {
-                var result = await _recipePlcSender.DownloadAsync();
+                var result = await _recipePlcSender.ReciveRecipeAsync();
                 if (result.IsSuccess)
                 {
                     _recipeViewModel.SetRecipe(result.Value);
@@ -123,8 +125,9 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
                 }
                 else
                 {
-                    var first = result.Errors.FirstOrDefault()?.Message ?? "Неизвестная ошибка при чтении рецепта";
-                    _stateMachine.Dispatch(new ReadRecipeCompleted(opId, false, $"Ошибка чтения: {first}", new[] { first }));
+                    var list = result.Errors.Select(e => e.Message).ToList();
+                    var errorMsg = string.Join("; ", list);
+                    _stateMachine.Dispatch(new ReadRecipeCompleted(opId, false, $"Ошибка чтения: {errorMsg}", list));
                 }
             }
             catch (Exception ex)

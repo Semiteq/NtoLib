@@ -184,13 +184,13 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
             // Create the declarative effect object based on the command and resulting state.
             return cmd switch
             {
-                LoadRecipeRequested(var path) when next.Busy == BusyKind.Loading => new[] { new LoadRecipeEffect(opId, path) },
+                LoadRecipeRequested(var path) when next.Busy == BusyKind.Loading => new[] { new ReadRecipeEffect(opId, path) },
                 SaveRecipeRequested(var path) when next.Busy == BusyKind.Saving => new[] { new SaveRecipeEffect(opId, path) },
                 SendRecipeRequested when next.Busy == BusyKind.Transferring => new[] { new SendRecipeEffect(opId) },
-                ReadRecipeRequested when next.Busy == BusyKind.Transferring => new[] { new ReadRecipeEffect(opId) },
+                ReadRecipeRequested when next.Busy == BusyKind.Transferring => new[] { new ReceiveRecipeEffect(opId) },
 
                 // Effects can also be triggered by internal state changes (auto-read).
-                EnterRuntime or PlcAvailabilityChanged when next.Busy == BusyKind.Transferring => new[] { new ReadRecipeEffect(opId) },
+                EnterRuntime or PlcAvailabilityChanged when next.Busy == BusyKind.Transferring => new[] { new ReceiveRecipeEffect(opId) },
 
                 _ => Array.Empty<AppEffect>()
             };

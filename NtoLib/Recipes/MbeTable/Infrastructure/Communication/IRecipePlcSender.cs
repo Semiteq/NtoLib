@@ -9,6 +9,6 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication;
 
 public interface IRecipePlcSender
 {
-    Task<Result> UploadAndVerifyAsync(Recipe recipe, CancellationToken cancellationToken = default);
-    Task<Result<Recipe>> DownloadAsync(CancellationToken cancellationToken = default);
+    Task<Result> SendAndVerifyRecipeAsync(Recipe recipe, CancellationToken cancellationToken = default);
+    Task<Result<Recipe>> ReciveRecipeAsync(CancellationToken cancellationToken = default);
 }

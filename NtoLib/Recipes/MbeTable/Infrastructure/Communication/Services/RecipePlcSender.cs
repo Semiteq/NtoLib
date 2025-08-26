@@ -43,7 +43,7 @@ public sealed class RecipePlcSender : IRecipePlcSender
 
     private CommunicationSettings Settings => _communicationSettingsProvider.GetSettings();
     
-    public async Task<Result> UploadAndVerifyAsync(Recipe recipe, CancellationToken cancellationToken = default)
+    public async Task<Result> SendAndVerifyRecipeAsync(Recipe recipe, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -98,7 +98,7 @@ public sealed class RecipePlcSender : IRecipePlcSender
         }
     }
 
-    public Task<Result<Recipe>> DownloadAsync(CancellationToken cancellationToken = default)
+    public Task<Result<Recipe>> ReciveRecipeAsync(CancellationToken cancellationToken = default)
     {
         try
         {

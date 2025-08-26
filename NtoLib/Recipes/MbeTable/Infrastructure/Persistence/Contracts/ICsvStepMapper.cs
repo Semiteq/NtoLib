@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿#nullable enable
+
+using System.Collections.Generic;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 
@@ -16,9 +17,9 @@ public interface ICsvStepMapper
     /// <param name="record">The CSV record as an array of strings.</param>
     /// <param name="binding">The header binding that maps column keys to record indices.</param>
     /// <returns>
-    /// A tuple containing the mapped <see cref="Step"/> object (or null if mapping fails) and a list of errors encountered during mapping.
+    /// A <see cref="Result{T}"/> containing the mapped <see cref="Step"/> object on success, or an error on failure.
     /// </returns>
-    (Step Step, IImmutableList<RecipeFileError> Errors) FromRecord(
+    Result<Step> FromRecord(
         int lineNumber,
         string[] record,
         CsvHeaderBinder.Binding binding);

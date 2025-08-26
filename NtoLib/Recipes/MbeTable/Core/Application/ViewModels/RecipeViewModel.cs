@@ -38,7 +38,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private readonly TimerService _timerService;
 
         private IUiDispatcher _uiDispatcher = new ImmediateUiDispatcher();
-        
+
         private Recipe _recipe;
 
         private LoopValidationResult _loopResult = new();
@@ -85,7 +85,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         #region Public Commands
 
         public Recipe GetCurrentRecipe() => _recipe;
-        
+
         // For EffectsHandler to set recipe after load
         public void SetRecipe(Recipe newRecipe)
         {
@@ -148,7 +148,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             _recipe = newRecipe;
             _loopResult = _recipeLoopValidator.Validate(_recipe);
             _timeResult = _recipeTimeCalculator.Calculate(_recipe);
-            
+
             _timerService.SetTimeAnalysisData(_timeResult);
 
             _appStateMachine.Dispatch(new VmLoopValidChanged(_loopResult.IsValid));
@@ -244,12 +244,6 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 startTime,
                 availableTargets
             );
-        }
-
-        private static string MultilineErrors(IImmutableList<RecipeFileError> errors)
-        {
-            return string.Join(Environment.NewLine, 
-                errors.Select((error, index) => $"[{index + 1}/{errors.Count}] {error}"));
         }
 
         #endregion

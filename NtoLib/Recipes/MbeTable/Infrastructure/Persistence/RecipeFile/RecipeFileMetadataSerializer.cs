@@ -21,8 +21,6 @@ public class RecipeFileMetadataSerializer
     {
         writer.WriteLine($"# {_signature} v={meta.Version}");
         writer.WriteLine($"# SEP={meta.Separator}");
-        writer.WriteLine($"# SCHEMA_FP={meta.SchemaFingerprint}");
-        writer.WriteLine($"# ACTIONS_FP={meta.ActionsFingerprint}");
         writer.WriteLine($"# ROWS={meta.Rows}");
         writer.WriteLine($"# BODY_SHA256={meta.BodyHashBase64}");
         foreach (var kv in meta.Extras)
@@ -83,8 +81,6 @@ public class RecipeFileMetadataSerializer
             switch (key.ToUpperInvariant())
             {
                 case "SEP": meta = meta with { Separator = value.Length > 0 ? value[0] : ';' }; break;
-                case "SCHEMA_FP": meta = meta with { SchemaFingerprint = value }; break;
-                case "ACTIONS_FP": meta = meta with { ActionsFingerprint = value }; break;
                 case "ROWS": if (int.TryParse(value, out var rows)) meta = meta with { Rows = rows }; break;
                 case "BODY_SHA256": meta = meta with { BodyHashBase64 = value }; break;
                 default:

@@ -1,8 +1,10 @@
 ﻿#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
-using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
+using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
@@ -10,9 +12,14 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 
 public class TargetAvailabilityValidator
 {
-    // Проверяем, что все targetId из файла существуют в текущем окружении,
-    // используя контракт IActionTargetProvider (или аналогичный ваш сервис)
-    public (bool Ok, string? Error) Validate(
+    /// <summary>
+    /// Validates that all target IDs in the recipe steps exist in the current environment.
+    /// </summary>
+    /// <param name="recipe">The recipe to validate.</param>
+    /// <param name="actionManager">The action manager to resolve action types.</param>
+    /// <param name="targetProvider">The provider for available targets.</param>
+    /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
+    public Result Validate(
         Recipe recipe,
         ActionManager actionManager,
         IActionTargetProvider targetProvider)
@@ -35,11 +42,13 @@ public class TargetAvailabilityValidator
             };
 
             if (!ok)
-                missing.Add($"row {index+1}: action={actionId}, target={targetId}");
+            {
+                missing.Add($"row {index + 1}: action={actionId}, target={targetId}");
+            }
         }
 
         return missing.Count == 0
-            ? (true, null)
-            : (false, "Missing targets in current environment: " + string.Join("; ", missing));
+            ? Result.Ok()
+            : Result.Fail("Missing targets in current environment: " + string.Join("; ", missing));
     }
 }

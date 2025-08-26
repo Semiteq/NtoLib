@@ -1,14 +1,25 @@
 ﻿#nullable enable
 
-using System.Collections.Immutable;
 using System.IO;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
 
 public interface IRecipeSerializer
 {
-    (Recipe? Recipe, IImmutableList<RecipeFileError> Errors) Deserialize(TextReader reader);
-    IImmutableList<RecipeFileError> Serialize(Recipe recipe, TextWriter writer);
+    /// <summary>
+    /// Deserializes recipe data from the given text reader.
+    /// </summary>
+    /// <param name="reader">The text reader to read from.</param>
+    /// <returns>A <see cref="Result{T}"/> containing the deserialized recipe or an error.</returns>
+    Result<Recipe> Deserialize(TextReader reader);
+    
+    /// <summary>
+    /// Serializes the given recipe to the text writer.
+    /// </summary>
+    /// <param name="recipe">The recipe to serialize.</param>
+    /// <param name="writer">The text writer to write to.</param>
+    /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
+    Result Serialize(Recipe recipe, TextWriter writer);
 }

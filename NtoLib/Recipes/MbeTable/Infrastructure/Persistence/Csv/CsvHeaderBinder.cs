@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Schema;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 
@@ -19,21 +20,30 @@ public sealed class CsvHeaderBinder : ICsvHeaderBinder
         IReadOnlyDictionary<int, ColumnDefinition> FileIndexToColumn
     );
 
-    public (Binding? Result, string? Error) Bind(string[] headerTokens, TableSchema schema)
+    /// <summary>
+    /// Binds the header tokens from a CSV file to the provided table schema.
+    /// </summary>
+    /// <param name="headerTokens">An array of strings representing the header columns from the CSV file.</param>
+    /// <param name="schema">The table schema to bind against.</param>
+    /// <returns>
+    /// A <see cref="Result{T}"/> containing the binding information on success, or an error on failure.
+    /// </returns>
+    public Result<Binding> Bind(string[] headerTokens, TableSchema schema)
     {
         if (headerTokens.Length == 0)
-            return (null, "Empty header");
+            return Result.Fail("Empty header");
 
         var byCode = schema.GetColumns().ToDictionary(c => c.Code, StringComparer.OrdinalIgnoreCase);
 
         var map = new Dictionary<int, ColumnDefinition>(headerTokens.Length);
         var tokens = new List<string>(headerTokens.Length);
 
-        for (int i = 0; i < headerTokens.Length; i++)
+        for (var i = 0; i < headerTokens.Length; i++)
         {
             var token = headerTokens[i].Trim();
             if (!byCode.TryGetValue(token, out var def))
-                return (null, $"Unknown column in header at index {i}: '{token}'");
+                return Result.Fail($"Unknown column in header at index {i}: '{token}'");
+            
             map[i] = def;
             tokens.Add(token);
         }
@@ -45,8 +55,8 @@ public sealed class CsvHeaderBinder : ICsvHeaderBinder
             .ToArray();
 
         if (!expected.SequenceEqual(tokens, StringComparer.OrdinalIgnoreCase))
-            return (null, "Header mismatch: file columns do not match current TableSchema");
+            return Result.Fail("Header mismatch: file columns do not match current TableSchema");
 
-        return (new Binding(tokens, map), null);
+        return Result.Ok(new Binding(tokens, map));
     }
 }
