@@ -2,103 +2,76 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
+using NtoLib.Recipes.MbeTable.Core.Domain.Analysis.Rules;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 
-namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
+namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
+
+/// <summary>
+/// Orchestrates the calculation of dependent properties for a step by delegating to configured calculation rules.
+/// </summary>
+public sealed class StepPropertyCalculator
 {
+    private readonly IActionRepository _actionRepository;
+    private readonly IReadOnlyDictionary<string, ICalculationRule> _rules;
+
     /// <summary>
-    /// Calculates dependent properties for a single step based on a set of dependency rules.
-    /// This class embodies the Strategy pattern, where each rule is a strategy for calculation.
+    /// Initializes a new instance of the <see cref="StepPropertyCalculator"/> class.
     /// </summary>
-    public class StepPropertyCalculator
+    /// <param name="actionRepository">The repository to access action definitions.</param>
+    /// <param name="rules">A dictionary of available calculation rule implementations, keyed by their unique name.</param>
+    public StepPropertyCalculator(IActionRepository actionRepository, IEnumerable<ICalculationRule> rules)
     {
-        private readonly IImmutableList<DependencyRule> _rules;
-        private readonly IImmutableSet<ColumnIdentifier> _linkedColumns;
+        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
+        _rules = rules?.ToDictionary(r => r.Name) ?? throw new ArgumentNullException(nameof(rules));
+    }
 
-        public StepPropertyCalculator(IImmutableList<DependencyRule> rules)
+    /// <summary>
+    /// Checks if a property change requires a dependency recalculation for a given step.
+    /// </summary>
+    /// <param name="step">The step being modified.</param>
+    /// <returns>True if the step's action is configured with a calculation rule.</returns>
+    public bool IsRecalculationRequired(Step step)
+    {
+        var actionId = step.Properties[WellKnownColumns.Action]!.GetValue<int>();
+        var actionDef = _actionRepository.GetActionById(actionId);
+        return actionDef.CalculationRule != null;
+    }
+
+    /// <summary>
+    /// Calculates dependent properties by finding and applying the appropriate rule.
+    /// </summary>
+    /// <param name="currentStep">The current state of the step.</param>
+    /// <param name="triggerKey">The key of the property that was changed.</param>
+    /// <param name="newTriggerProperty">The new property value that triggered the calculation.</param>
+    /// <returns>A tuple containing the updated step and an optional error.</returns>
+    public (Step NewStep, RecipePropertyError? Error) CalculateDependencies(
+        Step currentStep,
+        ColumnIdentifier triggerKey,
+        StepProperty newTriggerProperty)
+    {
+        var actionId = currentStep.Properties[WellKnownColumns.Action]!.GetValue<int>();
+        var actionDef = _actionRepository.GetActionById(actionId);
+
+        if (actionDef.CalculationRule is null)
         {
-            _rules = rules ?? throw new ArgumentNullException(nameof(rules));
-            _linkedColumns = _rules.SelectMany(r => r.TriggerKeys).Union(_rules.Select(r => r.OutputKey))
-                .ToImmutableHashSet();
+            // Should not happen if IsRecalculationRequired is checked first, but good practice.
+            return (currentStep, null);
         }
 
-        public bool IsRecalculationRequired(Step step, ColumnIdentifier changedKey, IImmutableSet<int> smoothActionIds)
+        if (!_rules.TryGetValue(actionDef.CalculationRule.Name, out var rule))
         {
-            var actionId = step.Properties[WellKnownColumns.Action]?.GetValue<int>();
-            return actionId.HasValue && smoothActionIds.Contains(actionId.Value) &&
-                   _linkedColumns.Contains(changedKey);
+            return (currentStep, new CalculationError($"Calculation rule '{actionDef.CalculationRule.Name}' is defined in configuration but not implemented."));
         }
-
-        public (Step NewStep, RecipePropertyError? Error) CalculateDependencies(
-            Step currentStep,
-            ColumnIdentifier triggerKey,
-            StepProperty newTriggerProperty)
-        {
-            var pendingChanges = new Dictionary<ColumnIdentifier, StepProperty> { [triggerKey] = newTriggerProperty };
-            var affectedRules = _rules.Where(rule => rule.TriggerKeys.Contains(triggerKey));
-
-            foreach (var rule in affectedRules)
-            {
-                var context = CreateCalculationContext(currentStep.Properties, pendingChanges);
-
-                // Todo: This part is still complex and could be improved by refactoring DependencyRule
-                // to encapsulate the function signature and parameter mapping.
-                // For now, we keep the existing logic but contained within this class.
-                context.TryGetValue(WellKnownColumns.InitialValue, out var initialValue);
-                context.TryGetValue(WellKnownColumns.Setpoint, out var setpoint);
-                context.TryGetValue(WellKnownColumns.StepDuration, out var duration);
-                context.TryGetValue(WellKnownColumns.Speed, out var speed);
-
-                (float? calculatedValue, CalculationError? calcError) result;
-                if (rule.OutputKey == WellKnownColumns.StepDuration && speed is not null && initialValue is not null &&
-                    setpoint is not null)
-                {
-                    var func = (Func<float, float, float, (float?, CalculationError?)>)rule.CalculationFunc;
-                    result = func(speed.GetValue<float>(), initialValue.GetValue<float>(), setpoint.GetValue<float>());
-                }
-                else if (rule.OutputKey == WellKnownColumns.Speed && duration is not null && initialValue is not null &&
-                         setpoint is not null)
-                {
-                    var func = (Func<float, float, float, (float?, CalculationError?)>)rule.CalculationFunc;
-                    result = func(duration.GetValue<float>(), initialValue.GetValue<float>(), setpoint.GetValue<float>());
-                }
-                else
-                {
-                    continue;
-                }
-
-                if (result.calcError != null)
-                {
-                    return (currentStep, result.calcError);
-                }
-
-                var targetProperty = context[rule.OutputKey];
-                if (targetProperty == null) continue;
-
-                var (success, finalNewProperty, validationError) =
-                    targetProperty.WithValue(result.calculatedValue!.Value);
-                if (!success)
-                {
-                    return (currentStep, validationError);
-                }
-
-                pendingChanges[rule.OutputKey] = finalNewProperty;
-            }
-
-            var finalProperties = currentStep.Properties.SetItems(pendingChanges);
-            return (currentStep with { Properties = finalProperties }, null);
-        }
-
-        private IReadOnlyDictionary<ColumnIdentifier, StepProperty?> CreateCalculationContext(
-            IImmutableDictionary<ColumnIdentifier, StepProperty?> currentProperties,
-            IReadOnlyDictionary<ColumnIdentifier, StepProperty> pendingChanges)
-        {
-            return currentProperties.SetItems(pendingChanges);
-        }
+        
+        // The mapping tells the rule which columns to use for its calculations.
+        var mapping = actionDef.CalculationRule.Mapping;
+        
+        return rule.Apply(currentStep, triggerKey, newTriggerProperty, mapping);
     }
 }

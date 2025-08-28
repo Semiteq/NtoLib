@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
+
 namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
 {
     /// <summary>

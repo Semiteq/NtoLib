@@ -21,12 +21,12 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 public sealed class CsvStepMapper : ICsvStepMapper
 {
     private readonly IStepFactory _stepFactory;
-    private readonly ActionManager _actionManager;
+    private readonly IActionRepository _actionRepository;
 
-    public CsvStepMapper(IStepFactory stepFactory, ActionManager actionManager)
+    public CsvStepMapper(IStepFactory stepFactory, IActionRepository actionRepository)
     {
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
-        _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
+        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
     }
     
     public Result<Step> FromRecord(
@@ -78,9 +78,8 @@ public sealed class CsvStepMapper : ICsvStepMapper
             .WithOptionalSetpoint(setpointResult.Value)
             .WithOptionalSpeed(speedResult.Value)
             .WithOptionalDuration(durationResult.Value)
-            .WithOptionalComment(comment)
-            .WithDeployDuration(_actionManager.GetActionEntryById(actionId).DeployDuration);
-
+            .WithOptionalComment(comment);
+        
         // Validation of extra fields.
         var supported = builder.NonNullKeys.ToHashSet();
         foreach (var (i, value) in EnumerateIndexValues(record))

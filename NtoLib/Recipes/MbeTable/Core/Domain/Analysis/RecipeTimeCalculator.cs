@@ -11,11 +11,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 
 public class RecipeTimeCalculator : IRecipeTimeCalculator
 {
-    private readonly ActionManager _actionManager;
+    private const int ForLoopActionId = 120;
+    private const int EndForLoopActionId = 130;
+    private readonly IActionRepository _actionRepository;
 
-    public RecipeTimeCalculator(ActionManager actionManager)
+    public RecipeTimeCalculator(IActionRepository actionRepository)
     {
-        _actionManager = actionManager;
+        _actionRepository = actionRepository;
     }
 
     /// <summary>
@@ -37,13 +39,13 @@ public class RecipeTimeCalculator : IRecipeTimeCalculator
 
             var actionId = step.Properties[WellKnownColumns.Action]?.GetValue<int>() ?? -1;
 
-            if (actionId == _actionManager.ForLoop.Id)
+            if (actionId == ForLoopActionId)
             {
                 var iterationCount = step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ?? 1f;
                 loopStack.Push(((int)iterationCount, accumulatedTime));
             }
-            else if (actionId == _actionManager.EndForLoop.Id)
-            {
+            // else if (actionId == _actionManager.EndForLoop.Id)
+            else if (actionId == EndForLoopActionId)
                 if (loopStack.Count > 0)
                 {
                     var (iterationCount, loopBodyStartTime) = loopStack.Pop();
@@ -54,15 +56,15 @@ public class RecipeTimeCalculator : IRecipeTimeCalculator
                         accumulatedTime += TimeSpan.FromTicks(loopBodyDuration.Ticks * (iterationCount - 1));
                     }
                 }
-            }
-            else if (step.DeployDuration == DeployDuration.LongLasting)
-            {
-                var durationInSeconds = step.Properties[WellKnownColumns.StepDuration]?.GetValue<float>() ??
-                                        step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ??
-                                        0;
 
-                accumulatedTime += TimeSpan.FromSeconds(durationInSeconds);
-            }
+                else if (step.DeployDuration == DeployDuration.LongLasting)
+                {
+                    var durationInSeconds = step.Properties[WellKnownColumns.StepDuration]?.GetValue<float>() ??
+                                            step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ??
+                                            0;
+
+                    accumulatedTime += TimeSpan.FromSeconds(durationInSeconds);
+                }
         }
 
         return new RecipeTimeAnalysis(accumulatedTime, stepStartTimes.ToImmutableDictionary());

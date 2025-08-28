@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using EasyModbus;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
@@ -14,14 +15,20 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Protocol;
 public sealed class PlcRecipeSerializerV1 : IPlcRecipeSerializer
 {
     private readonly IStepFactory _stepFactory;
-    private readonly ActionManager _actionManager;
+    private readonly IActionRepository _actionRepository;
+    private readonly TableSchema _tableSchema; 
     private readonly ModbusClient.RegisterOrder _registerOrder;
     private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
 
-    public PlcRecipeSerializerV1(IStepFactory stepFactory, ActionManager actionManager, ICommunicationSettingsProvider communicationSettingsProvider)
+    public PlcRecipeSerializerV1(
+        IStepFactory stepFactory, 
+        IActionRepository actionRepository,
+        TableSchema tableSchema, 
+        ICommunicationSettingsProvider communicationSettingsProvider)
     {
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
-        _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
+        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
+        _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema)); 
         _communicationSettingsProvider = communicationSettingsProvider ?? throw new ArgumentNullException(nameof(communicationSettingsProvider));
         
         _registerOrder = CommunicationSettings.WordOrder == WordOrder.HighLow
@@ -31,70 +38,109 @@ public sealed class PlcRecipeSerializerV1 : IPlcRecipeSerializer
     
     private CommunicationSettings CommunicationSettings => _communicationSettingsProvider.GetSettings();
 
+    /// <inheritdoc />
     public (int[] IntArray, int[] FloatArray, int[] BoolArray) ToRegisters(IReadOnlyList<Step> steps)
     {
-        var rows = steps.Count;
+        var rowCount = steps.Count;
+        var settings = CommunicationSettings;
 
-        var intCols = CommunicationSettings.IntColumNum;
-        var floatCols = CommunicationSettings.FloatColumNum;
-        var boolCols = CommunicationSettings.BoolColumNum;
+        // Определяем размеры массивов на основе максимальных индексов в маппинге
+        var maxIntIndex = _tableSchema.GetColumns()
+            .Where(c => c.PlcMapping?.Area == "Int")
+            .Max(c => c.PlcMapping?.Index ?? -1);
+        
+        var maxFloatIndex = _tableSchema.GetColumns()
+            .Where(c => c.PlcMapping?.Area == "Float")
+            .Max(c => c.PlcMapping?.Index ?? -1);
 
-        var intArray = new int[rows * intCols];
-        var floatArray = new int[rows * floatCols * 2];
-        var boolArray = boolCols > 0 ? new int[rows * boolCols] : Array.Empty<int>();
+        var intCols = maxIntIndex + 1;
+        var floatCols = maxFloatIndex + 1;
+        // Bool пока не используется, но логика аналогична
+        var boolCols = 0; 
+        
+        var intArray = new int[rowCount * intCols];
+        // Каждый float занимает 2 регистра
+        var floatArray = new int[rowCount * floatCols * 2]; 
+        var boolArray = boolCols > 0 ? new int[rowCount * boolCols] : Array.Empty<int>();
 
-        for (var row = 0; row < rows; row++)
+        var writableColumns = _tableSchema.GetColumns().Where(c => c.PlcMapping != null).ToList();
+
+        for (var row = 0; row < rowCount; row++)
         {
-            var s = steps[row];
-            var iBase = row * intCols;
-
-            intArray[iBase + 0] = GetInt(s, WellKnownColumns.Action) ?? 0;
-            if (intCols > 1) intArray[iBase + 1] = GetInt(s, WellKnownColumns.ActionTarget) ?? 0;
-
-            var fBase = row * floatCols * 2;
-            if (floatCols > 0) WriteFloat(floatArray, fBase + 0, GetFloat(s, WellKnownColumns.InitialValue) ?? 0f);
-            if (floatCols > 1) WriteFloat(floatArray, fBase + 2, GetFloat(s, WellKnownColumns.Setpoint) ?? 0f);
-            if (floatCols > 2) WriteFloat(floatArray, fBase + 4, GetFloat(s, WellKnownColumns.Speed) ?? 0f);
-            if (floatCols > 3) WriteFloat(floatArray, fBase + 6, GetFloat(s, WellKnownColumns.StepDuration) ?? 0f);
-
-            if (boolCols > 0)
+            var step = steps[row];
+            foreach (var column in writableColumns)
             {
-                var bBase = row * boolCols;
-                for (var i = 0; i < boolCols; i++)
-                    boolArray[bBase + i] = 0;
+                var mapping = column.PlcMapping!;
+                if (!step.Properties.TryGetValue(column.Key, out var property) || property is null)
+                {
+                    continue; // Пропускаем неактивные для этого шага свойства
+                }
+
+                switch (mapping.Area)
+                {
+                    case "Int":
+                        var intBase = row * intCols;
+                        intArray[intBase + mapping.Index] = property.GetValue<int>();
+                        break;
+                    case "Float":
+                        var floatBase = row * floatCols * 2;
+                        WriteFloat(floatArray, floatBase + (mapping.Index * 2), property.GetValue<float>());
+                        break;
+                    // case "Bool": ... (логика для bool)
+                }
             }
         }
-
+        
         return (intArray, floatArray, boolArray);
     }
 
+    /// <inheritdoc />
     public List<Step> FromRegisters(int[] intData, int[] floatData, int rowCount)
     {
-        var intCols = CommunicationSettings.IntColumNum;
-        var floatCols = CommunicationSettings.FloatColumNum;
         var steps = new List<Step>(rowCount);
+        
+        var maxIntIndex = _tableSchema.GetColumns()
+            .Where(c => c.PlcMapping?.Area == "Int")
+            .Max(c => c.PlcMapping?.Index ?? -1);
+        
+        var maxFloatIndex = _tableSchema.GetColumns()
+            .Where(c => c.PlcMapping?.Area == "Float")
+            .Max(c => c.PlcMapping?.Index ?? -1);
+
+        var intCols = maxIntIndex + 1;
+        var floatCols = maxFloatIndex + 1;
+        
+        var mappedColumns = _tableSchema.GetColumns().Where(c => c.PlcMapping != null).ToList();
+        var actionColumn = _tableSchema.GetColumnDefinition(WellKnownColumns.Action);
 
         for (var row = 0; row < rowCount; row++)
         {
             var iBase = row * intCols;
-            var fBase = row * floatCols * 2;
+            var actionId = SafeGet(intData, iBase + actionColumn.PlcMapping!.Index);
 
-            var actionId = SafeGet(intData, iBase + 0);
-            var targetId = intCols > 1 ? SafeGet(intData, iBase + 1) : 0;
+            var builder = _stepFactory.ForAction(actionId);
 
-            var initial = floatCols >= 1 ? ReadFloat(floatData, fBase + 0) : 0f;
-            var setpoint = floatCols >= 2 ? ReadFloat(floatData, fBase + 2) : 0f;
-            var speed = floatCols >= 3 ? ReadFloat(floatData, fBase + 4) : 0f;
-            var duration = floatCols >= 4 ? ReadFloat(floatData, fBase + 6) : 0f;
+            foreach (var column in mappedColumns)
+            {
+                var mapping = column.PlcMapping!;
+                object? value = null;
 
-            var builder = _stepFactory.ForAction(actionId)
-                .WithOptionalTarget(targetId)
-                .WithOptionalInitialValue(initial)
-                .WithOptionalSetpoint(setpoint)
-                .WithOptionalSpeed(speed)
-                .WithOptionalDuration(duration)
-                .WithDeployDuration(_actionManager.GetActionEntryById(actionId).DeployDuration);
-
+                switch (mapping.Area)
+                {
+                    case "Int":
+                        value = SafeGet(intData, iBase + mapping.Index);
+                        break;
+                    case "Float":
+                        var fBase = row * floatCols * 2;
+                        value = ReadFloat(floatData, fBase + (mapping.Index * 2));
+                        break;
+                }
+                
+                if (value != null)
+                {
+                    builder.WithOptionalDynamic(column.Key, value);
+                }
+            }
             steps.Add(builder.Build());
         }
 

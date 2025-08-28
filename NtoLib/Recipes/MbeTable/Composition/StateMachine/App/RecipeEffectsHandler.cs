@@ -1,12 +1,13 @@
 ﻿#nullable enable
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
+using NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
+namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.App
 {
     /// <summary>
     /// Centralized executor for AppEffects. Runs async operations and dispatches Completed commands.
@@ -16,15 +17,15 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         private readonly AppStateMachine _stateMachine;
         private readonly IRecipePlcSender _recipePlcSender;
         private readonly RecipeViewModel _recipeViewModel;
-        private readonly RecipeFileReader _recipeFileReader;
-        private readonly RecipeFileWriter _recipeFileWriter;
+        private readonly IRecipeFileReader _recipeFileReader;
+        private readonly IRecipeFileWriter _recipeFileWriter;
 
         public RecipeEffectsHandler(
             AppStateMachine stateMachine,
             RecipeViewModel recipeViewModel,
             IRecipePlcSender recipePlcSender,
-            RecipeFileReader recipeFileReader,
-            RecipeFileWriter recipeFileWriter)
+            IRecipeFileReader recipeFileReader,
+            IRecipeFileWriter recipeFileWriter)
         {
             _stateMachine = stateMachine;
             _recipeViewModel = recipeViewModel;
@@ -58,7 +59,7 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         private async Task DoReadRecipeAsync(Guid opId, string filePath)
         {
             var readResult = _recipeFileReader.ReadRecipe(filePath);
-            
+
             if (readResult.IsSuccess)
             {
                 _recipeViewModel.SetRecipe(readResult.Value);

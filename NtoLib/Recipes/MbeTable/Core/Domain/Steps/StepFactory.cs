@@ -1,51 +1,36 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+
+using System;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Steps.Definitions;
 
-namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
+namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps;
+
+/// <inheritdoc />
+public sealed class StepFactory : IStepFactory
 {
-    public sealed class StepFactory : IStepFactory
+    private readonly IActionRepository _actionRepository;
+    private readonly PropertyDefinitionRegistry _registry;
+    private readonly TableSchema _tableSchema;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StepFactory"/> class.
+    /// </summary>
+    /// <param name="actionRepository">The repository for accessing configured action definitions.</param>
+    /// <param name="registry">The registry for property type definitions.</param>
+    /// <param name="tableSchema">The schema of the recipe table.</param>
+    public StepFactory(IActionRepository actionRepository, PropertyDefinitionRegistry registry, TableSchema tableSchema)
     {
-        private readonly IReadOnlyDictionary<int, IStepDefaultsProvider> _defaultsProviders;
-        private readonly PropertyDefinitionRegistry _registry;
-        private readonly TableSchema _tableSchema;
+        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
+        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema));
+    }
 
-        public StepFactory(ActionManager actionManager, PropertyDefinitionRegistry registry, TableSchema tableSchema)
-        {
-            _registry = registry;
-            _tableSchema = tableSchema;
-            _defaultsProviders = new Dictionary<int, IStepDefaultsProvider>
-            {
-                { actionManager.Power.Id, new PowerDefaults(registry) },
-                { actionManager.PowerSmooth.Id, new PowerSmoothDefaults(registry) },
-                { actionManager.PowerWait.Id, new PowerWaitDefaults(registry) },
-                { actionManager.Temperature.Id, new TemperatureDefaults(registry) },
-                { actionManager.TemperatureSmooth.Id, new TemperatureSmoothDefaults(registry) },
-                { actionManager.TemperatureWait.Id, new TemperatureWaitDefaults(registry) },
-                { actionManager.Close.Id, new CloseDefaults(registry) },
-                { actionManager.CloseAll.Id, new CloseAllDefaults(registry) },
-                { actionManager.Open.Id, new OpenDefaults(registry) },
-                { actionManager.OpenTime.Id, new OpenTimeDefaults(registry) },
-                { actionManager.NRun.Id, new NitrogenRunSourceDefaults(registry) },
-                { actionManager.NClose.Id, new NitrogenSourceCloseDefaults(registry) },
-                { actionManager.NVent.Id, new NitrogenSourceVentDefaults(registry) },
-                { actionManager.Pause.Id, new PauseDefaults(registry) },
-                { actionManager.ForLoop.Id, new ForLoopDefaults(registry) },
-                { actionManager.EndForLoop.Id, new EndForLoopDefaults(registry) },
-                { actionManager.Wait.Id, new WaitDefaults(registry) }
-            };
-        }
-
-        public IStepBuilder ForAction(int actionId)
-        {
-            if (!_defaultsProviders.TryGetValue(actionId, out var provider))
-            {
-                throw new KeyNotFoundException($"Defaults provider not found for action with id {actionId}");
-            }
-
-            return new StepBuilder(actionId, provider, _registry, _tableSchema);
-        }
+    /// <inheritdoc />
+    public IStepBuilder ForAction(int actionId)
+    {
+        var actionDefinition = _actionRepository.GetActionById(actionId);
+        return new StepBuilder(actionDefinition, _registry, _tableSchema);
     }
 }

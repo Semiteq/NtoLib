@@ -1,0 +1,132 @@
+[
+  {
+    "Id": 10,
+    "Name": "CLOSE",
+    "ActionType": "Shutter",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "action-target", "comment" ]
+  },
+  {
+    "Id": 20,
+    "Name": "OPEN",
+    "ActionType": "Shutter",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "action-target", "comment" ]
+  },
+  {
+    "Id": 30,
+    "Name": "OPEN TIME",
+    "ActionType": "Shutter",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "action-target", "setpoint", "comment" ],
+    "DefaultValues": { "setpoint": 1.0 }
+  },
+  {
+    "Id": 40,
+    "Name": "CLOSE ALL",
+    "ActionType": "Shutter",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "comment" ]
+  },
+  {
+    "Id": 50,
+    "Name": "TEMP",
+    "ActionType": "Heater",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "action-target", "setpoint", "comment" ],
+    "DefaultValues": { "setpoint": 500.0 }
+  },
+  {
+    "Id": 60,
+    "Name": "TEMP + WAIT",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "action-target", "setpoint", "step-duration", "comment" ],
+    "DefaultValues": { "setpoint": 500.0, "step-duration": 60.0 }
+  },
+  {
+    "Id": 70,
+    "Name": "TEMP SMOOTH",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "action-target", "initial-value", "setpoint", "speed", "step-duration", "comment" ],
+    "DefaultValues": { "initial-value": 500.0, "setpoint": 600.0, "speed": 10.0, "step-duration": 600.0 }
+  },
+  {
+    "Id": 80,
+    "Name": "POWER",
+    "ActionType": "Heater",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "action-target", "setpoint", "comment" ],
+    "DefaultValues": { "setpoint": 10.0 }
+  },
+  {
+    "Id": 90,
+    "Name": "POWER + WAIT",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "action-target", "setpoint", "step-duration", "comment" ],
+    "DefaultValues": { "setpoint": 10.0, "step-duration": 60.0 }
+  },
+  {
+    "Id": 100,
+    "Name": "POWER SMOOTH",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "action-target", "initial-value", "setpoint", "speed", "step-duration", "comment" ],
+    "DefaultValues": { "initial-value": 10.0, "setpoint": 20.0, "speed": 1.0, "step-duration": 600.0 }
+  },
+  {
+    "Id": 110,
+    "Name": "WAIT",
+    "ActionType": "Service",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "setpoint", "comment" ],
+    "DefaultValues": { "setpoint": 60.0 }
+  },
+  {
+    "Id": 120,
+    "Name": "FOR",
+    "ActionType": "Service",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "setpoint", "comment" ],
+    "DefaultValues": { "setpoint": 1.0 }
+  },
+  {
+    "Id": 130,
+    "Name": "END FOR",
+    "ActionType": "Service",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "comment" ]
+  },
+  {
+    "Id": 140,
+    "Name": "PAUSE",
+    "ActionType": "Service",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "comment" ]
+  },
+  {
+    "Id": 150,
+    "Name": "N+ RUN",
+    "ActionType": "NitrogenSource",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "action-target", "setpoint", "comment" ],
+    "DefaultValues": { "setpoint": 10.0 }
+  },
+  {
+    "Id": 160,
+    "Name": "N+ CLOSE",
+    "ActionType": "NitrogenSource",
+    "DeployDuration": "Immediate",
+    "ApplicableColumns": [ "comment" ]
+  },
+  {
+    "Id": 170,
+    "Name": "N+ VENT",
+    "ActionType": "NitrogenSource",
+    "DeployDuration": "LongLasting",
+    "ApplicableColumns": [ "action-target", "setpoint", "comment" ],
+    "DefaultValues": { "setpoint": 10.0 }
+  }
+]

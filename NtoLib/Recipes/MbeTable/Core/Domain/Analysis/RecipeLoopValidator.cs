@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using NtoLib.Recipes.MbeTable.Config;
-using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
@@ -16,13 +15,14 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
     /// </summary>
     public class RecipeLoopValidator : IRecipeLoopValidator
     {
-        private readonly ActionManager _actionManager;
-        private readonly DebugLogger _debugLogger;
+        private const int ForLoopActionId = 120;
+        private const int EndForLoopActionId = 130;
+
+        private readonly ILogger _debugLogger;
         private const int MaxLoopDepth = 3;
 
-        public RecipeLoopValidator(ActionManager actionManager, DebugLogger debugLogger)
+        public RecipeLoopValidator(ILogger debugLogger)
         {
-            _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
             _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
         }
 
@@ -45,12 +45,10 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
                     _debugLogger.LogException(ex);
                     throw ex;
                 }
-                    
+
                 var actionId = actionProperty.GetValue<int>();
 
-                var actionType = _actionManager.GetActionEntryById(actionId);
-
-                if (actionType == _actionManager.ForLoop)
+                if (actionId == ForLoopActionId)
                 {
                     if (currentDepth >= MaxLoopDepth)
                         return new LoopValidationResult($"Exceeded max loop depth of {MaxLoopDepth}.");
@@ -58,7 +56,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
                     nestingLevels[i] = currentDepth;
                     currentDepth++;
                 }
-                else if (actionType == _actionManager.EndForLoop)
+                else if (actionId == EndForLoopActionId)
                 {
                     currentDepth--;
                     if (currentDepth < 0)

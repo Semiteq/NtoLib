@@ -1,11 +1,12 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Linq;
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
@@ -27,10 +28,10 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         public DynamicBindingList ViewModels { get; }
 
         private readonly IRecipeEngine _recipeEngine;
-        private readonly RecipeLoopValidator _recipeLoopValidator;
-        private readonly RecipeTimeCalculator _recipeTimeCalculator;
+        private readonly IRecipeLoopValidator _recipeLoopValidator;
+        private readonly IRecipeTimeCalculator _recipeTimeCalculator;
         private readonly IComboboxDataProvider _comboboxDataProvider;
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
         private readonly IStatusManager _statusManager;
         private readonly AppStateMachine _appStateMachine;
         private readonly TimerService _timerService;
@@ -45,13 +46,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
 
         public RecipeViewModel(
             IRecipeEngine recipeEngine,
-            RecipeLoopValidator recipeLoopValidator,
-            RecipeTimeCalculator recipeTimeCalculator,
+            IRecipeLoopValidator recipeLoopValidator,
+            IRecipeTimeCalculator recipeTimeCalculator,
             IComboboxDataProvider comboboxDataProvider,
             AppStateMachine appStateMachine,
             TimerService timerService,
             IStatusManager statusManager,
-            DebugLogger debugLogger,
+            ILogger debugLogger,
             TableSchema tableSchema)
         {
             _recipeEngine = recipeEngine;
@@ -216,8 +217,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
             finally
             {
-                 ViewModels.RaiseListChangedEvents = true;
-                 ViewModels.ResetBindings();
+                ViewModels.RaiseListChangedEvents = true;
+                ViewModels.ResetBindings();
             }
         }
 

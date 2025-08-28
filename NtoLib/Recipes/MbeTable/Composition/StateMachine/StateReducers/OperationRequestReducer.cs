@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
 namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
@@ -9,9 +10,9 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
     /// </summary>
     internal sealed class OperationRequestReducer : ICommandReducer
     {
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
 
-        public OperationRequestReducer(DebugLogger debugLogger)
+        public OperationRequestReducer(ILogger debugLogger)
         {
             _debugLogger = debugLogger;
         }
@@ -37,7 +38,7 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
                 _ => currentState
             };
         }
-        
+
         private static bool CanStartOperation(AppState s)
         {
             return s.Busy is BusyKind.Idle or BusyKind.Executing && s.ActiveOperationId is null;

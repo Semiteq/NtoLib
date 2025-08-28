@@ -2,36 +2,87 @@
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
-public record ColorScheme(
+/// <summary>
+/// Represents an immutable set of colors and fonts for styling the recipe table UI.
+/// </summary>
+public record ColorScheme
+{
+    // --- Static ---
+
+    /// <summary>
+    /// Provides a single, shared instance with default theme values.
+    /// This is the Single Source of Truth for default styles.
+    /// </summary>
+    public static ColorScheme Default { get; } = new();
+
+    // --- Properties ---
+
     // Table background colors
-    Color ControlBackgroundColor,
-    Color TableBackgroundColor,
+    public Color ControlBackgroundColor { get; init; }
+    public Color TableBackgroundColor { get; init; }
 
     // Table fonts
-    Font HeaderFont,
-    Font LineFont,
-    Font SelectedLineFont,
-    Font PassedLineFont,
-    Font BlockedFont,
+    public Font HeaderFont { get; init; }
+    public Font LineFont { get; init; }
+    public Font SelectedLineFont { get; init; }
+    public Font PassedLineFont { get; init; }
+    public Font BlockedFont { get; init; }
 
     // Line text colors
-    Color HeaderTextColor,
-    Color LineTextColor,
-    Color SelectedLineTextColor,
-    Color PassedLineTextColor,
-    Color BlockedTextColor,
+    public Color HeaderTextColor { get; init; }
+    public Color LineTextColor { get; init; }
+    public Color SelectedLineTextColor { get; init; }
+    public Color PassedLineTextColor { get; init; }
+    public Color BlockedTextColor { get; init; }
 
     // Line background colors
-    Color HeaderBgColor,
-    Color LineBgColor,
-    Color SelectedLineBgColor,
-    Color PassedLineBgColor,
-    Color BlockedBgColor,
+    public Color HeaderBgColor { get; init; }
+    public Color LineBgColor { get; init; }
+    public Color SelectedLineBgColor { get; init; }
+    public Color PassedLineBgColor { get; init; }
+    public Color BlockedBgColor { get; init; }
 
     // Buttons
-    Color ButtonsColor,
-    Color BlockedButtonsColor,
+    public Color ButtonsColor { get; init; }
+    public Color BlockedButtonsColor { get; init; }
 
     // Sizes
-    int LineHeight
-);
+    public int LineHeight { get; init; }
+
+    public Color StatusBgColor { get; init; }
+    /// <summary>
+    /// Creates a ColorScheme with a set of default values.
+    /// Used to initialize the static Default instance.
+    /// </summary>
+    public ColorScheme()
+    {
+        // Default values are defined in one single place.
+        ControlBackgroundColor = SystemColors.Control;
+        TableBackgroundColor = SystemColors.Window;
+
+        HeaderFont = new Font("Arial", 14f, FontStyle.Bold);
+        LineFont = new Font("Arial", 12f);
+        SelectedLineFont = new Font("Arial", 12f, FontStyle.Bold);
+        PassedLineFont = new Font("Arial", 12f);
+        BlockedFont = new Font("Arial", 12f);
+
+        HeaderTextColor = SystemColors.ControlText;
+        LineTextColor = SystemColors.WindowText;
+        SelectedLineTextColor = Color.White;
+        PassedLineTextColor = Color.DarkGray;
+        BlockedTextColor = Color.DarkGray;
+
+        HeaderBgColor = SystemColors.ControlLight;
+        LineBgColor = SystemColors.Window;
+        SelectedLineBgColor = Color.FromArgb(0, 120, 215); // A modern selection blue
+        PassedLineBgColor = Color.FromArgb(240, 240, 240); // A light gray
+        BlockedBgColor = SystemColors.ControlLight;
+        
+        ButtonsColor = SystemColors.Control;
+        BlockedButtonsColor = Color.FromArgb(170, 170, 170);
+
+        LineHeight = 40;
+        
+        ControlBackgroundColor = SystemColors.Control;
+    }
+}

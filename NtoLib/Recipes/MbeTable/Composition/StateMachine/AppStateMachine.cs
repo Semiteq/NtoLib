@@ -3,8 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers;
+using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
 namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
 {
@@ -15,7 +16,7 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
     public sealed class AppStateMachine : IDisposable
     {
         private readonly object _lock = new();
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
         private RecipeEffectsHandler? _effectsHandler;
 
         /// <summary>
@@ -33,7 +34,7 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         /// </summary>
         public event Action<AppState>? StateChanged;
 
-        public AppStateMachine(DebugLogger debugLogger)
+        public AppStateMachine(ILogger debugLogger)
         {
             _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
 

@@ -2,8 +2,9 @@
 
 using System;
 using System.Windows.Forms;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine;
+namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 
 /// <summary>
 /// WinForms implementation that posts actions via Control.BeginInvoke.

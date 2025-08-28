@@ -10,18 +10,18 @@ namespace NtoLib.Recipes.MbeTable.Composition;
 
 public class ComboboxDataProvider : IComboboxDataProvider
 {
-    private readonly ActionManager _actionManager;
+    private readonly IActionRepository _actionRepository;
     private readonly IActionTargetProvider _actionTargetProvider;
 
-    public ComboboxDataProvider(ActionManager actionManager, IActionTargetProvider actionTargetProvider)
+    public ComboboxDataProvider(IActionRepository actionRepository, IActionTargetProvider actionTargetProvider)
     {
-        _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
+        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
         _actionTargetProvider = actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));
     }
 
     public List<KeyValuePair<int, string>>? GetActionTargets(int actionId)
     {
-        var actionType = _actionManager.GetActionTypeById(actionId);
+        var actionType = _actionRepository.GetActionById(actionId).ActionType;
         return actionType switch
         {
             ActionType.Heater => _actionTargetProvider.GetHeaterNames().ToList(),
@@ -31,5 +31,5 @@ public class ComboboxDataProvider : IComboboxDataProvider
         };
     }
 
-    public List<KeyValuePair<int, string>> GetActions() => _actionManager.GetAllActions().ToList();
+    public List<KeyValuePair<int, string>> GetActions() => _actionRepository.GetAllActions().ToList();
 }

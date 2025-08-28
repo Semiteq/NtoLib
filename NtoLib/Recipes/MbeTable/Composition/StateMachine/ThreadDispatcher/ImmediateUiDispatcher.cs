@@ -1,6 +1,7 @@
 ﻿using System;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine;
+namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 
 /// <summary>
 /// Fallback dispatcher that runs the action inline on the current thread.

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
 namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
@@ -12,9 +13,9 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
     /// </summary>
     internal sealed class OperationCompletionReducer : ICommandReducer
     {
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
 
-        public OperationCompletionReducer(DebugLogger debugLogger)
+        public OperationCompletionReducer(ILogger debugLogger)
         {
             _debugLogger = debugLogger;
         }

@@ -25,28 +25,30 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
 public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
 {
     private readonly TableSchema _schema;
-    private readonly ActionManager _actionManager;
+    // --- ЗАМЕНИТЬ ---
+    // private readonly ActionManager _actionManager;
+    private readonly IActionRepository _actionRepository;
     private readonly ICsvHelperFactory _csvHelperFactory;
     private readonly RecipeFileMetadataSerializer _recipeFileMetadataSerializer;
     private readonly ICsvHeaderBinder _csvHeaderBinder;
     private readonly ICsvStepMapper _csvStepMapper;
-    private readonly RecipeLoopValidator _recipeLoopValidator;
+    private readonly IRecipeLoopValidator _recipeLoopValidator;
     private readonly TargetAvailabilityValidator _targetAvailabilityValidator;
     private readonly IActionTargetProvider _actionTargetProvider;
 
     public RecipeCsvSerializerV1(
         TableSchema schema,
-        ActionManager actionManager,
+        IActionRepository actionRepository,
         ICsvHelperFactory csvFactory,
         RecipeFileMetadataSerializer metaSerializer,
         ICsvHeaderBinder headerBinder,
         ICsvStepMapper csvStepMapper,
-        RecipeLoopValidator loopValidator,
+        IRecipeLoopValidator loopValidator,
         TargetAvailabilityValidator targetsValidator,
         IActionTargetProvider targetProvider)
     {
         _schema = schema ?? throw new ArgumentNullException(nameof(schema));
-        _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
+        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
         _csvHelperFactory = csvFactory ?? throw new ArgumentNullException(nameof(csvFactory));
         _recipeFileMetadataSerializer = metaSerializer ?? throw new ArgumentNullException(nameof(metaSerializer));
         _csvHeaderBinder = headerBinder ?? throw new ArgumentNullException(nameof(headerBinder));
@@ -138,7 +140,7 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         if (!loopRes.IsValid)
             return Result.Fail(new RecipeError(loopRes.ErrorMessage ?? "Loop structure invalid"));
 
-        var targetsResult = _targetAvailabilityValidator.Validate(recipe, _actionManager, _actionTargetProvider);
+        var targetsResult = _targetAvailabilityValidator.Validate(recipe, _actionRepository, _actionTargetProvider);
         if (targetsResult.IsFailed)
             return targetsResult;
 

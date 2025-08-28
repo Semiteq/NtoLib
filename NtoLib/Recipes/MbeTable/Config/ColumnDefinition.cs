@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Windows.Forms;
 
 namespace NtoLib.Recipes.MbeTable.Config
@@ -24,6 +26,7 @@ namespace NtoLib.Recipes.MbeTable.Config
         Type SystemType,
         int Width,
         bool ReadOnly,
-        DataGridViewContentAlignment Alignment
+        DataGridViewContentAlignment Alignment,
+        PlcMapping? PlcMapping
     );
 }

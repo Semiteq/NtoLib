@@ -12,16 +12,9 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 
 public class TargetAvailabilityValidator
 {
-    /// <summary>
-    /// Validates that all target IDs in the recipe steps exist in the current environment.
-    /// </summary>
-    /// <param name="recipe">The recipe to validate.</param>
-    /// <param name="actionManager">The action manager to resolve action types.</param>
-    /// <param name="targetProvider">The provider for available targets.</param>
-    /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
     public Result Validate(
         Recipe recipe,
-        ActionManager actionManager,
+        IActionRepository actionRepository,
         IActionTargetProvider targetProvider)
     {
         var missing = new List<string>();
@@ -32,7 +25,7 @@ public class TargetAvailabilityValidator
             var targetId = step.Properties[WellKnownColumns.ActionTarget]?.GetValue<int>() ?? 0;
             if (targetId == 0) continue;
 
-            var actionType = actionManager.GetActionTypeById(actionId);
+            var actionType = actionRepository.GetActionById(actionId).ActionType;
             var ok = actionType switch
             {
                 ActionType.Heater => targetProvider.GetHeaterNames().ContainsKey(targetId),

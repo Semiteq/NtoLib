@@ -22,8 +22,7 @@ public class TableSchemaLoader : ITableSchemaLoader
     /// <param name="configFileName">The name of the configuration file to load.</param>
     public TableSchemaLoader(string configFileName = "TableSchema.json")
     {
-        //_configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configFileName);
-        _configPath = Path.Combine("C:\\Users\\admin\\Projects\\git\\NtoLib\\NtoLib\\Recipes\\MbeTable", configFileName);
+        _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configFileName);
     }
 
     /// <summary>
@@ -40,8 +39,9 @@ public class TableSchemaLoader : ITableSchemaLoader
         public int Width { get; set; }
         public bool ReadOnly { get; set; }
         public string Alignment { get; set; }
+        public PlcMapping? PlcMapping { get; set; }
     }
-    
+
     public IReadOnlyList<ColumnDefinition> LoadSchema()
     {
         if (!File.Exists(_configPath))
@@ -71,7 +71,8 @@ public class TableSchemaLoader : ITableSchemaLoader
                 SystemType: systemType!,
                 Width: jsonDef.Width,
                 ReadOnly: jsonDef.ReadOnly,
-                Alignment: alignment
+                Alignment: alignment,
+                PlcMapping: jsonDef.PlcMapping
             );
         }).OrderBy(c => c.Index).ToList().AsReadOnly();
     }

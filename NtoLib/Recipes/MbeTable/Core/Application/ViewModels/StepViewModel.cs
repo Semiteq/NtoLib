@@ -17,7 +17,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
     {
         private readonly Step _stepRecord;
         private readonly Action<ColumnIdentifier, object> _updatePropertyAction;
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
         private readonly float _stepStartTimeSeconds;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -29,7 +29,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             Action<ColumnIdentifier, object> updatePropertyAction,
             TimeSpan startTime,
             List<KeyValuePair<int, string>>? availableActionTargets,
-            DebugLogger debugLogger)
+            ILogger debugLogger)
         {
             _stepRecord = stepRecord ?? throw new ArgumentNullException(nameof(stepRecord));
             _updatePropertyAction = updatePropertyAction ?? throw new ArgumentNullException(nameof(updatePropertyAction));

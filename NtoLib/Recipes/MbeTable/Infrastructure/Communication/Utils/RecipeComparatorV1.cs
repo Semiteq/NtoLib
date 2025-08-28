@@ -14,10 +14,10 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Utils;
 
 public sealed class RecipeComparatorV1 : IRecipeComparator
 {
-    private readonly DebugLogger _debugLogger;
+    private readonly ILogger _debugLogger;
     private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
 
-    public RecipeComparatorV1(DebugLogger debugLogger, ICommunicationSettingsProvider communicationSettingsProvider)
+    public RecipeComparatorV1(ILogger debugLogger, ICommunicationSettingsProvider communicationSettingsProvider)
     {
         _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
         _communicationSettingsProvider = communicationSettingsProvider ?? throw new ArgumentNullException(nameof(communicationSettingsProvider));

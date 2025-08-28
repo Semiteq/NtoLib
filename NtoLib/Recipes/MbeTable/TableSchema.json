@@ -7,7 +7,11 @@
         "SystemType": "System.Int32",
         "Width": 150,
         "ReadOnly": false,
-        "Alignment": "MiddleLeft"
+        "Alignment": "MiddleLeft",
+        "PlcMapping": {
+            "Area": "Int",
+            "Index": 0
+        }
     },
     {
         "Key": "action-target",
@@ -17,47 +21,67 @@
         "SystemType": "System.Int32",
         "Width": 130,
         "ReadOnly": false,
-        "Alignment": "MiddleCenter"
+        "Alignment": "MiddleCenter",
+        "PlcMapping": {
+            "Area": "Int",
+            "Index": 1
+        }
     },
     {
         "Key": "initial-value",
         "Index": 2,
         "Code": "initial-value",
         "UiName": "Нач.значение",
-        "SystemType": "System.String",
+        "SystemType": "System.Single",
         "Width": 140,
         "ReadOnly": false,
-        "Alignment": "MiddleCenter"
+        "Alignment": "MiddleCenter",
+        "PlcMapping": {
+            "Area": "Float",
+            "Index": 0
+        }
     },
     {
         "Key": "setpoint",
         "Index": 3,
         "Code": "setpoint",
         "UiName": "Задание",
-        "SystemType": "System.String",
+        "SystemType": "System.Single",
         "Width": 100,
         "ReadOnly": false,
-        "Alignment": "MiddleCenter"
+        "Alignment": "MiddleCenter",
+        "PlcMapping": {
+            "Area": "Float",
+            "Index": 1
+        }
     },
     {
         "Key": "speed",
         "Index": 4,
         "Code": "speed",
         "UiName": "Скорость",
-        "SystemType": "System.String",
+        "SystemType": "System.Single",
         "Width": 120,
         "ReadOnly": false,
-        "Alignment": "MiddleCenter"
+        "Alignment": "MiddleCenter",
+        "PlcMapping": {
+            "Area": "Float",
+            "Index": 2
+        }
     },
     {
         "Key": "step-duration",
         "Index": 5,
         "Code": "step-duration",
         "UiName": "Длительность",
-        "SystemType": "System.String",
+        "SystemType": "System.Single",
         "Width": 150,
         "ReadOnly": false,
-        "Alignment": "MiddleCenter"
+        "Alignment": "MiddleCenter",
+        "PlcMapping": {
+            "Area": "Float",
+            "Index": 3
+        }
     },
     {
         "Key": "step-start-time",

@@ -1,0 +1,17 @@
+﻿#nullable enable
+
+using FluentResults;
+
+namespace NtoLib.Recipes.MbeTable.Composition;
+
+/// <summary>
+/// Defines a service for loading the application's configuration.
+/// </summary>
+public interface IConfigurationLoader
+{
+    /// <summary>
+    /// Loads, parses, and validates configuration from external sources (e.g., JSON files).
+    /// </summary>
+    /// <returns>A <see cref="Result{T}"/> containing the <see cref="AppConfiguration"/> on success, or an error on failure.</returns>
+    Result<AppConfiguration> LoadConfiguration();
+}

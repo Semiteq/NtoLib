@@ -18,7 +18,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
         private readonly DataGridView _table;
         private readonly TableSchema _schema;
         private readonly TableCellStateManager _stateManager;
-        private readonly DebugLogger? _debugLogger;
+        private readonly ILogger? _debugLogger;
 
         private bool _attached;
         private bool _disposed;
@@ -27,7 +27,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             DataGridView table,
             TableSchema schema,
             TableCellStateManager stateManager,
-            DebugLogger? debugLogger = null)
+            ILogger? debugLogger = null)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _schema = schema ?? throw new ArgumentNullException(nameof(schema));

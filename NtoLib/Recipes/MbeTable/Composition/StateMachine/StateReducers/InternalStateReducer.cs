@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
@@ -11,9 +12,9 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
     /// </summary>
     internal sealed class InternalStateReducer : ICommandReducer
     {
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
 
-        public InternalStateReducer(DebugLogger debugLogger)
+        public InternalStateReducer(ILogger debugLogger)
         {
             _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
         }

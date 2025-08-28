@@ -1,6 +1,7 @@
 ﻿#nullable enable
-using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using System;
+using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
+using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
 namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
 {
@@ -9,9 +10,9 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
     /// </summary>
     internal sealed class LifecycleReducer : ICommandReducer
     {
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
 
-        public LifecycleReducer(DebugLogger debugLogger)
+        public LifecycleReducer(ILogger debugLogger)
         {
             _debugLogger = debugLogger;
         }
@@ -33,10 +34,10 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
                 : (state.RecipeActive ? BusyKind.Executing : BusyKind.Idle);
 
             var nextState = state with { Mode = AppMode.Runtime, Busy = busy };
-            
+
             return MaybeStartAutoRead(nextState);
         }
-        
+
         private AppState MaybeStartAutoRead(AppState state)
         {
             if (!ShouldAutoRead(state)) return state;

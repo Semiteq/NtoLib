@@ -20,28 +20,25 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
     /// </summary>
     public sealed class RecipeEngine : IRecipeEngine
     {
-        private readonly ActionManager _actionManager;
+        private const int DefaultActionId = 20; // OPEN
+
+        private readonly IActionRepository _actionRepository;
         private readonly IStepFactory _stepFactory;
         private readonly IActionTargetProvider _actionTargetProvider;
         private readonly StepPropertyCalculator _stepPropertyCalculator;
-        private readonly IImmutableSet<int> _smoothActionIds;
-        private readonly DebugLogger _debugLogger;
+        private readonly ILogger _debugLogger;
 
-        public RecipeEngine(ActionManager actionManager,
+        public RecipeEngine(
+            IActionRepository actionRepository,
             IStepFactory stepFactory,
             IActionTargetProvider actionTargetProvider,
             StepPropertyCalculator stepPropertyCalculator,
-            DebugLogger debugLogger)
+            ILogger debugLogger)
         {
-            _actionManager = actionManager ?? throw new ArgumentNullException(nameof(actionManager));
+            _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
             _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
-            _actionTargetProvider =
-                actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));
-            _stepPropertyCalculator = stepPropertyCalculator ??
-                                      throw new ArgumentNullException(nameof(stepPropertyCalculator));
-
-            _smoothActionIds = new[] { _actionManager.PowerSmooth.Id, _actionManager.TemperatureSmooth.Id }
-                .ToImmutableHashSet();
+            _actionTargetProvider = actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));
+            _stepPropertyCalculator = stepPropertyCalculator ?? throw new ArgumentNullException(nameof(stepPropertyCalculator));
             _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
         }
 
@@ -52,7 +49,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
             _debugLogger.Log("Step added");
 
             var minimalShutterId = _actionTargetProvider.GetMinimalShutterId();
-            var newStep = _stepFactory.ForAction(_actionManager.Open.Id).WithOptionalTarget(minimalShutterId).Build();
+            var newStep = _stepFactory.ForAction(DefaultActionId).WithOptionalTarget(minimalShutterId).Build();
 
             return new Recipe(Steps: currentRecipe.Steps.Insert(rowIndex, newStep));
         }
@@ -70,7 +67,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         {
             if (rowIndex < 0 || rowIndex >= currentRecipe.Steps.Count) return currentRecipe;
 
-            var actionType = _actionManager.GetActionTypeById(newActionId);
+            var actionType = _actionRepository.GetActionById(newActionId).ActionType;
             var targetId = GetDefaultTargetForActionType(actionType);
 
             var newDefaultStep = _stepFactory.ForAction(newActionId).WithOptionalTarget(targetId).Build();
@@ -121,7 +118,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
                 return (currentStep, error);
             }
 
-            if (!_stepPropertyCalculator.IsRecalculationRequired(currentStep, columnKey, _smoothActionIds))
+            if (!_stepPropertyCalculator.IsRecalculationRequired(currentStep))
             {
                 var newProperties = currentStep.Properties.SetItem(columnKey, newProperty);
                 return (currentStep with { Properties = newProperties }, null);
