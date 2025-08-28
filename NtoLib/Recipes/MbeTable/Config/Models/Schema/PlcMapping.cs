@@ -1,12 +1,12 @@
 ﻿#nullable enable
 
-namespace NtoLib.Recipes.MbeTable.Config
+namespace NtoLib.Recipes.MbeTable.Config.Models.Schema
 {
     /// <summary>
     /// Describes the mapping of a table column to a PLC memory area.
     /// This is a DTO class for deserialization purposes.
     /// </summary>
-    public sealed class PlcMapping
+    public class PlcMapping
     {
         /// <summary>
         /// The memory area in the PLC (e.g., "Int", "Float").

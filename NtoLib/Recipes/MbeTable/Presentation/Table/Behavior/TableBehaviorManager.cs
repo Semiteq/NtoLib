@@ -4,7 +4,9 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 

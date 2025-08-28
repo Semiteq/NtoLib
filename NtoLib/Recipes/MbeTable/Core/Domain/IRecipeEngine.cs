@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 

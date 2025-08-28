@@ -3,6 +3,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NtoLib.Recipes.MbeTable.Composition;
+using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Actions;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 

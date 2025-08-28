@@ -8,6 +8,8 @@ using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Actions;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;

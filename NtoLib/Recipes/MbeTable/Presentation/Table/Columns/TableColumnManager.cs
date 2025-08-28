@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Config;
-using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 

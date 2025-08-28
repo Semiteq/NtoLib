@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using FluentResults;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 

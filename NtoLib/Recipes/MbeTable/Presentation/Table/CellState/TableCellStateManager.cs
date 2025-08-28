@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;

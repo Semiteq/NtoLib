@@ -9,6 +9,8 @@ using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
 using NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Loaders;
+using NtoLib.Recipes.MbeTable.Config.Models.Actions;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
@@ -52,7 +54,6 @@ public static class MbeTableServiceConfigurator
     /// <exception cref="InvalidOperationException">Thrown if application configuration cannot be loaded.</exception>
     public static IServiceProvider ConfigureServices(MbeTableFB mbeTableFb)
     {
-        // Fail Fast principle: Validate preconditions at the start.
         if (mbeTableFb is null)
         {
             throw new ArgumentNullException(nameof(mbeTableFb),
@@ -64,13 +65,22 @@ public static class MbeTableServiceConfigurator
         // --- External Dependencies & Configuration ---
         services.AddSingleton(mbeTableFb);
 
-        var configurationLoader = new ConfigurationLoader();
-        var configResult = configurationLoader.LoadConfiguration();
+        var configurationLoader = new ConfigurationLoader(
+            new TableSchemaLoader(), 
+            new ActionsLoader()
+        );
+        
+        var configResult = configurationLoader.LoadConfiguration(
+            AppDomain.CurrentDomain.BaseDirectory,
+            "TableSchema.json",
+            "ActionSchema.json");
+
         if (configResult.IsFailed)
         {
-            var errorMessage = $"Failed to configure services. Reason: {configResult.Errors.First().Message}";
+            var errorMessage = $"Failed to load application configuration. Reason: {configResult.Errors.First().Message}";
             throw new InvalidOperationException(errorMessage);
         }
+        
         var appConfiguration = configResult.Value;
         services.AddSingleton(appConfiguration);
         services.AddSingleton(appConfiguration.Schema); // Register schema separately for convenience.

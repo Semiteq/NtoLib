@@ -11,6 +11,7 @@ using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv.Hasher;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;

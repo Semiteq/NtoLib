@@ -3,7 +3,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace NtoLib.Recipes.MbeTable.Config
+namespace NtoLib.Recipes.MbeTable.Config.Models.Schema
 {
     /// <summary>
     /// Represents the definition of a column in a data grid or table. This record holds metadata

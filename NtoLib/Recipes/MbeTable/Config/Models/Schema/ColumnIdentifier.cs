@@ -1,6 +1,6 @@
 ﻿#nullable enable
 
-namespace NtoLib.Recipes.MbeTable.Config;
+namespace NtoLib.Recipes.MbeTable.Config.Models.Schema;
 
 /// <summary>
 /// Represents a type-safe identifier for a table column, encapsulating a string key.

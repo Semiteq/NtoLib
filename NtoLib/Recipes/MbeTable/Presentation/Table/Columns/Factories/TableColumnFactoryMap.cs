@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Actions;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 

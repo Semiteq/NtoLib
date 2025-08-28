@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Presentation.Table;
 
 namespace NtoLib.Recipes.MbeTable.Presentation

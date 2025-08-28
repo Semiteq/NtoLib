@@ -3,6 +3,7 @@
 using System;
 using System.ComponentModel;
 using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table

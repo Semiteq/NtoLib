@@ -174,11 +174,6 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\ComboboxDataProvider.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\ConfigurationLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\ConfigurationModels.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\IComboboxDataProvider.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\IConfigurationLoader.cs" />
     <Compile Include="Recipes\MbeTable\Composition\ServiceProvider.cs" />
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\AppStateMachine.cs" />
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\App\AppCommand.cs" />
@@ -195,17 +190,27 @@
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\OperationRequestReducer.cs" />
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\ThreadDispatcher\ImmediateUiDispatcher.cs" />
     <Compile Include="Recipes\MbeTable\Composition\StateMachine\ThreadDispatcher\WinFormsUiDispatcher.cs" />
-    <Compile Include="Recipes\MbeTable\Config\ColumnDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Config\ColumnIdentifier.cs" />
-    <Compile Include="Recipes\MbeTable\Config\ITableSchemaLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\PlcMapping.cs" />
-    <Compile Include="Recipes\MbeTable\Config\TableSchema.cs" />
-    <Compile Include="Recipes\MbeTable\Config\TableSchemaLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\WellKnownColumns.cs" />
+    <Compile Include="Recipes\MbeTable\Config\AppConfiguration.cs" />
+    <Compile Include="Recipes\MbeTable\Config\ConfigurationLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\IConfigurationLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\ActionsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\IActionsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\ITableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\TableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionDefenition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\CalculationRuleMapping.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ConfigurationModels.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\IComboboxDataProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\ColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\ColumnIdentifier.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\JsonColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\PlcMapping.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\WellKnownColumns.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ActionRepository.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ActionType.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ComboboxDataProvider.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\DeployDuration.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\IActionRepository.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\IRecipeLoopValidator.cs" />
@@ -239,6 +244,7 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyType.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\StepProperty.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeEngine.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\TableSchema.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\TimerService.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepFactory.cs" />
@@ -487,6 +493,9 @@
     <EmbeddedResource Include="Resources\ImgOpen.bmp" />
     <EmbeddedResource Include="Resources\ImgSave.bmp" />
     <EmbeddedResource Include="Resources\ImgWrite.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Recipes\MbeTable\Config\Models\ActionTargets\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

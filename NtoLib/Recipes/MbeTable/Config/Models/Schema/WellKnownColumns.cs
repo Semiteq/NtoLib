@@ -1,6 +1,6 @@
 ﻿#nullable enable
 
-namespace NtoLib.Recipes.MbeTable.Config;
+namespace NtoLib.Recipes.MbeTable.Config.Models.Schema;
 
 /// <summary>
 /// Provides static, well-known instances of <see cref="ColumnIdentifier"/> for system-critical columns.
