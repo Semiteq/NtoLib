@@ -1,21 +1,21 @@
 ﻿#nullable enable
 
-using NtoLib.Recipes.MbeTable.Config;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 
-namespace NtoLib.Recipes.MbeTable.Core.Domain;
-
-public interface IRecipeEngine
+namespace NtoLib.Recipes.MbeTable.Core.Domain
 {
-    public Recipe CreateEmptyRecipe();
+    public interface IRecipeEngine
+    {
+        Recipe CreateEmptyRecipe();
 
-    public Recipe AddDefaultStep(Recipe currentRecipe, int rowIndex);
-    
-    public Recipe RemoveStep(Recipe currentRecipe, int rowIndex);
-    
-    public Recipe ReplaceStepWithNewDefault(Recipe currentRecipe, int rowIndex, int newActionId);
+        Recipe AddDefaultStep(Recipe currentRecipe, int rowIndex);
 
-    public (Recipe NewRecipe, RecipePropertyError? Error) UpdateStepProperty(Recipe currentRecipe, int rowIndex, ColumnIdentifier columnKey, object value);
+        Recipe RemoveStep(Recipe currentRecipe, int rowIndex);
+
+        Recipe ReplaceStepWithNewDefault(Recipe currentRecipe, int rowIndex, int newActionId);
+
+        Result<Recipe> UpdateStepProperty(Recipe currentRecipe, int rowIndex, ColumnIdentifier columnKey, object value);
+    }
 }

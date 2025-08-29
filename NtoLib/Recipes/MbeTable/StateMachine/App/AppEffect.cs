@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.App
+namespace NtoLib.Recipes.MbeTable.StateMachine.App
 {
     /// <summary>
     /// Declarative effects triggered by AppStateMachine after Reduce.

@@ -174,22 +174,6 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\ServiceProvider.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\AppStateMachine.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\App\AppCommand.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\App\AppEffect.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\App\AppStateModels.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\App\AppStateUiProjector.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\App\RecipeEffectsHandler.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\Contracts\IUiDispatcher.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\ICommandReducer.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\InternalStateReducer.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\LifecycleReducer.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\MessageReducer.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\OperationCompletionReducer.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\StateReducers\OperationRequestReducer.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\ThreadDispatcher\ImmediateUiDispatcher.cs" />
-    <Compile Include="Recipes\MbeTable\Composition\StateMachine\ThreadDispatcher\WinFormsUiDispatcher.cs" />
     <Compile Include="Recipes\MbeTable\Config\AppConfiguration.cs" />
     <Compile Include="Recipes\MbeTable\Config\ConfigurationLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\IConfigurationLoader.cs" />
@@ -197,6 +181,7 @@
     <Compile Include="Recipes\MbeTable\Config\Loaders\IActionsLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\Loaders\ITableSchemaLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\Loaders\TableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionDefenition.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Actions\CalculationRuleMapping.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Actions\ConfigurationModels.cs" />
@@ -206,6 +191,9 @@
     <Compile Include="Recipes\MbeTable\Config\Models\Schema\JsonColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Schema\PlcMapping.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Schema\WellKnownColumns.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\IStepViewModelFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\RecipeApplicationService.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\StepViewModelFactory.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ActionRepository.cs" />
@@ -239,7 +227,7 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TemperatureDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TempSpeedDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TimeDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Errors\RecipePropertyErrors.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Errors\DomainErrors.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyDefinitionRegistry.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyType.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\StepProperty.cs" />
@@ -250,6 +238,7 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepFactory.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepFactory.cs" />
+    <Compile Include="Recipes\MbeTable\DI\ServiceProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IModbusTransport.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcProtocol.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcRecipeSerializer.cs" />
@@ -257,7 +246,7 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcProtocolV1.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcRecipeSerializerV1.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Services\RecipePlcSender.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Transport\ModbusTransportV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Transport\ModbusTransport.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\IRecipeComparator.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\PlcCapacityCalculator.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\RecipeComparatorV1.cs" />
@@ -276,7 +265,7 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeError.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeFileMetadata.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeFileMetadataSerializer.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeCsvSerializerV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeCsvSerializer.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeFileReader.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeFileWriter.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Validation\TargetAvailabilityValidator.cs" />
@@ -293,7 +282,6 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcStateMonitor.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeStatus.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\WordOrder.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\DynamicBindingList.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\IStatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
@@ -307,17 +295,33 @@
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\StepStartTimeColumnFactory.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\TableColumnFactoryMap.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\TextBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\StepPropertyDescriptor.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TableColumnManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\DynamicBindingList.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Editing\ActionTargetEditingControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\CellStatusDescription.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellState.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellStateManager.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\StepPropertyDescriptor.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ButtonStateStyler.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\AppStateMachine.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppCommand.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppEffect.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppStateModels.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppStateUiProjector.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\RecipeEffectsHandler.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\Contracts\IUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\ICommandReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\InternalStateReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\LifecycleReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\MessageReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\OperationCompletionReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\OperationRequestReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\ThreadDispatcher\ImmediateUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\ThreadDispatcher\WinFormsUiDispatcher.cs" />
     <Compile Include="Recipes\MbeTable\TableControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -497,12 +501,65 @@
   <ItemGroup>
     <Folder Include="Recipes\MbeTable\Config\Models\ActionTargets\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="ActionSchema.json" />
+    <Content Include="TableSchema.json" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll" "$(TargetDir)OneOf.dll" "$(TargetDir)System.Collections.Immutable.dll" "$(TargetDir)CsvHelper.dll" "$(TargetDir)FluentResults.dll" "$(TargetDir)Microsoft.Extensions.Logging.Abstractions.dll" "$(TartgetDir)System.Resources.Extensions.dll" "$(TartgetDir)Microsoft.Extensions.DependencyInjection.dll" "$(TartgetDir)Microsoft.Extensions.DependencyInjection.Abstractions.dll"
-chcp 437 &amp;&amp; xcopy "$(TargetPath)" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
-chcp 437 &amp;&amp; xcopy "$(TargetDir)NtoLib.pdb" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
-chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I</PostBuildEvent>
+    <PostBuildEvent>@echo on
+setlocal
+
+REM --- Установка переменных ---
+set DEST_DIR="C:\Program Files (x86)\MPSSoft\MasterSCADA"
+set ILREPACK_EXE="$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe"
+
+REM --- Шаг 1: Объединение сборок ---
+echo Running ILRepack to merge assemblies...
+%25ILREPACK_EXE%25 ^
+    /target:library ^
+    /log:"$(SolutionDir)\ilrepack.log" ^
+    /out:"$(TargetDir)NtoLib.dll" ^
+    "$(TargetPath)" ^
+    "$(TargetDir)COMDeviceSDK.dll" ^
+    "$(TargetDir)EasyModbus.dll" ^
+    "$(TargetDir)OneOf.dll" ^
+    "$(TargetDir)System.Collections.Immutable.dll" ^
+    "$(TargetDir)CsvHelper.dll" ^
+    "$(TargetDir)FluentResults.dll" ^
+    "$(TargetDir)Microsoft.Extensions.Logging.Abstractions.dll" ^
+    "$(TargetDir)Microsoft.Extensions.DependencyInjection.dll" ^
+    "$(TargetDir)Microsoft.Extensions.DependencyInjection.Abstractions.dll"
+
+REM --- Проверка кода завершения ILRepack ---
+if %25errorlevel%25 neq 0 (
+    echo ERROR: ILRepack failed! Check log for details: "$(SolutionDir)\ilrepack.log"
+    exit /b %25errorlevel%25
+)
+echo ILRepack completed successfully.
+echo.
+
+REM --- Шаг 2: Копирование артефактов сборки ---
+echo Copying build artifacts to %25DEST_DIR%25...
+chcp 437
+
+xcopy "$(TargetDir)System.Resources.Extensions.dll" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy System.Resources.Extensions.dll &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(TargetPath)" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy $(TargetFileName) &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(TargetDir)NtoLib.pdb" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy NtoLib.pdb &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(ProjectDir)ActionSchema.json" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy ActionSchema.json &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(ProjectDir)TableSchema.json" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy TableSchema.json &amp; exit /b %25errorlevel%25 )
+
+echo All files copied successfully.
+endlocal</PostBuildEvent>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="Build">
     <!-- Clean temporary files -->

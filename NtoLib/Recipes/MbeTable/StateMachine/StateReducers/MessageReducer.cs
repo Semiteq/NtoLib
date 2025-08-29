@@ -1,8 +1,8 @@
 ﻿#nullable enable
 
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
+namespace NtoLib.Recipes.MbeTable.StateMachine.StateReducers
 {
     /// <summary>
     /// Handles commands related to displaying and managing UI messages.

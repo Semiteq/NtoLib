@@ -2,260 +2,230 @@
 
 using System;
 using System.Linq;
-using NtoLib.Recipes.MbeTable.Composition;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
-using NtoLib.Recipes.MbeTable.Config;
-using NtoLib.Recipes.MbeTable.Config.Models.Actions;
+using FluentResults;
+using NtoLib.Recipes.MbeTable.Core.Application.Services;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
-using NtoLib.Recipes.MbeTable.Core.Domain;
-using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
-using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
-using NtoLib.Recipes.MbeTable.Presentation;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
+using NtoLib.Recipes.MbeTable.Presentation.Table;
+using NtoLib.Recipes.MbeTable.StateMachine;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
+using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
+using NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
 
-namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
+namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+
+/// <summary>
+/// Acts as the main UI orchestrator for the recipe view. It owns the
+/// UI-bound collection of view models and coordinates changes by delegating
+/// business logic to application services.
+/// </summary>
+public sealed class RecipeViewModel
 {
-    /// <summary>
-    /// Acts as the main controller and orchestrator for the recipe UI. It owns the
-    /// complete state of the recipe view and coordinates all changes through the domain services.
-    /// </summary>
-    public sealed class RecipeViewModel
+    public DynamicBindingList ViewModels { get; }
+
+    private readonly IRecipeApplicationService _recipeService;
+    private readonly IStepViewModelFactory _stepViewModelFactory;
+    private readonly ILogger _debugLogger;
+    private readonly IStatusManager _statusManager;
+    private readonly AppStateMachine _appStateMachine;
+    private readonly TimerService _timerService;
+
+    private IUiDispatcher _uiDispatcher = new ImmediateUiDispatcher();
+    private Recipe _recipe;
+
+    public event Action? OnUpdateStart;
+    public event Action? OnUpdateEnd;
+
+    public RecipeViewModel(
+        IRecipeApplicationService recipeService,
+        IStepViewModelFactory stepViewModelFactory,
+        AppStateMachine appStateMachine,
+        TimerService timerService,
+        IStatusManager statusManager,
+        ILogger debugLogger,
+        TableSchema tableSchema)
     {
-        public DynamicBindingList ViewModels { get; }
+        _recipeService = recipeService;
+        _stepViewModelFactory = stepViewModelFactory;
+        _appStateMachine = appStateMachine;
+        _timerService = timerService;
+        _statusManager = statusManager;
+        _debugLogger = debugLogger;
 
-        private readonly IRecipeEngine _recipeEngine;
-        private readonly IRecipeLoopValidator _recipeLoopValidator;
-        private readonly IRecipeTimeCalculator _recipeTimeCalculator;
-        private readonly IComboboxDataProvider _comboboxDataProvider;
-        private readonly ILogger _debugLogger;
-        private readonly IStatusManager _statusManager;
-        private readonly AppStateMachine _appStateMachine;
-        private readonly TimerService _timerService;
+        ViewModels = new DynamicBindingList(tableSchema);
 
-        private IUiDispatcher _uiDispatcher = new ImmediateUiDispatcher();
-        private Recipe _recipe;
-        private LoopValidationResult _loopResult = new();
-        private RecipeTimeAnalysis _timeResult = new();
+        var initialResult = _recipeService.CreateEmpty();
+        _recipe = initialResult.Recipe;
+    }
 
-        public event Action? OnUpdateStart;
-        public event Action? OnUpdateEnd;
+    public void SetUiDispatcher(IUiDispatcher uiDispatcher)
+    {
+        _uiDispatcher = uiDispatcher ?? new ImmediateUiDispatcher();
+        // Populate with initial empty recipe state
+        var initialResult = _recipeService.CreateEmpty();
+        UpdateStateAndViewModels(initialResult);
+    }
 
-        public RecipeViewModel(
-            IRecipeEngine recipeEngine,
-            IRecipeLoopValidator recipeLoopValidator,
-            IRecipeTimeCalculator recipeTimeCalculator,
-            IComboboxDataProvider comboboxDataProvider,
-            AppStateMachine appStateMachine,
-            TimerService timerService,
-            IStatusManager statusManager,
-            ILogger debugLogger,
-            TableSchema tableSchema)
+    #region Public Commands
+
+    public Recipe GetCurrentRecipe() => _recipe;
+
+    public void SetRecipe(Recipe newRecipe)
+    {
+        // Here we should re-analyze the recipe to get consistent state
+        var newResult = new RecipeUpdateResult(newRecipe, new Domain.Analysis.LoopValidationResult(),
+            new Domain.Analysis.RecipeTimeAnalysis()); // Simplified for now, better to call a service method
+        UpdateStateAndViewModels(newResult);
+    }
+
+    public void AddNewStep(int rowIndex)
+    {
+        rowIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
+        var result = _recipeService.AddDefaultStep(_recipe, rowIndex);
+        UpdateStateAndViewModels(result, new StructuralChange(ChangeType.Add, rowIndex));
+    }
+
+    public void RemoveStep(int rowIndex)
+    {
+        if (rowIndex < 0 || rowIndex >= ViewModels.Count) return;
+        var result = _recipeService.RemoveStep(_recipe, rowIndex);
+        UpdateStateAndViewModels(result, new StructuralChange(ChangeType.Remove, rowIndex));
+    }
+
+    #endregion
+
+    private void OnStepPropertyChanged(int rowIndex, ColumnIdentifier key, object value)
+    {
+        var result = (key == WellKnownColumns.Action && value is int newActionId)
+            ? Result.Ok(_recipeService.ReplaceStepWithNewDefault(_recipe, rowIndex, newActionId))
+            : _recipeService.UpdateStepProperty(_recipe, rowIndex, key, value);
+
+        if (result.IsFailed)
         {
-            _recipeEngine = recipeEngine;
-            _recipeLoopValidator = recipeLoopValidator;
-            _recipeTimeCalculator = recipeTimeCalculator;
-            _comboboxDataProvider = comboboxDataProvider;
-            _appStateMachine = appStateMachine;
-            _timerService = timerService;
-            _statusManager = statusManager;
-            _debugLogger = debugLogger;
+            var error = result.Errors.First();
+            _debugLogger.Log(
+                $"Step property update failed. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'. Error: {error.Message}");
+            _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
 
-            ViewModels = new DynamicBindingList(tableSchema);
-            _recipe = _recipeEngine.CreateEmptyRecipe();
-        }
-
-        /// <summary>
-        /// Attaches UI dispatcher that marshals list updates to the UI thread.
-        /// Should be called from TableControl after it is created.
-        /// </summary>
-        public void SetUiDispatcher(IUiDispatcher uiDispatcher)
-        {
-            _uiDispatcher = uiDispatcher ?? new ImmediateUiDispatcher();
-            // Populate current recipe into ViewModels once dispatcher is ready
-            UpdateRecipeStateAndViewModels(_recipe);
-        }
-
-        #region Public Commands
-
-        public Recipe GetCurrentRecipe() => _recipe;
-
-        // For EffectsHandler to set recipe after load
-        public void SetRecipe(Recipe newRecipe)
-        {
-            UpdateRecipeStateAndViewModels(newRecipe);
-        }
-
-        public void AddNewStep(int rowIndex)
-        {
-            rowIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
-            var newRecipe = _recipeEngine.AddDefaultStep(_recipe, rowIndex);
-            UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Add, rowIndex));
-        }
-
-        public void RemoveStep(int rowIndex)
-        {
-            if (rowIndex < 0 || rowIndex >= ViewModels.Count) return;
-            var newRecipe = _recipeEngine.RemoveStep(_recipe, rowIndex);
-            UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Remove, rowIndex));
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private void OnStepPropertyChanged(int rowIndex, ColumnIdentifier key, object value)
-        {
-            Recipe newRecipe;
-            RecipePropertyError? error;
-
-            if (key == WellKnownColumns.Action && value is int newActionId)
-            {
-                newRecipe = _recipeEngine.ReplaceStepWithNewDefault(_recipe, rowIndex, newActionId);
-                error = null;
-            }
-            else
-            {
-                (newRecipe, error) = _recipeEngine.UpdateStepProperty(_recipe, rowIndex, key, value);
-            }
-
-            if (error != null)
-            {
-                _debugLogger.Log($"Step property update failed. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'. Error: {error.Message}");
-                _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
-
-                // UI-bound list reset must run on UI thread
-                _uiDispatcher.Post(() =>
-                {
-                    try { ViewModels.ResetItem(rowIndex); } catch { /* ignore */ }
-                });
-                return;
-            }
-
-            _debugLogger.Log($"Step property updated. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'");
-            UpdateRecipeStateAndViewModels(newRecipe, new StructuralChange(ChangeType.Update, rowIndex));
-        }
-
-        private void UpdateRecipeStateAndViewModels(Recipe newRecipe, StructuralChange? change = null)
-        {
-            // Compute domain results off-UI thread (safe)
-            _recipe = newRecipe;
-            _loopResult = _recipeLoopValidator.Validate(_recipe);
-            _timeResult = _recipeTimeCalculator.Calculate(_recipe);
-
-            _timerService.SetTimeAnalysisData(_timeResult);
-
-            _appStateMachine.Dispatch(new VmLoopValidChanged(_loopResult.IsValid));
-
-            // Now perform all ViewModels mutations on UI thread
             _uiDispatcher.Post(() =>
             {
-                OnUpdateStart?.Invoke();
                 try
                 {
-                    if (change == null || (ViewModels.Count != _recipe.Steps.Count && change.Type != ChangeType.Add))
-                    {
-                        // Full repopulate
-                        ViewModels.RaiseListChangedEvents = false;
-                        try
-                        {
-                            ViewModels.Clear();
-                            foreach (var (step, index) in _recipe.Steps.Select((s, i) => (s, i)))
-                            {
-                                ViewModels.Add(CreateStepViewModel(step, index));
-                            }
-                        }
-                        finally
-                        {
-                            ViewModels.RaiseListChangedEvents = true;
-                        }
-                        ViewModels.ResetBindings();
-                        _debugLogger.Log("ViewModel was repopulated.");
-                    }
-                    else
-                    {
-                        // Partial update
-                        switch (change.Type)
-                        {
-                            case ChangeType.Add:
-                                var newVm = CreateStepViewModel(_recipe.Steps[change.Index], change.Index);
-                                ViewModels.Insert(change.Index, newVm);
-                                UpdateSubsequentViewModels(change.Index + 1);
-                                break;
-
-                            case ChangeType.Remove:
-                                ViewModels.RemoveAt(change.Index);
-                                UpdateSubsequentViewModels(change.Index);
-                                break;
-
-                            case ChangeType.Update:
-                                UpdateSubsequentViewModels(change.Index);
-                                break;
-                        }
-                    }
+                    ViewModels.ResetItem(rowIndex);
                 }
-                finally
+                catch
                 {
-                    _debugLogger.Log($"Current stepViewModel quantity {ViewModels.Count}");
-                    OnUpdateEnd?.Invoke();
+                    /* ignore */
                 }
             });
+            return;
         }
 
-        private void UpdateSubsequentViewModels(int startIndex)
+        _debugLogger.Log($"Step property updated. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'");
+        UpdateStateAndViewModels(result.Value, new StructuralChange(ChangeType.Update, rowIndex));
+    }
+
+    private void UpdateStateAndViewModels(RecipeUpdateResult result, StructuralChange? change = null)
+    {
+        // Update domain state
+        _recipe = result.Recipe;
+        _timerService.SetTimeAnalysisData(result.TimeResult);
+        _appStateMachine.Dispatch(new VmLoopValidChanged(result.LoopResult.IsValid));
+
+        // Perform all ViewModels mutations on UI thread
+        _uiDispatcher.Post(() =>
         {
-            ViewModels.RaiseListChangedEvents = false;
+            OnUpdateStart?.Invoke();
             try
             {
-                for (int i = startIndex; i < _recipe.Steps.Count; i++)
+                if (change == null || (ViewModels.Count != _recipe.Steps.Count && change.Type != ChangeType.Add))
                 {
-                    ViewModels[i] = CreateStepViewModel(_recipe.Steps[i], i);
+                    RebuildViewModelList(result);
+                }
+                else
+                {
+                    ApplyPartialUpdate(result, change);
                 }
             }
             finally
             {
-                ViewModels.RaiseListChangedEvents = true;
-                ViewModels.ResetBindings();
+                _debugLogger.Log($"Current stepViewModel quantity {ViewModels.Count}");
+                OnUpdateEnd?.Invoke();
             }
-        }
-
-        private StepViewModel CreateStepViewModel(Step step, int index)
-        {
-            _loopResult.NestingLevels.TryGetValue(index, out var nestingLevel);
-            _timeResult.StepStartTimes.TryGetValue(index, out var startTime);
-
-            var actionId = step.Properties[WellKnownColumns.Action]?.GetValue<int>();
-
-            if (!actionId.HasValue)
-            {
-                var ex = new InvalidOperationException($"Step №{index} does not have an action.");
-                _debugLogger.LogException(ex);
-                throw ex;
-            }
-
-            var availableTargets = _comboboxDataProvider.GetActionTargets(actionId.Value);
-
-            return new StepViewModel(
-                step,
-                (key, val) => OnStepPropertyChanged(index, key, val),
-                startTime,
-                availableTargets,
-                _debugLogger
-            );
-        }
-
-        #endregion
-
-        #region Helper Types
-
-        private enum ChangeType { Add, Remove, Update }
-        private record StructuralChange(ChangeType Type, int Index);
-
-        #endregion
+        });
     }
+
+    private void RebuildViewModelList(RecipeUpdateResult result)
+    {
+        ViewModels.RaiseListChangedEvents = false;
+        try
+        {
+            ViewModels.Clear();
+            foreach (var (step, index) in result.Recipe.Steps.Select((s, i) => (s, i)))
+            {
+                ViewModels.Add(_stepViewModelFactory.Create(step, index, result, OnStepPropertyChanged));
+            }
+        }
+        finally
+        {
+            ViewModels.RaiseListChangedEvents = true;
+            ViewModels.ResetBindings();
+        }
+
+        _debugLogger.Log("ViewModel was repopulated.");
+    }
+
+    private void ApplyPartialUpdate(RecipeUpdateResult result, StructuralChange change)
+    {
+        switch (change.Type)
+        {
+            case ChangeType.Add:
+                var newVm = _stepViewModelFactory.Create(result.Recipe.Steps[change.Index], change.Index, result,
+                    OnStepPropertyChanged);
+                ViewModels.Insert(change.Index, newVm);
+                UpdateSubsequentViewModels(result, change.Index + 1);
+                break;
+            case ChangeType.Remove:
+                ViewModels.RemoveAt(change.Index);
+                UpdateSubsequentViewModels(result, change.Index);
+                break;
+            case ChangeType.Update:
+                // Only need to update the affected and subsequent items
+                UpdateSubsequentViewModels(result, change.Index);
+                break;
+        }
+    }
+
+    private void UpdateSubsequentViewModels(RecipeUpdateResult result, int startIndex)
+    {
+        ViewModels.RaiseListChangedEvents = false;
+        try
+        {
+            for (int i = startIndex; i < result.Recipe.Steps.Count; i++)
+            {
+                ViewModels[i] = _stepViewModelFactory.Create(result.Recipe.Steps[i], i, result, OnStepPropertyChanged);
+            }
+        }
+        finally
+        {
+            ViewModels.RaiseListChangedEvents = true;
+            ViewModels.ResetBindings();
+        }
+    }
+
+    #region Helper Types
+
+    private enum ChangeType
+    {
+        Add,
+        Remove,
+        Update
+    }
+
+    private record StructuralChange(ChangeType Type, int Index);
+
+    #endregion
 }

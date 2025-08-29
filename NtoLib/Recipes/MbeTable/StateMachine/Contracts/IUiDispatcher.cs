@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
+namespace NtoLib.Recipes.MbeTable.StateMachine.Contracts;
 
 /// <summary>
 /// Dispatches work to the UI thread.

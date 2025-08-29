@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.App
+namespace NtoLib.Recipes.MbeTable.StateMachine.App
 {
     public record UiProjection(
         bool EnableWrite,

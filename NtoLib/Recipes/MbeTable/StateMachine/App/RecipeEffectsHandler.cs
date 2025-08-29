@@ -7,7 +7,7 @@ using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Infrastructure.Communication;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.App
+namespace NtoLib.Recipes.MbeTable.StateMachine.App
 {
     /// <summary>
     /// Centralized executor for AppEffects. Runs async operations and dispatches Completed commands.

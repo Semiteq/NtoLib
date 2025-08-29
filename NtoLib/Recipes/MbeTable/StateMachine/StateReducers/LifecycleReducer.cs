@@ -1,9 +1,9 @@
 ﻿#nullable enable
 using System;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
+namespace NtoLib.Recipes.MbeTable.StateMachine.StateReducers
 {
     /// <summary>
     /// Handles lifecycle commands like entering editor or runtime mode.

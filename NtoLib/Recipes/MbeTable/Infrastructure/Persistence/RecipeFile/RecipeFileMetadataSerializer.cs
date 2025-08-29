@@ -14,12 +14,10 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 /// </summary>
 public class RecipeFileMetadataSerializer
 {
-    private readonly string _signature;
-    public RecipeFileMetadataSerializer(string signature = "MBE-RECIPE") => _signature = signature;
+
 
     public void Write(TextWriter writer, RecipeFileMetadata meta)
     {
-        writer.WriteLine($"# {_signature} v={meta.Version}");
         writer.WriteLine($"# SEP={meta.Separator}");
         writer.WriteLine($"# ROWS={meta.Rows}");
         writer.WriteLine($"# BODY_SHA256={meta.BodyHashBase64}");
@@ -38,14 +36,12 @@ public class RecipeFileMetadataSerializer
     /// - <c>MetaLines</c>: The count of metadata lines parsed from the text.
     /// - <c>SignatureFound</c>: A boolean indicating if the signature line was detected.
     /// </returns>
-    public (RecipeFileMetadata Meta, int MetaLines, bool SignatureFound, bool VersionFound) ReadAllMeta(string fullText)
+    public (RecipeFileMetadata Meta, int MetaLines) ReadAllMeta(string fullText)
     {
         var reader = new StringReader(fullText);
         var meta = new RecipeFileMetadata();
         var extras = new Dictionary<string, string>();
         var lines = 0;
-        var signatureFound = false;
-        var versionFound = false;
 
         string? line;
         while ((line = reader.ReadLine()) != null)
@@ -54,23 +50,6 @@ public class RecipeFileMetadataSerializer
             lines++;
 
             var payload = line.TrimStart('#', ' ');
-            if (payload.StartsWith(_signature, StringComparison.Ordinal))
-            {
-                signatureFound = true;
-
-                var parts = payload.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var p in parts)
-                {
-                    if (p.StartsWith("v=", StringComparison.OrdinalIgnoreCase)
-                        && int.TryParse(p.AsSpan(2).ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))
-                    {
-                        meta = meta with { Version = v };
-                        versionFound = true;
-                        break;
-                    }
-                }
-                continue;
-            }
 
             var eq = payload.IndexOf('=');
             if (eq <= 0) continue;
@@ -93,6 +72,6 @@ public class RecipeFileMetadataSerializer
         foreach (var kv in extras)
             meta.Extras[kv.Key] = kv.Value;
 
-        return (meta, lines, signatureFound, versionFound);
+        return (meta, lines);
     }
 }

@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
@@ -12,26 +13,26 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
     /// </summary>
     public class StepCalculationLogic
     {
-        public (float? Value, CalculationError? Error) CalculateDurationFromSpeed(float speed, float initialValue, float setpoint)
+        public Result<float> CalculateDurationFromSpeed(float speed, float initialValue, float setpoint)
         {
             if (speed <= 1e-6f)
             {
-                return (null, new CalculationError("Скорость должна быть больше нуля для расчета."));
+                return Result.Fail(new CalculationError("Скорость должна быть больше нуля для расчета."));
             }
 
             var duration = Math.Abs(setpoint - initialValue) / speed;
-            return (duration, null);
+            return Result.Ok(duration);
         }
 
-        public (float? Value, CalculationError? Error) CalculateSpeedFromDuration(float duration, float initialValue, float setpoint)
+        public Result<float> CalculateSpeedFromDuration(float duration, float initialValue, float setpoint)
         {
             if (duration <= 1e-6f)
             {
-                return (null, new CalculationError("Длительность должна быть больше нуля для расчета."));
+                return Result.Fail(new CalculationError("Длительность должна быть больше нуля для расчета."));
             }
             
             var speed = Math.Abs(setpoint - initialValue) / duration;
-            return (speed, null);
+            return Result.Ok(speed);
         }
     }
 }

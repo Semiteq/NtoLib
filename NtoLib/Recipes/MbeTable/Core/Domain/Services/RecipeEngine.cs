@@ -2,7 +2,8 @@
 
 using System;
 using System.Collections.Immutable;
-using NtoLib.Recipes.MbeTable.Config;
+using System.Linq;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
@@ -77,19 +78,22 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
             return new Recipe(Steps: newSteps);
         }
 
-        public (Recipe NewRecipe, RecipePropertyError? Error) UpdateStepProperty(
+        public Result<Recipe> UpdateStepProperty(
             Recipe currentRecipe, int rowIndex, ColumnIdentifier columnKey, object value)
         {
             if (rowIndex < 0 || rowIndex >= currentRecipe.Steps.Count)
-                return (currentRecipe, new ValidationError("Row index is out of range."));
+                return Result.Fail(new ValidationError("Row index is out of range."));
 
             var stepToUpdate = currentRecipe.Steps[rowIndex];
-            var (newStep, error) = ApplyUpdateToStep(stepToUpdate, columnKey, value);
+            var updateResult = ApplyUpdateToStep(stepToUpdate, columnKey, value);
 
-            if (error != null) return (currentRecipe, error);
+            if (updateResult.IsFailed)
+            {
+                return updateResult.ToResult<Recipe>(); // Propagate errors
+            }
 
-            var newSteps = currentRecipe.Steps.SetItem(rowIndex, newStep);
-            return (new Recipe(Steps: newSteps), null);
+            var newSteps = currentRecipe.Steps.SetItem(rowIndex, updateResult.Value);
+            return Result.Ok(new Recipe(Steps: newSteps));
         }
 
         private int GetDefaultTargetForActionType(ActionType actionType)
@@ -103,26 +107,28 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
             };
         }
 
-        private (Step NewStep, RecipePropertyError? Error) ApplyUpdateToStep(
+        private Result<Step> ApplyUpdateToStep(
             Step currentStep, ColumnIdentifier columnKey, object value)
         {
             if (!currentStep.Properties.TryGetValue(columnKey, out var propertyToUpdate) || propertyToUpdate == null)
             {
                 _debugLogger.Log($"Error: Attempted to update non-existent property '{columnKey.Value}' on a step.", "ApplyUpdateToStep");
-                return (currentStep, new ValidationError($"Property {columnKey.Value} is not available."));
+                return Result.Fail(new ValidationError($"Property {columnKey.Value} is not available."));
             }
 
-            var (success, newProperty, error) = propertyToUpdate.WithValue(value);
-            if (!success)
+            var newPropertyResult = propertyToUpdate.WithValue(value);
+            if (newPropertyResult.IsFailed)
             {
-                _debugLogger.Log($"Property validation failed for '{columnKey.Value}' with value '{value}'. Reason: {error?.Message}", "ApplyUpdateToStep");
-                return (currentStep, error);
+                _debugLogger.Log($"Property validation failed for '{columnKey.Value}' with value '{value}'. Reason: {newPropertyResult.Errors.First().Message}", "ApplyUpdateToStep");
+                return Result.Fail(newPropertyResult.Errors);
             }
+            
+            var newProperty = newPropertyResult.Value;
 
             if (!_stepPropertyCalculator.IsRecalculationRequired(currentStep))
             {
                 var newProperties = currentStep.Properties.SetItem(columnKey, newProperty);
-                return (currentStep with { Properties = newProperties }, null);
+                return Result.Ok(currentStep with { Properties = newProperties });
             }
 
             return _stepPropertyCalculator.CalculateDependencies(currentStep, columnKey, newProperty);

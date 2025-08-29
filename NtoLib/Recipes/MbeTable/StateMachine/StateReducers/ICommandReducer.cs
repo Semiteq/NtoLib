@@ -1,8 +1,8 @@
 ﻿#nullable enable
 
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
+namespace NtoLib.Recipes.MbeTable.StateMachine.StateReducers
 {
     /// <summary>
     /// Defines a strategy for reducing a state based on a specific command.

@@ -1,7 +1,7 @@
 ﻿using System;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
+using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
+namespace NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
 
 /// <summary>
 /// Fallback dispatcher that runs the action inline on the current thread.
@@ -9,6 +9,7 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 /// </summary>
 public sealed class ImmediateUiDispatcher : IUiDispatcher
 {
+    /// <inheritdoc />
     public void Post(Action action)
     {
         if (action == null) return;

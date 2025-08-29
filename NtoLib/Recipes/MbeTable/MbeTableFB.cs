@@ -10,8 +10,8 @@ using InSAT.Library.Interop;
 using InSAT.OPC;
 using MasterSCADA.Hlp;
 using Microsoft.Extensions.DependencyInjection;
-using NtoLib.Recipes.MbeTable.Composition;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
+using NtoLib.Recipes.MbeTable.DI;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 

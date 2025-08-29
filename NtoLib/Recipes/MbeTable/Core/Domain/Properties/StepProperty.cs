@@ -3,6 +3,7 @@
 using System;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 using OneOf;
+using FluentResults;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
 {
@@ -32,29 +33,28 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
         /// Updates the property with a new value and validates it against its type definition.
         /// </summary>
         /// <param name="newValue">The new value to update the property with. Can be unformatted and contain strings.</param>
-        /// <returns>A tuple containing a success flag, the updated StepProperty if successful, and an error object if applicable.</returns>
-        public (bool Success, StepProperty NewProperty, RecipePropertyError? Error) WithValue(object newValue)
+        /// <returns>A <see cref="Result{T}"/> containing the updated <see cref="StepProperty"/> if successful, or an <see cref="Error"/> if it fails.</returns>
+        public Result<StepProperty> WithValue(object newValue)
         {
             var propertyTypeDefinition = PropertyRegistry.GetDefinition(Type);
-            
-            var parsingResult = propertyTypeDefinition.TryParse(newValue.ToString());
-            if (!parsingResult.Success)
-                return (false, this, new ConversionError(newValue.ToString() ?? "", propertyTypeDefinition.SystemType.Name));
-            
-            // expecting typed value here wrapped as an object
-            var parsedValue = parsingResult.Value;
 
-            var validationResult = propertyTypeDefinition.Validate(parsedValue);
-            if (!validationResult.Success)
+            var (parseSuccess, parsedValue) = propertyTypeDefinition.TryParse(newValue.ToString() ?? string.Empty);
+            if (!parseSuccess)
             {
-                return (false, this, new ValidationError(validationResult.errorMessage));
+                return Result.Fail(new ConversionError(newValue.ToString() ?? "", propertyTypeDefinition.SystemType.Name));
+            }
+
+            var (validationSuccess, errorMessage) = propertyTypeDefinition.Validate(parsedValue);
+            if (!validationSuccess)
+            {
+                return Result.Fail(new ValidationError(errorMessage));
             }
 
             var newUnion = CreateUnionValue(parsedValue);
             var newPropertyValue = new PropertyValue(newUnion, Type);
             var newProperty = new StepProperty(newPropertyValue, PropertyRegistry);
 
-            return (true, newProperty, null);
+            return Result.Ok(newProperty);
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
             var definition = PropertyRegistry.GetDefinition(Type);
             return $"{definition.FormatValue(Value.UnionValue.Value)} {definition.Units}".Trim();
         }
-        
+
         /// <summary>
         /// Represents a single, immutable property belonging to a recipe step.
         /// </summary>
@@ -100,13 +100,13 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
                 throw new ArgumentException(
                     $"Initial value type '{initialValue.GetType().Name}' does not match the expected system type '{definition.SystemType.Name}' for PropertyType '{propertyType}'.");
             }
-            
-            var validationResult = definition.Validate(initialValue);
-            if (!validationResult.Success)
+
+            var (validationSuccess, errorMessage) = definition.Validate(initialValue);
+            if (!validationSuccess)
             {
-                throw new ArgumentException($"Initial value '{initialValue}' is invalid for PropertyType '{propertyType}': {validationResult.errorMessage}");
+                throw new ArgumentException($"Initial value '{initialValue}' is invalid for PropertyType '{propertyType}': {errorMessage}");
             }
-            
+
             PropertyRegistry = propertyRegistry;
             Value = new PropertyValue(CreateUnionValue(initialValue), propertyType);
         }

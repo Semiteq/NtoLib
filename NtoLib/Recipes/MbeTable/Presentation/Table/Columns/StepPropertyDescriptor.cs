@@ -2,11 +2,10 @@
 
 using System;
 using System.ComponentModel;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
 {
     /// <summary>
     /// Provides a dynamic property description for a single column in the StepViewModel.

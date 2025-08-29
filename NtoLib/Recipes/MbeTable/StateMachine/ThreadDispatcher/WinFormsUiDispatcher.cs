@@ -2,9 +2,9 @@
 
 using System;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
+using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
+namespace NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
 
 /// <summary>
 /// WinForms implementation that posts actions via Control.BeginInvoke.
@@ -18,6 +18,7 @@ public sealed class WinFormsUiDispatcher : IUiDispatcher
         _control = control ?? throw new ArgumentNullException(nameof(control));
     }
 
+    /// <inheritdoc />   
     public void Post(Action action)
     {
         if (action == null) return;

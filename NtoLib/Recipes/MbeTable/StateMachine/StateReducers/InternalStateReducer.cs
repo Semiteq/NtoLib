@@ -1,11 +1,11 @@
 ﻿#nullable enable
 
 using System;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
+namespace NtoLib.Recipes.MbeTable.StateMachine.StateReducers
 {
     /// <summary>
     /// Handles commands related to internal system state changes, such as PLC availability or VM validation status.

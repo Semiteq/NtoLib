@@ -1,0 +1,194 @@
+[
+  {
+    "Id": 10,
+    "Name": "CLOSE",
+    "ActionType": "Shutter",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 20,
+    "Name": "OPEN",
+    "ActionType": "Shutter",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 30,
+    "Name": "OPEN TIME",
+    "ActionType": "Shutter",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "setpoint":      { "PropertyType": "Time", "DefaultValue": 1.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 40,
+    "Name": "CLOSE ALL",
+    "ActionType": "Shutter",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "comment": { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 50,
+    "Name": "TEMP",
+    "ActionType": "Heater",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "setpoint":      { "PropertyType": "Temp", "DefaultValue": 500.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 60,
+    "Name": "TEMP + WAIT",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "setpoint":      { "PropertyType": "Temp", "DefaultValue": 500.0 },
+      "step-duration": { "PropertyType": "Time", "DefaultValue": 60.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 70,
+    "Name": "TEMP SMOOTH",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "initial-value": { "PropertyType": "Temp", "DefaultValue": 500.0 },
+      "setpoint":      { "PropertyType": "Temp", "DefaultValue": 600.0 },
+      "speed":         { "PropertyType": "TempSpeed", "DefaultValue": 10.0 },
+      "step-duration": { "PropertyType": "Time", "DefaultValue": 600.0 },
+      "comment":       { "PropertyType": "String" }
+    },
+    "CalculationRule": {
+      "Name": "SmoothRampCalculation",
+      "Mapping": {
+        "Rate": "speed",
+        "Duration": "step-duration",
+        "Initial": "initial-value",
+        "Final": "setpoint"
+      }
+    }
+  },
+  {
+    "Id": 80,
+    "Name": "POWER",
+    "ActionType": "Heater",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "setpoint":      { "PropertyType": "Percent", "DefaultValue": 10.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 90,
+    "Name": "POWER + WAIT",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "setpoint":      { "PropertyType": "Percent", "DefaultValue": 10.0 },
+      "step-duration": { "PropertyType": "Time", "DefaultValue": 60.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 100,
+    "Name": "POWER SMOOTH",
+    "ActionType": "Heater",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "initial-value": { "PropertyType": "Percent", "DefaultValue": 10.0 },
+      "setpoint":      { "PropertyType": "Percent", "DefaultValue": 20.0 },
+      "speed":         { "PropertyType": "PowerSpeed", "DefaultValue": 1.0 },
+      "step-duration": { "PropertyType": "Time", "DefaultValue": 600.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 110,
+    "Name": "WAIT",
+    "ActionType": "Service",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "step-duration":  { "PropertyType": "Time", "DefaultValue": 60.0 },
+      "comment":        { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 120,
+    "Name": "FOR",
+    "ActionType": "Service",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "setpoint": { "PropertyType": "Int", "DefaultValue": 1.0 },
+      "comment":  { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 130,
+    "Name": "END FOR",
+    "ActionType": "Service",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "comment": { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 140,
+    "Name": "PAUSE",
+    "ActionType": "Service",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "comment": { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 150,
+    "Name": "N+ RUN",
+    "ActionType": "NitrogenSource",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "setpoint":      { "PropertyType": "Flow", "DefaultValue": 10.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 160,
+    "Name": "N+ CLOSE",
+    "ActionType": "NitrogenSource",
+    "DeployDuration": "Immediate",
+    "Columns": {
+      "comment": { "PropertyType": "String" }
+    }
+  },
+  {
+    "Id": 170,
+    "Name": "N+ VENT",
+    "ActionType": "NitrogenSource",
+    "DeployDuration": "LongLasting",
+    "Columns": {
+      "action-target": { "PropertyType": "Enum" },
+      "setpoint":      { "PropertyType": "Flow", "DefaultValue": 10.0 },
+      "comment":       { "PropertyType": "String" }
+    }
+  }
+]

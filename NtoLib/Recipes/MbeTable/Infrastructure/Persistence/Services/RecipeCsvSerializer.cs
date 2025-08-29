@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
@@ -23,11 +22,9 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
 /// <summary>
 /// A serializer for handling CSV-based persistence of recipe data.
 /// </summary>
-public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
+public sealed class RecipeCsvSerializer : IRecipeSerializer
 {
     private readonly TableSchema _schema;
-    // --- ЗАМЕНИТЬ ---
-    // private readonly ActionManager _actionManager;
     private readonly IActionRepository _actionRepository;
     private readonly ICsvHelperFactory _csvHelperFactory;
     private readonly RecipeFileMetadataSerializer _recipeFileMetadataSerializer;
@@ -37,7 +34,7 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
     private readonly TargetAvailabilityValidator _targetAvailabilityValidator;
     private readonly IActionTargetProvider _actionTargetProvider;
 
-    public RecipeCsvSerializerV1(
+    public RecipeCsvSerializer(
         TableSchema schema,
         IActionRepository actionRepository,
         ICsvHelperFactory csvFactory,
@@ -70,16 +67,7 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
         var fullText = reader.ReadToEnd();
 
         // Metadata
-        var (meta, metaLines, signatureFound, versionFound) = _recipeFileMetadataSerializer.ReadAllMeta(fullText);
-
-        if (!signatureFound)
-            return Result.Fail(new RecipeError("Missing or invalid signature line (expected '# MBE-RECIPE v=...')"));
-
-        if (!versionFound)
-            return Result.Fail(new RecipeError("Missing version in signature line (expected 'v=...')"));
-        
-        if (meta.Version != 1)
-            return Result.Fail(new RecipeError($"Unsupported version {meta.Version}"));
+        var (meta, metaLines) = _recipeFileMetadataSerializer.ReadAllMeta(fullText);
 
         // Body as text
         var bodyText = ExtractBodyText(fullText, metaLines);
@@ -171,12 +159,10 @@ public sealed class RecipeCsvSerializerV1 : IRecipeSerializer
 
         var meta = new RecipeFileMetadata
         {
-            Signature = "MBE-RECIPE",
-            Version = 1,
             Separator = _csvHelperFactory.Separator,
             Rows = canonicalRowsCount,
             BodyHashBase64 = bodyHash,
-            Extras = new Dictionary<string, string> { ["ExportedAtUtc"] = DateTime.UtcNow.ToString("O") }
+            Extras = new Dictionary<string, string> { ["ExportedAtLocalTime"] = DateTime.Now.ToString("O") }
         };
 
         _recipeFileMetadataSerializer.Write(writer, meta);

@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers
+namespace NtoLib.Recipes.MbeTable.StateMachine.StateReducers
 {
     /// <summary>
     /// Handles the completion of long-running operations.

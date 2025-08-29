@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Immutable;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.App
+namespace NtoLib.Recipes.MbeTable.StateMachine.App
 {
     public record UiPermissions(
         bool CanWriteRecipe,

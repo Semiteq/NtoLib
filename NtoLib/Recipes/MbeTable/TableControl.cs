@@ -8,10 +8,6 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FB.VisualFB;
 using Microsoft.Extensions.DependencyInjection;
-using NtoLib.Recipes.MbeTable.Composition;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
@@ -24,6 +20,9 @@ using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
+using NtoLib.Recipes.MbeTable.StateMachine;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
+using NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
 
 namespace NtoLib.Recipes.MbeTable;
 
@@ -328,7 +327,7 @@ public partial class TableControl : VisualControlBase
     protected override void OnFBLinkChanged()
     {
         base.OnFBLinkChanged();
-        System.Diagnostics.Debug.WriteLine("!!! TableControl.OnFBLinkChanged called !!!");
+        
         // Initialization logic is now moved to put_DesignMode to correctly
         // handle the transition to runtime. This method only establishes the link.
         try

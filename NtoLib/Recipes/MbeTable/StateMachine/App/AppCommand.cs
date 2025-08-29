@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine.App
+namespace NtoLib.Recipes.MbeTable.StateMachine.App
 {
     public abstract record AppCommand;
 

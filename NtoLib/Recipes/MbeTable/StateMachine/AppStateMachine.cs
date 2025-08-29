@@ -3,17 +3,17 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.StateReducers;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
+using NtoLib.Recipes.MbeTable.StateMachine.StateReducers;
 
-namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
+namespace NtoLib.Recipes.MbeTable.StateMachine
 {
     /// <summary>
     /// Manages the application's state transitions by orchestrating various command reducers.
     /// It ensures thread-safety and decouples state logic from side effects.
     /// </summary>
-    public sealed class AppStateMachine : IDisposable
+    public sealed class AppStateMachine
     {
         private readonly object _lock = new();
         private readonly ILogger _debugLogger;
@@ -203,14 +203,6 @@ namespace NtoLib.Recipes.MbeTable.Composition.StateMachine
         private void Emit(AppState snapshot)
         {
             ThreadPool.QueueUserWorkItem(_ => StateChanged?.Invoke(snapshot));
-        }
-
-        /// <summary>
-        /// Disposes of any managed resources.
-        /// </summary>
-        public void Dispose()
-        {
-            // No unmanaged resources to dispose in this class.
         }
     }
 }

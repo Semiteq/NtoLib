@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Composition;
 
 namespace NtoLib.Recipes.MbeTable.Config;
 

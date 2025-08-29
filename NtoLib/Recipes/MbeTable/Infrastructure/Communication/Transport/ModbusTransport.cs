@@ -18,7 +18,7 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Transport;
 /// This class incorporates retry logic, proper exception handling, and resource management
 /// to ensure reliable data transmission or a clear failure status.
 /// </summary>
-public sealed class ModbusTransportV1 : IModbusTransport, IDisposable
+public sealed class ModbusTransport : IModbusTransport, IDisposable
 {
     private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
     private readonly ILogger _debugLogger;
@@ -30,7 +30,7 @@ public sealed class ModbusTransportV1 : IModbusTransport, IDisposable
     private const int TimeoutMs = 1000;
     private const int MaxRetries = 2;
 
-    public ModbusTransportV1(ICommunicationSettingsProvider communicationSettingsProvider, ILogger logger)
+    public ModbusTransport(ICommunicationSettingsProvider communicationSettingsProvider, ILogger logger)
     {
         _communicationSettingsProvider = communicationSettingsProvider ?? throw new ArgumentNullException(nameof(communicationSettingsProvider));
         _debugLogger = logger ?? throw new ArgumentNullException(nameof(logger));

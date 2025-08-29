@@ -4,13 +4,10 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.App;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.Contracts;
-using NtoLib.Recipes.MbeTable.Composition.StateMachine.ThreadDispatcher;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Loaders;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
+using NtoLib.Recipes.MbeTable.Core.Application.Services;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
@@ -36,8 +33,12 @@ using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
+using NtoLib.Recipes.MbeTable.StateMachine;
+using NtoLib.Recipes.MbeTable.StateMachine.App;
+using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
+using NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
 
-namespace NtoLib.Recipes.MbeTable.Composition;
+namespace NtoLib.Recipes.MbeTable.DI;
 
 /// <summary>
 /// Configures the dependency injection container for the MBE Table application.
@@ -73,11 +74,12 @@ public static class MbeTableServiceConfigurator
         var configResult = configurationLoader.LoadConfiguration(
             AppDomain.CurrentDomain.BaseDirectory,
             "TableSchema.json",
-            "ActionSchema.json");
+            "ActionSchema.json"
+        );
 
         if (configResult.IsFailed)
         {
-            var errorMessage = $"Failed to load application configuration. Reason: {configResult.Errors.First().Message}";
+            var errorMessage = $"Failed to load application configuration. Reasons: {string.Join("; ", configResult.Errors.Select(e => e.Message))}";
             throw new InvalidOperationException(errorMessage);
         }
         
@@ -117,12 +119,14 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IRecipeEngine, RecipeEngine>();
 
         // --- ViewModels ---
+        services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
+        services.AddSingleton<IStepViewModelFactory, StepViewModelFactory>();
         services.AddSingleton<RecipeViewModel>();
 
         // --- IO ---
         services.AddSingleton<IRecipeFileReader, RecipeFileReader>();
         services.AddSingleton<IRecipeFileWriter, RecipeFileWriter>();
-        services.AddSingleton<IRecipeSerializer, RecipeCsvSerializerV1>();
+        services.AddSingleton<IRecipeSerializer, RecipeCsvSerializer>();
         services.AddSingleton<ICsvHelperFactory, CsvHelperFactory>();
         services.AddSingleton<ICsvStepMapper, CsvStepMapper>();
         services.AddSingleton<ICsvHeaderBinder, CsvHeaderBinder>();
@@ -135,7 +139,7 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IRecipePlcSender, RecipePlcSender>();
         services.AddSingleton<PlcCapacityCalculator>();
         services.AddSingleton<IPlcProtocol, PlcProtocolV1>();
-        services.AddSingleton<IModbusTransport, ModbusTransportV1>();
+        services.AddSingleton<IModbusTransport, ModbusTransport>();
 
         // --- UI Components & Handlers ---
         services.AddSingleton<RecipeEffectsHandler>();

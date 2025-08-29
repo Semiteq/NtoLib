@@ -11,16 +11,6 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
 public sealed record RecipeFileMetadata
 {
     /// <summary>
-    /// Metadata format version
-    /// </summary>
-    public string Signature { get; init; } = "MBE-RECIPE";
-
-    /// <summary>
-    /// Represents the version of the recipe file metadata
-    /// </summary>
-    public int Version { get; init; } = 1;
-    
-    /// <summary>
     /// CSV separator
     /// </summary>
     public char Separator { get; init; } = ';';
