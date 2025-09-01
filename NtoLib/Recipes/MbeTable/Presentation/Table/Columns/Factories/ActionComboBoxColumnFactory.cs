@@ -5,50 +5,36 @@ using NtoLib.Recipes.MbeTable.Config.Models.Actions;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
+
+public class ActionComboBoxColumnFactory : BaseColumnFactory
 {
-    public class ActionComboBoxColumnFactory : IColumnFactory
+    private readonly IComboboxDataProvider _dataProvider;
+    private const int MaxDropDownItems = 20;
+
+    public ActionComboBoxColumnFactory(IComboboxDataProvider dataProvider)
     {
-        private readonly IComboboxDataProvider _dataProvider;
+        _dataProvider = dataProvider;
+    }
 
-        public ActionComboBoxColumnFactory(IComboboxDataProvider dataProvider)
-        {
-            _dataProvider = dataProvider;
-        }
+    /// <inheritdoc />
+    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition colDef)
+    {
+        return new DataGridViewComboBoxColumn();
+    }
 
-        public DataGridViewColumn CreateColumn(ColumnDefinition colDef, ColorScheme colorScheme)
-        {
-            var comboColumn = new DataGridViewComboBoxColumn
-            {
-                Name = colDef.Key.ToString(),
-                HeaderText = colDef.UiName,
-                DataSource = _dataProvider.GetActions(),
-                DisplayMember = "Value",
-                ValueMember = "Key",
-                ValueType = typeof(int?),
-                DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton,
-                DisplayStyleForCurrentCellOnly = true,
-                FlatStyle = FlatStyle.Standard,
-                SortMode = DataGridViewColumnSortMode.NotSortable
-            };
+    /// <inheritdoc />
+    protected override void ConfigureColumn(DataGridViewColumn column, ColumnDefinition colDef, ColorScheme colorScheme)
+    {
+        if (column is not DataGridViewComboBoxColumn comboColumn) return;
 
-            comboColumn.DefaultCellStyle.Alignment = colDef.Alignment;
-            comboColumn.DefaultCellStyle.Font = colorScheme.LineFont;
-            comboColumn.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
-
-            comboColumn.MaxDropDownItems = 20;
-            
-            if (colDef.Width > 0)
-            {
-                comboColumn.Width = colDef.Width;
-                comboColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            }
-            else
-            {
-                comboColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            }
-
-            return comboColumn;
-        }
+        comboColumn.DataSource = _dataProvider.GetActions();
+        comboColumn.DisplayMember = "Value";
+        comboColumn.ValueMember = "Key";
+        comboColumn.ValueType = typeof(int?);
+        comboColumn.DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton;
+        comboColumn.DisplayStyleForCurrentCellOnly = true;
+        comboColumn.FlatStyle = FlatStyle.Standard;
+        comboColumn.MaxDropDownItems = MaxDropDownItems;
     }
 }

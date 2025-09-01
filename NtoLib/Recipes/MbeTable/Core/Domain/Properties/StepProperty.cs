@@ -1,9 +1,9 @@
 ﻿#nullable enable
 
 using System;
+using FluentResults;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 using OneOf;
-using FluentResults;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
 {
@@ -35,6 +35,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties
         /// <param name="newValue">The new value to update the property with. Can be unformatted and contain strings.</param>
         /// <returns>A <see cref="Result{T}"/> containing the updated <see cref="StepProperty"/> if successful, or an <see cref="Error"/> if it fails.</returns>
         public Result<StepProperty> WithValue(object newValue)
+
         {
             var propertyTypeDefinition = PropertyRegistry.GetDefinition(Type);
 

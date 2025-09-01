@@ -8,6 +8,7 @@ using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
@@ -20,6 +21,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
         private readonly DataGridView _table;
         private readonly TableSchema _schema;
         private readonly TableCellStateManager _stateManager;
+        private readonly IStatusManager? _statusManager;
         private readonly ILogger? _debugLogger;
 
         private bool _attached;
@@ -29,11 +31,13 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             DataGridView table,
             TableSchema schema,
             TableCellStateManager stateManager,
+            IStatusManager? statusManager,
             ILogger? debugLogger = null)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _schema = schema ?? throw new ArgumentNullException(nameof(schema));
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
+            _statusManager = statusManager;
             _debugLogger = debugLogger;
 
             // Auto-detach when the grid is disposed.
@@ -190,8 +194,19 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             {
                 // Suppress common "value is not valid" when the list changes under the cell.
                 e.ThrowException = false;
-                e.Cancel = true;
-                _debugLogger?.Log($"ActionTarget r{e.RowIndex} suppressed: {e.Exception?.Message}");
+                e.Cancel = true; 
+                _debugLogger?.Log($"ActionTarget r{e.RowIndex} data error suppressed: {e.Exception?.Message}");
+                return;
+            }
+            
+            if (e.Exception is FormatException)
+            {
+                // Показываем пользователю сообщение об ошибке, которое мы сгенерировали в ядре.
+                // Вместо MessageBox используем StatusManager для лучшей интеграции.
+                _statusManager?.WriteStatusMessage(e.Exception.Message, StatusMessage.Error);
+
+                // Не даем DataGridView показывать собственное окно с ошибкой.
+                e.ThrowException = false; 
             }
         }
 

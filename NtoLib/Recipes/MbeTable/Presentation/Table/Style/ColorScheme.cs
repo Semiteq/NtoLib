@@ -50,13 +50,13 @@ public record ColorScheme
     public int LineHeight { get; init; }
 
     public Color StatusBgColor { get; init; }
+    
     /// <summary>
     /// Creates a ColorScheme with a set of default values.
     /// Used to initialize the static Default instance.
     /// </summary>
     public ColorScheme()
     {
-        // Default values are defined in one single place.
         ControlBackgroundColor = SystemColors.Control;
         TableBackgroundColor = SystemColors.Window;
 
@@ -74,8 +74,8 @@ public record ColorScheme
 
         HeaderBgColor = SystemColors.ControlLight;
         LineBgColor = SystemColors.Window;
-        SelectedLineBgColor = Color.FromArgb(0, 120, 215); // A modern selection blue
-        PassedLineBgColor = Color.FromArgb(240, 240, 240); // A light gray
+        SelectedLineBgColor = Color.FromArgb(0, 120, 215);
+        PassedLineBgColor = Color.FromArgb(240, 240, 240);
         BlockedBgColor = SystemColors.ControlLight;
         
         ButtonsColor = SystemColors.Control;

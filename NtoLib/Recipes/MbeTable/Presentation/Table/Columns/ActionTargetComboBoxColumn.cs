@@ -4,8 +4,8 @@ using System;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Cells;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
-{
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
+
     /// <summary>
     /// DataGridViewComboBoxColumn for ActionTarget with a custom cell template.
     /// </summary>
@@ -36,4 +36,3 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns
             }
         }
     }
-}

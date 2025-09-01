@@ -3,9 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
@@ -39,8 +39,14 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             AvailableActionTargets = availableActionTargets ?? new List<KeyValuePair<int, string>>();
         }
 
-        // --- Public methods for data access, called by StepPropertyDescriptor ---
-        
+        /// <summary>
+        /// Retrieves the value of a property based on the specified column identifier.
+        /// </summary>
+        /// <param name="identifier">The unique identifier of the column whose value is being retrieved.</param>
+        /// <returns>
+        /// The value of the property associated with the specified column identifier, or null if the property
+        /// does not exist or an error occurs during the retrieval.
+        /// </returns>
         public object? GetPropertyValue(ColumnIdentifier identifier)
         {
             try
@@ -84,7 +90,11 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
             }
         }
         
-        // --- Methods for styling ---
+        public StepProperty? GetProperty(ColumnIdentifier identifier)
+        {
+            _stepRecord.Properties.TryGetValue(identifier, out var property);
+            return property;
+        }
         
         
         /// <summary>

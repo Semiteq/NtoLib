@@ -24,6 +24,7 @@ namespace NtoLib.Recipes.MbeTable.Config.Models.Schema
         string Code,
         string UiName,
         Type SystemType,
+        string ColumnType,
         int Width,
         bool ReadOnly,
         DataGridViewContentAlignment Alignment,

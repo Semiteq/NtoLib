@@ -55,6 +55,7 @@ public class TableSchemaLoader : ITableSchemaLoader
                     Code: jsonDef.Code,
                     UiName: jsonDef.UiName,
                     SystemType: systemType,
+                    ColumnType: jsonDef.ColumnType,
                     Width: jsonDef.Width,
                     ReadOnly: jsonDef.ReadOnly,
                     Alignment: alignment,

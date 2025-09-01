@@ -10,6 +10,7 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Binding;
 using NtoLib.Recipes.MbeTable.StateMachine;
 using NtoLib.Recipes.MbeTable.StateMachine.App;
 using NtoLib.Recipes.MbeTable.StateMachine.Contracts;

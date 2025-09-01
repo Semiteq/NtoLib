@@ -286,24 +286,27 @@
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Behavior\TableBehaviorManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Binding\DynamicBindingList.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Binding\StepPropertyDescriptor.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ActionTargetComboBoxCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\PropertyGridCell.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ReadonlyLabelCell.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionTargetComboBoxColumn.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionComboBoxColumnFactory.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionTargetComboBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\BaseColumnFactory.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\IColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\PropertyColumnFactory.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\StepStartTimeColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\TableColumnFactoryMap.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\TextBoxColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\StepPropertyDescriptor.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\PropertyGridColumn.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TableColumnManager.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\DynamicBindingList.cs" />
-    <Compile Include="Recipes\MbeTable\Presentation\Table\Editing\ActionTargetEditingControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\CellStatusDescription.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellState.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellStateManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Editing\ActionTargetEditingControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ButtonStateStyler.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />

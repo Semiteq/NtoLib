@@ -108,7 +108,6 @@ public static class MbeTableServiceConfigurator
 
         // --- Factories & Maps ---
         services.AddSingleton<IStepFactory, StepFactory>();
-        services.AddSingleton<TableColumnFactoryMap>();
 
         // --- Analysis & Engine ---
         services.AddSingleton<StepCalculationLogic>();

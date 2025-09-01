@@ -39,7 +39,6 @@ public partial class TableControl : VisualControlBase
     [NonSerialized] private IPlcStateMonitor? _plcStateMonitor;
     [NonSerialized] private IActionTargetProvider? _actionTargetProvider;
     [NonSerialized] private IComboboxDataProvider? _comboboxDataProvider;
-    [NonSerialized] private TableColumnFactoryMap? _tableColumnFactoryMap;
     [NonSerialized] private TableCellStateManager? _tableCellStateManager;
     [NonSerialized] private IPlcRecipeStatusProvider? _plcRecipeStatusProvider;
     [NonSerialized] private ILogger? _debugLogger;
@@ -373,7 +372,6 @@ public partial class TableControl : VisualControlBase
         _saveFileDialog = _sp.GetRequiredService<SaveFileDialog>();
         _actionTargetProvider = _sp.GetRequiredService<IActionTargetProvider>();
         _comboboxDataProvider = _sp.GetRequiredService<IComboboxDataProvider>();
-        _tableColumnFactoryMap = _sp.GetRequiredService<TableColumnFactoryMap>();
         _tableCellStateManager = _sp.GetRequiredService<TableCellStateManager>();
         _plcRecipeStatusProvider = _sp.GetRequiredService<IPlcRecipeStatusProvider>();
         _appStateMachine = _sp.GetRequiredService<AppStateMachine>();
@@ -393,7 +391,7 @@ public partial class TableControl : VisualControlBase
         InitializeUi();
         InitializeAppState();
 
-        _debugLogger.Log("TableControl: Runtime services and UI initialized successfully.", nameof(InitializeServicesAndEvents));
+        _debugLogger.Log("TableControl: Runtime services and UI initialized successfully.");
     }
 
     private void InitializeUi()
@@ -403,7 +401,7 @@ public partial class TableControl : VisualControlBase
         InitButtonStyling();
         EnableDoubleBufferDataGridView();
 
-        var tableColumnManager = new TableColumnManager(_table, _tableSchema!, _tableColumnFactoryMap!.GetMap, _colorScheme!);
+        var tableColumnManager = new TableColumnManager(_table, _tableSchema!, _colorScheme!, _comboboxDataProvider!);
         tableColumnManager.InitializeHeaders();
         tableColumnManager.InitializeTableColumns();
         tableColumnManager.InitializeTableRows();
@@ -413,7 +411,7 @@ public partial class TableControl : VisualControlBase
         _table.DataSource = _recipeViewModel!.ViewModels;
         _table.Invalidate();
 
-        _tableBehaviorManager = new TableBehaviorManager(_table, _tableSchema!, _tableCellStateManager!, _debugLogger);
+        _tableBehaviorManager = new TableBehaviorManager(_table, _tableSchema!, _tableCellStateManager!, _statusManager, _debugLogger);
         _tableBehaviorManager.TableStyleSetup();
         _tableBehaviorManager.Attach();
 
@@ -496,7 +494,6 @@ public partial class TableControl : VisualControlBase
         _plcStateMonitor = null;
         _actionTargetProvider = null;
         _comboboxDataProvider = null;
-        _tableColumnFactoryMap = null;
         _tableCellStateManager = null;
         _plcRecipeStatusProvider = null;
         _appStateMachine = null;

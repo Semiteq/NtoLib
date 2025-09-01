@@ -6,22 +6,20 @@ using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
-public class ActionTargetComboBoxColumnFactory : BaseColumnFactory
+/// <summary>
+/// Default column factory for StepProperty float values.
+/// </summary>
+public class PropertyColumnFactory : BaseColumnFactory
 {
-    private const int MaxDropDownItems = 20;
-
     /// <inheritdoc />
     protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition colDef)
     {
-        return new ActionTargetComboBoxColumn();
+        return new PropertyGridColumn();
     }
 
     /// <inheritdoc />
     protected override void ConfigureColumn(DataGridViewColumn column, ColumnDefinition colDef, ColorScheme colorScheme)
     {
-        if (column is not DataGridViewComboBoxColumn comboColumn) return;
-
-        comboColumn.DisplayStyleForCurrentCellOnly = true;
-        comboColumn.MaxDropDownItems = MaxDropDownItems;
+        column.ValueType = colDef.SystemType;
     }
 }

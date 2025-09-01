@@ -45,7 +45,7 @@
         
         <!-- Visual pins start with 1001 -->
         <Items>
-                    <!-- Base Address for Real (Float) Data Storage -->
+            <!-- Base Address for Real (Float) Data Storage -->
 			<Pout ID="1003" Name="FloatBaseAddr"	Type="БеззнаковыйЦелый"/>
 			
 			<!-- Size of Real (Float) Data Storage Area -->
@@ -83,10 +83,6 @@
 			
 			<!-- Timeout -->
 			<Pout ID="1015" Name="Timeout"			Type="БеззнаковыйЦелый"/>
-			
-			<Pout ID="1016" Name="HMIActualLine"	Type="Целый"/>
-			
-			<Pout ID="1017" Name="HMIStatus"		Type="БеззнаковыйЦелый"/>
-		</Items>
+        </Items>
 	</VisualMap>
 </FBConfig>

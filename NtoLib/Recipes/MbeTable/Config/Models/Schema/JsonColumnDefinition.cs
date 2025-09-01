@@ -14,6 +14,7 @@ public class JsonColumnDefinition
     public string Code { get; set; } = string.Empty;
     public string UiName { get; set; } = string.Empty;
     public string SystemType { get; set; } = string.Empty;
+    public string ColumnType { get; set; } = string.Empty;
     public int Width { get; set; }
     public bool ReadOnly { get; set; }
     public string Alignment { get; set; } = string.Empty;

@@ -1,37 +1,18 @@
-﻿using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Config;
+﻿#nullable enable
+
+using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
-public class TextBoxColumnFactory :  IColumnFactory
+/// <summary>
+/// Creates DataGridViewTextBoxColumn instances for simple text display and editing.
+/// </summary>
+public class TextBoxColumnFactory : BaseColumnFactory
 {
-    public DataGridViewColumn CreateColumn(ColumnDefinition colDef, ColorScheme colorScheme)
+    /// <inheritdoc />
+    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition colDef)
     {
-        var column = new DataGridViewTextBoxColumn
-        {
-            Name = colDef.Key.Value,
-            HeaderText = colDef.UiName,
-            ReadOnly = colDef.ReadOnly,
-            SortMode = DataGridViewColumnSortMode.NotSortable
-        };
-        
-        column.DefaultCellStyle.Alignment = colDef.Alignment;
-        column.DefaultCellStyle.Font = colorScheme.LineFont;
-        column.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
-        
-        if (colDef.Width > 0)
-        {
-            column.Width = colDef.Width;
-            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-        }
-        else
-        {
-            column.MinimumWidth = 50;
-            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-        }
-        
-        return column;
+        return new DataGridViewTextBoxColumn();
     }
 }

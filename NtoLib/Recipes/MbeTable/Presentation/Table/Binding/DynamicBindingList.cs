@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
 
-namespace NtoLib.Recipes.MbeTable.Presentation.Table
+namespace NtoLib.Recipes.MbeTable.Presentation.Table.Binding
 {
     /// <summary>
     /// A custom BindingList that implements ITypedList to provide dynamic property descriptors

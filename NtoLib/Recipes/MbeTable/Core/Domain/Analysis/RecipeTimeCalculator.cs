@@ -1,9 +1,6 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
@@ -21,53 +18,63 @@ public class RecipeTimeCalculator : IRecipeTimeCalculator
         _actionRepository = actionRepository;
     }
 
-    /// <summary>
-    /// Calculates the total duration and step start times for a given recipe based on its steps
-    /// and their associated properties, such as action types, durations, and loops.
-    /// </summary>
-    /// <param name="recipe">The recipe containing a list of steps to be analyzed for timing information.</param>
-    /// <returns>A <see cref="RecipeTimeAnalysis"/> object containing the total duration and start times of each step in the recipe.</returns>
     public RecipeTimeAnalysis Calculate(Recipe recipe)
     {
-        var stepStartTimes = new Dictionary<int, TimeSpan>();
+        var stepStartTimes = new Dictionary<int, TimeSpan>(recipe.Steps.Count);
         var accumulatedTime = TimeSpan.Zero;
-        var loopStack = new Stack<(int IterationCount, TimeSpan LoopBodyStartTime)>();
+        var loopStack = new Stack<(int Iterations, TimeSpan BodyStartTime)>();
 
         for (var i = 0; i < recipe.Steps.Count; i++)
         {
             stepStartTimes[i] = accumulatedTime;
             var step = recipe.Steps[i];
-
             var actionId = step.Properties[WellKnownColumns.Action]?.GetValue<int>() ?? -1;
 
             if (actionId == ForLoopActionId)
             {
-                var iterationCount = step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ?? 1f;
-                loopStack.Push(((int)iterationCount, accumulatedTime));
+                // Normalize iteration count (treat <1 as 1).
+                var rawIterations = step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ?? 1f;
+                var iterations = Math.Max(1, (int)Math.Round(rawIterations, MidpointRounding.AwayFromZero));
+                loopStack.Push((iterations, accumulatedTime));
+                continue;
             }
-            // else if (actionId == _actionManager.EndForLoop.Id)
-            else if (actionId == EndForLoopActionId)
-                if (loopStack.Count > 0)
-                {
-                    var (iterationCount, loopBodyStartTime) = loopStack.Pop();
-                    var loopBodyDuration = accumulatedTime - loopBodyStartTime;
 
-                    if (iterationCount > 1)
-                    {
-                        accumulatedTime += TimeSpan.FromTicks(loopBodyDuration.Ticks * (iterationCount - 1));
-                    }
+            if (actionId == EndForLoopActionId)
+            {
+                if (loopStack.Count == 0)
+                    continue; // Or log inconsistency if needed.
+
+                var (iterations, bodyStart) = loopStack.Pop();
+                var bodyDuration = accumulatedTime - bodyStart;
+
+                if (iterations > 1 && bodyDuration > TimeSpan.Zero)
+                {
+                    // Multiply body duration for remaining (iterations - 1) loops.
+                    accumulatedTime += TimeSpan.FromTicks(bodyDuration.Ticks * (iterations - 1));
                 }
 
-                else if (step.DeployDuration == DeployDuration.LongLasting)
-                {
-                    var durationInSeconds = step.Properties[WellKnownColumns.StepDuration]?.GetValue<float>() ??
-                                            step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ??
-                                            0;
+                continue;
+            }
 
-                    accumulatedTime += TimeSpan.FromSeconds(durationInSeconds);
-                }
+            // Regular (non-loop control) step.
+            var stepDuration = GetStepDuration(step);
+            if (stepDuration > TimeSpan.Zero)
+                accumulatedTime += stepDuration;
         }
 
         return new RecipeTimeAnalysis(accumulatedTime, stepStartTimes.ToImmutableDictionary());
+    }
+
+    private static TimeSpan GetStepDuration(Step step)
+    {
+        if (step.DeployDuration != DeployDuration.LongLasting)
+            return TimeSpan.Zero;
+
+        var seconds =
+            step.Properties[WellKnownColumns.StepDuration]?.GetValue<float>() ??
+            step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ??
+            0f;
+
+        return seconds > 0f ? TimeSpan.FromSeconds(seconds) : TimeSpan.Zero;
     }
 }
