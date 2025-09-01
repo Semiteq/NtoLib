@@ -50,22 +50,22 @@
       <HintPath>..\packages\EasyModbusTCP.5.6.0\lib\net40\EasyModbus.dll</HintPath>
     </Reference>
     <Reference Include="FB">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\FB.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\FB.dll</HintPath>
     </Reference>
     <Reference Include="FluentResults, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentResults.4.0.0\lib\netstandard2.0\FluentResults.dll</HintPath>
     </Reference>
     <Reference Include="InSAT.Library">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\InSAT.Library.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\InSAT.Library.dll</HintPath>
     </Reference>
     <Reference Include="Insat.Opc">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\Insat.Opc.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\Insat.Opc.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Common">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Common.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADA.Common.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADALib">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADALib.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADALib.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.8\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
