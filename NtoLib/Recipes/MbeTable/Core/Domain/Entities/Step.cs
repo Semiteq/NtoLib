@@ -9,14 +9,26 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 
 /// <summary>
-/// Represents an immutable snapshot of a single step in a recipe.
+/// Represents a single, immutable step in a recipe. A step consists of a collection of properties.
 /// </summary>
-/// <param name="Properties">
-/// An immutable dictionary of all properties within the step.
-/// A key's value can be 'null' to indicate a "blocked" or unavailable property for this step.
-/// </param>
-public record Step(
-    IImmutableDictionary<ColumnIdentifier, StepProperty?> Properties,
-    ActionType ActionType,
-    DeployDuration DeployDuration
-);
+public sealed record Step
+{
+    /// <summary>
+    /// A dictionary of all properties for this step, keyed by their column identifier.
+    /// Properties not applicable to this step's action have a null value.
+    /// </summary>
+    public ImmutableDictionary<ColumnIdentifier, StepProperty?> Properties { get; init; }
+        
+    /// <summary>
+    /// The deployment duration type of the action associated with this step.
+    /// </summary>
+    public DeployDuration DeployDuration { get; init; }
+
+    public Step(
+        ImmutableDictionary<ColumnIdentifier, StepProperty?> properties, 
+        DeployDuration deployDuration)
+    {
+        Properties = properties;
+        DeployDuration = deployDuration;
+    }
+}

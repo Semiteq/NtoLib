@@ -1,21 +1,24 @@
 ﻿#nullable enable
+namespace NtoLib.Recipes.MbeTable;
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
+
 using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
 using MasterSCADA.Hlp;
+
 using Microsoft.Extensions.DependencyInjection;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.DI;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
-
-namespace NtoLib.Recipes.MbeTable;
 
 [CatID(CatIDs.CATID_OTHER)]
 [Guid("DFB05172-07CD-492C-925E-A091B197D8A8")]
@@ -26,22 +29,20 @@ namespace NtoLib.Recipes.MbeTable;
 [Serializable]
 public class MbeTableFB : VisualFBBase
 {
-    /// <summary>
-    /// Gets the service provider instance.
-    /// It is initialized in ToRuntime and cleared in ToDesign.
-    /// Will be null in Design-Time mode.
-    /// </summary>
     public IServiceProvider? ServiceProvider => _serviceProvider;
 
-    [NonSerialized] private IServiceProvider? _serviceProvider; 
-    [NonSerialized] private TimerService _timerService;
-    [NonSerialized] private IPlcStateMonitor _plcStateMonitor;
-    [NonSerialized] private IActionTargetProvider _actionTargetProvider;
-    [NonSerialized] private IPlcRecipeStatusProvider _plcRecipeStatusProvider;
+    [NonSerialized] private IServiceProvider? _serviceProvider;
+    [NonSerialized] private TimerService _timerService = null!;
+    [NonSerialized] private IPlcStateMonitor _plcStateMonitor = null!;
+    [NonSerialized] private IActionTargetProvider _actionTargetProvider = null!;
+    [NonSerialized] private IPlcRecipeStatusProvider _plcRecipeStatusProvider = null!;
+
+    // Runtime snapshot of pin groups loaded from PinGroups.json: GroupName -> (FirstPinId, PinQuantity)
+    [NonSerialized] private Dictionary<string, (int FirstPinId, int PinQuantity)> _pinGroups =
+        new Dictionary<string, (int FirstPinId, int PinQuantity)>(StringComparer.OrdinalIgnoreCase);
 
     #region Numerical Properties
 
-    // Pin ID's
     private const int IdRecipeActive = 1;
     private const int IdCurrentLine = 3;
     private const int IdStepCurrentTime = 4;
@@ -52,20 +53,6 @@ public class MbeTableFB : VisualFBBase
     private const int IdTotalTimeLeft = 101;
     private const int IdLineTimeLeft = 102;
 
-    // ActionProperty pin ID's
-    private const int ShutterNamesGroupId = 200;
-    private const int HeaterNamesGroupId = 300;
-    private const int NitrogenSourcesGroupId = 400;
-
-    private const int IdFirstShutterName = 201;
-    private const int IdFirstHeaterName = 301;
-    private const int IdFirstNitrogenSourceName = 401;
-
-    private const int ShutterNameQuantity = 32;
-    private const int HeaterNameQuantity = 32;
-    private const int NitrogenSourceNameQuantity = 3;
-
-    // Communication pin ID's
     private const int IdHmiFloatBaseAddr = 1003;
     private const int IdHmiFloatAreaSize = 1004;
     private const int IdHmiIntBaseAddr = 1005;
@@ -79,7 +66,6 @@ public class MbeTableFB : VisualFBBase
     private const int IdHmiIp4 = 1013;
     private const int IdHmiPort = 1014;
 
-    // Default values
     private uint _floatBaseAddr = 8100;
     private uint _floatAreaSize = 19600;
 
@@ -100,14 +86,6 @@ public class MbeTableFB : VisualFBBase
     #endregion
 
     #region VisualProperties
-
-    /// !!! ATTENTION !!!
-    /// It is strictly forbidden to change names or types of the following properties (at least the public ones).
-    /// SCADA caches Pin's and Pout's. In case a project already contained an old version of the FB,
-    /// cached data and dll data will be different, so the FB will break and corrupt the project.
-    /// If necessary, change the following at your own risk and make a backup of the SCADA project.
-    /// The same may apply to MbeTableFb.xml (not tested).
-    /// Consider this as a legacy code.
 
     [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
     [DisplayName(" 1.  Базовый адрес хранения данных типа Real (Float)")]
@@ -141,8 +119,8 @@ public class MbeTableFB : VisualFBBase
         set => _intAreaSize = value;
     }
 
-    [DisplayName(" 5.  Базовый адрес хранения данных типа Boolean")]
-    [Description("Определяет начальный адрес, куда помещаются данные типа 'логический'.")]
+    [DisplayName(" 5.  Базовый адрес контрольной области")]
+    [Description("Определяет начальный адрес, где располагается зона контрольных данных (3 слова)")]
     public uint UBoolBaseAddr
     {
         get => _boolBaseAddr;
@@ -207,19 +185,25 @@ public class MbeTableFB : VisualFBBase
 
     #endregion
 
-    public Dictionary<int, string> GetShutterNames() => ReadPinGroup(IdFirstShutterName, ShutterNameQuantity);
-    public Dictionary<int, string> GetHeaterNames() => ReadPinGroup(IdFirstHeaterName, HeaterNameQuantity);
-    public Dictionary<int, string> GetNitrogenSourceNames() => ReadPinGroup(IdFirstNitrogenSourceName, NitrogenSourceNameQuantity);
+    public IReadOnlyCollection<string> GetDefinedGroupNames() => _pinGroups.Keys.ToArray();
+
+    public Dictionary<int, string> ReadTargets(string groupName)
+    {
+        if (string.IsNullOrWhiteSpace(groupName))
+            throw new ArgumentNullException(nameof(groupName));
+
+        if (!_pinGroups.TryGetValue(groupName, out var cfg))
+            throw new InvalidOperationException($"Group '{groupName}' is not defined in PinGroups.json.");
+
+        return ReadPinGroup(cfg.FirstPinId, cfg.PinQuantity, groupName);
+    }
 
     protected override void UpdateData()
     {
         base.UpdateData();
 
-        // Service fields are null in design-time, so we must guard against it.
         if (_plcStateMonitor == null || _plcRecipeStatusProvider == null || _timerService == null)
-        {
             return;
-        }
 
         var stepCurrentTime = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<float>(IdStepCurrentTime) : -1f;
         var lineNumber = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdCurrentLine) : -1;
@@ -229,12 +213,11 @@ public class MbeTableFB : VisualFBBase
 
         _plcStateMonitor.UpdateState(lineNumber, forLoopCount1, forLoopCount2, forLoopCount3, stepCurrentTime);
 
-        // For safety reason if failed to read, then consider the recipe is running
         var isRecipeActive = GetPinQuality(IdRecipeActive) is OpcQuality.Good && GetPinValue<bool>(IdRecipeActive);
-        var curentLine = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdCurrentLine) : -1;
+        var currentLine = GetPinQuality(IdCurrentLine) is OpcQuality.Good ? GetPinValue<int>(IdCurrentLine) : -1;
         var isEnaSend = GetPinQuality(IdEnaSend) is OpcQuality.Good && GetPinValue<bool>(IdEnaSend);
 
-        _plcRecipeStatusProvider.UpdateStatus(isRecipeActive, isEnaSend, curentLine);
+        _plcRecipeStatusProvider.UpdateStatus(isRecipeActive, isEnaSend, currentLine);
 
         _timerService.Update();
 
@@ -267,8 +250,6 @@ public class MbeTableFB : VisualFBBase
             SetPinValue(IdLineTimeLeft, (float)stepTimeLeft.TotalSeconds);
         }
 
-
-
         if (GetPinQuality(IdTotalTimeLeft) != OpcQuality.Good
             || !AreFloatsEqual(GetPinValue<float>(IdTotalTimeLeft), (float)totalTimeLeft.TotalSeconds))
         {
@@ -276,48 +257,27 @@ public class MbeTableFB : VisualFBBase
         }
     }
 
+    /// <summary>
+    /// Creates pin groups and pins dynamically based on PinGroups.json via PinMapInitializer.
+    /// Called by SCADA before constructors; configuration must be read right here.
+    /// </summary>
     protected override void CreatePinMap(bool newObject)
     {
         base.CreatePinMap(newObject);
 
-        var shutterGroup = Root.AddGroup(ShutterNamesGroupId, "ShutterNames");
-        var heaterGroup = Root.AddGroup(HeaterNamesGroupId, "HeaterNames");
-        var nitrogenGroup = Root.AddGroup(NitrogenSourcesGroupId, "NitrogenSourcesNames");
-
-        for (var i = 0; i < ShutterNameQuantity; i++)
-        {
-            var pinId = IdFirstShutterName + i;
-            var pinName = $"Shutter{i + 1}";
-            shutterGroup.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
-        }
-
-        for (var i = 0; i < HeaterNameQuantity; i++)
-        {
-            var pinId = IdFirstHeaterName + i;
-            var pinName = $"Heater{i + 1}";
-            heaterGroup.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
-        }
-
-        for (var i = 0; i < NitrogenSourceNameQuantity; i++)
-        {
-            var pinId = IdFirstNitrogenSourceName + i;
-            var pinName = $"NitrogenSource{i + 1}";
-            nitrogenGroup.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
-        }
+        var initializer = new PinMapInitializer();
+        _pinGroups = initializer.InitializePinsFromConfig(this);
 
         FirePinSpaceChanged();
+        Debug.Print("Pins were created from PinGroups.json (via PinMapInitializer).");
     }
 
     private void InitializeServices()
     {
-        // Avoid re-initialization if already in runtime.
         if (_serviceProvider != null) return;
 
-        // This is the single point of entry for service creation.
-        // We call the static configurator to build the service provider.
         _serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this);
 
-        // Get services from the container.
         var debugLogger = _serviceProvider.GetRequiredService<ILogger>();
         debugLogger.Log("MbeTableFB: Entering Runtime. ServiceProvider created via DI container.");
 
@@ -332,34 +292,24 @@ public class MbeTableFB : VisualFBBase
         debugLogger.Log("MbeTableFB: Runtime services initialized and event handlers subscribed.");
     }
 
-    /// <summary>
-    /// Symmetrically cleans up all runtime services and subscriptions.
-    /// This method is safe to call multiple times.
-    /// </summary>
     private void CleanupServices()
     {
-        if (_serviceProvider == null) return; // Already cleaned up.
+        if (_serviceProvider == null) return;
 
-        var debugLogger = _serviceProvider.GetService<ILogger>(); // Use GetService to avoid exception if already disposed
+        var debugLogger = _serviceProvider.GetService<ILogger>();
         debugLogger?.Log("MbeTableFB: Entering Design mode or Disposing. Cleaning up services.");
 
         if (_timerService != null)
-        {
             _timerService.TimesUpdated -= OnTimesUpdated;
-        }
 
-        // The service provider from Microsoft.Extensions.DependencyInjection implements IDisposable.
         if (_serviceProvider is IDisposable disposableProvider)
-        {
             disposableProvider.Dispose();
-        }
 
-        // Nullify all references to ensure garbage collection and prevent accidental use.
-        _plcStateMonitor = null;
-        _actionTargetProvider = null;
-        _plcRecipeStatusProvider = null;
-        _timerService = null;
-        _serviceProvider = null;
+        _plcStateMonitor = null!;
+        _actionTargetProvider = null!;
+        _plcRecipeStatusProvider = null!;
+        _timerService = null!;
+        _serviceProvider = null!;
     }
 
     private void UpdateUiConnectionPins()
@@ -378,30 +328,30 @@ public class MbeTableFB : VisualFBBase
         VisualPins.SetValue<uint>(IdHmiPort, ControllerTcpPort);
     }
 
-    private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
+    private Dictionary<int, string> ReadPinGroup(int firstId, int quantity, string groupNameForDefault)
     {
-        if (quantity <= 0)
-            return new Dictionary<int, string>();
-
         var pinGroup = new Dictionary<int, string>(quantity);
 
-        for (var pinId = firstId; pinId < firstId + quantity; pinId++)
+        for (var offset = 0; offset < quantity; offset++)
         {
+            var pinId = firstId + offset;
+            string value;
+
             if (GetPinQuality(pinId) == OpcQuality.Good)
             {
                 var pinValue = GetPinValue<string>(pinId);
-                if (!string.IsNullOrWhiteSpace(pinValue))
-                {
-                    pinGroup[pinId - firstId] = pinValue;
-                }
+                value = !string.IsNullOrWhiteSpace(pinValue) ? pinValue : $"{groupNameForDefault}{offset}";
             }
+            else
+            {
+                value = $"{groupNameForDefault}{offset}";
+            }
+
+            pinGroup[offset] = value;
         }
 
         return pinGroup;
     }
 
-    private bool AreFloatsEqual(float a, float b)
-    {
-        return Math.Abs(a - b) < 0.01;
-    }
+    private static bool AreFloatsEqual(float a, float b) => Math.Abs(a - b) < 0.01f;
 }

@@ -34,7 +34,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions
 
             return floatValue % 1 == 0
                 ? floatValue.ToString("F0", CultureInfo.InvariantCulture)
-                : floatValue.ToString("G", CultureInfo.InvariantCulture);
+                : floatValue.ToString("G2", CultureInfo.InvariantCulture);
         }
 
         public virtual (bool Success, object Value) TryParse(string input)

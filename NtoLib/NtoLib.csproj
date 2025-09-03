@@ -179,7 +179,12 @@
     <Compile Include="Recipes\MbeTable\Config\IConfigurationLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\Loaders\ActionsLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\Loaders\IActionsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\IPinGroupsDataLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\Loaders\ITableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsConfigurationReader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsDataDataLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\ActionTargets\PinGroupData.cs" />
     <Compile Include="Recipes\MbeTable\Config\Loaders\TableSchemaLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionDefenition.cs" />
@@ -243,8 +248,8 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcProtocol.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcRecipeSerializer.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\IRecipePlcSender.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcProtocolV1.cs" />
-    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcRecipeSerializerV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcProtocol.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcRecipeSerializer.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Services\RecipePlcSender.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Transport\ModbusTransport.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\IRecipeComparator.cs" />
@@ -274,8 +279,10 @@
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\CommunicationSettingsProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\ICommunicationSettingsProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPinMapInitializer.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPlcRecipeStatusProvider.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPlcStateMonitor.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PinMapInitializer.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcLineInfo.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeAvailable.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeStatusProvider.cs" />
@@ -501,11 +508,10 @@
     <EmbeddedResource Include="Resources\ImgSave.bmp" />
     <EmbeddedResource Include="Resources\ImgWrite.bmp" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Recipes\MbeTable\Config\Models\ActionTargets\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="ActionSchema.json" />
+    <Content Include="PinGroups.json" />
     <Content Include="TableSchema.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -559,6 +565,9 @@ xcopy "$(ProjectDir)ActionSchema.json" %25DEST_DIR%25 /Y /I
 if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy ActionSchema.json &amp; exit /b %25errorlevel%25 )
 
 xcopy "$(ProjectDir)TableSchema.json" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy TableSchema.json &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(ProjectDir)PinGroups.json" %25DEST_DIR%25 /Y /I
 if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy TableSchema.json &amp; exit /b %25errorlevel%25 )
 
 echo All files copied successfully.

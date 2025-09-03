@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System.Collections.Generic;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
@@ -33,49 +32,28 @@ public interface IStepBuilder
     bool Supports(ColumnIdentifier key);
 
     /// <summary>
-    /// Sets the action target property if the action supports it.
+    /// Sets a property with a new value if the property is supported by the action.
+    /// The property type is inferred from the existing property definition. This is the primary method
+    /// for setting property values.
     /// </summary>
-    IStepBuilder WithOptionalTarget(int? target);
-    
-    /// <summary>
-    /// Sets the initial value property if the action supports it.
-    /// </summary>
-    IStepBuilder WithOptionalInitialValue(float? value);
-
-    /// <summary>
-    /// Sets the setpoint property if the action supports it.
-    /// </summary>
-    IStepBuilder WithOptionalSetpoint(float? value);
-
-    /// <summary>
-    /// Sets the speed property if the action supports it.
-    /// </summary>
-    IStepBuilder WithOptionalSpeed(float? value);
-
-    /// <summary>
-    /// Sets the duration property if the action supports it.
-    /// </summary>
-    IStepBuilder WithOptionalDuration(float? value);
-
-    /// <summary>
-    /// Sets the comment property if the action supports it.
-    /// </summary>
-    IStepBuilder WithOptionalComment(string? comment);
-    
-    /// <summary>
-    /// Constructs and returns the final immutable <see cref="Step"/> object.
-    /// </summary>
-    Step Build();
+    /// <param name="key">The identifier of the column to set.</param>
+    /// <param name="value">The new value for the property.</param>
+    /// <returns>The same builder instance for fluent chaining.</returns>
+    IStepBuilder WithOptionalDynamic(ColumnIdentifier key, object value);
 
     /// <summary>
     /// Sets a property with a specific value and type, overriding any existing value.
-    /// This method is for internal use when the type is known.
+    /// This method is for specific scenarios (e.g., deserialization) where the type is explicitly known.
     /// </summary>
+    /// <param name="key">The identifier of the column to set.</param>
+    /// <param name="value">The new value for the property.</param>
+    /// <param name="type">The semantic property type.</param>
+    /// <returns>The same builder instance for fluent chaining.</returns>
     IStepBuilder WithProperty(ColumnIdentifier key, object value, PropertyType type);
-    
+
     /// <summary>
-    /// Sets a property with a new value if the property is supported by the action.
-    /// The property type is inferred from the existing property definition.
+    /// Constructs and returns the final immutable <see cref="Step"/> object.
     /// </summary>
-    IStepBuilder WithOptionalDynamic(ColumnIdentifier key, object value);
+    /// <returns>A new <see cref="Step"/> instance.</returns>
+    Step Build();
 }

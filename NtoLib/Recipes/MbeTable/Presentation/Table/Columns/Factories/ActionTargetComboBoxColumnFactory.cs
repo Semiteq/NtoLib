@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 

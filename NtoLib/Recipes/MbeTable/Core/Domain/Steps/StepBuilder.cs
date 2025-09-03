@@ -57,82 +57,40 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
         /// <inheritdoc />
         public void InitializeStep()
         {
-            // 1. Initialize all properties from the schema as null (disabled).
             foreach (var column in _schema.GetColumns())
             {
                 _properties[column.Key] = null;
             }
 
-            // 2. Set the mandatory action property.
             _properties[WellKnownColumns.Action] = new StepProperty(_actionDefinition.Id, PropertyType.Enum, _registry);
 
-            // 3. "Activate" properties based on the new "Columns" dictionary from the action definition.
             foreach (var columnEntry in _actionDefinition.Columns)
             {
                 var key = new ColumnIdentifier(columnEntry.Key);
                 var actionColumnDef = columnEntry.Value;
-                var schemaColumnDef = _schema.GetColumnDefinition(key);
 
-                // The semantic property type is now taken directly from the action's configuration.
+                ColumnDefinition schemaColumnDef;
+                try
+                {
+                    schemaColumnDef = _schema.GetColumnDefinition(key);
+                }
+                catch (KeyNotFoundException)
+                {
+                    throw new InvalidOperationException(
+                        $"Configuration Error: actionId={_actionDefinition.Id} ('{_actionDefinition.Name}') references column '{key.Value}', " +
+                        "which is not defined in TableSchema.json.");
+                }
+
                 var propertyType = actionColumnDef.PropertyType;
 
                 object defaultValue;
                 if (actionColumnDef.DefaultValue.HasValue)
-                {
                     defaultValue = ConvertJsonElement(actionColumnDef.DefaultValue.Value, schemaColumnDef.SystemType);
-                }
                 else
-                {
                     defaultValue = GetDefaultValueForType(schemaColumnDef.SystemType);
-                }
 
                 _properties[key] = new StepProperty(defaultValue, propertyType, _registry);
             }
-        }
-
-        /// <inheritdoc />
-        public IStepBuilder WithOptionalTarget(int? target)
-        {
-            if (target.HasValue && Supports(WellKnownColumns.ActionTarget))
-            {
-                _properties[WellKnownColumns.ActionTarget] = new StepProperty(target.Value, PropertyType.Enum, _registry);
-            }
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IStepBuilder WithOptionalInitialValue(float? value)
-        {
-            if (value.HasValue) WithOptionalDynamic(WellKnownColumns.InitialValue, value.Value);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IStepBuilder WithOptionalSetpoint(float? value)
-        {
-            if (value.HasValue) WithOptionalDynamic(WellKnownColumns.Setpoint, value.Value);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IStepBuilder WithOptionalSpeed(float? value)
-        {
-            if (value.HasValue) WithOptionalDynamic(WellKnownColumns.Speed, value.Value);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IStepBuilder WithOptionalDuration(float? value)
-        {
-            if (value.HasValue) WithOptionalDynamic(WellKnownColumns.StepDuration, value.Value);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IStepBuilder WithOptionalComment(string? comment)
-        {
-            if (comment != null) WithOptionalDynamic(WellKnownColumns.Comment, comment);
-            return this;
         }
 
         /// <inheritdoc />
@@ -155,16 +113,18 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Failed to set property '{key.Value}': {string.Join(", ", propertyResult.Errors.Select(e => e.Message))}");
+                    throw new InvalidOperationException(
+                        $"Failed to set property '{key.Value}': {string.Join(", ", propertyResult.Errors.Select(e => e.Message))}");
                 }
             }
+
             return this;
         }
 
         /// <inheritdoc />
         public Step Build()
         {
-            return new Step(_properties.ToImmutableDictionary(), _actionDefinition.ActionType, _actionDefinition.DeployDuration);
+            return new Step(_properties.ToImmutableDictionary(), _actionDefinition.DeployDuration);
         }
 
         private object GetDefaultValueForType(Type type)
@@ -183,17 +143,24 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
             switch (element.ValueKind)
             {
                 case JsonValueKind.String:
-                    return targetType == typeof(string) ? element.GetString()! : throw new InvalidCastException($"Cannot convert JSON string to type {targetType.Name}.");
+                    return targetType == typeof(string)
+                        ? element.GetString()!
+                        : throw new InvalidCastException($"Cannot convert JSON string to type {targetType.Name}.");
                 case JsonValueKind.Number:
                     if (targetType == typeof(int)) return element.GetInt32();
                     if (targetType == typeof(float)) return element.GetSingle();
                     throw new InvalidCastException($"Cannot convert JSON number to type {targetType.Name}.");
                 case JsonValueKind.True:
-                    return targetType == typeof(bool) ? true : throw new InvalidCastException($"Cannot convert JSON 'true' to type {targetType.Name}.");
+                    return targetType == typeof(bool)
+                        ? true
+                        : throw new InvalidCastException($"Cannot convert JSON 'true' to type {targetType.Name}.");
                 case JsonValueKind.False:
-                    return targetType == typeof(bool) ? false : throw new InvalidCastException($"Cannot convert JSON 'false' to type {targetType.Name}.");
+                    return targetType == typeof(bool)
+                        ? false
+                        : throw new InvalidCastException($"Cannot convert JSON 'false' to type {targetType.Name}.");
                 default:
-                    throw new InvalidCastException($"Cannot convert JSON value of kind {element.ValueKind} to type {targetType.Name}.");
+                    throw new InvalidCastException(
+                        $"Cannot convert JSON value of kind {element.ValueKind} to type {targetType.Name}.");
             }
         }
     }

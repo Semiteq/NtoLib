@@ -35,7 +35,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         /// Gets a specific column definition by its zero-based index.
         /// </summary>
         /// <param name="index">The index of the column to retrieve.</param>
-        /// <returns>The <see cref="NtoLib.Recipes.MbeTable.Config.TableSchema.ColumnDefinition"/> at the specified index.</returns>
+        /// <returns>The <see cref="NtoLib.Recipes.MbeTable.Config.Models.Schema.ColumnDefinition"/> at the specified index.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
         public ColumnDefinition GetColumnDefinition(int index)
         {
@@ -49,13 +49,24 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Services
         /// Gets a specific column definition by its unique identifier.
         /// </summary>
         /// <param name="key">The identifier of the column to retrieve.</param>
-        /// <returns>The <see cref="NtoLib.Recipes.MbeTable.Config.TableSchema.ColumnDefinition"/> for the specified key.</returns>
+        /// <returns>The <see cref="NtoLib.Recipes.MbeTable.Config.Models.Schema.ColumnDefinition"/> for the specified key.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if no column with the given key is found.</exception>
         public ColumnDefinition GetColumnDefinition(ColumnIdentifier key)
         {
             return _columnsByKey.TryGetValue(key, out var definition) 
                 ? definition
                 : throw new KeyNotFoundException($"Column with key '{key.Value}' not found in schema.");
+        }
+        
+        /// <summary>
+        /// Gets all column definitions that have a specific semantic role.
+        /// </summary>
+        /// <param name="role">The semantic role to search for.</param>
+        /// <returns>An enumeration of column definitions matching the role.</returns>
+        public IEnumerable<ColumnDefinition> GetColumnsByRole(string role)
+        {
+            return _columns.Where(c => 
+                string.Equals(c.Role, role, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

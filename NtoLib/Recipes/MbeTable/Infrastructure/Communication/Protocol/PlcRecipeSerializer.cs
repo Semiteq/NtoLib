@@ -14,7 +14,7 @@ using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Protocol;
 
-public sealed class PlcRecipeSerializerV1 : IPlcRecipeSerializer
+public sealed class PlcRecipeSerializer : IPlcRecipeSerializer
 {
     private readonly IStepFactory _stepFactory;
     private readonly IActionRepository _actionRepository;
@@ -22,7 +22,7 @@ public sealed class PlcRecipeSerializerV1 : IPlcRecipeSerializer
     private readonly ModbusClient.RegisterOrder _registerOrder;
     private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
 
-    public PlcRecipeSerializerV1(
+    public PlcRecipeSerializer(
         IStepFactory stepFactory, 
         IActionRepository actionRepository,
         TableSchema tableSchema, 

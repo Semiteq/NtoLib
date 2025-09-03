@@ -8,7 +8,7 @@ using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Protocol;
 
-public sealed class PlcProtocolV1 : IPlcProtocol
+public sealed class PlcProtocol : IPlcProtocol
 {
     private const int MaxChunkSize = 123;
 
@@ -16,7 +16,7 @@ public sealed class PlcProtocolV1 : IPlcProtocol
     private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
     private readonly ILogger _debugLogger;
 
-    public PlcProtocolV1(IModbusTransport modbusTransport, ICommunicationSettingsProvider communicationSettingsProvider, ILogger debugLogger)
+    public PlcProtocol(IModbusTransport modbusTransport, ICommunicationSettingsProvider communicationSettingsProvider, ILogger debugLogger)
     {
         _modbusTransport = modbusTransport ?? throw new ArgumentNullException(nameof(modbusTransport));
         _communicationSettingsProvider = communicationSettingsProvider ?? throw new ArgumentNullException(nameof(communicationSettingsProvider));
@@ -62,7 +62,10 @@ public sealed class PlcProtocolV1 : IPlcProtocol
         
         var rowCount = rowCountReadingResult.Value[0];
 
-        if (rowCount <= 0)
+        if (rowCount == 0)
+            return Result.Ok((Array.Empty<int>(), Array.Empty<int>(), 0));
+        
+        if (rowCount < 0)
             return Result.Fail<(int[], int[], int)>("Некорректное число строк рецепта в ПЛК.");
 
         var intQty = rowCount * Settings.IntColumNum;

@@ -8,11 +8,14 @@ using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 
-public class ComboboxDataProvider : IComboboxDataProvider
+/// <summary>
+/// Provides data for UI comboboxes (actions and their targets) based on configuration.
+/// </summary>
+public sealed class ComboboxDataProvider : IComboboxDataProvider
 {
     private readonly IActionRepository _actionRepository;
     private readonly IActionTargetProvider _actionTargetProvider;
-    
+
     public ComboboxDataProvider(IActionRepository actionRepository, IActionTargetProvider actionTargetProvider)
     {
         _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
@@ -20,18 +23,19 @@ public class ComboboxDataProvider : IComboboxDataProvider
     }
 
     /// <inheritdoc />
-    public List<KeyValuePair<int, string>>? GetActionTargets(int actionId)
+    public List<KeyValuePair<int, string>> GetActionTargets(int actionId)
     {
-        var actionType = _actionRepository.GetActionById(actionId).ActionType;
-        return actionType switch
-        {
-            ActionType.Heater => _actionTargetProvider.GetHeaterNames().ToList(),
-            ActionType.Shutter => _actionTargetProvider.GetShutterNames().ToList(),
-            ActionType.NitrogenSource => _actionTargetProvider.GetNitrogenSourceNames().ToList(),
-            _ => null
-        };
+        var action = _actionRepository.GetActionById(actionId);
+        var groupName = action.TargetGroup;
+
+        if (string.IsNullOrWhiteSpace(groupName))
+            return new List<KeyValuePair<int, string>>();
+
+        return _actionTargetProvider.TryGetTargets(groupName, out var dict)
+            ? dict.ToList()
+            : new List<KeyValuePair<int, string>>();
     }
-    
-    /// <inheritdoc />   
+
+    /// <inheritdoc />
     public List<KeyValuePair<int, string>> GetActions() => _actionRepository.GetAllActions().ToList();
 }

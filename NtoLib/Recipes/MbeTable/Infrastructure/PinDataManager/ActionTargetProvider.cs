@@ -1,53 +1,63 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
-public class ActionTargetProvider : IActionTargetProvider
+/// <summary>
+/// Default implementation of <see cref="IActionTargetProvider"/> backed by <see cref="MbeTableFB"/>.
+/// </summary>
+public sealed class ActionTargetProvider : IActionTargetProvider
 {
-    private Dictionary<int, string> _shutterNames = new();
-    private Dictionary<int, string> _heaterNames = new();
-    private Dictionary<int, string> _nitrogenSourceNames = new();
     private readonly MbeTableFB _fb;
+
+    // Snapshot of current targets. Outer and inner dictionaries are read-only to callers.
+    private IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> _targetsByGroup =
+        new ReadOnlyDictionary<string, IReadOnlyDictionary<int, string>>(new Dictionary<string, IReadOnlyDictionary<int, string>>(StringComparer.OrdinalIgnoreCase));
 
     public ActionTargetProvider(MbeTableFB fb)
     {
         _fb = fb ?? throw new ArgumentNullException(nameof(fb));
     }
-    
+
     public void RefreshTargets()
     {
-        _shutterNames = _fb.GetShutterNames();
-        _heaterNames = _fb.GetHeaterNames();
-        _nitrogenSourceNames = _fb.GetNitrogenSourceNames();
+        var groups = _fb.GetDefinedGroupNames();
+        var updated = new Dictionary<string, IReadOnlyDictionary<int, string>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var group in groups)
+        {
+            var map = _fb.ReadTargets(group);
+
+            // Defensive copy to a read-only dictionary
+            var readonlyMap = new ReadOnlyDictionary<int, string>(new Dictionary<int, string>(map));
+            updated[group] = readonlyMap;
+        }
+
+        _targetsByGroup = new ReadOnlyDictionary<string, IReadOnlyDictionary<int, string>>(updated);
     }
-    
-    public Dictionary<int, string> GetShutterNames() => _shutterNames;
-    public Dictionary<int, string> GetHeaterNames() => _heaterNames;
-    public Dictionary<int, string> GetNitrogenSourceNames() => _nitrogenSourceNames;
-    
-    public int GetMinimalShutterId()
+
+    public bool TryGetTargets(string groupName, out IReadOnlyDictionary<int, string> targets)
     {
-        if (_shutterNames.Count == 0)
-            throw new InvalidOperationException("Shutter names dictionary is empty.");
-        
-        return _shutterNames.Keys.Min();
+        if (groupName == null) throw new ArgumentNullException(nameof(groupName));
+        return _targetsByGroup.TryGetValue(groupName, out targets!);
     }
-    
-    public int GetMinimalHeaterId()
+
+    public int GetMinimalTargetId(string groupName)
     {
-        if (_heaterNames.Count == 0)
-            throw new InvalidOperationException("Heater names dictionary is empty.");
-        
-        return _heaterNames.Keys.Min();
+        if (!TryGetTargets(groupName, out var targets))
+            throw new InvalidOperationException($"Target group '{groupName}' is not defined.");
+
+        if (targets.Count == 0)
+            throw new InvalidOperationException($"Target group '{groupName}' has no targets configured.");
+
+        return targets.Keys.Min();
     }
-    
-    public int GetMinimalNitrogenSourceId()
-    {
-        if (_nitrogenSourceNames.Count == 0)
-            throw new InvalidOperationException("Nitrogen source names dictionary is empty.");
-        
-        return _nitrogenSourceNames.Keys.Min();
-    }
+
+    public IReadOnlyCollection<string> GetDefinedGroups() => _targetsByGroup.Keys.ToArray();
+
+    public IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> GetAllTargetsSnapshot() => _targetsByGroup;
 }

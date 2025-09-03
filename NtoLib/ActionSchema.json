@@ -2,7 +2,7 @@
     {
         "Id": 10,
         "Name": "CLOSE",
-        "ActionType": "Shutter",
+        "TargetGroup": "Shutters",
         "DeployDuration": "Immediate",
         "Columns": {
             "action-target": {
@@ -16,7 +16,7 @@
     {
         "Id": 20,
         "Name": "OPEN",
-        "ActionType": "Shutter",
+        "TargetGroup": "Shutters",
         "DeployDuration": "Immediate",
         "Columns": {
             "action-target": {
@@ -30,7 +30,7 @@
     {
         "Id": 30,
         "Name": "OPEN TIME",
-        "ActionType": "Shutter",
+        "TargetGroup": "Shutters",
         "DeployDuration": "LongLasting",
         "Columns": {
             "action-target": {
@@ -48,7 +48,7 @@
     {
         "Id": 40,
         "Name": "CLOSE ALL",
-        "ActionType": "Shutter",
+        "TargetGroup": "Shutters",
         "DeployDuration": "Immediate",
         "Columns": {
             "comment": {
@@ -59,7 +59,7 @@
     {
         "Id": 50,
         "Name": "TEMP",
-        "ActionType": "Heater",
+        "TargetGroup": "Heaters",
         "DeployDuration": "Immediate",
         "Columns": {
             "action-target": {
@@ -77,7 +77,7 @@
     {
         "Id": 60,
         "Name": "TEMP + WAIT",
-        "ActionType": "Heater",
+        "TargetGroup": "Heaters",
         "DeployDuration": "LongLasting",
         "Columns": {
             "action-target": {
@@ -99,7 +99,7 @@
     {
         "Id": 70,
         "Name": "TEMP SMOOTH",
-        "ActionType": "Heater",
+        "TargetGroup": "Heaters",
         "DeployDuration": "LongLasting",
         "Columns": {
             "action-target": {
@@ -138,7 +138,7 @@
     {
         "Id": 80,
         "Name": "POWER",
-        "ActionType": "Heater",
+        "TargetGroup": "Heaters",
         "DeployDuration": "Immediate",
         "Columns": {
             "action-target": {
@@ -156,7 +156,7 @@
     {
         "Id": 90,
         "Name": "POWER + WAIT",
-        "ActionType": "Heater",
+        "TargetGroup": "Heaters",
         "DeployDuration": "LongLasting",
         "Columns": {
             "action-target": {
@@ -178,7 +178,7 @@
     {
         "Id": 100,
         "Name": "POWER SMOOTH",
-        "ActionType": "Heater",
+        "TargetGroup": "Heaters",
         "DeployDuration": "LongLasting",
         "Columns": {
             "action-target": {
@@ -202,22 +202,21 @@
             },
             "comment": {
                 "PropertyType": "String"
-            },
-            "CalculationRule": {
-                "Name": "SmoothRampCalculation",
-                "Mapping": {
-                    "Rate": "speed",
-                    "Duration": "step-duration",
-                    "Initial": "initial-value",
-                    "Final": "setpoint"
-                }
+            }
+        },
+        "CalculationRule": {
+            "Name": "SmoothRampCalculation",
+            "Mapping": {
+                "Rate": "speed",
+                "Duration": "step-duration",
+                "Initial": "initial-value",
+                "Final": "setpoint"
             }
         }
     },
     {
         "Id": 110,
         "Name": "WAIT",
-        "ActionType": "Service",
         "DeployDuration": "LongLasting",
         "Columns": {
             "step-duration": {
@@ -232,7 +231,6 @@
     {
         "Id": 120,
         "Name": "FOR",
-        "ActionType": "Service",
         "DeployDuration": "Immediate",
         "Columns": {
             "setpoint": {
@@ -247,7 +245,6 @@
     {
         "Id": 130,
         "Name": "END FOR",
-        "ActionType": "Service",
         "DeployDuration": "Immediate",
         "Columns": {
             "comment": {
@@ -258,7 +255,6 @@
     {
         "Id": 140,
         "Name": "PAUSE",
-        "ActionType": "Service",
         "DeployDuration": "LongLasting",
         "Columns": {
             "comment": {
@@ -269,7 +265,7 @@
     {
         "Id": 150,
         "Name": "N+ RUN",
-        "ActionType": "NitrogenSource",
+        "TargetGroup": "NitrogenSources",
         "DeployDuration": "Immediate",
         "Columns": {
             "action-target": {
@@ -287,7 +283,7 @@
     {
         "Id": 160,
         "Name": "N+ CLOSE",
-        "ActionType": "NitrogenSource",
+        "TargetGroup": "NitrogenSources",
         "DeployDuration": "Immediate",
         "Columns": {
             "comment": {
@@ -298,7 +294,7 @@
     {
         "Id": 170,
         "Name": "N+ VENT",
-        "ActionType": "NitrogenSource",
+        "TargetGroup": "NitrogenSources",
         "DeployDuration": "LongLasting",
         "Columns": {
             "action-target": {

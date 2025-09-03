@@ -22,9 +22,11 @@ namespace NtoLib.Recipes.MbeTable.Config.Models.Actions
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the type of the action (e.g., Heater, Shutter).
+        /// Gets or sets the name of the target hardware group this action operates on.
+        /// The value must correspond to a 'GroupName' in 'PinGroups.json'.
+        /// Can be null if the action does not require a hardware target.
         /// </summary>
-        public ActionType ActionType { get; set; }
+        public string? TargetGroup { get; set; }
 
         /// <summary>
         /// Gets or sets a dictionary defining the columns applicable to this action and their specific properties.

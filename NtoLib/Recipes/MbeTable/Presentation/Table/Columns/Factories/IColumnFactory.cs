@@ -1,5 +1,4 @@
 ﻿using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 

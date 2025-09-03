@@ -34,11 +34,11 @@ public class TableColumnManager
 
         _factories = new Dictionary<string, IColumnFactory>(StringComparer.OrdinalIgnoreCase)
         {
-            { "Property", new PropertyColumnFactory() },
-            { "Text", new TextBoxColumnFactory() },
-            { "ActionComboBox", new ActionComboBoxColumnFactory(dataProvider) },
-            { "ActionTargetComboBox", new ActionTargetComboBoxColumnFactory() },
-            { "StepStartTime", new StepStartTimeColumnFactory() }
+            { "ActionComboBox",         new ActionComboBoxColumnFactory(dataProvider) },
+            { "ActionTargetComboBox",   new ActionTargetComboBoxColumnFactory() },
+            { "PropertyField",          new PropertyColumnFactory() },
+            { "StepStartTimeField",     new StepStartTimeColumnFactory() },
+            { "TextField",              new TextBoxColumnFactory() }
         };
     }
 
@@ -68,22 +68,13 @@ public class TableColumnManager
     {
         _table.AutoGenerateColumns = false;
         _table.Columns.Clear();
-
-        // As requested, PropertyColumnFactory is the default.
-        var defaultFactory = _factories["Property"];
-
+        var defaultFactory = _factories["PropertyField"];
         foreach (var colDef in _tableSchema.GetColumns())
         {
-            // Select the factory based on the ColumnType string from the schema.
-            // If the type is not specified or not found, fall back to the default factory.
-            _factories.TryGetValue(colDef.ColumnType ?? string.Empty, out var factory);
+            _factories.TryGetValue(colDef.ColumnType, out var factory);
             factory ??= defaultFactory;
-
             var column = factory.CreateColumn(colDef, _colorScheme);
-
-            // Set the DataPropertyName to enable automatic data binding.
             column.DataPropertyName = colDef.Key.Value;
-
             _table.Columns.Add(column);
         }
 

@@ -13,6 +13,7 @@ public class JsonColumnDefinition
     public int Index { get; set; }
     public string Code { get; set; } = string.Empty;
     public string UiName { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
     public string SystemType { get; set; } = string.Empty;
     public string ColumnType { get; set; } = string.Empty;
     public int Width { get; set; }

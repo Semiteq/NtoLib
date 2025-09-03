@@ -1,15 +1,16 @@
-﻿// MbeTableServiceConfigurator.cs
+﻿#nullable enable
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Loaders;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
+using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Application.Services;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 using NtoLib.Recipes.MbeTable.Core.Domain.Analysis.Rules;
@@ -32,7 +33,6 @@ using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.StateMachine;
 using NtoLib.Recipes.MbeTable.StateMachine.App;
 using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
@@ -40,54 +40,35 @@ using NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
 
 namespace NtoLib.Recipes.MbeTable.DI;
 
-/// <summary>
-/// Configures the dependency injection container for the MBE Table application.
-/// Follows the composition root pattern to register all application services.
-/// </summary>
 public static class MbeTableServiceConfigurator
 {
-    /// <summary>
-    /// Creates and configures an <see cref="IServiceProvider"/> with all necessary services for the application.
-    /// </summary>
-    /// <param name="mbeTableFb">The mandatory, externally provided MbeTableFB connector instance.</param>
-    /// <returns>A fully configured <see cref="IServiceProvider"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="mbeTableFb"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown if application configuration cannot be loaded.</exception>
     public static IServiceProvider ConfigureServices(MbeTableFB mbeTableFb)
     {
         if (mbeTableFb is null)
-        {
-            throw new ArgumentNullException(nameof(mbeTableFb),
-                "FbConnector cannot be null. Ensure that the VisualFBConnector is properly initialized.");
-        }
+            throw new ArgumentNullException(nameof(mbeTableFb), "FbConnector cannot be null. Ensure that the VisualFBConnector is properly initialized.");
 
         var services = new ServiceCollection();
 
-        // --- External Dependencies & Configuration ---
-        services.AddSingleton(mbeTableFb);
+        var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-        var configurationLoader = new ConfigurationLoader(
-            new TableSchemaLoader(), 
-            new ActionsLoader()
-        );
-        
-        var configResult = configurationLoader.LoadConfiguration(
-            AppDomain.CurrentDomain.BaseDirectory,
-            "TableSchema.json",
-            "ActionSchema.json"
-        );
-
+        var configurationLoader = new ConfigurationLoader(new TableSchemaLoader(), new ActionsLoader());
+        var configResult = configurationLoader.LoadConfiguration(baseDirectory, "TableSchema.json", "ActionSchema.json");
         if (configResult.IsFailed)
         {
-            var errorMessage = $"Failed to load application configuration. Reasons: {string.Join("; ", configResult.Errors.Select(e => e.Message))}";
-            throw new InvalidOperationException(errorMessage);
+            throw new InvalidOperationException(
+                $"Failed to load application configuration. Reasons: {string.Join("; ", configResult.Errors.Select(e => e.Message))}");
         }
-        
         var appConfiguration = configResult.Value;
-        services.AddSingleton(appConfiguration);
-        services.AddSingleton(appConfiguration.Schema); // Register schema separately for convenience.
 
-        // --- Core Services & Managers ---
+        Debug.Print("Schema and action configuration files loaded successfully.");
+
+        ValidateConfigurationConsistency(mbeTableFb, appConfiguration);
+        ValidateActionsColumnsAgainstSchema(appConfiguration);
+
+        services.AddSingleton(mbeTableFb);
+        services.AddSingleton(appConfiguration);
+        services.AddSingleton(appConfiguration.Schema);
+
         services.AddSingleton<IPlcStateMonitor, PlcStateMonitor>();
         services.AddSingleton<IStatusManager, StatusManager>();
         services.AddSingleton<IActionRepository, ActionRepository>();
@@ -100,29 +81,19 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<AppStateUiProjector>();
         services.AddSingleton<IUiDispatcher, ImmediateUiDispatcher>();
         services.AddSingleton<TimerService>();
-
-        // --- Data & Schema ---
         services.AddSingleton<PropertyDefinitionRegistry>();
         services.AddSingleton<IComboboxDataProvider, ComboboxDataProvider>();
         services.AddSingleton<ITableSchemaLoader, TableSchemaLoader>();
-
-        // --- Factories & Maps ---
         services.AddSingleton<IStepFactory, StepFactory>();
-
-        // --- Analysis & Engine ---
         services.AddSingleton<StepCalculationLogic>();
         services.AddSingleton<ICalculationRule, SmoothRampCalculationRule>();
         services.AddSingleton<StepPropertyCalculator>();
         services.AddSingleton<IRecipeLoopValidator, RecipeLoopValidator>();
         services.AddSingleton<IRecipeTimeCalculator, RecipeTimeCalculator>();
         services.AddSingleton<IRecipeEngine, RecipeEngine>();
-
-        // --- ViewModels ---
         services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
         services.AddSingleton<IStepViewModelFactory, StepViewModelFactory>();
         services.AddSingleton<RecipeViewModel>();
-
-        // --- IO ---
         services.AddSingleton<IRecipeFileReader, RecipeFileReader>();
         services.AddSingleton<IRecipeFileWriter, RecipeFileWriter>();
         services.AddSingleton<IRecipeSerializer, RecipeCsvSerializer>();
@@ -131,48 +102,89 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<ICsvHeaderBinder, CsvHeaderBinder>();
         services.AddSingleton<RecipeFileMetadataSerializer>();
         services.AddSingleton<TargetAvailabilityValidator>();
-
-        // --- Modbus ---
-        services.AddSingleton<IPlcRecipeSerializer, PlcRecipeSerializerV1>();
+        services.AddSingleton<IPlcRecipeSerializer, PlcRecipeSerializer>();
         services.AddSingleton<IRecipeComparator, RecipeComparatorV1>();
         services.AddSingleton<IRecipePlcSender, RecipePlcSender>();
         services.AddSingleton<PlcCapacityCalculator>();
-        services.AddSingleton<IPlcProtocol, PlcProtocolV1>();
+        services.AddSingleton<IPlcProtocol, PlcProtocol>();
         services.AddSingleton<IModbusTransport, ModbusTransport>();
-
-        // --- UI Components & Handlers ---
         services.AddSingleton<RecipeEffectsHandler>();
 
-        // A new ColorScheme instance can be created and configured separately.
-        // It can be added to the container if needed.
-        // services.AddSingleton(new ColorScheme());
-
-        // UI dialogs should be created on demand (Transient lifestyle).
         services.AddTransient(_ => new OpenFileDialog
         {
             Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-            AddExtension = true,
-            Multiselect = false,
-            Title = @"Выберите файл рецепта",
-            RestoreDirectory = true
+            AddExtension = true, Multiselect = false, Title = @"Выберите файл рецепта", RestoreDirectory = true
         });
 
         services.AddTransient(_ => new SaveFileDialog
         {
             Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-            AddExtension = true,
-            Title = @"Сохраните файл рецепта",
-            RestoreDirectory = true
+            AddExtension = true, Title = @"Сохраните файл рецепта", RestoreDirectory = true
         });
 
         var serviceProvider = services.BuildServiceProvider();
 
-        // --- Post-configuration steps ---
-        // Some services need to be initialized after they are created.
         var stateMachine = serviceProvider.GetRequiredService<AppStateMachine>();
         var effectsHandler = serviceProvider.GetRequiredService<RecipeEffectsHandler>();
         stateMachine.InitializeEffects(effectsHandler);
 
         return serviceProvider;
+    }
+
+    private static void ValidateConfigurationConsistency(MbeTableFB fb, AppConfiguration appConfig)
+    {
+        var definedHardwareGroups = fb.GetDefinedGroupNames().ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var requiredTargetGroups = appConfig.Actions.Values
+            .Where(a => !string.IsNullOrWhiteSpace(a.TargetGroup))
+            .Where(a => a.Columns?.ContainsKey("action-target") == true)
+            .Select(a => a.TargetGroup!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (var requiredGroup in requiredTargetGroups)
+        {
+            if (!definedHardwareGroups.Contains(requiredGroup))
+            {
+                throw new InvalidOperationException(
+                    "Configuration Error: ActionSchema.json requires a TargetGroup named " +
+                    $"'{requiredGroup}', but no such group is defined in PinGroups.json. " +
+                    "Please check for typos or add the corresponding group to the hardware configuration.");
+            }
+        }
+
+        Debug.Print("Configuration consistency check passed.");
+    }
+
+    /// <summary>
+    /// Ensures every column key mentioned in ActionSchema.json exists in TableSchema.json.
+    /// Fails fast with a detailed message listing invalid keys per action.
+    /// </summary>
+    private static void ValidateActionsColumnsAgainstSchema(AppConfiguration appConfig)
+    {
+        var schemaKeys = appConfig.Schema.GetColumns()
+            .Select(c => c.Key.Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var invalidPerAction = appConfig.Actions.Values
+            .Select(a => new
+            {
+                a.Id,
+                a.Name,
+                Invalid = a.Columns.Keys
+                    .Where(k => !schemaKeys.Contains(k))
+                    .OrderBy(k => k, StringComparer.OrdinalIgnoreCase)
+                    .ToArray()
+            })
+            .Where(x => x.Invalid.Length > 0)
+            .ToArray();
+
+        if (invalidPerAction.Length > 0)
+        {
+            var details = string.Join("; ", invalidPerAction.Select(x =>
+                $"actionId={x.Id} ('{x.Name}') invalid columns: [{string.Join(", ", x.Invalid)}]"));
+            throw new InvalidOperationException(
+                "Configuration Error: Some action columns do not exist in TableSchema.json. " + details);
+        }
     }
 }

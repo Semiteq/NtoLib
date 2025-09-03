@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
@@ -29,21 +28,19 @@ public sealed class CsvStepMapper : ICsvStepMapper
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
         _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
     }
-    
+
     public Result<Step> FromRecord(
         int lineNumber,
         string[] record,
         CsvHeaderBinder.Binding binding)
     {
-        // ActionId is mandatory.
         var actionIdx = FindFileIndex(binding, WellKnownColumns.Action);
         if (actionIdx < 0 || actionIdx >= record.Length)
-            return Result.Fail(new RecipeError("Missing 'Action' column", lineNumber));
+            return Result.Fail(new RecipeError("Missing 'Action' column in the recipe file", lineNumber));
 
         if (!int.TryParse(record[actionIdx], NumberStyles.Integer, CultureInfo.InvariantCulture, out var actionId))
-            return Result.Fail(new RecipeError($"Invalid action id '{record[actionIdx]}'", lineNumber));
+            return Result.Fail(new RecipeError($"Invalid Action ID '{record[actionIdx]}'", lineNumber));
 
-        // Builder with defaults.
         IStepBuilder builder;
         try
         {
@@ -51,54 +48,49 @@ public sealed class CsvStepMapper : ICsvStepMapper
         }
         catch (Exception ex)
         {
-            return Result.Fail(new RecipeError($"Unknown action id '{actionId}'", lineNumber)
+            return Result.Fail(new RecipeError($"Unknown Action ID '{actionId}'", lineNumber)
                 .CausedBy(ex));
         }
-        
-        // Parsing and applying properties.
-        var targetResult = TryParseInt(binding, record, WellKnownColumns.ActionTarget, lineNumber);
-        if (targetResult.IsFailed) return targetResult.ToResult();
-        
-        var initialValueResult = TryParseFloat(binding, record, WellKnownColumns.InitialValue, lineNumber);
-        if (initialValueResult.IsFailed) return initialValueResult.ToResult();
 
-        var setpointResult = TryParseFloat(binding, record, WellKnownColumns.Setpoint, lineNumber);
-        if (setpointResult.IsFailed) return setpointResult.ToResult();
-        
-        var speedResult = TryParseFloat(binding, record, WellKnownColumns.Speed, lineNumber);
-        if (speedResult.IsFailed) return speedResult.ToResult();
-
-        var durationResult = TryParseFloat(binding, record, WellKnownColumns.StepDuration, lineNumber);
-        if (durationResult.IsFailed) return durationResult.ToResult();
-        
-        var comment = TryGetRaw(binding, record, WellKnownColumns.Comment);
-
-        builder = builder
-            .WithOptionalTarget(targetResult.Value)
-            .WithOptionalInitialValue(initialValueResult.Value)
-            .WithOptionalSetpoint(setpointResult.Value)
-            .WithOptionalSpeed(speedResult.Value)
-            .WithOptionalDuration(durationResult.Value)
-            .WithOptionalComment(comment);
-        
-        // Validation of extra fields.
-        var supported = builder.NonNullKeys.ToHashSet();
-        foreach (var (i, value) in EnumerateIndexValues(record))
+        foreach (var kvp in binding.FileIndexToColumn)
         {
-            var key = binding.FileIndexToColumn[i].Key;
-            if (key == WellKnownColumns.Action || key == WellKnownColumns.StepStartTime) continue;
+            var fileIndex = kvp.Key;
+            var columnDef = kvp.Value;
+            var columnKey = columnDef.Key;
             
-            if (!supported.Contains(key) && !string.IsNullOrWhiteSpace(value))
+            if (columnKey == WellKnownColumns.Action || columnKey == WellKnownColumns.StepStartTime)
+                continue;
+            
+            var rawValue = (fileIndex < record.Length) ? record[fileIndex] : string.Empty;
+
+            if (!builder.Supports(columnKey))
             {
-                return Result.Fail(new RecipeError(
-                    $"Column '{key.Value}' is not applicable for action {actionId} but has value '{value}'",
-                    lineNumber));
+                if (!string.IsNullOrWhiteSpace(rawValue))
+                {
+                    var actionName = _actionRepository.GetActionById(actionId).Name;
+                    return Result.Fail(new RecipeError(
+                        $"Column '{columnKey.Value}' is not applicable for action '{actionName}' but contains value '{rawValue}'",
+                        lineNumber));
+                }
+                continue;
             }
+            
+            if (string.IsNullOrWhiteSpace(rawValue))
+                continue;
+            
+            var parseResult = TryParseValue(rawValue, columnDef.SystemType);
+            if (parseResult.IsFailed)
+            {
+                return Result.Fail(new RecipeError($"Invalid value '{rawValue}' in column '{columnKey.Value}'", lineNumber))
+                    .WithErrors(parseResult.Errors);
+            }
+            
+            builder.WithOptionalDynamic(columnKey, parseResult.Value);
         }
 
         return Result.Ok(builder.Build());
     }
-    
+
     public string[] ToRecord(Step step, IReadOnlyList<ColumnDefinition> orderedColumns)
     {
         var result = new string[orderedColumns.Count];
@@ -108,8 +100,8 @@ public sealed class CsvStepMapper : ICsvStepMapper
             if (col.Key == WellKnownColumns.StepStartTime || !step.Properties.TryGetValue(col.Key, out var prop) ||
                 prop is null)
             {
-                result[i] = string.Empty; 
-                continue; 
+                result[i] = string.Empty;
+                continue;
             }
 
             result[i] = prop.GetValueAsObject() switch
@@ -123,56 +115,38 @@ public sealed class CsvStepMapper : ICsvStepMapper
         return result;
     }
     
+    /// <summary>
+    /// Parses a raw string value to the target type specified.
+    /// </summary>
+    private static Result<object> TryParseValue(string rawValue, Type targetType)
+    {
+        if (targetType == typeof(string))
+        {
+            return Result.Ok<object>(rawValue);
+        }
+
+        if (targetType == typeof(int))
+        {
+            return int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue)
+                ? Result.Ok<object>(parsedValue)
+                : Result.Fail("Value must be a valid integer.");
+        }
+
+        if (targetType == typeof(float))
+        {
+            return float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedValue)
+                ? Result.Ok<object>(parsedValue)
+                : Result.Fail("Value must be a valid floating-point number.");
+        }
+        
+        return Result.Fail($"Unsupported type for CSV parsing: {targetType.Name}");
+    }
+    
     private int FindFileIndex(CsvHeaderBinder.Binding binding, ColumnIdentifier key)
     {
-        foreach (var kv in binding.FileIndexToColumn)
-        {
-            if (kv.Value.Key == key) return kv.Key;
-        }
-        return -1;
-    }
-    
-    private Result<int?> TryParseInt(CsvHeaderBinder.Binding binding, string[] record, ColumnIdentifier key, int lineNumber)
-    {
-        var idx = FindFileIndex(binding, key);
-        if (idx < 0 || idx >= record.Length) 
-            return Result.Ok<int?>(null);
-        
-        var raw = record[idx];
-        if (string.IsNullOrWhiteSpace(raw)) 
-            return Result.Ok<int?>(null);
-
-        if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue))
-            return Result.Ok<int?>(parsedValue);
-        
-        return Result.Fail(new RecipeError($"Invalid int '{raw}' in column '{key.Value}'", lineNumber));
-    }
-    
-    private Result<float?> TryParseFloat(CsvHeaderBinder.Binding binding, string[] record, ColumnIdentifier key, int lineNumber)
-    {
-        var idx = FindFileIndex(binding, key);
-        if (idx < 0 || idx >= record.Length) 
-            return Result.Ok<float?>(null);
-        
-        var raw = record[idx];
-        if (string.IsNullOrWhiteSpace(raw)) 
-            return Result.Ok<float?>(null);
-
-        if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedValue))
-            return Result.Ok<float?>(parsedValue);
-        
-        return Result.Fail(new RecipeError($"Invalid float '{raw}' in column '{key.Value}'", lineNumber));
-    }
-    
-    private string? TryGetRaw(CsvHeaderBinder.Binding binding, string[] record, ColumnIdentifier key)
-    {
-        var idx = FindFileIndex(binding, key);
-        if (idx < 0 || idx >= record.Length) return null;
-        return record[idx];
-    }
-
-    private IEnumerable<(int Index, string Value)> EnumerateIndexValues(string[] record)
-    {
-        return record.Select((t, i) => (i, t));
+        // This helper can be optimized if needed, but is clear for now.
+        return binding.FileIndexToColumn
+            .FirstOrDefault(kv => kv.Value.Key == key)
+            .Key;
     }
 }
