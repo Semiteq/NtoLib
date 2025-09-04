@@ -10,7 +10,8 @@ using NtoLib.Recipes.MbeTable.Presentation.Table.Editing;
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Cells;
 
 /// <summary>
-/// Per-row ComboBox cell for ActionTarget. Handles per-row data binding and formatting.
+/// Per-row ComboBox cell for enum-like columns sourced from pin groups.
+/// Fetches options per row and per column using StepViewModel.GetComboItems.
 /// </summary>
 public class ActionTargetComboBoxCell : DataGridViewComboBoxCell
 {
@@ -39,8 +40,9 @@ public class ActionTargetComboBoxCell : DataGridViewComboBoxCell
             return;
 
         var vm = GetRowViewModel(rowIndex);
-        var list = vm?.AvailableActionTargets;
-
+        var columnKey = GetCurrentColumnKey();
+        var list = vm?.GetComboItems(columnKey);
+        
         this.DataSource = list;
         this.DisplayMember = "Value";
         this.ValueMember = "Key";
@@ -86,7 +88,9 @@ public class ActionTargetComboBoxCell : DataGridViewComboBoxCell
             return base.GetFormattedValue(value, rowIndex, ref cellStyle, valueTypeConverter,
                 formattedValueTypeConverter, context);
 
-        if (vm.IsPropertyDisabled(WellKnownColumns.ActionTarget))
+        var columnKey = GetCurrentColumnKey();
+
+        if (vm.IsPropertyDisabled(columnKey))
             return string.Empty;
 
         int? key = null;
@@ -105,7 +109,8 @@ public class ActionTargetComboBoxCell : DataGridViewComboBoxCell
 
         if (key.HasValue)
         {
-            var display = vm.AvailableActionTargets.FirstOrDefault(p => p.Key == key.Value).Value;
+            var list = vm.GetComboItems(columnKey);
+            var display = list.FirstOrDefault(p => p.Key == key.Value).Value;
             if (!string.IsNullOrEmpty(display))
                 return display;
         }
@@ -118,5 +123,13 @@ public class ActionTargetComboBoxCell : DataGridViewComboBoxCell
         if (rowIndex < 0 || DataGridView == null) return null;
         var row = DataGridView.Rows[rowIndex];
         return row?.DataBoundItem as StepViewModel;
+    }
+
+    private ColumnIdentifier GetCurrentColumnKey()
+    {
+        if (DataGridView == null || ColumnIndex < 0)
+            return new ColumnIdentifier(string.Empty);
+        var name = DataGridView.Columns[ColumnIndex].Name;
+        return new ColumnIdentifier(name);
     }
 }

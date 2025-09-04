@@ -11,6 +11,8 @@
         Percent,
         PowerSpeed,
         
+        Pressure,
+        
         String,
         Temp,
         TempSpeed,

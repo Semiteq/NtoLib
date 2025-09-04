@@ -1,20 +1,110 @@
 ﻿[
     {
-        "GroupName": "Shutters",
+        "GroupName": "MocCell",
         "PinGroupId": 200,
         "FirstPinId": 201,
-        "PinQuantity": 32
+        "PinQuantity": 16
     },
     {
-        "GroupName": "Heaters",
+        "GroupName": "LigatureCell",
+        "PinGroupId": 225,
+        "FirstPinId": 226,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "HydrideCell",
+        "PinGroupId": 250,
+        "FirstPinId": 251,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "CompensationLine",
+        "PinGroupId": 275,
+        "FirstPinId": 276,
+        "PinQuantity": 16   
+    },
+    {
+        "GroupName": "GasChoice",
         "PinGroupId": 300,
         "FirstPinId": 301,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "Transport",
+        "PinGroupId": 325,
+        "FirstPinId": 326,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "Fanning",
+        "PinGroupId": 350,
+        "FirstPinId": 351,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "Bypass",
+        "PinGroupId": 375,
+        "FirstPinId": 376,
+        "PinQuantity": 16   
+    },
+    {
+        "GroupName": "TempSensors",
+        "PinGroupId": 400,
+        "FirstPinId": 401,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "PressureSensors",
+        "PinGroupId": 425,
+        "FirstPinId": 426,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "Valves",
+        "PinGroupId": 450,
+        "FirstPinId": 451,
         "PinQuantity": 32
     },
     {
-        "GroupName": "NitrogenSources",
-        "PinGroupId": 400,
-        "FirstPinId": 401,
-        "PinQuantity": 3
+        "GroupName": "Venting",
+        "PinGroupId": 500,
+        "FirstPinId": 501,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "MocState",
+        "PinGroupId": 525,
+        "FirstPinId": 526,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "LigatureState",
+        "PinGroupId": 550,
+        "FirstPinId": 551,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "HydrideState",
+        "PinGroupId": 575,
+        "FirstPinId": 576,
+        "PinQuantity": 16
+    },
+    {
+        "GroupName": "TargetConsumer",
+        "PinGroupId": 600,
+        "FirstPinId": 601,
+        "PinQuantity": 2
+    },
+    {
+        "GroupName": "Gas",
+        "PinGroupId": 625,
+        "FirstPinId": 626,
+        "PinQuantity": 2
+    },
+    {
+        "GroupName": "Nitrogen",
+        "PinGroupId": 650,
+        "FirstPinId": 651,
+        "PinQuantity": 1 
     }
 ]

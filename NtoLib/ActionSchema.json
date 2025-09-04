@@ -1,312 +1,995 @@
 [
     {
-        "Id": 10,
-        "Name": "CLOSE",
-        "TargetGroup": "Shutters",
+        "Id": 1,
+        "Name": "MOC",
         "DeployDuration": "Immediate",
-        "Columns": {
-            "action-target": {
+        "Columns": [ 
+            {
+                "Key": "channel",
+                "GroupName": "MocCell",
                 "PropertyType": "Enum"
             },
-            "comment": {
+            {
+                "Key": "mode",
+                "GroupName": "MocState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "10",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "10",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "pressure",
+                "DefaultValue": "10",
+                "PropertyType": "Pressure"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "10",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
                 "PropertyType": "String"
             }
-        }
+        ]
+    },
+    {
+        "Id": 21,
+        "Name": "Wait_MOC",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "MocCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "MocState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "pressure",
+                "DefaultValue": "0",
+                "PropertyType": "Pressure"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 31,
+        "Name": "Set_Default_MOC",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "MocCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "MocState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "pressure",
+                "DefaultValue": "0",
+                "PropertyType": "Pressure"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 2,
+        "Name": "Ligature",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "LigatureCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "LigatureState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "pressure",
+                "DefaultValue": "0",
+                "PropertyType": "Pressure"
+            },
+            {
+                "Key": "mixing",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "transport",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 22,
+        "Name": "Wait_Ligature",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "LigatureCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "LigatureState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "pressure",
+                "DefaultValue": "0",
+                "PropertyType": "Pressure"
+            },
+            {
+                "Key": "mixing",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "transport",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 32,
+        "Name": "Set_Default_Ligature",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "LigatureCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "LigatureState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "pressure",
+                "DefaultValue": "0",
+                "PropertyType": "Pressure"
+            },
+            {
+                "Key": "mixing",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "transport",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 3,
+        "Name": "Hydride",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "HydrideCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "HydrideState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 23,
+        "Name": "Wait_Hydride",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "HydrideCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "HydrideState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 33,
+        "Name": "Set_Default_Hydride",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "HydrideCell",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "HydrideState",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 4,
+        "Name": "Compensation",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "CompensationLine",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "TargetConsumer",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 24,
+        "Name": "Wait_Compensation",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "CompensationLine",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "TargetConsumer",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 34,
+        "Name": "Set_Default_Compensation",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "CompensationLine",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "TargetConsumer",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Flow"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 8,
+        "Name": "Gas_Choice",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "GasChoice",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "Gas",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 9,
+        "Name": "Butterfly P",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "GasChoice",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Pressure"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 10,
+        "Name": "Butterfly %",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "GasChoice",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 11,
+        "Name": "Inductor T",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "GasChoice",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Temp"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Temp"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 12,
+        "Name": "Inductor P",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "GasChoice",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "final-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 5,
+        "Name": "Transport",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Transport",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "Gas",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 25,
+        "Name": "Wait_Transport",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Transport",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "Gas",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 35,
+        "Name": "Set_Default_Transport",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Transport",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "Gas",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 6,
+        "Name": "Fanning",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Fanning",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "Gas",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 26,
+        "Name": "Wait_Fanning",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Fanning",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "Gas",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 36,
+        "Name": "Set_Default_Fanning",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Fanning",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "mode",
+                "GroupName": "Gas",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 7,
+        "Name": "Bypass",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Bypass",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 27,
+        "Name": "Wait Bypass",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Bypass",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 37,
+        "Name": "Set_Default_Bypass",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Bypass",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Percent"
+            },
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 18,
+        "Name": "Wait_Temp",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "TempSensors",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Temp"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
+    },
+    {
+        "Id": 19,
+        "Name": "Wait_Pressure",
+        "DeployDuration": "Immediate",
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "PressureSensors",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "initial-value",
+                "DefaultValue": "0",
+                "PropertyType": "Temp"
+            },
+            {
+                "Key": "comment",
+                "PropertyType": "String"
+            }
+        ]
     },
     {
         "Id": 20,
-        "Name": "OPEN",
-        "TargetGroup": "Shutters",
-        "DeployDuration": "Immediate",
-        "Columns": {
-            "action-target": {
-                "PropertyType": "Enum"
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 30,
-        "Name": "OPEN TIME",
-        "TargetGroup": "Shutters",
+        "Name": "Wait_Time",
         "DeployDuration": "LongLasting",
-        "Columns": {
-            "action-target": {
-                "PropertyType": "Enum"
+        "Columns": [
+            {
+                "Key": "step-duration",
+                "DefaultValue": "0",
+                "PropertyType": "Time"
             },
-            "setpoint": {
-                "PropertyType": "Time",
-                "DefaultValue": 1.0
-            },
-            "comment": {
+            {
+                "Key": "comment",
                 "PropertyType": "String"
             }
-        }
+        ]
     },
     {
-        "Id": 40,
-        "Name": "CLOSE ALL",
-        "TargetGroup": "Shutters",
+        "Id": 13,
+        "Name": "Open",
         "DeployDuration": "Immediate",
-        "Columns": {
-            "comment": {
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Valves",
+                "PropertyType": "Enum"
+            },
+            {
+                "Key": "comment",
                 "PropertyType": "String"
             }
-        }
+        ]
     },
     {
-        "Id": 50,
-        "Name": "TEMP",
-        "TargetGroup": "Heaters",
+        "Id": 14,
+        "Name": "Close",
         "DeployDuration": "Immediate",
-        "Columns": {
-            "action-target": {
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Valves",
                 "PropertyType": "Enum"
             },
-            "setpoint": {
-                "PropertyType": "Temp",
-                "DefaultValue": 500.0
-            },
-            "comment": {
+            {
+                "Key": "comment",
                 "PropertyType": "String"
             }
-        }
+        ]
     },
     {
-        "Id": 60,
-        "Name": "TEMP + WAIT",
-        "TargetGroup": "Heaters",
-        "DeployDuration": "LongLasting",
-        "Columns": {
-            "action-target": {
-                "PropertyType": "Enum"
-            },
-            "setpoint": {
-                "PropertyType": "Temp",
-                "DefaultValue": 500.0
-            },
-            "step-duration": {
-                "PropertyType": "Time",
-                "DefaultValue": 60.0
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 70,
-        "Name": "TEMP SMOOTH",
-        "TargetGroup": "Heaters",
-        "DeployDuration": "LongLasting",
-        "Columns": {
-            "action-target": {
-                "PropertyType": "Enum"
-            },
-            "initial-value": {
-                "PropertyType": "Temp",
-                "DefaultValue": 500.0
-            },
-            "setpoint": {
-                "PropertyType": "Temp",
-                "DefaultValue": 600.0
-            },
-            "speed": {
-                "PropertyType": "TempSpeed",
-                "DefaultValue": 10.0
-            },
-            "step-duration": {
-                "PropertyType": "Time",
-                "DefaultValue": 600.0
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        },
-        "CalculationRule": {
-            "Name": "SmoothRampCalculation",
-            "Mapping": {
-                "Rate": "speed",
-                "Duration": "step-duration",
-                "Initial": "initial-value",
-                "Final": "setpoint"
-            }
-        }
-    },
-    {
-        "Id": 80,
-        "Name": "POWER",
-        "TargetGroup": "Heaters",
+        "Id": 15,
+        "Name": "Start",
         "DeployDuration": "Immediate",
-        "Columns": {
-            "action-target": {
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Venting",
                 "PropertyType": "Enum"
             },
-            "setpoint": {
-                "PropertyType": "Percent",
-                "DefaultValue": 10.0
-            },
-            "comment": {
+            {
+                "Key": "comment",
                 "PropertyType": "String"
             }
-        }
+        ]
     },
     {
-        "Id": 90,
-        "Name": "POWER + WAIT",
-        "TargetGroup": "Heaters",
-        "DeployDuration": "LongLasting",
-        "Columns": {
-            "action-target": {
-                "PropertyType": "Enum"
-            },
-            "setpoint": {
-                "PropertyType": "Percent",
-                "DefaultValue": 10.0
-            },
-            "step-duration": {
-                "PropertyType": "Time",
-                "DefaultValue": 60.0
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 100,
-        "Name": "POWER SMOOTH",
-        "TargetGroup": "Heaters",
-        "DeployDuration": "LongLasting",
-        "Columns": {
-            "action-target": {
-                "PropertyType": "Enum"
-            },
-            "initial-value": {
-                "PropertyType": "Percent",
-                "DefaultValue": 10.0
-            },
-            "setpoint": {
-                "PropertyType": "Percent",
-                "DefaultValue": 20.0
-            },
-            "speed": {
-                "PropertyType": "PowerSpeed",
-                "DefaultValue": 1.0
-            },
-            "step-duration": {
-                "PropertyType": "Time",
-                "DefaultValue": 600.0
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        },
-        "CalculationRule": {
-            "Name": "SmoothRampCalculation",
-            "Mapping": {
-                "Rate": "speed",
-                "Duration": "step-duration",
-                "Initial": "initial-value",
-                "Final": "setpoint"
-            }
-        }
-    },
-    {
-        "Id": 110,
-        "Name": "WAIT",
-        "DeployDuration": "LongLasting",
-        "Columns": {
-            "step-duration": {
-                "PropertyType": "Time",
-                "DefaultValue": 60.0
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 120,
-        "Name": "FOR",
+        "Id": 16,
+        "Name": "Stop",
         "DeployDuration": "Immediate",
-        "Columns": {
-            "setpoint": {
-                "PropertyType": "Int",
-                "DefaultValue": 1.0
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 130,
-        "Name": "END FOR",
-        "DeployDuration": "Immediate",
-        "Columns": {
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 140,
-        "Name": "PAUSE",
-        "DeployDuration": "LongLasting",
-        "Columns": {
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 150,
-        "Name": "N+ RUN",
-        "TargetGroup": "NitrogenSources",
-        "DeployDuration": "Immediate",
-        "Columns": {
-            "action-target": {
+        "Columns": [
+            {
+                "Key": "channel",
+                "GroupName": "Venting",
                 "PropertyType": "Enum"
             },
-            "setpoint": {
-                "PropertyType": "Flow",
-                "DefaultValue": 10.0
-            },
-            "comment": {
+            {
+                "Key": "comment",
                 "PropertyType": "String"
             }
-        }
-    },
-    {
-        "Id": 160,
-        "Name": "N+ CLOSE",
-        "TargetGroup": "NitrogenSources",
-        "DeployDuration": "Immediate",
-        "Columns": {
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
-    },
-    {
-        "Id": 170,
-        "Name": "N+ VENT",
-        "TargetGroup": "NitrogenSources",
-        "DeployDuration": "LongLasting",
-        "Columns": {
-            "action-target": {
-                "PropertyType": "Enum"
-            },
-            "setpoint": {
-                "PropertyType": "Flow",
-                "DefaultValue": 10.0
-            },
-            "comment": {
-                "PropertyType": "String"
-            }
-        }
+        ]
     }
 ]

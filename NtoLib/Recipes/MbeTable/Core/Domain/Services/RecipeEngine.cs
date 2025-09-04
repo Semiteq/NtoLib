@@ -12,12 +12,10 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Services;
 
-/// <summary>
-/// A stateless service that encapsulates all business logic for recipe manipulation.
-/// </summary>
 public sealed class RecipeEngine : IRecipeEngine
 {
     private readonly IActionRepository _actionRepository;
@@ -84,32 +82,29 @@ public sealed class RecipeEngine : IRecipeEngine
         return Result.Ok(new Recipe(Steps: newSteps));
     }
 
-    /// <summary>
-    /// Creates a new step for a given action and populates its properties with default values.
-    /// Uses configuration-driven TargetGroup instead of enums.
-    /// </summary>
     private Step CreateDefaultStepForAction(int actionId)
     {
         var actionDefinition = _actionRepository.GetActionById(actionId);
         var builder = _stepFactory.ForAction(actionId);
 
-        var groupName = actionDefinition.TargetGroup;
-        if (!string.IsNullOrWhiteSpace(groupName))
+        // For each column that sources its values from a pin group (Enum + GroupName),
+        // set a default (minimal) target id if available.
+        foreach (var col in actionDefinition.Columns)
         {
-            var targetColumns = _tableSchema.GetColumnsByRole("ActionTarget");
-            foreach (var column in targetColumns)
-            {
-                if (!builder.Supports(column.Key)) continue;
+            if (col.PropertyType != PropertyType.Enum) continue;
+            if (string.IsNullOrWhiteSpace(col.GroupName)) continue;
 
-                try
-                {
-                    var defaultTargetId = _actionTargetProvider.GetMinimalTargetId(groupName);
-                    builder.WithOptionalDynamic(column.Key, defaultTargetId);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    _debugLogger.LogException(ex, $"Could not get a default target for TargetGroup '{groupName}'.");
-                }
+            var key = new ColumnIdentifier(col.Key);
+            if (!builder.Supports(key)) continue;
+
+            try
+            {
+                var defaultTargetId = _actionTargetProvider.GetMinimalTargetId(col.GroupName!);
+                builder.WithOptionalDynamic(key, defaultTargetId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _debugLogger.LogException(ex, $"Could not get a default target for column '{col.Key}' in group '{col.GroupName}'.");
             }
         }
 

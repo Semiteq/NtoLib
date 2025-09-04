@@ -18,8 +18,13 @@ public class ActionTargetComboBoxColumnFactory : BaseColumnFactory
     protected override void ConfigureColumn(DataGridViewColumn column, ColumnDefinition colDef, ColorScheme colorScheme)
     {
         if (column is not DataGridViewComboBoxColumn comboColumn) return;
-
+        
+        comboColumn.DisplayMember = "Value";
+        comboColumn.ValueMember = "Key";
+        comboColumn.ValueType = typeof(int?);
+        comboColumn.DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton;
         comboColumn.DisplayStyleForCurrentCellOnly = true;
+        comboColumn.FlatStyle = FlatStyle.Standard;
         comboColumn.MaxDropDownItems = MaxDropDownItems;
     }
 }

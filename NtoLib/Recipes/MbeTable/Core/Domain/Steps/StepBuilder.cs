@@ -11,157 +11,190 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 
-namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps
+namespace NtoLib.Recipes.MbeTable.Core.Domain.Steps;
+
+/// <summary>
+/// Stateful builder to construct a Step for a specific action.
+/// </summary>
+public sealed class StepBuilder : IStepBuilder
 {
-    /// <inheritdoc />
-    public sealed class StepBuilder : IStepBuilder
+    private readonly ActionDefinition _actionDefinition;
+    private readonly PropertyDefinitionRegistry _registry;
+    private readonly TableSchema _schema;
+    private readonly Dictionary<ColumnIdentifier, StepProperty?> _properties;
+    private readonly IReadOnlyCollection<ColumnIdentifier> _applicableColumnKeys;
+    private readonly HashSet<string> _applicableKeysLookup;
+
+    public StepBuilder(ActionDefinition actionDefinition, PropertyDefinitionRegistry registry, TableSchema schema)
     {
-        private readonly ActionDefinition _actionDefinition;
-        private readonly PropertyDefinitionRegistry _registry;
-        private readonly TableSchema _schema;
-        private readonly Dictionary<ColumnIdentifier, StepProperty?> _properties;
-        private readonly IReadOnlyCollection<ColumnIdentifier> _applicableColumnKeys;
+        _actionDefinition = actionDefinition ?? throw new ArgumentNullException(nameof(actionDefinition));
+        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        _schema = schema ?? throw new ArgumentNullException(nameof(schema));
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StepBuilder"/> class for a specific action.
-        /// </summary>
-        /// <param name="actionDefinition">The configuration-driven definition of the action.</param>
-        /// <param name="registry">The registry for property type definitions.</param>
-        /// <param name="schema">The table schema defining all possible columns.</param>
-        public StepBuilder(ActionDefinition actionDefinition, PropertyDefinitionRegistry registry, TableSchema schema)
+        _properties = new Dictionary<ColumnIdentifier, StepProperty?>();
+
+        _applicableColumnKeys = _actionDefinition.Columns
+            .Select(c => new ColumnIdentifier(c.Key))
+            .ToList()
+            .AsReadOnly();
+
+        // Case-insensitive membership check for convenience
+        _applicableKeysLookup = new HashSet<string>(_actionDefinition.Columns.Select(c => c.Key), StringComparer.OrdinalIgnoreCase);
+
+        InitializeStep();
+    }
+
+    public IReadOnlyCollection<ColumnIdentifier> NonNullKeys => _applicableColumnKeys;
+
+    public bool Supports(ColumnIdentifier key)
+    {
+        if (key == WellKnownColumns.Action) return true;
+        return _applicableKeysLookup.Contains(key.Value);
+    }
+
+    public void InitializeStep()
+    {
+        // 1. Initialize all properties from the schema as null (disabled).
+        foreach (var column in _schema.GetColumns())
+            _properties[column.Key] = null;
+
+        // 2. Set the mandatory action property.
+        _properties[WellKnownColumns.Action] = new StepProperty(_actionDefinition.Id, PropertyType.Enum, _registry);
+
+        // 3. Activate properties based on action columns list.
+        foreach (var actionColumn in _actionDefinition.Columns)
         {
-            _actionDefinition = actionDefinition ?? throw new ArgumentNullException(nameof(actionDefinition));
-            _registry = registry ?? throw new ArgumentNullException(nameof(registry));
-            _schema = schema ?? throw new ArgumentNullException(nameof(schema));
+            var key = new ColumnIdentifier(actionColumn.Key);
 
-            _properties = new Dictionary<ColumnIdentifier, StepProperty?>();
-            _applicableColumnKeys = _actionDefinition.Columns.Keys
-                .Select(c => new ColumnIdentifier(c))
-                .ToList()
-                .AsReadOnly();
-
-            InitializeStep();
-        }
-
-        /// <inheritdoc />
-        public IReadOnlyCollection<ColumnIdentifier> NonNullKeys => _applicableColumnKeys;
-
-        /// <inheritdoc />
-        public bool Supports(ColumnIdentifier key)
-        {
-            // The action property itself is always supported.
-            if (key == WellKnownColumns.Action) return true;
-            return _actionDefinition.Columns.ContainsKey(key.Value);
-        }
-
-        /// <inheritdoc />
-        public void InitializeStep()
-        {
-            foreach (var column in _schema.GetColumns())
+            // Validate presence in schema for clearer error than KeyNotFoundException
+            ColumnDefinition schemaColumnDef;
+            try
             {
-                _properties[column.Key] = null;
+                schemaColumnDef = _schema.GetColumnDefinition(key);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new InvalidOperationException(
+                    $"Configuration Error: actionId={_actionDefinition.Id} ('{_actionDefinition.Name}') references column '{key.Value}', " +
+                    "which is not defined in TableSchema.json.");
             }
 
-            _properties[WellKnownColumns.Action] = new StepProperty(_actionDefinition.Id, PropertyType.Enum, _registry);
+            var propertyType = actionColumn.PropertyType;
 
-            foreach (var columnEntry in _actionDefinition.Columns)
+            object defaultValue = actionColumn.DefaultValue.HasValue
+                ? ConvertJsonElement(actionColumn.DefaultValue.Value, schemaColumnDef.SystemType)
+                : GetDefaultValueForType(schemaColumnDef.SystemType);
+
+            _properties[key] = new StepProperty(defaultValue, propertyType, _registry);
+        }
+    }
+
+    public IStepBuilder WithProperty(ColumnIdentifier key, object value, PropertyType type)
+    {
+        _properties[key] = new StepProperty(value, type, _registry);
+        return this;
+    }
+
+    public IStepBuilder WithOptionalDynamic(ColumnIdentifier key, object value)
+    {
+        if (Supports(key) && _properties.TryGetValue(key, out var existingProperty) && existingProperty != null)
+        {
+            var propertyResult = existingProperty.WithValue(value);
+            if (propertyResult.IsSuccess)
             {
-                var key = new ColumnIdentifier(columnEntry.Key);
-                var actionColumnDef = columnEntry.Value;
-
-                ColumnDefinition schemaColumnDef;
-                try
-                {
-                    schemaColumnDef = _schema.GetColumnDefinition(key);
-                }
-                catch (KeyNotFoundException)
-                {
-                    throw new InvalidOperationException(
-                        $"Configuration Error: actionId={_actionDefinition.Id} ('{_actionDefinition.Name}') references column '{key.Value}', " +
-                        "which is not defined in TableSchema.json.");
-                }
-
-                var propertyType = actionColumnDef.PropertyType;
-
-                object defaultValue;
-                if (actionColumnDef.DefaultValue.HasValue)
-                    defaultValue = ConvertJsonElement(actionColumnDef.DefaultValue.Value, schemaColumnDef.SystemType);
-                else
-                    defaultValue = GetDefaultValueForType(schemaColumnDef.SystemType);
-
-                _properties[key] = new StepProperty(defaultValue, propertyType, _registry);
+                _properties[key] = propertyResult.Value;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Failed to set property '{key.Value}': {string.Join(", ", propertyResult.Errors.Select(e => e.Message))}");
             }
         }
+        return this;
+    }
 
-        /// <inheritdoc />
-        public IStepBuilder WithProperty(ColumnIdentifier key, object value, PropertyType type)
-        {
-            _properties[key] = new StepProperty(value, type, _registry);
-            return this;
-        }
+    public Step Build() => new(_properties.ToImmutableDictionary(), _actionDefinition.DeployDuration);
 
-        /// <inheritdoc />
-        public IStepBuilder WithOptionalDynamic(ColumnIdentifier key, object value)
+    private static object GetDefaultValueForType(Type type)
+    {
+        if (type == typeof(string)) return string.Empty;
+        if (type == typeof(float)) return 0f;
+        if (type == typeof(int)) return 0;
+        if (type == typeof(bool)) return false;
+        throw new NotSupportedException($"Default value for type {type.Name} is not supported.");
+    }
+
+    // Updated to handle string defaults like "0" for numeric/bool types
+    private static object ConvertJsonElement(JsonElement element, Type targetType)
+    {
+        switch (element.ValueKind)
         {
-            if (Supports(key) && _properties.TryGetValue(key, out var existingProperty) && existingProperty != null)
+            case JsonValueKind.String:
             {
-                var propertyResult = existingProperty.WithValue(value);
-                if (propertyResult.IsSuccess)
-                {
-                    var newProperty = propertyResult.Value;
-                    _properties[key] = newProperty;
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        $"Failed to set property '{key.Value}': {string.Join(", ", propertyResult.Errors.Select(e => e.Message))}");
-                }
+                var s = element.GetString() ?? string.Empty;
+                return ConvertFromString(s, targetType);
             }
-
-            return this;
-        }
-
-        /// <inheritdoc />
-        public Step Build()
-        {
-            return new Step(_properties.ToImmutableDictionary(), _actionDefinition.DeployDuration);
-        }
-
-        private object GetDefaultValueForType(Type type)
-        {
-            if (type == typeof(string)) return string.Empty;
-            if (type == typeof(float)) return 0f;
-            if (type == typeof(int)) return 0;
-            if (type == typeof(bool)) return false;
-
-            // This should not be reached for supported types.
-            throw new NotSupportedException($"Default value for type {type.Name} is not supported.");
-        }
-
-        private object ConvertJsonElement(JsonElement element, Type targetType)
-        {
-            switch (element.ValueKind)
+            case JsonValueKind.Number:
             {
-                case JsonValueKind.String:
-                    return targetType == typeof(string)
-                        ? element.GetString()!
-                        : throw new InvalidCastException($"Cannot convert JSON string to type {targetType.Name}.");
-                case JsonValueKind.Number:
-                    if (targetType == typeof(int)) return element.GetInt32();
-                    if (targetType == typeof(float)) return element.GetSingle();
-                    throw new InvalidCastException($"Cannot convert JSON number to type {targetType.Name}.");
-                case JsonValueKind.True:
-                    return targetType == typeof(bool)
-                        ? true
-                        : throw new InvalidCastException($"Cannot convert JSON 'true' to type {targetType.Name}.");
-                case JsonValueKind.False:
-                    return targetType == typeof(bool)
-                        ? false
-                        : throw new InvalidCastException($"Cannot convert JSON 'false' to type {targetType.Name}.");
-                default:
-                    throw new InvalidCastException(
-                        $"Cannot convert JSON value of kind {element.ValueKind} to type {targetType.Name}.");
+                if (targetType == typeof(int))
+                {
+                    if (element.TryGetInt32(out var iv)) return iv;
+                    // try via double then cast
+                    if (element.TryGetDouble(out var dv)) return checked((int)dv);
+                }
+                if (targetType == typeof(float))
+                {
+                    if (element.TryGetSingle(out var fv)) return fv;
+                    if (element.TryGetDouble(out var dv)) return (float)dv;
+                }
+                // Fallback to string-based conversion
+                return ConvertFromString(element.ToString(), targetType);
             }
+            case JsonValueKind.True:
+                return ConvertFromString("true", targetType);
+            case JsonValueKind.False:
+                return ConvertFromString("false", targetType);
+            case JsonValueKind.Null:
+                return GetDefaultValueForType(targetType);
+            default:
+                throw new InvalidCastException($"Cannot convert JSON value of kind {element.ValueKind} to type {targetType.Name}.");
         }
+    }
+
+    private static object ConvertFromString(string s, Type targetType)
+    {
+        if (targetType == typeof(string)) return s;
+
+        if (targetType == typeof(int))
+        {
+            if (int.TryParse(s, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var iv))
+                return iv;
+            if (float.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var fv))
+                return checked((int)fv);
+            if (double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var dv))
+                return checked((int)dv);
+            if (bool.TryParse(s, out var bv)) return bv ? 1 : 0;
+        }
+
+        if (targetType == typeof(float))
+        {
+            if (float.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var fv))
+                return fv;
+            if (double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var dv))
+                return (float)dv;
+            if (int.TryParse(s, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var iv))
+                return (float)iv;
+            if (bool.TryParse(s, out var bv)) return bv ? 1f : 0f;
+        }
+
+        if (targetType == typeof(bool))
+        {
+            if (bool.TryParse(s, out var bv)) return bv;
+            if (int.TryParse(s, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var iv))
+                return iv != 0;
+            if (float.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var fv))
+                return Math.Abs(fv) > float.Epsilon;
+        }
+
+        throw new InvalidCastException($"Cannot convert default value '{s}' to type {targetType.Name}.");
     }
 }

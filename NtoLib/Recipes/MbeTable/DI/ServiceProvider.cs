@@ -135,10 +135,11 @@ public static class MbeTableServiceConfigurator
     {
         var definedHardwareGroups = fb.GetDefinedGroupNames().ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        // Collect all column-level TargetGroups
         var requiredTargetGroups = appConfig.Actions.Values
-            .Where(a => !string.IsNullOrWhiteSpace(a.TargetGroup))
-            .Where(a => a.Columns?.ContainsKey("action-target") == true)
-            .Select(a => a.TargetGroup!)
+            .SelectMany(a => a.Columns)
+            .Where(c => !string.IsNullOrWhiteSpace(c.GroupName))
+            .Select(c => c.GroupName!)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
@@ -147,7 +148,7 @@ public static class MbeTableServiceConfigurator
             if (!definedHardwareGroups.Contains(requiredGroup))
             {
                 throw new InvalidOperationException(
-                    "Configuration Error: ActionSchema.json requires a TargetGroup named " +
+                    "Configuration Error: ActionSchema.json requires a GroupName named " +
                     $"'{requiredGroup}', but no such group is defined in PinGroups.json. " +
                     "Please check for typos or add the corresponding group to the hardware configuration.");
             }
@@ -156,10 +157,6 @@ public static class MbeTableServiceConfigurator
         Debug.Print("Configuration consistency check passed.");
     }
 
-    /// <summary>
-    /// Ensures every column key mentioned in ActionSchema.json exists in TableSchema.json.
-    /// Fails fast with a detailed message listing invalid keys per action.
-    /// </summary>
     private static void ValidateActionsColumnsAgainstSchema(AppConfiguration appConfig)
     {
         var schemaKeys = appConfig.Schema.GetColumns()
@@ -171,8 +168,9 @@ public static class MbeTableServiceConfigurator
             {
                 a.Id,
                 a.Name,
-                Invalid = a.Columns.Keys
-                    .Where(k => !schemaKeys.Contains(k))
+                Invalid = a.Columns
+                    .Where(col => !schemaKeys.Contains(col.Key))
+                    .Select(col => col.Key)
                     .OrderBy(k => k, StringComparer.OrdinalIgnoreCase)
                     .ToArray()
             })

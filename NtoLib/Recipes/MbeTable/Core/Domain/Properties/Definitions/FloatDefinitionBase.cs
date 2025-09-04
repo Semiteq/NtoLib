@@ -30,7 +30,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions
             var floatValue = (float)value;
 
             if (floatValue != 0 && (Math.Abs(floatValue) < 0.001 || Math.Abs(floatValue) > 10000))
-                return floatValue.ToString("0.##E+0", CultureInfo.InvariantCulture);
+                return floatValue.ToString("0.##E0", CultureInfo.InvariantCulture);
 
             return floatValue % 1 == 0
                 ? floatValue.ToString("F0", CultureInfo.InvariantCulture)
@@ -40,7 +40,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions
         public virtual (bool Success, object Value) TryParse(string input)
         {
             // Drop all non-chars and replace "," with "."
-            var sanitizedInput = new string(input.Trim().Where(c => char.IsDigit(c) || c == '.' || c == ',').ToArray())
+            var sanitizedInput = new string(input.Trim()
+                    .Where(c => char.IsDigit(c) || c == '.' || c == ',' || c == 'E' || c == 'e' || c == '+' || c == '-')
+                    .ToArray())
                 .Replace(',', '.');
 
             if (float.TryParse(sanitizedInput, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))

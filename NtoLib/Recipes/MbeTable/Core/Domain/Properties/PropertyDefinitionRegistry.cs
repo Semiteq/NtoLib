@@ -18,7 +18,8 @@ public class PropertyDefinitionRegistry
         { PropertyType.String, new StringDefinition() },
         { PropertyType.Temp, new TemperatureDefinition() },
         { PropertyType.TempSpeed, new TempSpeedDefinition() },
-        { PropertyType.Time, new TimeDefinition() }
+        { PropertyType.Time, new TimeDefinition() },
+        { PropertyType.Pressure, new PressureDefinition() }
     };
 
     public IPropertyTypeDefinition GetDefinition(PropertyType type)

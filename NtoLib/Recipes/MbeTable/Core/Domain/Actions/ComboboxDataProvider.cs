@@ -9,7 +9,7 @@ using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 
 /// <summary>
-/// Provides data for UI comboboxes (actions and their targets) based on configuration.
+/// Provides data for UI comboboxes (actions and per-column enum options).
 /// </summary>
 public sealed class ComboboxDataProvider : IComboboxDataProvider
 {
@@ -22,20 +22,18 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
         _actionTargetProvider = actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));
     }
 
-    /// <inheritdoc />
-    public List<KeyValuePair<int, string>> GetActionTargets(int actionId)
+    public List<KeyValuePair<int, string>> GetEnumOptions(int actionId, string columnKey)
     {
         var action = _actionRepository.GetActionById(actionId);
-        var groupName = action.TargetGroup;
+        var column = action.Columns.FirstOrDefault(c => string.Equals(c.Key, columnKey, StringComparison.OrdinalIgnoreCase));
+        if (column is null) return new List<KeyValuePair<int, string>>();
 
-        if (string.IsNullOrWhiteSpace(groupName))
-            return new List<KeyValuePair<int, string>>();
+        if (string.IsNullOrWhiteSpace(column.GroupName)) return new List<KeyValuePair<int, string>>();
 
-        return _actionTargetProvider.TryGetTargets(groupName, out var dict)
+        return _actionTargetProvider.TryGetTargets(column.GroupName!, out var dict)
             ? dict.ToList()
             : new List<KeyValuePair<int, string>>();
     }
 
-    /// <inheritdoc />
     public List<KeyValuePair<int, string>> GetActions() => _actionRepository.GetAllActions().ToList();
 }

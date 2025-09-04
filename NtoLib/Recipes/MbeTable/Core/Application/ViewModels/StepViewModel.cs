@@ -21,22 +21,23 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         private readonly ILogger _debugLogger;
         private readonly float _stepStartTimeSeconds;
 
+        // Provides enum options for a given column (per-action, per-row).
+        private readonly Func<ColumnIdentifier, List<KeyValuePair<int, string>>> _enumOptionsProvider;
+
         public event PropertyChangedEventHandler? PropertyChanged;
-        
-        public List<KeyValuePair<int, string>> AvailableActionTargets { get; }
 
         public StepViewModel(
             Step stepRecord,
             Action<ColumnIdentifier, object> updatePropertyAction,
             TimeSpan startTime,
-            List<KeyValuePair<int, string>>? availableActionTargets,
+            Func<ColumnIdentifier, List<KeyValuePair<int, string>>> enumOptionsProvider,
             ILogger debugLogger)
         {
             _stepRecord = stepRecord ?? throw new ArgumentNullException(nameof(stepRecord));
             _updatePropertyAction = updatePropertyAction ?? throw new ArgumentNullException(nameof(updatePropertyAction));
+            _enumOptionsProvider = enumOptionsProvider ?? throw new ArgumentNullException(nameof(enumOptionsProvider));
             _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
             _stepStartTimeSeconds = (float)startTime.TotalSeconds;
-            AvailableActionTargets = availableActionTargets ?? new List<KeyValuePair<int, string>>();
         }
 
         /// <summary>
@@ -61,7 +62,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                     return null;
                 }
 
-                if (identifier == WellKnownColumns.Action || identifier == WellKnownColumns.ActionTarget)
+                // For Action keep raw value (id). For all others use display value.
+                if (identifier == WellKnownColumns.Action)
                 {
                     return property.GetValueAsObject();
                 }
@@ -76,7 +78,7 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         }
 
         public string? StepStartTime => FormatTime(_stepStartTimeSeconds);
-        
+
         public void SetPropertyValue(ColumnIdentifier identifier, object? value)
         {
             if (value == null) return;
@@ -89,14 +91,30 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
                 _debugLogger.LogException(ex, $"Error setting value for key '{identifier.Value}'");
             }
         }
-        
+
         public StepProperty? GetProperty(ColumnIdentifier identifier)
         {
             _stepRecord.Properties.TryGetValue(identifier, out var property);
             return property;
         }
-        
-        
+
+        /// <summary>
+        /// Returns combobox items (id -> display name) for a specific column of this step.
+        /// Works for any Enum-like column that is bound to a GroupName in ActionSchema.
+        /// </summary>
+        public List<KeyValuePair<int, string>> GetComboItems(ColumnIdentifier key)
+        {
+            try
+            {
+                return _enumOptionsProvider(key);
+            }
+            catch (Exception ex)
+            {
+                _debugLogger.LogException(ex, $"Error getting combo items for key '{key.Value}'");
+                return new List<KeyValuePair<int, string>>();
+            }
+        }
+
         /// <summary>
         /// Determines if a property/cell should be disabled (grayed out and non-editable).
         /// </summary>
@@ -104,9 +122,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels
         {
             return !_stepRecord.Properties.TryGetValue(key, out var property) || property == null;
         }
-        
+
         public bool IsPropertyReadonly(ColumnIdentifier key) => key == WellKnownColumns.StepStartTime;
-        
+
         private string FormatTime(float seconds)
         {
             var time = TimeSpan.FromSeconds(seconds);
