@@ -56,7 +56,7 @@ public sealed class PinMapInitializer : IPinMapInitializer
             {
                 var pinId = group.FirstPinId + i;
                 var pinName = $"{group.GroupName}{i}";
-                groupNode.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), 0d);
+                groupNode.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), "");
             }
 
             snapshot[group.GroupName] = (group.FirstPinId, group.PinQuantity);

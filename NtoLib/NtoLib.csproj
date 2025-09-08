@@ -195,8 +195,10 @@
     <Compile Include="Recipes\MbeTable\Config\Models\Schema\JsonColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Schema\PlcMapping.cs" />
     <Compile Include="Recipes\MbeTable\Config\Models\Schema\WellKnownColumns.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\IRecipeApplicationService.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\Services\IStepViewModelFactory.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\Services\RecipeApplicationService.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\RecipeUpdateResult.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\Services\StepViewModelFactory.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\StepViewModel.cs" />
@@ -296,10 +298,14 @@
     <Compile Include="Recipes\MbeTable\Presentation\Table\Behavior\TableBehaviorManager.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Binding\DynamicBindingList.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Binding\StepPropertyDescriptor.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ActionComboBoxCell.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ActionTargetComboBoxCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\BaseRecipeComboBoxCell.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\PropertyGridCell.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ReadonlyLabelCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionComboBoxColumn.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionTargetComboBoxColumn.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\BaseRecipeComboBoxColumn.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionComboBoxColumnFactory.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionTargetComboBoxColumnFactory.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\BaseColumnFactory.cs" />
@@ -318,6 +324,8 @@
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ButtonStateStyler.cs" />
     <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\DefaultCellStylePalette.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ICellStylePalette.cs" />
     <Compile Include="Recipes\MbeTable\StateMachine\AppStateMachine.cs" />
     <Compile Include="Recipes\MbeTable\StateMachine\App\AppCommand.cs" />
     <Compile Include="Recipes\MbeTable\StateMachine\App\AppEffect.cs" />

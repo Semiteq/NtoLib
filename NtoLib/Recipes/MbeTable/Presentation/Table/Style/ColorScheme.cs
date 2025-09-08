@@ -17,11 +17,11 @@ public record ColorScheme
 
     // --- Properties ---
 
-    // Table background colors
+    // Control/table background
     public Color ControlBackgroundColor { get; init; }
     public Color TableBackgroundColor { get; init; }
 
-    // Table fonts
+    // Fonts
     public Font HeaderFont { get; init; }
     public Font LineFont { get; init; }
     public Font SelectedLineFont { get; init; }
@@ -49,8 +49,13 @@ public record ColorScheme
     // Sizes
     public int LineHeight { get; init; }
 
+    // Status area background
     public Color StatusBgColor { get; init; }
-    
+
+    // Focus (keyboard cursor) outline for the current cell
+    public Color SelectedOutlineColor { get; init; }
+    public int SelectedOutlineThickness { get; init; }
+
     /// <summary>
     /// Creates a ColorScheme with a set of default values.
     /// Used to initialize the static Default instance.
@@ -77,12 +82,16 @@ public record ColorScheme
         SelectedLineBgColor = Color.FromArgb(0, 120, 215);
         PassedLineBgColor = Color.FromArgb(240, 240, 240);
         BlockedBgColor = SystemColors.ControlLight;
-        
+
         ButtonsColor = SystemColors.Control;
         BlockedButtonsColor = Color.FromArgb(170, 170, 170);
 
         LineHeight = 40;
-        
-        ControlBackgroundColor = SystemColors.Control;
+
+        StatusBgColor = SystemColors.ControlLight;
+
+        // Focus outline defaults
+        SelectedOutlineColor = Color.FromArgb(0, 120, 215);
+        SelectedOutlineThickness = 1;
     }
 }

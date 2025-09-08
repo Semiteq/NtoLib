@@ -1,5 +1,4 @@
 ﻿#nullable enable
-namespace NtoLib.Recipes.MbeTable;
 
 using System;
 using System.Collections.Generic;
@@ -12,13 +11,14 @@ using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
-using MasterSCADA.Hlp;
 
 using Microsoft.Extensions.DependencyInjection;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.DI;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+
+namespace NtoLib.Recipes.MbeTable;
 
 [CatID(CatIDs.CATID_OTHER)]
 [Guid("DFB05172-07CD-492C-925E-A091B197D8A8")]
@@ -36,10 +36,8 @@ public class MbeTableFB : VisualFBBase
     [NonSerialized] private IPlcStateMonitor _plcStateMonitor = null!;
     [NonSerialized] private IActionTargetProvider _actionTargetProvider = null!;
     [NonSerialized] private IPlcRecipeStatusProvider _plcRecipeStatusProvider = null!;
-
-    // Runtime snapshot of pin groups loaded from PinGroups.json: GroupName -> (FirstPinId, PinQuantity)
-    [NonSerialized] private Dictionary<string, (int FirstPinId, int PinQuantity)> _pinGroups =
-        new Dictionary<string, (int FirstPinId, int PinQuantity)>(StringComparer.OrdinalIgnoreCase);
+    [NonSerialized] private Dictionary<string, (int FirstPinId, int PinQuantity)> _pinGroups = 
+        new(StringComparer.OrdinalIgnoreCase);
 
     #region Numerical Properties
 
@@ -269,6 +267,8 @@ public class MbeTableFB : VisualFBBase
         _pinGroups = initializer.InitializePinsFromConfig(this);
 
         FirePinSpaceChanged();
+        
+        // Debug logger here not existing yet
         Debug.Print("Pins were created from PinGroups.json (via PinMapInitializer).");
     }
 
@@ -279,7 +279,7 @@ public class MbeTableFB : VisualFBBase
         _serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this);
 
         var debugLogger = _serviceProvider.GetRequiredService<ILogger>();
-        debugLogger.Log("MbeTableFB: Entering Runtime. ServiceProvider created via DI container.");
+        debugLogger.Log("Entering Runtime. ServiceProvider created via DI container.");
 
         _timerService = _serviceProvider.GetRequiredService<TimerService>();
         _plcStateMonitor = _serviceProvider.GetRequiredService<IPlcStateMonitor>();
@@ -289,7 +289,7 @@ public class MbeTableFB : VisualFBBase
         _actionTargetProvider.RefreshTargets();
         _timerService.TimesUpdated += OnTimesUpdated;
 
-        debugLogger.Log("MbeTableFB: Runtime services initialized and event handlers subscribed.");
+        debugLogger.Log("Runtime services initialized and event handlers subscribed.");
     }
 
     private void CleanupServices()
@@ -297,7 +297,7 @@ public class MbeTableFB : VisualFBBase
         if (_serviceProvider == null) return;
 
         var debugLogger = _serviceProvider.GetService<ILogger>();
-        debugLogger?.Log("MbeTableFB: Entering Design mode or Disposing. Cleaning up services.");
+        debugLogger?.Log("Entering Design mode or Disposing. Cleaning up services.");
 
         if (_timerService != null)
             _timerService.TimesUpdated -= OnTimesUpdated;
@@ -330,7 +330,10 @@ public class MbeTableFB : VisualFBBase
 
     private Dictionary<int, string> ReadPinGroup(int firstId, int quantity, string groupNameForDefault)
     {
-        var pinGroup = new Dictionary<int, string>(quantity);
+        // Starting with 1, zero is reserved in PLC.
+        var initialPinOffset = 1; 
+        
+        var pinGroup = new Dictionary<int, string>(quantity + initialPinOffset);
 
         for (var offset = 0; offset < quantity; offset++)
         {
@@ -338,20 +341,15 @@ public class MbeTableFB : VisualFBBase
             string value;
 
             if (GetPinQuality(pinId) == OpcQuality.Good)
-            {
-                var pinValue = GetPinValue<string>(pinId);
-                value = !string.IsNullOrWhiteSpace(pinValue) ? pinValue : $"{groupNameForDefault}{offset}";
-            }
+                value = GetPinValue<string>(pinId);
             else
-            {
-                value = $"{groupNameForDefault}{offset}";
-            }
+                continue;
 
-            pinGroup[offset] = value;
+            pinGroup[offset + initialPinOffset] = value;
         }
 
         return pinGroup;
     }
 
-    private static bool AreFloatsEqual(float a, float b) => Math.Abs(a - b) < 0.01f;
+    private static bool AreFloatsEqual(float a, float b) => Math.Abs(a - b) < 1E-4f;
 }

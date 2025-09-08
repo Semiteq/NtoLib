@@ -1,5 +1,4 @@
 ﻿#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -10,11 +9,6 @@ using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
 
-/// <summary>
-/// Manages the creation and configuration of DataGridView columns based on a table schema.
-/// It acts as an orchestrator, selecting the appropriate column factory based on the
-/// 'ColumnType' specified in the schema definition.
-/// </summary>
 public class TableColumnManager
 {
     private readonly DataGridView _table;
@@ -31,7 +25,6 @@ public class TableColumnManager
         _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema));
         _colorScheme = colorScheme ?? throw new ArgumentNullException(nameof(colorScheme));
 
-
         _factories = new Dictionary<string, IColumnFactory>(StringComparer.OrdinalIgnoreCase)
         {
             { "ActionComboBox",         new ActionComboBoxColumnFactory(dataProvider) },
@@ -42,9 +35,6 @@ public class TableColumnManager
         };
     }
 
-    /// <summary>
-    /// Initializes the visual style of the table headers.
-    /// </summary>
     public void InitializeHeaders()
     {
         _table.ColumnHeadersDefaultCellStyle.Font = _colorScheme.HeaderFont;
@@ -61,9 +51,6 @@ public class TableColumnManager
         _table.EnableHeadersVisualStyles = false;
     }
 
-    /// <summary>
-    /// Clears existing columns and generates new ones based on the table schema.
-    /// </summary>
     public void InitializeTableColumns()
     {
         _table.AutoGenerateColumns = false;
@@ -85,12 +72,9 @@ public class TableColumnManager
         _table.MultiSelect = false;
     }
 
-    /// <summary>
-    /// Clears all rows and sets the template height.
-    /// </summary>
     public void InitializeTableRows()
     {
         _table.Rows.Clear();
-        _table.RowTemplate.Height = _colorScheme.LineFont.Height + 8;
+        _table.RowTemplate.Height = _colorScheme.LineHeight;
     }
 }

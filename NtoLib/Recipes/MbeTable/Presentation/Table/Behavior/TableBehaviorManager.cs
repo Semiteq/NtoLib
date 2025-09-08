@@ -1,69 +1,110 @@
 ﻿#nullable enable
-
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Config;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
+using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 {
     /// <summary>
-    /// Applies visual state and editing rules for table cells and suppresses known data binding glitches.
+    /// The central point of ALL table behavior.
+    ///
+    /// Goals:
+    /// 1. Unified application of colors/fonts (DO NOT mutate cell.Style, only e.CellStyle or custom drawing).
+    /// 2. "Row-level override" for states:
+    ///      - Current (current PLC line)
+    ///      - Passed (past lines)
+    ///    In these rows, ALL cells must be colored uniformly, regardless of the Disabled / ReadOnly statuses of the properties themselves.
+    ///    This is done intentionally, otherwise DataGridView partially caches formatting and some cells (especially text cells) remain "white".
+    /// 3. Custom rendering of ComboBoxes in ReadOnly (remove arrow, flat fill).
+    /// 4. Focus/cursor — draw a neat border on top (SelectedOutline).
+    /// 5. Minimum redrawing: when the current line changes — invalidate only the range.
+    /// 6. Avoid "sticky" styles — do not touch cell.Style (styles are not permanently cached in the DGV internal dictionary).
+    ///
+    /// Why we had to use OnCellPainting:
+    ///  - Standard DataGridView DOES NOT guarantee a repeated call to CellFormatting when the "global state" of a row changes,
+    ///    if the cell value does not change.
+    ///  - Some internal optimizations overwrite BackColor set in e.CellStyle when FullRowSelect is active,
+    ///    or during editing (TextBox gets a system white background).
+    ///  - Therefore, for Current/Passed rows, we take over the entire rendering (background + text + border).
+    ///  - For others — we let the standard mechanism work (e.Paint) and only supplement with a border.
+    ///
+    /// Painting stages:
+    ///   OnCellFormatting:
+    ///       - Get logical state (state manager) or force row-level colors.
+    ///       - Set e.CellStyle.*
+    ///       - Set ReadOnly / DisplayStyle (combo).
+    ///   OnCellPainting:
+    ///       - If the row is Current/Passed (or a combobox in readonly) — manually fill the background (guaranteed).
+    ///       - Otherwise: standard drawing + focus outline.
+    ///
+    /// Important: Any edits that "simplify" this code will almost certainly bring back the bug
+    /// of partially uncolored cells during execution. Do not change without regression tests!
     /// </summary>
     public sealed class TableBehaviorManager : IDisposable
     {
         private readonly DataGridView _table;
         private readonly TableSchema _schema;
         private readonly TableCellStateManager _stateManager;
+        private readonly IPlcRecipeStatusProvider _statusProvider;
         private readonly IStatusManager? _statusManager;
         private readonly ILogger? _debugLogger;
+        private readonly ICellStylePalette _palette;
+        private ColorScheme _colorScheme;
 
         private bool _attached;
         private bool _disposed;
+        private bool _clearedInitialPerCellStyles;
+        private PlcRecipeStatus? _lastStatus;
+
+        // Value for configuring the visibility of elements in ComboBox (passed from TableControl).
+        private readonly Func<int>? _getComboMaxItems; // optional, if dynamic adjustment is needed.
 
         public TableBehaviorManager(
             DataGridView table,
             TableSchema schema,
             TableCellStateManager stateManager,
             IStatusManager? statusManager,
-            ILogger? debugLogger = null)
+            ICellStylePalette palette,
+            ColorScheme colorScheme,
+            IPlcRecipeStatusProvider statusProvider,
+            ILogger? debugLogger = null,
+            Func<int>? getComboMaxItems = null)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _schema = schema ?? throw new ArgumentNullException(nameof(schema));
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
             _statusManager = statusManager;
+            _palette = palette ?? throw new ArgumentNullException(nameof(palette));
+            _colorScheme = colorScheme ?? throw new ArgumentNullException(nameof(colorScheme));
+            _statusProvider = statusProvider ?? throw new ArgumentNullException(nameof(statusProvider));
             _debugLogger = debugLogger;
+            _getComboMaxItems = getComboMaxItems;
 
-            // Auto-detach when the grid is disposed.
             _table.Disposed += OnTableDisposed;
         }
 
-        /// <summary>
-        /// One-time table style configuration.
-        /// </summary>
         public void TableStyleSetup()
         {
             _table.EditMode = DataGridViewEditMode.EditOnEnter;
-            // Disable visual highlight by making selection colors equal to normal colors.
             _table.EnableHeadersVisualStyles = false;
-            var d = _table.DefaultCellStyle;
-            d.SelectionBackColor = d.BackColor;
-            d.SelectionForeColor = d.ForeColor;
-            var rd = _table.RowsDefaultCellStyle;
-            rd.SelectionBackColor = rd.BackColor;
-            rd.SelectionForeColor = rd.ForeColor;
-            var ch = _table.ColumnHeadersDefaultCellStyle;
-            ch.SelectionBackColor = ch.SelectionBackColor;
-            ch.SelectionForeColor = ch.SelectionBackColor;
-            var rh = _table.RowHeadersDefaultCellStyle;
-            rh.SelectionBackColor = rh.SelectionBackColor;
-            rh.SelectionForeColor = rh.SelectionForeColor;
+
+            // "Mute" the standard selection color to avoid conflict with our row-level colors.
+            void Equalize(DataGridViewCellStyle s)
+            {
+                s.SelectionBackColor = s.BackColor;
+                s.SelectionForeColor = s.ForeColor;
+            }
+            Equalize(_table.DefaultCellStyle);
+            Equalize(_table.RowsDefaultCellStyle);
+            Equalize(_table.ColumnHeadersDefaultCellStyle);
+            Equalize(_table.RowHeadersDefaultCellStyle);
         }
 
         public void Attach()
@@ -72,9 +113,15 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
             _table.CellFormatting += OnCellFormatting;
             _table.CellBeginEdit += OnCellBeginEdit;
-            _table.CellPainting += OnCellPainting; // Gray out blocked ActionTarget
-            _table.DataError += OnDataError;       // Suppress ComboBox binding glitches
+            _table.CellPainting += OnCellPainting;
+            _table.DataError += OnDataError;
             _table.RowPostPaint += OnRowPostPaint;
+            _table.SelectionChanged += OnSelectionChanged;
+            _table.DataBindingComplete += OnDataBindingComplete;
+            _table.EditingControlShowing += OnEditingControlShowing;
+
+            _statusProvider.StatusChanged += OnStatusChanged;
+            _lastStatus = _statusProvider.GetStatus();
 
             _attached = true;
         }
@@ -88,14 +135,51 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             _table.CellPainting -= OnCellPainting;
             _table.DataError -= OnDataError;
             _table.RowPostPaint -= OnRowPostPaint;
+            _table.SelectionChanged -= OnSelectionChanged;
+            _table.DataBindingComplete -= OnDataBindingComplete;
+            _table.EditingControlShowing -= OnEditingControlShowing;
 
+            _statusProvider.StatusChanged -= OnStatusChanged;
             _attached = false;
         }
 
         private void OnTableDisposed(object? sender, EventArgs e)
         {
-            // Grid is going away — make sure we unhook.
-            try { Detach(); } catch { /* ignore */ }
+            try { Detach(); } catch { }
+        }
+
+        public void RefreshTheme(ColorScheme? schemeOverride = null)
+        {
+            if (schemeOverride != null)
+                _colorScheme = schemeOverride;
+            TableStyleSetup();
+            try { _table.Invalidate(true); } catch { }
+        }
+
+        private void OnDataBindingComplete(object? sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            // Clear potentially outdated per-cell styles once, so they don't "burn" after data changes.
+            if (_clearedInitialPerCellStyles) return;
+            _clearedInitialPerCellStyles = true;
+            try
+            {
+                foreach (DataGridViewRow row in _table.Rows)
+                    foreach (DataGridViewCell cell in row.Cells)
+                        if (cell.HasStyle)
+                            cell.Style = new DataGridViewCellStyle();
+            }
+            catch { }
+        }
+
+        private void OnSelectionChanged(object? sender, EventArgs e)
+        {
+            // Update the focus outline only for the current cell.
+            try
+            {
+                var cur = _table.CurrentCell;
+                if (cur != null) _table.InvalidateCell(cur);
+            }
+            catch { }
         }
 
         private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
@@ -105,46 +189,43 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             var row = grid.Rows[e.RowIndex];
             if (row.DataBoundItem is not StepViewModel vm) return;
 
-            var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            var cellState = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
+            // Get global PLC status (whether the recipe is active and the current line).
+            var status = _statusProvider.GetStatus();
+            bool rowPassed = e.RowIndex < status.CurrentLine;
+            bool rowCurrent = e.RowIndex == status.CurrentLine;
 
-            // Apply base style
-            e.CellStyle.Font = cellState.Font;
-            e.CellStyle.ForeColor = cellState.ForeColor;
-            e.CellStyle.BackColor = cellState.BackColor;
-            // Force selection colors identical (disable highlight)
-            e.CellStyle.SelectionBackColor = cellState.BackColor;
-            e.CellStyle.SelectionForeColor = cellState.ForeColor;
+            CellStatusDescription visual;
 
-            // Fine-grained update only if differs
+            if (rowPassed || rowCurrent)
+            {
+                // Row-level override: ALL cells in the row — one color (Passed/Current)
+                var forcedState = rowCurrent ? TableCellState.Current : TableCellState.Passed;
+                visual = _palette.Resolve(forcedState) with { IsReadonly = true };
+            }
+            else
+            {
+                var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
+                visual = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
+            }
+
+            // Apply only e.CellStyle — NOT cell.Style (otherwise the style will "stick" after Action / VM changes).
+            e.CellStyle.Font = visual.Font;
+            e.CellStyle.ForeColor = visual.ForeColor;
+            e.CellStyle.BackColor = visual.BackColor;
+            e.CellStyle.SelectionBackColor = visual.BackColor;
+            e.CellStyle.SelectionForeColor = visual.ForeColor;
+
             var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
-            var s = cell.Style;
-            bool changed = false;
-
-            if (!Equals(s.Font, cellState.Font)) { s.Font = cellState.Font; changed = true; }
-            if (s.ForeColor != cellState.ForeColor) { s.ForeColor = cellState.ForeColor; changed = true; }
-            if (s.BackColor != cellState.BackColor) { s.BackColor = cellState.BackColor; changed = true; }
-            if (s.SelectionBackColor != cellState.BackColor) { s.SelectionBackColor = cellState.BackColor; changed = true; }
-            if (s.SelectionForeColor != cellState.ForeColor) { s.SelectionForeColor = cellState.ForeColor; changed = true; }
-
-            if (changed)
-                cell.Style = s;
-
-            if (cell.ReadOnly != cellState.IsReadonly)
-                cell.ReadOnly = cellState.IsReadonly;
+            if (cell.ReadOnly != visual.IsReadonly)
+                cell.ReadOnly = visual.IsReadonly;
 
             if (cell is DataGridViewComboBoxCell comboCell)
             {
-                var isDisabled = vm.IsPropertyDisabled(columnKey);
-                var desired = (cellState.IsReadonly || isDisabled)
+                var desired = visual.IsReadonly
                     ? DataGridViewComboBoxDisplayStyle.Nothing
                     : DataGridViewComboBoxDisplayStyle.DropDownButton;
-
                 if (comboCell.DisplayStyle != desired)
-                {
                     comboCell.DisplayStyle = desired;
-                    _debugLogger?.Log($"Updated row:{e.RowIndex} column:{columnKey.Value} readonly={cellState.IsReadonly}");
-                }
             }
         }
 
@@ -153,101 +234,228 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
 
             var grid = (DataGridView)sender!;
-            var row = grid.Rows[e.RowIndex];
-            if (row.DataBoundItem is not StepViewModel stepViewModel) return;
+            if (grid.Rows[e.RowIndex].DataBoundItem is not StepViewModel vm)
+                return;
+
+            var status = _statusProvider.GetStatus();
+            bool rowPassed = e.RowIndex < status.CurrentLine;
+            bool rowCurrent = e.RowIndex == status.CurrentLine;
 
             var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            if (columnKey != WellKnownColumns.ActionTarget) return;
+            var cellVisual = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
 
-            var state = _stateManager.GetStateForCell(stepViewModel, columnKey, e.RowIndex);
-            if (!state.IsReadonly) return;
+            bool forceRowStyle = rowPassed || rowCurrent;
+            CellStatusDescription rowVisual = cellVisual;
 
-            using (var back = new SolidBrush(state.BackColor))
+            if (forceRowStyle)
             {
-                e.Graphics.FillRectangle(back, e.CellBounds);
+                // Force again — even if someone changed it in Formatting.
+                var forcedState = rowCurrent ? TableCellState.Current : TableCellState.Passed;
+                rowVisual = _palette.Resolve(forcedState) with { IsReadonly = true };
             }
 
-            e.Paint(e.CellBounds, DataGridViewPaintParts.Border);
+            bool isCombo =
+                grid.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn ||
+                grid.Rows[e.RowIndex].Cells[e.ColumnIndex] is DataGridViewComboBoxCell;
 
-            var text = e.FormattedValue?.ToString() ?? string.Empty;
-            var textRect = Rectangle.Inflate(e.CellBounds, -4, -2);
-            var font = state.Font ?? grid.Font;
+            bool customComboReadonly = isCombo && rowVisual.IsReadonly;
 
-            TextRenderer.DrawText(
-                e.Graphics,
-                text,
-                font,
-                textRect,
-                state.ForeColor,
-                state.BackColor,
-                TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.Left);
+            // Custom drawing is needed:
+            // 1) For Current/Passed rows (forceRowStyle)
+            // 2) For any ComboBox in readonly (arrow removed, fill background ourselves)
+            if (forceRowStyle || customComboReadonly)
+            {
+                e.Handled = true;
 
+                using (var back = new SolidBrush(rowVisual.BackColor))
+                    e.Graphics.FillRectangle(back, e.CellBounds);
+
+                e.Paint(e.CellBounds, DataGridViewPaintParts.Border);
+
+                var text = e.FormattedValue?.ToString() ?? string.Empty;
+                var rect = Rectangle.Inflate(e.CellBounds, -4, -2);
+
+                TextRenderer.DrawText(
+                    e.Graphics,
+                    text,
+                    rowVisual.Font ?? grid.Font,
+                    rect,
+                    rowVisual.ForeColor,
+                    rowVisual.BackColor,
+                    TextFormatFlags.Left |
+                    TextFormatFlags.VerticalCenter |
+                    TextFormatFlags.EndEllipsis |
+                    TextFormatFlags.NoPrefix);
+
+                DrawFocusOutlineIfCurrent(grid, e);
+                return;
+            }
+
+            // Normal rows: let the standard logic draw the content,
+            // then draw the focus outline on top.
+            e.Paint(e.ClipBounds, e.PaintParts);
+            DrawFocusOutlineIfCurrent(grid, e);
             e.Handled = true;
+        }
+
+        private void DrawFocusOutlineIfCurrent(DataGridView grid, DataGridViewCellPaintingEventArgs e)
+        {
+            var cur = grid.CurrentCell;
+            if (cur == null || cur.RowIndex != e.RowIndex || cur.ColumnIndex != e.ColumnIndex) return;
+
+            using var pen = new Pen(_colorScheme.SelectedOutlineColor, Math.Max(1, _colorScheme.SelectedOutlineThickness));
+            var rect = Rectangle.Inflate(e.CellBounds, -1, -1);
+            e.Graphics.DrawRectangle(pen, rect);
+        }
+
+        private void OnEditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            // Apply runtime correction for ComboBox (MaxDropDownItems / DropDownHeight),
+            // and synchronize the colors of the TextBox editor.
+            if (_table.CurrentCell is null) return;
+
+            // Apply styles to TextBox (otherwise white background)
+            if (e.Control is DataGridViewTextBoxEditingControl tb)
+            {
+                var style = _table.CurrentCell.InheritedStyle;
+                try
+                {
+                    tb.BackColor = style.BackColor;
+                    tb.ForeColor = style.ForeColor;
+                    tb.Font = style.Font;
+                }
+                catch { }
+            }
+
+            if (e.Control is ComboBox cb)
+            {
+                try
+                {
+                    int desired = _getComboMaxItems?.Invoke() ?? cb.MaxDropDownItems;
+                    if (desired <= 0) desired = 1;
+
+                    // The number of actual items in the current combo — limiter.
+                    int actual = cb.Items.Count;
+                    int visible = Math.Min(desired, actual);
+
+                    cb.MaxDropDownItems = visible;
+                    cb.IntegralHeight = false;
+
+                    // Forcefully set the list height:
+                    if (cb.ItemHeight > 0)
+                    {
+                        // +2 or + SystemInformation.VerticalScrollBarWidth / padding as desired
+                        int extra = 2;
+                        cb.DropDownHeight = cb.ItemHeight * visible + extra;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _debugLogger?.Log($"ComboBox MaxDropDownItems adjust failed: {ex.Message}");
+                }
+            }
         }
 
         private void OnDataError(object? sender, DataGridViewDataErrorEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
 
-            var colKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            if (colKey == WellKnownColumns.ActionTarget)
+            var grid = (DataGridView)sender!;
+            var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+            if (cell is DataGridViewComboBoxCell || grid.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn)
             {
-                // Suppress common "value is not valid" when the list changes under the cell.
                 e.ThrowException = false;
-                e.Cancel = true; 
-                _debugLogger?.Log($"ActionTarget r{e.RowIndex} data error suppressed: {e.Exception?.Message}");
+                e.Cancel = true;
+                _debugLogger?.Log($"ComboBox data error suppressed at r{e.RowIndex} c{e.ColumnIndex}: {e.Exception?.Message}");
                 return;
             }
-            
+
             if (e.Exception is FormatException)
             {
-                // Показываем пользователю сообщение об ошибке, которое мы сгенерировали в ядре.
-                // Вместо MessageBox используем StatusManager для лучшей интеграции.
                 _statusManager?.WriteStatusMessage(e.Exception.Message, StatusMessage.Error);
-
-                // Не даем DataGridView показывать собственное окно с ошибкой.
-                e.ThrowException = false; 
+                e.ThrowException = false;
+                e.Cancel = true;
             }
         }
 
         private void OnCellBeginEdit(object? sender, DataGridViewCellCancelEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-            var grid = (DataGridView)sender!;
-            var row = grid.Rows[e.RowIndex];
-            if (row.DataBoundItem is not StepViewModel stepViewModel) return;
+            if (_table.Rows[e.RowIndex].DataBoundItem is not StepViewModel vm) return;
 
             var key = _schema.GetColumnDefinition(e.ColumnIndex).Key;
-            var state = _stateManager.GetStateForCell(stepViewModel, key, e.RowIndex);
-
-            if (state.IsReadonly)
+            var visual = _stateManager.GetStateForCell(vm, key, e.RowIndex);
+            if (visual.IsReadonly)
                 e.Cancel = true;
         }
 
         private void OnRowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
         {
+            // Row numbering in the header.
             var grid = (DataGridView)sender!;
-            var indexText = (e.RowIndex + 1).ToString();
-
+            var text = (e.RowIndex + 1).ToString();
             var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
 
             var style = grid.RowHeadersDefaultCellStyle;
             var font = style?.Font ?? grid.Font;
             var fore = style?.ForeColor.IsEmpty == false ? style.ForeColor : grid.ForeColor;
 
-            var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;
+            TextRenderer.DrawText(
+                e.Graphics,
+                text,
+                font,
+                headerBounds,
+                fore,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix);
+        }
 
-            TextRenderer.DrawText(e.Graphics, indexText, font, headerBounds, fore, flags);
+        private void OnStatusChanged(PlcRecipeStatus status)
+        {
+            try
+            {
+                var prev = _lastStatus;
+                _lastStatus = status;
+
+                if (prev == null || _table.Rows.Count == 0)
+                {
+                    _table.Invalidate();
+                    return;
+                }
+
+                if (prev.IsRecipeActive != status.IsRecipeActive)
+                {
+                    _table.Invalidate();
+                    return;
+                }
+
+                var oldLine = prev.CurrentLine;
+                var newLine = status.CurrentLine;
+                if (oldLine == newLine) return;
+
+                int rowCount = _table.Rows.Count;
+                int from = Math.Min(oldLine, newLine);
+                int to = Math.Max(oldLine, newLine);
+                from = Math.Max(0, from);
+                to = Math.Min(rowCount - 1, to);
+
+                for (int i = from; i <= to; i++)
+                {
+                    try { _table.InvalidateRow(i); } catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                _debugLogger?.LogException(ex, "OnStatusChanged invalidate failed");
+            }
         }
 
         public void Dispose()
         {
             if (_disposed) return;
             _disposed = true;
-
-            try { Detach(); } catch { /* ignore */ }
-
-            try { _table.Disposed -= OnTableDisposed; } catch { /* ignore */ }
+            try { Detach(); } catch { }
+            try { _table.Disposed -= OnTableDisposed; } catch { }
         }
     }
 }

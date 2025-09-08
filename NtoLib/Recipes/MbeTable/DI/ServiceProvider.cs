@@ -33,6 +33,7 @@ using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Validation;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 using NtoLib.Recipes.MbeTable.StateMachine;
 using NtoLib.Recipes.MbeTable.StateMachine.App;
 using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
@@ -60,6 +61,7 @@ public static class MbeTableServiceConfigurator
         }
         var appConfiguration = configResult.Value;
 
+        // Debug logger here not existing yet
         Debug.Print("Schema and action configuration files loaded successfully.");
 
         ValidateConfigurationConsistency(mbeTableFb, appConfiguration);
@@ -83,6 +85,10 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<TimerService>();
         services.AddSingleton<PropertyDefinitionRegistry>();
         services.AddSingleton<IComboboxDataProvider, ComboboxDataProvider>();
+
+        // Palette for mapping states to styles
+        services.AddSingleton<ICellStylePalette, DefaultCellStylePalette>();
+
         services.AddSingleton<ITableSchemaLoader, TableSchemaLoader>();
         services.AddSingleton<IStepFactory, StepFactory>();
         services.AddSingleton<StepCalculationLogic>();
@@ -154,6 +160,7 @@ public static class MbeTableServiceConfigurator
             }
         }
 
+        // Debug logger here not existing yet
         Debug.Print("Configuration consistency check passed.");
     }
 

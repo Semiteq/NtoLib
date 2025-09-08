@@ -3,8 +3,8 @@
 using System;
 using System.Linq;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Core.Application.Services;
 using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Core.Application.Services;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
@@ -25,6 +25,9 @@ namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 /// </summary>
 public sealed class RecipeViewModel
 {
+    /// <summary>
+    /// Gets the collection of StepViewModels for data binding.
+    /// </summary>
     public DynamicBindingList ViewModels { get; }
 
     private readonly IRecipeApplicationService _recipeService;
@@ -37,9 +40,19 @@ public sealed class RecipeViewModel
     private IUiDispatcher _uiDispatcher = new ImmediateUiDispatcher();
     private Recipe _recipe;
 
+    /// <summary>
+    /// Occurs when a view model update operation starts.
+    /// </summary>
     public event Action? OnUpdateStart;
+
+    /// <summary>
+    /// Occurs when a view model update operation ends.
+    /// </summary>
     public event Action? OnUpdateEnd;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RecipeViewModel"/> class.
+    /// </summary>
     public RecipeViewModel(
         IRecipeApplicationService recipeService,
         IStepViewModelFactory stepViewModelFactory,
@@ -57,46 +70,57 @@ public sealed class RecipeViewModel
         _debugLogger = debugLogger;
 
         ViewModels = new DynamicBindingList(tableSchema);
-
-        var initialResult = _recipeService.CreateEmpty();
-        _recipe = initialResult.Recipe;
+        _recipe = _recipeService.CreateEmpty().Recipe;
     }
 
+    /// <summary>
+    /// Sets the UI dispatcher to marshal calls to the UI thread.
+    /// </summary>
+    /// <param name="uiDispatcher">The UI dispatcher implementation.</param>
     public void SetUiDispatcher(IUiDispatcher uiDispatcher)
     {
         _uiDispatcher = uiDispatcher ?? new ImmediateUiDispatcher();
-        // Populate with initial empty recipe state
         var initialResult = _recipeService.CreateEmpty();
         UpdateStateAndViewModels(initialResult);
     }
 
-    #region Public Commands
-
+    /// <summary>
+    /// Gets the current, immutable recipe domain object.
+    /// </summary>
+    /// <returns>The current <see cref="Recipe"/>.</returns>
     public Recipe GetCurrentRecipe() => _recipe;
 
+    /// <summary>
+    /// Replaces the entire recipe with a new one, e.g., from a file.
+    /// </summary>
+    /// <param name="newRecipe">The new recipe to display.</param>
     public void SetRecipe(Recipe newRecipe)
     {
-        // Here we should re-analyze the recipe to get consistent state
-        var newResult = new RecipeUpdateResult(newRecipe, new Domain.Analysis.LoopValidationResult(),
-            new Domain.Analysis.RecipeTimeAnalysis()); // Simplified for now, better to call a service method
+        var newResult = _recipeService.AnalyzeRecipe(newRecipe);
         UpdateStateAndViewModels(newResult);
     }
 
+    /// <summary>
+    /// Adds a new default step at the specified index.
+    /// </summary>
+    /// <param name="rowIndex">The zero-based index at which to insert the new step.</param>
     public void AddNewStep(int rowIndex)
     {
-        rowIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
-        var result = _recipeService.AddDefaultStep(_recipe, rowIndex);
-        UpdateStateAndViewModels(result, new StructuralChange(ChangeType.Add, rowIndex));
+        var clampedIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
+        var result = _recipeService.AddDefaultStep(_recipe, clampedIndex);
+        UpdateStateAndViewModels(result, new StructuralChange(ChangeType.Add, clampedIndex));
     }
 
+    /// <summary>
+    /// Removes the step at the specified index.
+    /// </summary>
+    /// <param name="rowIndex">The zero-based index of the step to remove.</param>
     public void RemoveStep(int rowIndex)
     {
         if (rowIndex < 0 || rowIndex >= ViewModels.Count) return;
         var result = _recipeService.RemoveStep(_recipe, rowIndex);
         UpdateStateAndViewModels(result, new StructuralChange(ChangeType.Remove, rowIndex));
     }
-
-    #endregion
 
     private void OnStepPropertyChanged(int rowIndex, ColumnIdentifier key, object value)
     {
@@ -111,17 +135,7 @@ public sealed class RecipeViewModel
                 $"Step property update failed. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'. Error: {error.Message}");
             _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
 
-            _uiDispatcher.Post(() =>
-            {
-                try
-                {
-                    ViewModels.ResetItem(rowIndex);
-                }
-                catch
-                {
-                    /* ignore */
-                }
-            });
+            _uiDispatcher.Post(() => ViewModels.ResetItem(rowIndex));
             return;
         }
 
@@ -131,24 +145,22 @@ public sealed class RecipeViewModel
 
     private void UpdateStateAndViewModels(RecipeUpdateResult result, StructuralChange? change = null)
     {
-        // Update domain state
         _recipe = result.Recipe;
         _timerService.SetTimeAnalysisData(result.TimeResult);
         _appStateMachine.Dispatch(new VmLoopValidChanged(result.LoopResult.IsValid));
 
-        // Perform all ViewModels mutations on UI thread
         _uiDispatcher.Post(() =>
         {
             OnUpdateStart?.Invoke();
             try
             {
-                if (change == null || (ViewModels.Count != _recipe.Steps.Count && change.Type != ChangeType.Add))
+                if (change == null)
                 {
                     RebuildViewModelList(result);
                 }
                 else
                 {
-                    ApplyPartialUpdate(result, change);
+                    ApplyIncrementalUpdate(result, change);
                 }
             }
             finally
@@ -165,9 +177,9 @@ public sealed class RecipeViewModel
         try
         {
             ViewModels.Clear();
-            foreach (var (step, index) in result.Recipe.Steps.Select((s, i) => (s, i)))
+            for (var i = 0; i < result.Recipe.Steps.Count; i++)
             {
-                ViewModels.Add(_stepViewModelFactory.Create(step, index, result, OnStepPropertyChanged));
+                ViewModels.Add(_stepViewModelFactory.Create(result.Recipe.Steps[i], i, result, OnStepPropertyChanged));
             }
         }
         finally
@@ -175,58 +187,50 @@ public sealed class RecipeViewModel
             ViewModels.RaiseListChangedEvents = true;
             ViewModels.ResetBindings();
         }
-
-        _debugLogger.Log("ViewModel was repopulated.");
+        _debugLogger.Log("ViewModel list was fully rebuilt.");
     }
 
-    private void ApplyPartialUpdate(RecipeUpdateResult result, StructuralChange change)
+    private void ApplyIncrementalUpdate(RecipeUpdateResult result, StructuralChange change)
     {
-        switch (change.Type)
+        // For structural changes, we perform the operation directly on the ViewModel.
+        // The BindingList will efficiently notify the DataGridView to add/remove a single row.
+        if (change.Type == ChangeType.Add)
         {
-            case ChangeType.Add:
-                var newVm = _stepViewModelFactory.Create(result.Recipe.Steps[change.Index], change.Index, result,
-                    OnStepPropertyChanged);
-                ViewModels.Insert(change.Index, newVm);
-                UpdateSubsequentViewModels(result, change.Index + 1);
-                break;
-            case ChangeType.Remove:
-                ViewModels.RemoveAt(change.Index);
-                UpdateSubsequentViewModels(result, change.Index);
-                break;
-            case ChangeType.Update:
-                // Only need to update the affected and subsequent items
-                UpdateSubsequentViewModels(result, change.Index);
-                break;
+            var newVm = _stepViewModelFactory.Create(result.Recipe.Steps[change.Index], change.Index, result, OnStepPropertyChanged);
+            ViewModels.Insert(change.Index, newVm);
         }
-    }
+        else if (change.Type == ChangeType.Remove)
+        {
+            ViewModels.RemoveAt(change.Index);
+        }
 
-    private void UpdateSubsequentViewModels(RecipeUpdateResult result, int startIndex)
-    {
+        // After any change (Add, Remove, or Update), the data in subsequent rows is stale.
+        // We must update their internal state and then notify the UI to refresh only those rows.
         ViewModels.RaiseListChangedEvents = false;
         try
         {
-            for (int i = startIndex; i < result.Recipe.Steps.Count; i++)
+            int startIndex = change.Index;
+            for (int i = startIndex; i < ViewModels.Count; i++)
             {
-                ViewModels[i] = _stepViewModelFactory.Create(result.Recipe.Steps[i], i, result, OnStepPropertyChanged);
+                if (i >= result.Recipe.Steps.Count) break;
+
+                result.TimeResult.StepStartTimes.TryGetValue(i, out var startTime);
+                ViewModels[i].UpdateInPlace(result.Recipe.Steps[i], i, startTime);
             }
         }
         finally
         {
             ViewModels.RaiseListChangedEvents = true;
-            ViewModels.ResetBindings();
+            // Now, tell the grid to refresh only the rows whose data we just changed.
+            // This is fast because it doesn't redraw the whole table.
+            for (int i = change.Index; i < ViewModels.Count; i++)
+            {
+                ViewModels.ResetItem(i);
+            }
         }
     }
 
-    #region Helper Types
+    private enum ChangeType { Add, Remove, Update }
 
-    private enum ChangeType
-    {
-        Add,
-        Remove,
-        Update
-    }
-
-    private record StructuralChange(ChangeType Type, int Index);
-
-    #endregion
+    private sealed record StructuralChange(ChangeType Type, int Index);
 }
