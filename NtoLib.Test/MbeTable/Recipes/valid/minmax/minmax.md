@@ -1,0 +1,1 @@
+todo: check float and int properties for min/max

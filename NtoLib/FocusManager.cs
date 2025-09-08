@@ -12,8 +12,6 @@ namespace NtoLib
         /// </summary>
         public static event Action<VisualControlBase> Focused;
 
-
-
         public static void OnFocused(VisualControlBase focusedControl)
         {
             Focused?.Invoke(focusedControl);

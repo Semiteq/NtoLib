@@ -16,6 +16,8 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <LangVersion>10</LangVersion>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,7 +27,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RegisterForComInterop>true</RegisterForComInterop>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
@@ -42,32 +43,96 @@
     <Reference Include="COMDeviceSDK">
       <HintPath>..\resources\COMDeviceSDK.dll</HintPath>
     </Reference>
+    <Reference Include="CsvHelper, Version=33.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <HintPath>..\packages\CsvHelper.33.1.0\lib\net48\CsvHelper.dll</HintPath>
+    </Reference>
     <Reference Include="EasyModbus, Version=5.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\EasyModbusTCP.5.6.0\lib\net40\EasyModbus.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>True</Private>
     </Reference>
     <Reference Include="FB">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\FB.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\FB.dll</HintPath>
+    </Reference>
+    <Reference Include="FluentResults, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentResults.4.0.0\lib\netstandard2.0\FluentResults.dll</HintPath>
     </Reference>
     <Reference Include="InSAT.Library">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\InSAT.Library.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\InSAT.Library.dll</HintPath>
     </Reference>
     <Reference Include="Insat.Opc">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\Insat.Opc.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\Insat.Opc.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Common">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Common.dll</HintPath>
+      <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADA.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="MasterSCADALib">
+      <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADALib.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.8\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=9.0.0.8, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.9.0.8\lib\net462\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=9.0.0.8, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.9.0.8\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
+    <Reference Include="OneOf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OneOf.3.0.271\lib\net45\OneOf.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=9.0.0.7, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.9.0.7\lib\net462\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Formats.Nrbf, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Formats.Nrbf.9.0.7\lib\net462\System.Formats.Nrbf.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipelines, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Pipelines.9.0.8\lib\net462\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Metadata, Version=9.0.0.7, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reflection.Metadata.9.0.7\lib\net462\System.Reflection.Metadata.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Extensions, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Resources.Extensions.9.0.7\lib\net462\System.Resources.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Text.Encodings.Web, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.9.0.8\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.9.0.8\lib\net462\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -78,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
+    <Compile Include="Compatibilty.cs" />
     <Compile Include="FocusManager.cs" />
     <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
     <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
@@ -88,11 +154,6 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Colors.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -113,71 +174,181 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\ActionEntry.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\ActionManager.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\ActionTime.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\ActionType.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\Commands.cs" />
-    <Compile Include="Recipes\MbeTable\PLC\PlcCommunication.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\ActionTarget.cs">
-      <SubType>UserControl</SubType>
+    <Compile Include="Recipes\MbeTable\Config\AppConfiguration.cs" />
+    <Compile Include="Recipes\MbeTable\Config\ConfigurationLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\IConfigurationLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\ActionsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\IActionsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\IPinGroupsDataLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\ITableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsConfigurationReader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsDataDataLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\ActionTargets\PinGroupData.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Loaders\TableSchemaLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionDefenition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\CalculationRuleMapping.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ConfigurationModels.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\ColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\ColumnIdentifier.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\JsonColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\PlcMapping.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Models\Schema\WellKnownColumns.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\IRecipeApplicationService.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\IStepViewModelFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\RecipeApplicationService.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\RecipeUpdateResult.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\Services\StepViewModelFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\RecipeViewModel.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Application\ViewModels\StepViewModel.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ActionRepository.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ActionType.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ComboboxDataProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\DeployDuration.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\IActionRepository.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\IComboboxDataProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\IRecipeLoopValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\IRecipeTimeCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\LoopValidationResult.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeLoopValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeTimeAnalysis.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeTimeCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\Rules\ICalculationRule.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\Rules\SmoothRampCalculationRule.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\StepCalculationLogic.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\StepPropertyCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Entities\Recipe.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Entities\Step.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\IRecipeEngine.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Contracts\IPropertyTypeDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\BoolDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\EnumDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\FloatDefinitionBase.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\FloatGenericDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\FlowDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\IntDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\PercentDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\PowerSpeedDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\PressureDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\StringDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TemperatureDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TempSpeedDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TimeDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Errors\DomainErrors.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyDefinitionRegistry.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyType.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\StepProperty.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeEngine.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\TableSchema.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\TimerService.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepBuilder.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepBuilder.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepFactory.cs" />
+    <Compile Include="Recipes\MbeTable\DI\ServiceProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IModbusTransport.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcProtocol.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcRecipeSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\IRecipePlcSender.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcProtocol.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Protocol\PlcRecipeSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Services\RecipePlcSender.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Transport\ModbusTransport.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\IRecipeComparator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\PlcCapacityCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Utils\RecipeComparatorV1.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Logging\DegugLogger.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Logging\ILogger.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\ICsvHeaderBinder.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\ICsvHelperFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Contracts\ICsvStepMapper.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\CsvHeaderBinder.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\CsvHelperFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\Hasher\BodyIntegrityHasher.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Csv\CsvStepMapper.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\IRecipeFileReader.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\IRecipeFileWriter.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\IRecipeSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeError.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeFileMetadata.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\RecipeFile\RecipeFileMetadataSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeCsvSerializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeFileReader.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Services\RecipeFileWriter.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\Persistence\Validation\TargetAvailabilityValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\ActionTargetProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\CommunicationSettings.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\CommunicationSettingsProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IActionTargetProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\ICommunicationSettingsProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPinMapInitializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPlcRecipeStatusProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\IPlcStateMonitor.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PinMapInitializer.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcLineInfo.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeAvailable.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeStatusProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcStateMonitor.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\PlcRecipeStatus.cs" />
+    <Compile Include="Recipes\MbeTable\Infrastructure\PinDataManager\WordOrder.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Status\IStatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Status\StatusManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Status\StatusMessage.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Behavior\TableBehaviorManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Binding\DynamicBindingList.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Binding\StepPropertyDescriptor.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ActionComboBoxCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ActionTargetComboBoxCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\BaseRecipeComboBoxCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\PropertyGridCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Cells\ReadonlyLabelCell.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionComboBoxColumn.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\ActionTargetComboBoxColumn.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\BaseRecipeComboBoxColumn.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionComboBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\ActionTargetComboBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\BaseColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\IColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\PropertyColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\StepStartTimeColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\Factories\TextBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\PropertyGridColumn.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Columns\TableColumnManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\CellStatusDescription.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellState.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\CellState\TableCellStateManager.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Editing\ActionTargetEditingControl.cs">
+      <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeComparator.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeFileWriter.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\FlattenedRecipeLine.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\ICountTimer.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\ILineChangeProcessor.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\IRecipeTimeManager.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\LineChangeProcessor.cs" />
-    <Compile Include="Recipes\MbeTable\StatusManager.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\CellType.cs" />
-    <Compile Include="Recipes\MbeTable\PLC\CommunicationSettings.cs" />
-    <Compile Include="Recipes\MbeTable\Params.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\CountTimer.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeFileReader.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TableAddLine.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Recipes\MbeTable\Table\TableLoadSave.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Recipes\MbeTable\Utils\DateTimeParser.cs" />
-    <Compile Include="Recipes\MbeTable\Table\ReadPins.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLine.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeLineFactory.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\RecipeTime\RecipeTimeManager.cs" />
-    <Compile Include="Recipes\MbeTable\PLC\SettingsReader.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ButtonStateStyler.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TableColumn.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TableControl.cs">
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\DefaultCellStylePalette.cs" />
+    <Compile Include="Recipes\MbeTable\Presentation\Table\Style\ICellStylePalette.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\AppStateMachine.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppCommand.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppEffect.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppStateModels.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\AppStateUiProjector.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\App\RecipeEffectsHandler.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\Contracts\IUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\ICommandReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\InternalStateReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\LifecycleReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\MessageReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\OperationCompletionReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\StateReducers\OperationRequestReducer.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\ThreadDispatcher\ImmediateUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\StateMachine\ThreadDispatcher\WinFormsUiDispatcher.cs" />
+    <Compile Include="Recipes\MbeTable\TableControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Recipes\MbeTable\Table\TableControl.Designer.cs">
+    <Compile Include="Recipes\MbeTable\TableControl.Designer.cs">
       <DependentUpon>TableControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\Close.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\CloseAll.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\EndFor_Loop.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\For_Loop.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\N_Close.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\N_Run.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\N_Vent.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\Open.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\OpenTime.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\Pause.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\Power.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\PowerSmooth.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\PowerWait.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\Temperature.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\TemperatureSmooth.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\TemperatureWait.cs" />
-    <Compile Include="Recipes\MbeTable\Actions\TableLines\Wait.cs" />
-    <Compile Include="Recipes\MbeTable\Table\TableLoops.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Recipes\MbeTable\Table\TableMode.cs" />
-    <Compile Include="Recipes\MbeTable\RecipeLines\TCell.cs" />
     <Compile Include="Spectrometer\SpectrometerFB.cs" />
+    <Compile Include="Utils\ButtonOrientation.cs" />
     <Compile Include="Utils\ReadResult.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
     <Compile Include="Render\Bounds.cs" />
@@ -222,7 +393,6 @@
     <Compile Include="Render\Valves\ValveBaseRenderer.cs" />
     <Compile Include="Render\Valves\SlideGateRenderer.cs" />
     <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
-    <Compile Include="ButtonOrientation.cs" />
     <Compile Include="Utils\SymbolType.cs" />
     <Compile Include="Utils\TextBoxFloat.cs">
       <SubType>Component</SubType>
@@ -252,13 +422,18 @@
       <DependentUpon>ValveControl.cs</DependentUpon>
     </Compile>
     <Compile Include="VisualFBBaseExtended.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatControl.resx">
       <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Devices\Pumps\PumpControl.resx">
@@ -267,7 +442,7 @@
     <EmbeddedResource Include="Devices\Pumps\Settings\PumpSettingForm.resx">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Recipes\MbeTable\Table\TableControl.resx">
+    <EmbeddedResource Include="Recipes\MbeTable\TableControl.resx">
       <DependentUpon>TableControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntControl.resx">
@@ -332,19 +507,82 @@
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.bmp" />
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.xml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ImgDelete.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ImgInsertAfter.bmp" />
+    <EmbeddedResource Include="Resources\ImgInsertBefore.bmp" />
+    <EmbeddedResource Include="Resources\ImgOpen.bmp" />
+    <EmbeddedResource Include="Resources\ImgSave.bmp" />
+    <EmbeddedResource Include="Resources\ImgWrite.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ActionSchema.json" />
+    <Content Include="PinGroups.json" />
+    <Content Include="Recipes\MbeTable\Templates\MBE\ActionSchema.json" />
+    <Content Include="Recipes\MbeTable\Templates\MBE\PinGroups.json" />
+    <Content Include="Recipes\MbeTable\Templates\MBE\TableSchema.json" />
+    <Content Include="TableSchema.json" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ILRepack.2.0.40\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.40\build\ILRepack.props'))" />
-  </Target>
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe" /target:library /log:"$(SolutionDir)logs\ilrepack.log" /out:"$(TargetDir)NtoLib.dll" "$(TargetPath)" "$(TargetDir)COMDeviceSDK.dll" "$(TargetDir)EasyModbus.dll"
-chcp 437 &amp;&amp; xcopy "$(TargetPath)" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
-chcp 437 &amp;&amp; xcopy "$(TargetDir)NtoLib.pdb" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I
-chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\MPSSoft\MasterSCADA" /Y /I</PostBuildEvent>
+    <PostBuildEvent>@echo on
+setlocal
+
+REM --- Установка переменных ---
+set DEST_DIR="C:\Program Files (x86)\MPSSoft\MasterSCADA"
+set ILREPACK_EXE="$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe"
+
+REM --- Шаг 1: Объединение сборок ---
+echo Running ILRepack to merge assemblies...
+%25ILREPACK_EXE%25 ^
+    /target:library ^
+    /log:"$(SolutionDir)\ilrepack.log" ^
+    /out:"$(TargetDir)NtoLib.dll" ^
+    "$(TargetPath)" ^
+    "$(TargetDir)COMDeviceSDK.dll" ^
+    "$(TargetDir)EasyModbus.dll" ^
+    "$(TargetDir)OneOf.dll" ^
+    "$(TargetDir)System.Collections.Immutable.dll" ^
+    "$(TargetDir)CsvHelper.dll" ^
+    "$(TargetDir)FluentResults.dll" ^
+    "$(TargetDir)Microsoft.Extensions.Logging.Abstractions.dll" ^
+    "$(TargetDir)Microsoft.Extensions.DependencyInjection.dll" ^
+    "$(TargetDir)Microsoft.Extensions.DependencyInjection.Abstractions.dll"
+
+REM --- Проверка кода завершения ILRepack ---
+if %25errorlevel%25 neq 0 (
+    echo ERROR: ILRepack failed! Check log for details: "$(SolutionDir)\ilrepack.log"
+    exit /b %25errorlevel%25
+)
+echo ILRepack completed successfully.
+echo.
+
+REM --- Шаг 2: Копирование артефактов сборки ---
+echo Copying build artifacts to %25DEST_DIR%25...
+chcp 437
+
+xcopy "$(TargetDir)System.Resources.Extensions.dll" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy System.Resources.Extensions.dll &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(TargetPath)" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy $(TargetFileName) &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(TargetDir)NtoLib.pdb" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy NtoLib.pdb &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(ProjectDir)ActionSchema.json" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy ActionSchema.json &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(ProjectDir)TableSchema.json" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy TableSchema.json &amp; exit /b %25errorlevel%25 )
+
+xcopy "$(ProjectDir)PinGroups.json" %25DEST_DIR%25 /Y /I
+if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy TableSchema.json &amp; exit /b %25errorlevel%25 )
+
+echo All files copied successfully.
+endlocal</PostBuildEvent>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="Build">
     <!-- Clean temporary files -->
@@ -353,5 +591,11 @@ chcp 437 &amp;&amp; xcopy "$(ProjectDir)NtoLib_reg.bat" "C:\Program Files (x86)\
     <!-- <Exec Command="$(ProjectDir)..\build_tools\NtoLib_reg.bat" /> -->
     <!-- Prepare release build -->
     <!-- <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ProjectDir)..\build_tools\Release.ps1&quot;" /> -->
+  </Target>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\ILRepack.2.0.40\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.40\build\ILRepack.props'))" />
   </Target>
 </Project>
