@@ -5,7 +5,7 @@ namespace NtoLib.Utils
 {
     public partial class TextBoxFloat : TextBox
     {
-        public event System.Action ValidatingValue;
+        public event Action ValidatingValue;
 
 
 

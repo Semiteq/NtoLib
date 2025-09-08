@@ -348,18 +348,8 @@ namespace NtoLib.InputFields.TextBoxFloat
 
         private void UpdateFocus(VisualControlBase focusedControl)
         {
-            try
-            {
-                if (IsDisposed)
-                    return;
-                    
-                if (this != focusedControl)
-                    ToCommonMode();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Игнорируем исключения для освобожденных объектов
-            }
+            if(this != focusedControl)
+                ToCommonMode();
         }
 
 

@@ -255,7 +255,7 @@ namespace NtoLib.Devices.Pumps
                 }
                 case PumpType.Turbine:
                 {
-                    group.AddPinWithID(TurbineSpeedId, "SpeedProperty", PinType.Pin, typeof(float), 0d);
+                    group.AddPinWithID(TurbineSpeedId, "Speed", PinType.Pin, typeof(float), 0d);
                     break;
                 }
                 case PumpType.Ion:
