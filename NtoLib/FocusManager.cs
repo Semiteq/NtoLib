@@ -1,6 +1,5 @@
 ﻿using FB.VisualFB;
 using System;
-using System.Windows.Forms;
 
 namespace NtoLib
 {
@@ -15,21 +14,7 @@ namespace NtoLib
 
         public static void OnFocused(VisualControlBase focusedControl)
         {
-            try
-            {
-                // Проверяем, что объект не освобожден перед вызовом события
-                if (focusedControl != null && focusedControl is Control control)
-                {
-                    if (control.IsDisposed)
-                        return;
-                }
-                
-                Focused?.Invoke(focusedControl);
-            }
-            catch (ObjectDisposedException)
-            {
-                // Игнорируем исключения для освобожденных объектов
-            }
+            Focused?.Invoke(focusedControl);
         }
     }
 }
