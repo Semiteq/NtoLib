@@ -23,7 +23,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -140,6 +140,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="YamlDotNet, Version=16.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.16.3.0\lib\net47\YamlDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
@@ -175,26 +178,38 @@
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
     <Compile Include="Recipes\MbeTable\Config\AppConfiguration.cs" />
+    <Compile Include="Recipes\MbeTable\Config\ConfigFiles.cs" />
     <Compile Include="Recipes\MbeTable\Config\ConfigurationLoader.cs" />
     <Compile Include="Recipes\MbeTable\Config\IConfigurationLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\ActionsLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\IActionsLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\IPinGroupsDataLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\ITableSchemaLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsConfigurationReader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsDataDataLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\PinGroupsValidator.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\ActionTargets\PinGroupData.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Loaders\TableSchemaLoader.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionColumnDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ActionDefenition.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Actions\CalculationRuleMapping.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Actions\ConfigurationModels.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Schema\ColumnDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Schema\ColumnIdentifier.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Schema\JsonColumnDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Schema\PlcMapping.cs" />
-    <Compile Include="Recipes\MbeTable\Config\Models\Schema\WellKnownColumns.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Loaders\ActionDefsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Loaders\IActionDefsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Loaders\IPinGroupDefsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Loaders\IColumnDefsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Loaders\PinGroupDefsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Loaders\PropertyDefsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Loaders\ColumnDefsLoader.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Actions\ActionColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Actions\ActionDefenition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\ColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\ColumnIdentifier.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\PlcMapping.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\WellKnownColumns.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\YamlColumnBusinessLogic.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\YamlColumnCalculation.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\YamlColumnDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Columns\YamlColumnUi.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\PinGroups\PinGroupData.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Models\Properties\YamlPropertyDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\ActionDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\AppConfigurationValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\ColumnDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\IActionDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\IAppConfigurationValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\IColumnDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\IPinGroupDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\IPropertyDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\PinGroupDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\Config\Yaml\Validators\PropertyDefsValidator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\Services\IRecipeApplicationService.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\Services\IStepViewModelFactory.cs" />
     <Compile Include="Recipes\MbeTable\Core\Application\Services\RecipeApplicationService.cs" />
@@ -208,45 +223,45 @@
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\DeployDuration.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\IActionRepository.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Actions\IComboboxDataProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Actions\ServiceActions.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\IRecipeLoopValidator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\IRecipeTimeCalculator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\LoopValidationResult.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeLoopValidator.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeTimeAnalysis.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\RecipeTimeCalculator.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\Rules\ICalculationRule.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\Rules\SmoothRampCalculationRule.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\StepCalculationLogic.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Analysis\StepPropertyCalculator.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Calculations\CalculationDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Calculations\CalculationOrderer.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Calculations\FormulaParser.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Calculations\GraphCycleError.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Calculations\ICalculationOrderer.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Calculations\IFormulaParser.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Entities\Recipe.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Entities\Step.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\IRecipeEngine.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Contracts\IDefenitionLoader.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Contracts\IPropertyTypeDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\BoolDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\EnumDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\FloatDefinitionBase.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\FloatGenericDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\FlowDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\IntDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\PercentDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\PowerSpeedDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\PressureDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\StringDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TemperatureDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TempSpeedDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\TimeDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\ConfigurableBooleanDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\ConfigurableEnumDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\ConfigurableNumericDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\ConfigurableStringDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Definitions\DynamicTimeDefinition.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\Errors\DomainErrors.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyDefinitionRegistry.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\PropertyType.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Properties\StepProperty.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\RecipeEngine.cs" />
-    <Compile Include="Recipes\MbeTable\Core\Domain\Services\TableSchema.cs" />
+    <Compile Include="Recipes\MbeTable\Core\Domain\Services\TableColumns.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Services\TimerService.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\IStepFactory.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\Core\Domain\Steps\StepFactory.cs" />
     <Compile Include="Recipes\MbeTable\DI\ServiceProvider.cs" />
+    <Compile Include="Recipes\MbeTable\Errors\RecipeError.cs" />
+    <Compile Include="Recipes\MbeTable\Errors\RecipeErrorCodes.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IModbusTransport.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcProtocol.cs" />
     <Compile Include="Recipes\MbeTable\Infrastructure\Communication\Contracts\IPlcRecipeSerializer.cs" />
@@ -422,11 +437,7 @@
       <DependentUpon>ValveControl.cs</DependentUpon>
     </Compile>
     <Compile Include="VisualFBBaseExtended.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatControl.resx">
@@ -518,72 +529,15 @@
     <EmbeddedResource Include="Resources\ImgWrite.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ActionSchema.json" />
-    <Content Include="PinGroups.json" />
+    <Content Include="NtoLibTableConfig\ActionsDefs.yaml" />
+    <Content Include="NtoLibTableConfig\PinGroupDefs.yaml" />
+    <Content Include="NtoLibTableConfig\PropertyDefs.yaml" />
+    <Content Include="NtoLibTableConfig\ColumnDefs.yaml" />
     <Content Include="Recipes\MbeTable\Templates\MBE\ActionSchema.json" />
     <Content Include="Recipes\MbeTable\Templates\MBE\PinGroups.json" />
     <Content Include="Recipes\MbeTable\Templates\MBE\TableSchema.json" />
-    <Content Include="TableSchema.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>@echo on
-setlocal
-
-REM --- Установка переменных ---
-set DEST_DIR="C:\Program Files (x86)\MPSSoft\MasterSCADA"
-set ILREPACK_EXE="$(SolutionDir)packages\ILRepack.2.0.40\tools\ilrepack.exe"
-
-REM --- Шаг 1: Объединение сборок ---
-echo Running ILRepack to merge assemblies...
-%25ILREPACK_EXE%25 ^
-    /target:library ^
-    /log:"$(SolutionDir)\ilrepack.log" ^
-    /out:"$(TargetDir)NtoLib.dll" ^
-    "$(TargetPath)" ^
-    "$(TargetDir)COMDeviceSDK.dll" ^
-    "$(TargetDir)EasyModbus.dll" ^
-    "$(TargetDir)OneOf.dll" ^
-    "$(TargetDir)System.Collections.Immutable.dll" ^
-    "$(TargetDir)CsvHelper.dll" ^
-    "$(TargetDir)FluentResults.dll" ^
-    "$(TargetDir)Microsoft.Extensions.Logging.Abstractions.dll" ^
-    "$(TargetDir)Microsoft.Extensions.DependencyInjection.dll" ^
-    "$(TargetDir)Microsoft.Extensions.DependencyInjection.Abstractions.dll"
-
-REM --- Проверка кода завершения ILRepack ---
-if %25errorlevel%25 neq 0 (
-    echo ERROR: ILRepack failed! Check log for details: "$(SolutionDir)\ilrepack.log"
-    exit /b %25errorlevel%25
-)
-echo ILRepack completed successfully.
-echo.
-
-REM --- Шаг 2: Копирование артефактов сборки ---
-echo Copying build artifacts to %25DEST_DIR%25...
-chcp 437
-
-xcopy "$(TargetDir)System.Resources.Extensions.dll" %25DEST_DIR%25 /Y /I
-if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy System.Resources.Extensions.dll &amp; exit /b %25errorlevel%25 )
-
-xcopy "$(TargetPath)" %25DEST_DIR%25 /Y /I
-if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy $(TargetFileName) &amp; exit /b %25errorlevel%25 )
-
-xcopy "$(TargetDir)NtoLib.pdb" %25DEST_DIR%25 /Y /I
-if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy NtoLib.pdb &amp; exit /b %25errorlevel%25 )
-
-xcopy "$(ProjectDir)ActionSchema.json" %25DEST_DIR%25 /Y /I
-if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy ActionSchema.json &amp; exit /b %25errorlevel%25 )
-
-xcopy "$(ProjectDir)TableSchema.json" %25DEST_DIR%25 /Y /I
-if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy TableSchema.json &amp; exit /b %25errorlevel%25 )
-
-xcopy "$(ProjectDir)PinGroups.json" %25DEST_DIR%25 /Y /I
-if %25errorlevel%25 neq 0 ( echo ERROR: Failed to copy TableSchema.json &amp; exit /b %25errorlevel%25 )
-
-echo All files copied successfully.
-endlocal</PostBuildEvent>
-  </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="Build">
     <!-- Clean temporary files -->
     <!-- <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ProjectDir)..\build_tools\CleanFiles.ps1&quot;" /> -->
