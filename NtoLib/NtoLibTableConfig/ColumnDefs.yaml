@@ -1,0 +1,158 @@
+- key: "action"
+  business_logic:
+      role: "action"
+      property_type_id: "Enum" 
+      read_only: false
+      plc_mapping:
+          area: "Int"
+          index: 0
+  ui:
+      code: "action"
+      ui_name: "Имя команды"
+      column_type: "action_combo_box"
+      width: 150
+      alignment: 16 
+
+- key: "channel"
+  business_logic:
+      role: "action_target"
+      property_type_id: "Enum" 
+      read_only: false
+      plc_mapping:
+          area: "Int"
+          index: 1
+  ui:
+      code: "channel"
+      ui_name: "Канал"
+      column_type: "action_target_combo_box"
+      width: 100
+      alignment: 32 
+
+- key: "mode"
+  business_logic:
+      role: "action_target"
+      property_type_id: "Enum"
+      read_only: false
+      plc_mapping:
+          area: "Int"
+          index: 1
+  ui:
+      code: "mode"
+      ui_name: "Режим"
+      column_type: "action_target_combo_box"
+      width: 100
+      alignment: 32
+
+- key: "initial_value"
+  business_logic:
+      role: "initial_value"
+      property_type_id: "Float"
+      read_only: false
+      plc_mapping:
+          area: "Float"
+          index: 0
+  ui:
+      code: "initial_value"
+      ui_name: "Поток/Нач.знач."
+      column_type: "property_field"
+      width: 160
+      alignment: 32 
+
+- key: "final_value"
+  business_logic:
+      role: "final_value"
+      property_type_id: "Float" 
+      read_only: false
+      plc_mapping:
+          area: "Float"
+          index: 1
+  ui:
+      code: "final_value"
+      ui_name: "Разбавление/Кон.знач."
+      column_type: "property_field"
+      width: 230
+      alignment: 32
+
+- key: "pressure"
+  business_logic:
+      role: "pressure"
+      property_type_id: "Pressure"
+      read_only: false
+      plc_mapping:
+          area: "Float"
+          index: 2
+  ui:
+      code: "pressure"
+      ui_name: "Давление"
+      column_type: "property_field"
+      width: 110
+      alignment: 32
+
+- key: "mixing"
+  business_logic:
+      role: "mixing"
+      property_type_id: "Flow"
+      read_only: false
+      plc_mapping:
+          area: "Float"
+          index: 3
+  ui:
+      code: "mixing"
+      ui_name: "Смешивание"
+      column_type: "property_field"
+      width: 140
+      alignment: 32
+
+- key: "transport"
+  business_logic:
+      role: "transport"
+      property_type_id: "Flow"
+      read_only: false
+      plc_mapping:
+          area: "Float"
+          index: 2
+  ui:
+      code: "transport"
+      ui_name: "Транспорт"
+      column_type: "property_field"
+      width: 120
+      alignment: 32
+
+- key: "step_duration"
+  business_logic:
+      role: "step_duration"
+      property_type_id: "Time"
+      read_only: false
+      plc_mapping:
+          area: "Float"
+          index: 3
+  ui:
+      code: "step_duration"
+      ui_name: "Время"
+      column_type: "property_field"
+      width: 100
+      alignment: 32
+
+- key: "step_start_time"
+  business_logic:
+      role: "step_start_time"
+      property_type_id: "String"
+      read_only: true
+  ui:
+      code: "step_start_time"
+      ui_name: "Время абс."
+      column_type: "step_start_time_field"
+      width: 130
+      alignment: 32
+
+- key: "comment"
+  business_logic:
+      role: "comment"
+      property_type_id: "String"
+      read_only: false
+  ui:
+      code: "comment"
+      ui_name: "Комментарий"
+      column_type: "text_field"
+      width: -1
+      alignment: 32

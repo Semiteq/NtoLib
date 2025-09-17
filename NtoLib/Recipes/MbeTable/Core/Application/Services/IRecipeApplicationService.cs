@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 
 namespace NtoLib.Recipes.MbeTable.Core.Application.Services;

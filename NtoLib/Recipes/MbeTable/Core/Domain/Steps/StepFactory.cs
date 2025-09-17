@@ -13,25 +13,25 @@ public sealed class StepFactory : IStepFactory
 {
     private readonly IActionRepository _actionRepository;
     private readonly PropertyDefinitionRegistry _registry;
-    private readonly TableSchema _tableSchema;
+    private readonly TableColumns _tableColumns;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StepFactory"/> class.
     /// </summary>
     /// <param name="actionRepository">The repository for accessing configured action definitions.</param>
     /// <param name="registry">The registry for property type definitions.</param>
-    /// <param name="tableSchema">The schema of the recipe table.</param>
-    public StepFactory(IActionRepository actionRepository, PropertyDefinitionRegistry registry, TableSchema tableSchema)
+    /// <param name="tableColumns">The schema of the recipe table.</param>
+    public StepFactory(IActionRepository actionRepository, PropertyDefinitionRegistry registry, TableColumns tableColumns)
     {
         _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
-        _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema));
+        _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns));
     }
 
     /// <inheritdoc />
     public IStepBuilder ForAction(int actionId)
     {
         var actionDefinition = _actionRepository.GetActionById(actionId);
-        return new StepBuilder(actionDefinition, _registry, _tableSchema);
+        return new StepBuilder(actionDefinition, _registry, _tableColumns);
     }
 }

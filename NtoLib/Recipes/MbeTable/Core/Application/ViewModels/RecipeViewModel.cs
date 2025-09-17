@@ -3,9 +3,11 @@
 using System;
 using System.Linq;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Application.Services;
+using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
@@ -57,10 +59,11 @@ public sealed class RecipeViewModel
         IRecipeApplicationService recipeService,
         IStepViewModelFactory stepViewModelFactory,
         AppStateMachine appStateMachine,
+        PropertyDefinitionRegistry registry,
         TimerService timerService,
         IStatusManager statusManager,
         ILogger debugLogger,
-        TableSchema tableSchema)
+        TableColumns tableColumns)
     {
         _recipeService = recipeService;
         _stepViewModelFactory = stepViewModelFactory;
@@ -69,7 +72,7 @@ public sealed class RecipeViewModel
         _statusManager = statusManager;
         _debugLogger = debugLogger;
 
-        ViewModels = new DynamicBindingList(tableSchema);
+        ViewModels = new DynamicBindingList(tableColumns, registry);
         _recipe = _recipeService.CreateEmpty().Recipe;
     }
 

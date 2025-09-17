@@ -4,24 +4,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using MasterSCADA.Hlp;
-using NtoLib.Recipes.MbeTable.Config.Loaders;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Loaders;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Validators;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
 
 /// <summary>
-/// Default implementation of pin map initialization from PinGroups.json.
+/// Default implementation of pin map initialization from PinGroupDefs.yaml.
 /// </summary>
 public sealed class PinMapInitializer : IPinMapInitializer
 {
-    private readonly IPinGroupsDataLoader _loader;
-    private readonly PinGroupsValidator _validator;
+    private readonly IPinGroupDefsLoader _loader;
+    private readonly IPinGroupDefsValidator _validator;
 
-    public PinMapInitializer()
-        : this(new PinGroupsDataDataLoader(), new PinGroupsValidator())
-    {
-    }
-
-    public PinMapInitializer(IPinGroupsDataLoader loader, PinGroupsValidator validator)
+    public PinMapInitializer(IPinGroupDefsLoader loader, IPinGroupDefsValidator validator)
     {
         _loader = loader ?? throw new ArgumentNullException(nameof(loader));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
@@ -30,7 +26,7 @@ public sealed class PinMapInitializer : IPinMapInitializer
     public Dictionary<string, (int FirstPinId, int PinQuantity)> InitializePinsFromConfig(
         MbeTableFB fb,
         string? baseDirectory = null,
-        string fileName = "PinGroups.json")
+        string fileName = "PinGroupDefs.yaml")
     {
         if (fb == null) throw new ArgumentNullException(nameof(fb));
         baseDirectory ??= AppDomain.CurrentDomain.BaseDirectory;
@@ -44,7 +40,7 @@ public sealed class PinMapInitializer : IPinMapInitializer
         }
 
         var groups = loadResult.Value;
-        _validator.ValidateOrThrow(groups);
+        _validator.Validate(groups);
 
         var snapshot = new Dictionary<string, (int FirstPinId, int PinQuantity)>(StringComparer.OrdinalIgnoreCase);
 

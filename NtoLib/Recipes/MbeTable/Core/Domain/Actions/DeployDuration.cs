@@ -1,8 +1,6 @@
-﻿namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions
+﻿namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions;
+public enum DeployDuration
 {
-    public enum DeployDuration
-    {
-        Immediate,
-        LongLasting,
-    }
+    Immediate,
+    LongLasting,
 }

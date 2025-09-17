@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using System.Collections.Generic;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 

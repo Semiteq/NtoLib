@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 
@@ -9,14 +9,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 
 public class RecipeTimeCalculator : IRecipeTimeCalculator
 {
-    private const int ForLoopActionId = 120;
-    private const int EndForLoopActionId = 130;
-    private readonly IActionRepository _actionRepository;
-
-    public RecipeTimeCalculator(IActionRepository actionRepository)
-    {
-        _actionRepository = actionRepository;
-    }
+    private const int ForLoopActionId = (int)ServiceActions.ForLoop;
+    private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;
 
     public RecipeTimeAnalysis Calculate(Recipe recipe)
     {
@@ -33,7 +27,7 @@ public class RecipeTimeCalculator : IRecipeTimeCalculator
             if (actionId == ForLoopActionId)
             {
                 // Normalize iteration count (treat <1 as 1).
-                var rawIterations = step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ?? 1f;
+                var rawIterations = step.Properties[WellKnownColumns.StepDuration]?.GetValue<float>() ?? 1f;
                 var iterations = Math.Max(1, (int)Math.Round(rawIterations, MidpointRounding.AwayFromZero));
                 loopStack.Push((iterations, accumulatedTime));
                 continue;
@@ -72,7 +66,6 @@ public class RecipeTimeCalculator : IRecipeTimeCalculator
 
         var seconds =
             step.Properties[WellKnownColumns.StepDuration]?.GetValue<float>() ??
-            step.Properties[WellKnownColumns.Setpoint]?.GetValue<float>() ??
             0f;
 
         return seconds > 0f ? TimeSpan.FromSeconds(seconds) : TimeSpan.Zero;

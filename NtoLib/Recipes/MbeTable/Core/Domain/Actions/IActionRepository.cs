@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Actions;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 

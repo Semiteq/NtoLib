@@ -86,7 +86,7 @@ public record ColorScheme
         ButtonsColor = SystemColors.Control;
         BlockedButtonsColor = Color.FromArgb(170, 170, 170);
 
-        LineHeight = 40;
+        LineHeight = 25;
 
         StatusBgColor = SystemColors.ControlLight;
 

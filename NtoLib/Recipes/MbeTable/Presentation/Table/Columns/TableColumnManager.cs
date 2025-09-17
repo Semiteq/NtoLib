@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
@@ -12,26 +13,27 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
 public class TableColumnManager
 {
     private readonly DataGridView _table;
-    private readonly TableSchema _tableSchema;
+    private readonly TableColumns _tableColumns;
     private readonly ColorScheme _colorScheme;
     private readonly IReadOnlyDictionary<string, IColumnFactory> _factories;
 
     public TableColumnManager(DataGridView table,
-        TableSchema tableSchema,
+        TableColumns tableColumns,
+        PropertyDefinitionRegistry registry,
         ColorScheme colorScheme,
         IComboboxDataProvider dataProvider)
     {
         _table = table ?? throw new ArgumentNullException(nameof(table));
-        _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema));
+        _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns));
         _colorScheme = colorScheme ?? throw new ArgumentNullException(nameof(colorScheme));
 
         _factories = new Dictionary<string, IColumnFactory>(StringComparer.OrdinalIgnoreCase)
         {
-            { "ActionComboBox",         new ActionComboBoxColumnFactory(dataProvider) },
-            { "ActionTargetComboBox",   new ActionTargetComboBoxColumnFactory() },
-            { "PropertyField",          new PropertyColumnFactory() },
-            { "StepStartTimeField",     new StepStartTimeColumnFactory() },
-            { "TextField",              new TextBoxColumnFactory() }
+            { "action_combo_box",         new ActionComboBoxColumnFactory(dataProvider) },
+            { "action_target_combo_box",   new ActionTargetComboBoxColumnFactory() },
+            { "property_field",          new PropertyColumnFactory(registry) },
+            { "step_start_time_field",     new StepStartTimeColumnFactory() },
+            { "text_field",              new TextBoxColumnFactory() }
         };
     }
 
@@ -55,11 +57,11 @@ public class TableColumnManager
     {
         _table.AutoGenerateColumns = false;
         _table.Columns.Clear();
-        var defaultFactory = _factories["PropertyField"];
-        foreach (var colDef in _tableSchema.GetColumns())
+        foreach (var colDef in _tableColumns.GetColumns())
         {
             _factories.TryGetValue(colDef.ColumnType, out var factory);
-            factory ??= defaultFactory;
+            if (factory == null) throw new InvalidOperationException($"Unknown column type '{colDef.ColumnType}'");
+            // todo: handle null key -> write validator
             var column = factory.CreateColumn(colDef, _colorScheme);
             column.DataPropertyName = colDef.Key.Value;
             _table.Columns.Add(column);

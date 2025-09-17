@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;

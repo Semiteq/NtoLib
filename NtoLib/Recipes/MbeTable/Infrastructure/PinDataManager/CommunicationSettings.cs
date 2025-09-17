@@ -6,17 +6,13 @@ public record CommunicationSettings
     
     public int ControlBaseAddr;
 
-    public int IntColumNum = 2;
-    public int FloatColumNum = 4;
-    public int BoolColumNum = 0;
-
-    public int FloatBaseAddr;
+    public int IntCount;
     public int IntBaseAddr;
-    public int BoolBaseAddr;
-    
-    public int FloatAreaSize;
     public int IntAreaSize;
-    public int BoolAreaSize;
+
+    public int FloatCount;
+    public int FloatBaseAddr;
+    public int FloatAreaSize;
 
     public int Ip1;
     public int Ip2;
@@ -29,6 +25,6 @@ public record CommunicationSettings
 
     public int VerifyDelayMs = 200;
 
-    public float Epsilon = 1e-2f;
+    public float Epsilon = 1e-4f;
 }
 

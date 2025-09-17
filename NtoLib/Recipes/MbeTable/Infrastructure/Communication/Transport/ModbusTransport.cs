@@ -2,7 +2,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using EasyModbus;
 using EasyModbus.Exceptions;
@@ -29,6 +28,10 @@ public sealed class ModbusTransport : IModbusTransport, IDisposable
     // These values should ideally come from settings for flexibility.
     private const int TimeoutMs = 1000;
     private const int MaxRetries = 2;
+    
+    // Unique id for connectivity check, also used as unit id for Modbus TCP
+    private const byte UnitId = 69; 
+    private const int ControlRegisterNumber = 69;
 
     public ModbusTransport(ICommunicationSettingsProvider communicationSettingsProvider, ILogger logger)
     {
@@ -56,17 +59,24 @@ public sealed class ModbusTransport : IModbusTransport, IDisposable
                 _modbusClient = new ModbusClient(ip, Settings.Port)
                 {
                     ConnectionTimeout = TimeoutMs,
+                    UnitIdentifier = UnitId
                 };
                 
                 _debugLogger.Log($"Connecting to {ip}:{Settings.Port} with a {TimeoutMs}ms timeout...");
                 _modbusClient.Connect();
                 _debugLogger.Log("Connection successful.");
 
-                // A quick, harmless read operation is a more reliable health check than Available().
-                _modbusClient.ReadHoldingRegisters(0, 1);
-                _debugLogger.Log("Connection validated with a test read.");
-
-                return Result.Ok();
+                var controlregNumber = _modbusClient.ReadHoldingRegisters(Settings.ControlBaseAddr, 1)[0];
+                if (controlregNumber == ControlRegisterNumber)
+                {
+                    _debugLogger.Log("Connection validated with a test read.");
+                    return Result.Ok();
+                }
+                else
+                {
+                    _debugLogger.Log("Connection validation failed. Unexpected control register value.");
+                    return Result.Fail("Connection validation failed. Could not read the expected control register value.");
+                }
             }
             catch (Exception ex)
             {

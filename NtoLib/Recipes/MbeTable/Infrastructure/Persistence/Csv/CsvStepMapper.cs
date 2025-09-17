@@ -3,14 +3,15 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Contracts;
-using NtoLib.Recipes.MbeTable.Infrastructure.Persistence.RecipeFile;
+using RecipeError = NtoLib.Recipes.MbeTable.Errors.RecipeError;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Csv;
 
@@ -22,11 +23,16 @@ public sealed class CsvStepMapper : ICsvStepMapper
 {
     private readonly IStepFactory _stepFactory;
     private readonly IActionRepository _actionRepository;
+    private readonly PropertyDefinitionRegistry _registry;
 
-    public CsvStepMapper(IStepFactory stepFactory, IActionRepository actionRepository)
+    public CsvStepMapper(
+        IStepFactory stepFactory, 
+        IActionRepository actionRepository, 
+        PropertyDefinitionRegistry registry)
     {
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
         _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
+        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
     }
 
     public Result<Step> FromRecord(
@@ -36,10 +42,10 @@ public sealed class CsvStepMapper : ICsvStepMapper
     {
         var actionIdx = FindFileIndex(binding, WellKnownColumns.Action);
         if (actionIdx < 0 || actionIdx >= record.Length)
-            return Result.Fail(new RecipeError("Missing 'Action' column in the recipe file", lineNumber));
+            return Result.Fail(new RecipeError("Missing 'Action' column in the recipe file.", RecipeErrorCodes.IoReadError));
 
         if (!int.TryParse(record[actionIdx], NumberStyles.Integer, CultureInfo.InvariantCulture, out var actionId))
-            return Result.Fail(new RecipeError($"Invalid Action ID '{record[actionIdx]}'", lineNumber));
+            return Result.Fail(new RecipeError($"Invalid Action ID '{record[actionIdx]}'.", RecipeErrorCodes.IoReadError));
 
         IStepBuilder builder;
         try
@@ -48,7 +54,7 @@ public sealed class CsvStepMapper : ICsvStepMapper
         }
         catch (Exception ex)
         {
-            return Result.Fail(new RecipeError($"Unknown Action ID '{actionId}'", lineNumber)
+            return Result.Fail(new RecipeError($"Unknown Action ID '{actionId}'.", RecipeErrorCodes.IoReadError)
                 .CausedBy(ex));
         }
 
@@ -69,8 +75,8 @@ public sealed class CsvStepMapper : ICsvStepMapper
                 {
                     var actionName = _actionRepository.GetActionById(actionId).Name;
                     return Result.Fail(new RecipeError(
-                        $"Column '{columnKey.Value}' is not applicable for action '{actionName}' but contains value '{rawValue}'",
-                        lineNumber));
+                        $"Column '{columnKey.Value}' is not applicable for action '{actionName}' but contains value '{rawValue}'.",
+                        RecipeErrorCodes.IoReadError));
                 }
                 continue;
             }
@@ -78,10 +84,14 @@ public sealed class CsvStepMapper : ICsvStepMapper
             if (string.IsNullOrWhiteSpace(rawValue))
                 continue;
             
-            var parseResult = TryParseValue(rawValue, columnDef.SystemType);
+            var propertyTypeId = columnDef.PropertyTypeId;
+            
+            var propertyDef = _registry.GetDefinition(propertyTypeId);
+
+            var parseResult = TryParseValue(rawValue, propertyDef.SystemType);
             if (parseResult.IsFailed)
             {
-                return Result.Fail(new RecipeError($"Invalid value '{rawValue}' in column '{columnKey.Value}'", lineNumber))
+                return Result.Fail(new RecipeError($"Invalid value '{rawValue}' in column '{columnKey.Value}'.", RecipeErrorCodes.IoReadError))
                     .WithErrors(parseResult.Errors);
             }
             
@@ -103,11 +113,12 @@ public sealed class CsvStepMapper : ICsvStepMapper
                 result[i] = string.Empty;
                 continue;
             }
-
+            
             result[i] = prop.GetValueAsObject() switch
             {
                 int ival => ival.ToString(CultureInfo.InvariantCulture),
                 float fval => fval.ToString("R", CultureInfo.InvariantCulture),
+                double dval => dval.ToString("R", CultureInfo.InvariantCulture),
                 string s => s,
                 _ => prop.GetValueAsObject()?.ToString() ?? string.Empty
             };
@@ -139,14 +150,32 @@ public sealed class CsvStepMapper : ICsvStepMapper
                 : Result.Fail("Value must be a valid floating-point number.");
         }
         
+        if (targetType == typeof(double))
+        {
+            return double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedValue)
+                ? Result.Ok<object>(parsedValue)
+                : Result.Fail("Value must be a valid floating-point number.");
+        }
+
+        if (targetType == typeof(bool))
+        {
+            return bool.TryParse(rawValue, out var parsedValue)
+                ? Result.Ok<object>(parsedValue)
+                : Result.Fail("Value must be a valid boolean (true/false).");
+        }
+        
         return Result.Fail($"Unsupported type for CSV parsing: {targetType.Name}");
     }
     
     private int FindFileIndex(CsvHeaderBinder.Binding binding, ColumnIdentifier key)
     {
-        // This helper can be optimized if needed, but is clear for now.
-        return binding.FileIndexToColumn
-            .FirstOrDefault(kv => kv.Value.Key == key)
-            .Key;
+        foreach (var kvp in binding.FileIndexToColumn)
+        {
+            if (kvp.Value.Key == key)
+            {
+                return kvp.Key;
+            }
+        }
+        return -1;
     }
 }

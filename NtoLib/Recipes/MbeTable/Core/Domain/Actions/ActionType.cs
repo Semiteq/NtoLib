@@ -1,10 +1,8 @@
-﻿namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions
+﻿namespace NtoLib.Recipes.MbeTable.Core.Domain.Actions;
+public enum ActionType
 {
-    public enum ActionType
-    {
-        Heater,
-        Shutter,
-        NitrogenSource,
-        Service
-    }
+    Heater,
+    Shutter,
+    NitrogenSource,
+    Service
 }

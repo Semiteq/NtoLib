@@ -1,33 +1,35 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Contracts;
-using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Definitions;
 
 namespace NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 
-public class PropertyDefinitionRegistry
+/// <summary>
+/// Registry of property type definitions keyed by string PropertyTypeId.
+/// </summary>
+public sealed class PropertyDefinitionRegistry
 {
-    private readonly IReadOnlyDictionary<PropertyType, IPropertyTypeDefinition> _definitions = new Dictionary<PropertyType, IPropertyTypeDefinition>
-    {
-        { PropertyType.Bool, new BoolDefinition() },
-        { PropertyType.Enum, new EnumDefinition() },
-        { PropertyType.Float, new FloatGenericDefinition() },
-        { PropertyType.Flow, new FlowDefinition() },
-        { PropertyType.Int, new IntDefinition() },
-        { PropertyType.Percent, new PercentDefinition() },
-        { PropertyType.PowerSpeed, new PowerSpeedDefinition() },
-        { PropertyType.String, new StringDefinition() },
-        { PropertyType.Temp, new TemperatureDefinition() },
-        { PropertyType.TempSpeed, new TempSpeedDefinition() },
-        { PropertyType.Time, new TimeDefinition() },
-        { PropertyType.Pressure, new PressureDefinition() }
-    };
+    private readonly IReadOnlyDictionary<string, IPropertyTypeDefinition> _definitions;
 
-    public IPropertyTypeDefinition GetDefinition(PropertyType type)
+    /// <summary>
+    /// Initializes a new instance with provided definitions.
+    /// </summary>
+    public PropertyDefinitionRegistry(IReadOnlyDictionary<string, IPropertyTypeDefinition> definitions)
     {
-        if (_definitions.TryGetValue(type, out var definition))
-        {
-            return definition;
-        }
-        throw new KeyNotFoundException($"No definition registered for PropertyType: {type}");
+        _definitions = definitions ?? throw new System.ArgumentNullException(nameof(definitions));
+    }
+
+    /// <summary>
+    /// Gets a property type definition by its string id.
+    /// </summary>
+    /// <param name="propertyTypeId">The string type id.</param>
+    /// <returns>The type definition.</returns>
+    /// <exception cref="KeyNotFoundException">When type id is missing after successful configuration load.</exception>
+    public IPropertyTypeDefinition GetDefinition(string propertyTypeId)
+    {
+        if (_definitions.TryGetValue(propertyTypeId, out var d))
+            return d;
+
+        throw new KeyNotFoundException($"No definition registered for PropertyTypeId: '{propertyTypeId}'.");
     }
 }

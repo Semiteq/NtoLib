@@ -24,7 +24,7 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Persistence.Services;
 /// </summary>
 public sealed class RecipeCsvSerializer : IRecipeSerializer
 {
-    private readonly TableSchema _schema;
+    private readonly TableColumns _columns;
     private readonly IActionRepository _actionRepository;
     private readonly ICsvHelperFactory _csvHelperFactory;
     private readonly RecipeFileMetadataSerializer _recipeFileMetadataSerializer;
@@ -35,7 +35,7 @@ public sealed class RecipeCsvSerializer : IRecipeSerializer
     private readonly IActionTargetProvider _actionTargetProvider;
 
     public RecipeCsvSerializer(
-        TableSchema schema,
+        TableColumns columns,
         IActionRepository actionRepository,
         ICsvHelperFactory csvFactory,
         RecipeFileMetadataSerializer metaSerializer,
@@ -45,7 +45,7 @@ public sealed class RecipeCsvSerializer : IRecipeSerializer
         TargetAvailabilityValidator targetsValidator,
         IActionTargetProvider targetProvider)
     {
-        _schema = schema ?? throw new ArgumentNullException(nameof(schema));
+        _columns = columns ?? throw new ArgumentNullException(nameof(columns));
         _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
         _csvHelperFactory = csvFactory ?? throw new ArgumentNullException(nameof(csvFactory));
         _recipeFileMetadataSerializer = metaSerializer ?? throw new ArgumentNullException(nameof(metaSerializer));
@@ -79,7 +79,7 @@ public sealed class RecipeCsvSerializer : IRecipeSerializer
 
         csv.ReadHeader();
         var headerTokens = csv.HeaderRecord ?? Array.Empty<string>();
-        var bindResult = _csvHeaderBinder.Bind(headerTokens, _schema);
+        var bindResult = _csvHeaderBinder.Bind(headerTokens, _columns);
         if (bindResult.IsFailed)
             return bindResult.ToResult();
 
@@ -199,9 +199,8 @@ public sealed class RecipeCsvSerializer : IRecipeSerializer
         using var bodySw = new StringWriter(bodySb);
         using var csv = _csvHelperFactory.CreateWriter(bodySw);
 
-        var orderedCols = _schema.GetColumns()
-            .Where(c => c.ReadOnly == false)
-            .OrderBy(c => c.Index)
+        var orderedCols = _columns.GetColumns()
+            .Where(c => !c.ReadOnly)
             .ToArray();
 
         // Header

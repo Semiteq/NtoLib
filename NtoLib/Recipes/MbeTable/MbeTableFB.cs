@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -13,6 +14,8 @@ using InSAT.Library.Interop;
 using InSAT.OPC;
 
 using Microsoft.Extensions.DependencyInjection;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Loaders;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Validators;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.DI;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
@@ -191,7 +194,7 @@ public class MbeTableFB : VisualFBBase
             throw new ArgumentNullException(nameof(groupName));
 
         if (!_pinGroups.TryGetValue(groupName, out var cfg))
-            throw new InvalidOperationException($"Group '{groupName}' is not defined in PinGroups.json.");
+            throw new InvalidOperationException($"Group '{groupName}' is not defined in PinGroupDefs.yaml.");
 
         return ReadPinGroup(cfg.FirstPinId, cfg.PinQuantity, groupName);
     }
@@ -256,22 +259,31 @@ public class MbeTableFB : VisualFBBase
     }
 
     /// <summary>
-    /// Creates pin groups and pins dynamically based on PinGroups.json via PinMapInitializer.
-    /// Called by SCADA before constructors; configuration must be read right here.
+    /// Creates pin groups and pins dynamically based on PinGroupDefs.yaml via PinMapInitializer.
+    /// This method is called by SCADA early in the lifecycle, before the main DI container is created.
     /// </summary>
     protected override void CreatePinMap(bool newObject)
     {
         base.CreatePinMap(newObject);
-
-        var initializer = new PinMapInitializer();
-        _pinGroups = initializer.InitializePinsFromConfig(this);
-
-        FirePinSpaceChanged();
         
-        // Debug logger here not existing yet
-        Debug.Print("Pins were created from PinGroups.json (via PinMapInitializer).");
+        try
+        {
+            PinGroupDefsLoader loader = new();
+            PinGroupDefsValidator validator = new();
+            var initializer = new PinMapInitializer(loader, validator);
+            var configDir = Path.Combine(AppContext.BaseDirectory, "NtoLibTableConfig");
+            _pinGroups = initializer.InitializePinsFromConfig(this, configDir);
+            // todo: check double initialization
+            base.FirePinSpaceChanged();
+            
+            Debug.Print("Pins were created successfully from PinGroupDefs.yaml.");
+        }
+        catch (Exception ex)
+        {
+            Debug.Fail($"Failed to create pin map from configuration: {ex.Message}");
+        }
     }
-
+    
     private void InitializeServices()
     {
         if (_serviceProvider != null) return;
@@ -279,13 +291,12 @@ public class MbeTableFB : VisualFBBase
         _serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this);
 
         var debugLogger = _serviceProvider.GetRequiredService<ILogger>();
-        debugLogger.Log("Entering Runtime. ServiceProvider created via DI container.");
 
         _timerService = _serviceProvider.GetRequiredService<TimerService>();
         _plcStateMonitor = _serviceProvider.GetRequiredService<IPlcStateMonitor>();
         _plcRecipeStatusProvider = _serviceProvider.GetRequiredService<IPlcRecipeStatusProvider>();
         _actionTargetProvider = _serviceProvider.GetRequiredService<IActionTargetProvider>();
-
+        
         _actionTargetProvider.RefreshTargets();
         _timerService.TimesUpdated += OnTimesUpdated;
 

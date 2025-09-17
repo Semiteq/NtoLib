@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
@@ -35,7 +36,8 @@ public partial class TableControl : VisualControlBase
     // DI and services
     [NonSerialized] private IServiceProvider? _sp;
     [NonSerialized] private RecipeViewModel? _recipeViewModel;
-    [NonSerialized] private TableSchema? _tableSchema;
+    [NonSerialized] private TableColumns? _tableSchema;
+    [NonSerialized] private PropertyDefinitionRegistry? _registry;
     [NonSerialized] private IStatusManager? _statusManager;
     [NonSerialized] private IPlcStateMonitor? _plcStateMonitor;
     [NonSerialized] private IActionTargetProvider? _actionTargetProvider;
@@ -345,7 +347,7 @@ public partial class TableControl : VisualControlBase
 
         if (FBConnector?.Fb is not MbeTableFB fb || fb.ServiceProvider is not IServiceProvider sp)
         {
-            System.Diagnostics.Debug.WriteLine("!!! TableControl.InitializeServicesAndEvents: Skipped, ServiceProvider not ready. !!!");
+            Debug.WriteLine("!!! TableControl.InitializeServicesAndEvents: Skipped, ServiceProvider not ready. !!!");
             return;
         }
 
@@ -354,7 +356,8 @@ public partial class TableControl : VisualControlBase
         _debugLogger.Log("Initializing runtime services and UI.");
 
         _recipeViewModel = _sp.GetRequiredService<RecipeViewModel>();
-        _tableSchema = _sp.GetRequiredService<TableSchema>();
+        _tableSchema = _sp.GetRequiredService<TableColumns>();
+        _registry = _sp.GetRequiredService<PropertyDefinitionRegistry>();
         _statusManager = _sp.GetRequiredService<IStatusManager>();
         _plcStateMonitor = _sp.GetRequiredService<IPlcStateMonitor>();
         _openFileDialog = _sp.GetRequiredService<OpenFileDialog>();
@@ -390,6 +393,7 @@ public partial class TableControl : VisualControlBase
         var tableColumnManager = new TableColumnManager(
             _table,
             _tableSchema!,
+            _registry!,
             _colorScheme!,
             _comboboxDataProvider!);
         
@@ -456,7 +460,7 @@ public partial class TableControl : VisualControlBase
 
     protected override void Dispose(bool disposing)
     {
-        System.Diagnostics.Debug.WriteLine($"!!! TableControl.Dispose(disposing={disposing}) called !!!");
+        Debug.WriteLine($"!!! TableControl.Dispose(disposing={disposing}) called !!!");
         if (disposing)
         {
             CleanupRuntimeState();
@@ -707,7 +711,7 @@ public partial class TableControl : VisualControlBase
         if (_eventSubscriptions.Count == 0) return;
         
         _debugLogger?.Log($"Clearing {_eventSubscriptions.Count} event subscriptions.");
-        System.Diagnostics.Debug.WriteLine($"Clearing {_eventSubscriptions.Count} subs.");
+        Debug.WriteLine($"Clearing {_eventSubscriptions.Count} subs.");
 
         for (int i = _eventSubscriptions.Count - 1; i >= 0; i--)
         {

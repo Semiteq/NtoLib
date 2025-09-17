@@ -1,80 +1,208 @@
 ﻿#nullable enable
-
 using System;
-using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
-using NtoLib.Recipes.MbeTable.Core.Domain.Analysis.Rules;
+using NtoLib.Recipes.MbeTable.Core.Domain.Calculations;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
-using NtoLib.Recipes.MbeTable.Core.Domain.Properties.Errors;
+using NtoLib.Recipes.MbeTable.Core.Domain.Services;
+using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
-namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis
+namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
+
+public sealed class StepPropertyCalculator
 {
-    /// <summary>
-    /// Orchestrates the calculation of dependent properties for a step by delegating to configured calculation rules.
-    /// </summary>
-    public sealed class StepPropertyCalculator
+    private readonly TableColumns _tableColumns;
+    private readonly IActionRepository _actionRepository;
+    private readonly PropertyDefinitionRegistry _propertyRegistry;
+    private readonly ICalculationOrderer _calculationOrderer;
+    private readonly IFormulaParser _formulaParser;
+    private readonly ILogger _logger;
+
+    public StepPropertyCalculator(
+        TableColumns tableColumns,
+        IActionRepository actionRepository,
+        PropertyDefinitionRegistry propertyRegistry,
+        ICalculationOrderer calculationOrderer,
+        IFormulaParser formulaParser,
+        ILogger logger)
     {
-        private readonly IActionRepository _actionRepository;
-        private readonly IReadOnlyDictionary<string, ICalculationRule> _rules;
+        _tableColumns = tableColumns;
+        _actionRepository = actionRepository;
+        _propertyRegistry = propertyRegistry;
+        _calculationOrderer = calculationOrderer;
+        _formulaParser = formulaParser;
+        _logger = logger;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StepPropertyCalculator"/> class.
-        /// </summary>
-        /// <param name="actionRepository">The repository to access action definitions.</param>
-        /// <param name="rules">A dictionary of available calculation rule implementations, keyed by their unique name.</param>
-        public StepPropertyCalculator(IActionRepository actionRepository, IEnumerable<ICalculationRule> rules)
+    /// <summary>
+    /// Applies user change and recalculates all calculated columns (if possible).
+    /// On formula error returns original step (logging error).
+    /// </summary>
+    public Result<Step> CalculateDependencies(
+        Step currentStep,
+        ColumnIdentifier triggerKey,
+        StepProperty newTriggerProperty)
+    {
+        try
         {
-            _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
-            _rules = rules?.ToDictionary(r => r.Name) ?? throw new ArgumentNullException(nameof(rules));
-        }
+            var updatedProps = currentStep.Properties.SetItem(triggerKey, newTriggerProperty);
+            
+            return Result.Ok(currentStep with { Properties = updatedProps });
+            
+            var calcColumns = _calculationOrderer.GetCalculatedColumnsInOrder();
+            if (calcColumns.Count == 0)
+                return Result.Ok(currentStep with { Properties = updatedProps });
 
-        /// <summary>
-        /// Checks if a property change requires a dependency recalculation for a given step.
-        /// </summary>
-        /// <param name="step">The step being modified.</param>
-        /// <returns>True if the step's action is configured with a calculation rule.</returns>
-        public bool IsRecalculationRequired(Step step)
-        {
-            var actionId = step.Properties[WellKnownColumns.Action]!.GetValue<int>();
-            var actionDef = _actionRepository.GetActionById(actionId);
-            return actionDef.CalculationRule != null;
-        }
+            var nameMap = _calculationOrderer.GetColumnKeyToDataTableNameMap();
 
-        /// <summary>
-        /// Calculates dependent properties by finding and applying the appropriate rule.
-        /// </summary>
-        /// <param name="currentStep">The current state of the step.</param>
-        /// <param name="triggerKey">The key of the property that was changed.</param>
-        /// <param name="newTriggerProperty">The new property value that triggered the calculation.</param>
-        /// <returns>A <see cref="Result{T}"/> containing the updated <see cref="Step"/> and an optional error.</returns>
-        public Result<Step> CalculateDependencies(
-            Step currentStep,
-            ColumnIdentifier triggerKey,
-            StepProperty newTriggerProperty)
-        {
-            var actionId = currentStep.Properties[WellKnownColumns.Action]!.GetValue<int>();
-            var actionDef = _actionRepository.GetActionById(actionId);
-
-            if (actionDef.CalculationRule is null)
+            using var table = new DataTable("calc");
+            // Create columns (string type for simplicity; we convert manually)
+            foreach (var kv in nameMap)
             {
-                // Should not happen if IsRecalculationRequired is checked first, but good practice.
-                return Result.Ok(currentStep);
+                if (!table.Columns.Contains(kv.Value))
+                    table.Columns.Add(kv.Value, typeof(double));
+            }
+            var row = table.NewRow();
+            table.Rows.Add(row);
+
+            // Preload existing numeric values
+            foreach (var kv in updatedProps)
+            {
+                if (!nameMap.TryGetValue(kv.Key, out var colName)) continue;
+                if (kv.Value == null) continue;
+
+                try
+                {
+                    var def = _propertyRegistry.GetDefinition(kv.Value.PropertyTypeId);
+                    var obj = kv.Value.GetValueAsObject();
+                    if (def.SystemType == typeof(int))
+                        row[colName] = Convert.ToDouble((int)obj);
+                    else if (def.SystemType == typeof(float))
+                        row[colName] = Convert.ToDouble((float)obj);
+                    else if (def.SystemType == typeof(bool))
+                        row[colName] = ((bool)obj) ? 1d : 0d;
+                    else
+                        continue; // strings не кладём — формулы для них не предполагаются
+                }
+                catch
+                {
+                    // Игнорируем нечисловые
+                }
             }
 
-            if (!_rules.TryGetValue(actionDef.CalculationRule.Name, out var rule))
+            var propsMutable = updatedProps.ToBuilder();
+
+            foreach (var column in calcColumns)
             {
-                var error = new CalculationError($"Calculation rule '{actionDef.CalculationRule.Name}' is defined in configuration but not implemented.");
-                return Result.Fail(error);
+                if (column.Calculation == null) continue;
+                var deps = column.Calculation.DependencyKeys;
+
+                // Проверка присутствия зависимостей (и значений)
+                var missing = deps.Any(d =>
+                    !updatedProps.TryGetValue(d, out var sp) || sp == null);
+                if (missing)
+                {
+                    continue; // пропускаем вычисление для этой строки
+                }
+
+                // Формула → DataTable syntax
+                string dtFormula;
+                try
+                {
+                    dtFormula = _formulaParser.ConvertFormulaToDataTableSyntax(
+                        column.Calculation.Formula,
+                        nameMap);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"Formula conversion failed for '{column.Key.Value}': {ex.Message}");
+                    return Result.Ok(currentStep); // возвращаем старое
+                }
+
+                object rawResult;
+                try
+                {
+                    rawResult = table.Compute(dtFormula, string.Empty);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"Formula evaluation failed for '{column.Key.Value}': {ex.Message}");
+                    return Result.Ok(currentStep);
+                }
+
+                if (rawResult is DBNull)
+                    continue;
+
+                double dbl;
+                try
+                {
+                    dbl = Convert.ToDouble(rawResult);
+                    if (double.IsNaN(dbl) || double.IsInfinity(dbl))
+                    {
+                        _logger.Log($"Formula result invalid (NaN/Inf) for '{column.Key.Value}'.");
+                        return Result.Ok(currentStep);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"Result conversion failed for '{column.Key.Value}': {ex.Message}");
+                    return Result.Ok(currentStep);
+                }
+
+                // Приведение к типу свойства
+                try
+                {
+                    var def = _propertyRegistry.GetDefinition(column.PropertyTypeId);
+                    object typedValue = def.SystemType == typeof(int)
+                        ? (object)(int)Math.Round(dbl)
+                        : def.SystemType == typeof(float)
+                            ? (object)(float)dbl
+                            : def.SystemType == typeof(bool)
+                                ? (object)(Math.Abs(dbl) > 1e-9)
+                                : (object)dbl.ToString(); // fallback
+
+                    // Обновляем DataRow для каскадных зависимостей
+                    if (nameMap.TryGetValue(column.Key, out var colName))
+                        row[colName] = def.SystemType == typeof(bool)
+                            ? ((bool)typedValue ? 1d : 0d)
+                            : Convert.ToDouble(typedValue);
+
+                    var existing = propsMutable[column.Key];
+                    StepProperty newProp;
+                    if (existing == null)
+                    {
+                        newProp = new StepProperty(typedValue, column.PropertyTypeId, _propertyRegistry);
+                    }
+                    else
+                    {
+                        var upd = existing.WithValue(typedValue);
+                        if (upd.IsFailed)
+                        {
+                            _logger.Log($"Validation failed for computed '{column.Key.Value}': {upd.Errors.First().Message}");
+                            return Result.Ok(currentStep);
+                        }
+                        newProp = upd.Value;
+                    }
+
+                    propsMutable[column.Key] = newProp;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"Applying computed value failed for '{column.Key.Value}': {ex.Message}");
+                    return Result.Ok(currentStep);
+                }
             }
 
-            // The mapping tells the rule which columns to use for its calculations.
-            var mapping = actionDef.CalculationRule.Mapping;
-
-            return rule.Apply(currentStep, triggerKey, newTriggerProperty, mapping);
+            return Result.Ok(currentStep with { Properties = propsMutable.ToImmutable() });
+        }
+        catch (Exception ex)
+        {
+            _logger.Log($"Unexpected calculation exception: {ex.Message}");
+            return Result.Ok(currentStep);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿#nullable enable
+
 using System.Collections.Generic;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 
@@ -9,7 +10,13 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Contracts;
 /// </summary>
 public interface IPlcRecipeSerializer
 {
-    (int[] IntArray, int[] FloatArray, int[] BoolArray) ToRegisters(IReadOnlyList<Step> steps);
+    /// <summary>
+    /// Converts a list of recipe steps into PLC register arrays based on column configuration.
+    /// </summary>
+    (int[] IntArray, int[] FloatArray) ToRegisters(IReadOnlyList<Step> steps);
 
+    /// <summary>
+    /// Reconstructs a list of recipe steps from PLC register arrays.
+    /// </summary>
     List<Step> FromRegisters(int[] intData, int[] floatData, int rowCount);
 }

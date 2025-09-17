@@ -1,11 +1,10 @@
 ﻿#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using EasyModbus;
-using NtoLib.Recipes.MbeTable.Config;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
-using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Core.Domain.Steps;
@@ -17,55 +16,40 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Communication.Protocol;
 public sealed class PlcRecipeSerializer : IPlcRecipeSerializer
 {
     private readonly IStepFactory _stepFactory;
-    private readonly IActionRepository _actionRepository;
-    private readonly TableSchema _tableSchema; 
+    private readonly TableColumns _tableColumns; 
     private readonly ModbusClient.RegisterOrder _registerOrder;
-    private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
 
     public PlcRecipeSerializer(
         IStepFactory stepFactory, 
-        IActionRepository actionRepository,
-        TableSchema tableSchema, 
+        TableColumns tableColumns, 
         ICommunicationSettingsProvider communicationSettingsProvider)
     {
         _stepFactory = stepFactory ?? throw new ArgumentNullException(nameof(stepFactory));
-        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
-        _tableSchema = tableSchema ?? throw new ArgumentNullException(nameof(tableSchema)); 
-        _communicationSettingsProvider = communicationSettingsProvider ?? throw new ArgumentNullException(nameof(communicationSettingsProvider));
+        _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns)); 
         
-        _registerOrder = CommunicationSettings.WordOrder == WordOrder.HighLow
+        if (communicationSettingsProvider is null)
+            throw new ArgumentNullException(nameof(communicationSettingsProvider));
+        
+        var settings = communicationSettingsProvider.GetSettings();
+        _registerOrder = settings.WordOrder == WordOrder.HighLow
             ? ModbusClient.RegisterOrder.HighLow
             : ModbusClient.RegisterOrder.LowHigh;
     }
-    
-    private CommunicationSettings CommunicationSettings => _communicationSettingsProvider.GetSettings();
 
     /// <inheritdoc />
-    public (int[] IntArray, int[] FloatArray, int[] BoolArray) ToRegisters(IReadOnlyList<Step> steps)
+    public (int[] IntArray, int[] FloatArray) ToRegisters(IReadOnlyList<Step> steps)
     {
         var rowCount = steps.Count;
-        var settings = CommunicationSettings;
+        if (rowCount == 0)
+            return (Array.Empty<int>(), Array.Empty<int>());
 
-        // Определяем размеры массивов на основе максимальных индексов в маппинге
-        var maxIntIndex = _tableSchema.GetColumns()
-            .Where(c => c.PlcMapping?.Area == "Int")
-            .Max(c => c.PlcMapping?.Index ?? -1);
-        
-        var maxFloatIndex = _tableSchema.GetColumns()
-            .Where(c => c.PlcMapping?.Area == "Float")
-            .Max(c => c.PlcMapping?.Index ?? -1);
-
-        var intCols = maxIntIndex + 1;
-        var floatCols = maxFloatIndex + 1;
-        // Bool пока не используется, но логика аналогична
-        var boolCols = 0; 
+        var intCols = GetColumnCountForArea("Int");
+        var floatCols = GetColumnCountForArea("Float");
         
         var intArray = new int[rowCount * intCols];
-        // Каждый float занимает 2 регистра
-        var floatArray = new int[rowCount * floatCols * 2]; 
-        var boolArray = boolCols > 0 ? new int[rowCount * boolCols] : Array.Empty<int>();
+        var floatArray = new int[rowCount * floatCols * 2]; // Each float takes 2 registers
 
-        var writableColumns = _tableSchema.GetColumns().Where(c => c.PlcMapping != null).ToList();
+        var writableColumns = _tableColumns.GetColumns().Where(c => c.PlcMapping != null).ToList();
 
         for (var row = 0; row < rowCount; row++)
         {
@@ -75,7 +59,7 @@ public sealed class PlcRecipeSerializer : IPlcRecipeSerializer
                 var mapping = column.PlcMapping!;
                 if (!step.Properties.TryGetValue(column.Key, out var property) || property is null)
                 {
-                    continue; // Пропускаем неактивные для этого шага свойства
+                    continue; // Skip properties not active for this step
                 }
 
                 switch (mapping.Area)
@@ -88,38 +72,31 @@ public sealed class PlcRecipeSerializer : IPlcRecipeSerializer
                         var floatBase = row * floatCols * 2;
                         WriteFloat(floatArray, floatBase + (mapping.Index * 2), property.GetValue<float>());
                         break;
-                    // case "Bool": ... (логика для bool)
                 }
             }
         }
         
-        return (intArray, floatArray, boolArray);
+        return (intArray, floatArray);
     }
 
     /// <inheritdoc />
     public List<Step> FromRegisters(int[] intData, int[] floatData, int rowCount)
     {
+        if (rowCount == 0)
+            return new List<Step>();
+
         var steps = new List<Step>(rowCount);
         
-        var maxIntIndex = _tableSchema.GetColumns()
-            .Where(c => c.PlcMapping?.Area == "Int")
-            .Max(c => c.PlcMapping?.Index ?? -1);
+        var intCols = GetColumnCountForArea("Int");
+        var floatCols = GetColumnCountForArea("Float");
         
-        var maxFloatIndex = _tableSchema.GetColumns()
-            .Where(c => c.PlcMapping?.Area == "Float")
-            .Max(c => c.PlcMapping?.Index ?? -1);
-
-        var intCols = maxIntIndex + 1;
-        var floatCols = maxFloatIndex + 1;
-        
-        var mappedColumns = _tableSchema.GetColumns().Where(c => c.PlcMapping != null).ToList();
-        var actionColumn = _tableSchema.GetColumnDefinition(WellKnownColumns.Action);
+        var mappedColumns = _tableColumns.GetColumns().Where(c => c.PlcMapping != null).ToList();
+        var actionColumn = _tableColumns.GetColumnDefinition(WellKnownColumns.Action);
 
         for (var row = 0; row < rowCount; row++)
         {
-            var iBase = row * intCols;
-            var actionId = SafeGet(intData, iBase + actionColumn.PlcMapping!.Index);
-
+            var intBase = row * intCols;
+            var actionId = SafeGet(intData, intBase + actionColumn.PlcMapping!.Index);
             var builder = _stepFactory.ForAction(actionId);
 
             foreach (var column in mappedColumns)
@@ -130,11 +107,11 @@ public sealed class PlcRecipeSerializer : IPlcRecipeSerializer
                 switch (mapping.Area)
                 {
                     case "Int":
-                        value = SafeGet(intData, iBase + mapping.Index);
+                        value = SafeGet(intData, intBase + mapping.Index);
                         break;
                     case "Float":
-                        var fBase = row * floatCols * 2;
-                        value = ReadFloat(floatData, fBase + (mapping.Index * 2));
+                        var floatBase = row * floatCols * 2;
+                        value = ReadFloat(floatData, floatBase + (mapping.Index * 2));
                         break;
                 }
                 
@@ -149,29 +126,29 @@ public sealed class PlcRecipeSerializer : IPlcRecipeSerializer
         return steps;
     }
 
-    public int? GetInt(Step step, ColumnIdentifier key) 
-        => step.Properties.TryGetValue(key, out var prop) 
-            ? prop?.GetValue<int>() 
-            : null;
-    public float? GetFloat(Step step, ColumnIdentifier key) 
-        => step.Properties.TryGetValue(key, out var prop) 
-            ? prop?.GetValue<float>() 
-            : null;
+    private int GetColumnCountForArea(string area)
+    {
+        var maxIndex = _tableColumns.GetColumns()
+            .Where(c => c.PlcMapping?.Area == area)
+            .Max(c => c.PlcMapping?.Index) ?? -1;
+        
+        return maxIndex + 1;
+    }
 
-    public void WriteFloat(int[] buffer, int offset, float value)
+    private void WriteFloat(int[] buffer, int offset, float value)
     {
         var regs = ModbusClient.ConvertFloatToRegisters(value, _registerOrder);
         buffer[offset] = regs[0];
         buffer[offset + 1] = regs[1];
     }
 
-    public float ReadFloat(int[] buffer, int offset)
+    private float ReadFloat(int[] buffer, int offset)
     {
-        var regs = new[] { buffer[offset], buffer[offset + 1] };
+        var regs = new[] { SafeGet(buffer, offset), SafeGet(buffer, offset + 1) };
         return ModbusClient.ConvertRegistersToFloat(regs, _registerOrder);
     }
 
-    public int SafeGet(int[] arr, int index) 
+    private int SafeGet(int[] arr, int index) 
         => index >= 0 && index < arr.Length 
             ? arr[index] 
             : 0;

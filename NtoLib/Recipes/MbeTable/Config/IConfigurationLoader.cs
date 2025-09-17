@@ -9,9 +9,6 @@ namespace NtoLib.Recipes.MbeTable.Config;
 /// </summary>
 public interface IConfigurationLoader
 {
-    /// <summary>
-    /// Loads, parses, and validates configuration from external sources (e.g., JSON files).
-    /// </summary>
-    /// <returns>A <see cref="Result{T}"/> containing the <see cref="AppConfiguration"/> on success, or an error on failure.</returns>
-    Result<AppConfiguration> LoadConfiguration(string baseDirectory, string schemaConfigFileName, string actionsConfigFileName);
+    Result<AppConfiguration> LoadConfiguration(ConfigFiles configFiles
+        );
 }

@@ -50,7 +50,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
     public sealed class TableBehaviorManager : IDisposable
     {
         private readonly DataGridView _table;
-        private readonly TableSchema _schema;
+        private readonly TableColumns _columns;
         private readonly TableCellStateManager _stateManager;
         private readonly IPlcRecipeStatusProvider _statusProvider;
         private readonly IStatusManager? _statusManager;
@@ -68,7 +68,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
         public TableBehaviorManager(
             DataGridView table,
-            TableSchema schema,
+            TableColumns columns,
             TableCellStateManager stateManager,
             IStatusManager? statusManager,
             ICellStylePalette palette,
@@ -78,7 +78,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             Func<int>? getComboMaxItems = null)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
-            _schema = schema ?? throw new ArgumentNullException(nameof(schema));
+            _columns = columns ?? throw new ArgumentNullException(nameof(columns));
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
             _statusManager = statusManager;
             _palette = palette ?? throw new ArgumentNullException(nameof(palette));
@@ -204,7 +204,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             }
             else
             {
-                var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
+                var columnKey = _columns.GetColumnDefinition(e.ColumnIndex).Key;
                 visual = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
             }
 
@@ -241,7 +241,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             bool rowPassed = e.RowIndex < status.CurrentLine;
             bool rowCurrent = e.RowIndex == status.CurrentLine;
 
-            var columnKey = _schema.GetColumnDefinition(e.ColumnIndex).Key;
+            var columnKey = _columns.GetColumnDefinition(e.ColumnIndex).Key;
             var cellVisual = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
 
             bool forceRowStyle = rowPassed || rowCurrent;
@@ -384,7 +384,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             if (_table.Rows[e.RowIndex].DataBoundItem is not StepViewModel vm) return;
 
-            var key = _schema.GetColumnDefinition(e.ColumnIndex).Key;
+            var key = _columns.GetColumnDefinition(e.ColumnIndex).Key;
             var visual = _stateManager.GetStateForCell(vm, key, e.RowIndex);
             if (visual.IsReadonly)
                 e.Cancel = true;

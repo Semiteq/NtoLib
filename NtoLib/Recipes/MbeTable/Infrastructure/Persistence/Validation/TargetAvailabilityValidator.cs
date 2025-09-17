@@ -1,8 +1,9 @@
 ﻿#nullable enable
 
+using System;
 using System.Collections.Generic;
 using FluentResults;
-using NtoLib.Recipes.MbeTable.Config.Models.Schema;
+using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
@@ -34,7 +35,7 @@ public sealed class TargetAvailabilityValidator
             // For each column that has GroupName (i.e., enum sourced from pin groups)
             foreach (var col in action.Columns)
             {
-                if (col.PropertyType != PropertyType.Enum) continue;
+                if (string.Equals(col.PropertyTypeId, "Enum", StringComparison.OrdinalIgnoreCase)) continue;
                 if (string.IsNullOrWhiteSpace(col.GroupName)) continue;
 
                 var keyId = new ColumnIdentifier(col.Key);

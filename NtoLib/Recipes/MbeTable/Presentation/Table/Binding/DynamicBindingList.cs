@@ -1,8 +1,10 @@
 ﻿#nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Binding
@@ -16,18 +18,21 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Binding
     {
         private readonly PropertyDescriptorCollection _propertyDescriptors;
 
-        public DynamicBindingList(TableSchema tableSchema)
+        public DynamicBindingList(TableColumns tableColumns, PropertyDefinitionRegistry registry)
         {
+            if (tableColumns == null) throw new ArgumentNullException(nameof(tableColumns));
+            if (registry == null) throw new ArgumentNullException(nameof(registry));
+
             var descriptors = new List<PropertyDescriptor>();
-            foreach (var colDef in tableSchema.GetColumns())
+            foreach (var colDef in tableColumns.GetColumns())
             {
-                descriptors.Add(new StepPropertyDescriptor(colDef));
+                var propDef = registry.GetDefinition(colDef.PropertyTypeId);
+                var propertyType = propDef.SystemType;
+                descriptors.Add(new StepPropertyDescriptor(colDef, propertyType));
             }
             _propertyDescriptors = new PropertyDescriptorCollection(descriptors.ToArray());
         }
-
-        // --- ITypedList Implementation ---
-
+        
         public PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[]? listAccessors)
         {
             return _propertyDescriptors;
