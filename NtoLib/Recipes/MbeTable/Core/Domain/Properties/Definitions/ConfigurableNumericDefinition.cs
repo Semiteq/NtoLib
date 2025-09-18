@@ -64,7 +64,7 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
     public virtual string FormatValue(object value)
     {
         var formatResult = TryFormatInternal(value);
-        return formatResult.IsSuccess ? formatResult.Value.display : value.ToString() ?? string.Empty;
+        return formatResult.IsSuccess ? formatResult.Value.display : value.ToString();
     }
 
     /// <inheritdoc/>
@@ -108,9 +108,7 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         var display = _formatKind switch
         {
             "Scientific" => numeric.ToString("0.##E0", CultureInfo.InvariantCulture),
-            "Auto" => numeric % 1 == 0
-                ? numeric.ToString("F0", CultureInfo.InvariantCulture)
-                : numeric.ToString("G2", CultureInfo.InvariantCulture),
+            "Auto" => numeric.ToString("0.##", CultureInfo.InvariantCulture),
             _ => numeric.ToString(CultureInfo.InvariantCulture)
         };
 

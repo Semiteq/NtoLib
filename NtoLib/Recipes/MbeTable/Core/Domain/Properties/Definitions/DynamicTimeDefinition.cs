@@ -31,7 +31,7 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
             _ => 0f
         };
         var t = TimeSpan.FromSeconds(seconds);
-        return $"{t.Hours:D2}:{t.Minutes:D2}:{t.Seconds + t.Milliseconds / 1000.0:00.###}";
+        return $"{t.Hours:D2}:{t.Minutes:D2}:{(t.Seconds + t.Milliseconds / 1000.0).ToString("00.###", CultureInfo.InvariantCulture)}";    
     }
 
     /// <inheritdoc/>
