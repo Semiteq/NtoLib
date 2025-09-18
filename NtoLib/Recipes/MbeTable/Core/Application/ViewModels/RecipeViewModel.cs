@@ -11,7 +11,6 @@ using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
-using NtoLib.Recipes.MbeTable.Presentation.Table;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Binding;
 using NtoLib.Recipes.MbeTable.StateMachine;
 using NtoLib.Recipes.MbeTable.StateMachine.App;
@@ -51,6 +50,14 @@ public sealed class RecipeViewModel
     /// Occurs when a view model update operation ends.
     /// </summary>
     public event Action? OnUpdateEnd;
+
+    /// <summary>
+    /// Gets the last structural change that was processed.
+    /// This is consumed by the UI layer (TableBehaviorManager) to apply targeted
+    /// refresh logic for complex updates that DataGridView might not handle correctly.
+    /// It is nullified after the OnUpdateEnd event to prevent stale state.
+    /// </summary>
+    public StructuralChange? LastChange { get; private set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RecipeViewModel"/> class.
@@ -127,8 +134,10 @@ public sealed class RecipeViewModel
 
     private void OnStepPropertyChanged(int rowIndex, ColumnIdentifier key, object value)
     {
-        var result = (key == WellKnownColumns.Action && value is int newActionId)
-            ? Result.Ok(_recipeService.ReplaceStepWithNewDefault(_recipe, rowIndex, newActionId))
+        bool isActionChange = key == WellKnownColumns.Action && value is int;
+        
+        var result = isActionChange
+            ? Result.Ok(_recipeService.ReplaceStepWithNewDefault(_recipe, rowIndex, (int)value))
             : _recipeService.UpdateStepProperty(_recipe, rowIndex, key, value);
 
         if (result.IsFailed)
@@ -137,13 +146,13 @@ public sealed class RecipeViewModel
             _debugLogger.Log(
                 $"Step property update failed. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'. Error: {error.Message}");
             _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
-
             _uiDispatcher.Post(() => ViewModels.ResetItem(rowIndex));
             return;
         }
-
+        
+        var changeType = isActionChange ? ChangeType.Replace : ChangeType.Update;
         _debugLogger.Log($"Step property updated. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'");
-        UpdateStateAndViewModels(result.Value, new StructuralChange(ChangeType.Update, rowIndex));
+        UpdateStateAndViewModels(result.Value, new StructuralChange(changeType, rowIndex));
     }
 
     private void UpdateStateAndViewModels(RecipeUpdateResult result, StructuralChange? change = null)
@@ -152,6 +161,9 @@ public sealed class RecipeViewModel
         _timerService.SetTimeAnalysisData(result.TimeResult);
         _appStateMachine.Dispatch(new VmLoopValidChanged(result.LoopResult.IsValid));
 
+        // Store the last change so the UI layer can query it.
+        LastChange = change;
+        
         _uiDispatcher.Post(() =>
         {
             OnUpdateStart?.Invoke();
@@ -168,8 +180,9 @@ public sealed class RecipeViewModel
             }
             finally
             {
-                _debugLogger.Log($"Current stepViewModel quantity {ViewModels.Count}");
                 OnUpdateEnd?.Invoke();
+                // Clear the state after the UI has had a chance to react.
+                LastChange = null; 
             }
         });
     }
@@ -190,13 +203,11 @@ public sealed class RecipeViewModel
             ViewModels.RaiseListChangedEvents = true;
             ViewModels.ResetBindings();
         }
-        _debugLogger.Log("ViewModel list was fully rebuilt.");
     }
 
     private void ApplyIncrementalUpdate(RecipeUpdateResult result, StructuralChange change)
     {
-        // For structural changes, we perform the operation directly on the ViewModel.
-        // The BindingList will efficiently notify the DataGridView to add/remove a single row.
+        // Step 1: Apply the primary change to the BindingList.
         if (change.Type == ChangeType.Add)
         {
             var newVm = _stepViewModelFactory.Create(result.Recipe.Steps[change.Index], change.Index, result, OnStepPropertyChanged);
@@ -206,34 +217,42 @@ public sealed class RecipeViewModel
         {
             ViewModels.RemoveAt(change.Index);
         }
-
-        // After any change (Add, Remove, or Update), the data in subsequent rows is stale.
-        // We must update their internal state and then notify the UI to refresh only those rows.
+        else if (change.Type == ChangeType.Replace)
+        {
+            var newVm = _stepViewModelFactory.Create(result.Recipe.Steps[change.Index], change.Index, result, OnStepPropertyChanged);
+            ViewModels[change.Index] = newVm;
+        }
+        
+        // Step 2: Update the internal data of all affected and subsequent ViewModels.
+        // This is done without raising list change events to avoid UI flicker.
         ViewModels.RaiseListChangedEvents = false;
         try
         {
-            int startIndex = change.Index;
-            for (int i = startIndex; i < ViewModels.Count; i++)
+            for (int i = change.Index; i < ViewModels.Count; i++)
             {
                 if (i >= result.Recipe.Steps.Count) break;
-
                 result.TimeResult.StepStartTimes.TryGetValue(i, out var startTime);
                 ViewModels[i].UpdateInPlace(result.Recipe.Steps[i], i, startTime);
             }
         }
         finally
         {
+            // Step 3: Now that the data is consistent, raise events to ask the UI to redraw.
             ViewModels.RaiseListChangedEvents = true;
-            // Now, tell the grid to refresh only the rows whose data we just changed.
-            // This is fast because it doesn't redraw the whole table.
             for (int i = change.Index; i < ViewModels.Count; i++)
             {
                 ViewModels.ResetItem(i);
             }
         }
     }
+    
+    /// <summary>
+    /// Describes the type of change that occurred in the ViewModel list.
+    /// </summary>
+    public enum ChangeType { Add, Remove, Update, Replace }
 
-    private enum ChangeType { Add, Remove, Update }
-
-    private sealed record StructuralChange(ChangeType Type, int Index);
+    /// <summary>
+    /// A record to hold information about a structural change.
+    /// </summary>
+    public sealed record StructuralChange(ChangeType Type, int Index);
 }

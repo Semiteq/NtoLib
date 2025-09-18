@@ -133,8 +133,10 @@ public sealed class ConfigurationLoader : IConfigurationLoader
     {
         var path = Path.Combine(config.BaseDirectory, config.PinGroupDefsFileName);
         
-        return _pinGroupsLoader.LoadPinGroups(path)
-            .Bind(groups => _pinGroupValidator.Validate(groups).ToResult(groups));
+        // Pin groups are always loaded before this method, because scada calls pin init before the main DI container is created.
+        // Here pins are already validated by PinGroupDefsValidator and inited. We load them into bundle to validate with other data in AppConfigurationValidator.
+        // todo: remove second load from disk
+        return _pinGroupsLoader.LoadPinGroups(path);
     }
 
     private ColumnDefinition ConvertToColumnDefinition(YamlColumnDefinition dto)
@@ -151,14 +153,14 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 
         return new ColumnDefinition(
             Key: new ColumnIdentifier(dto.Key),
+            PropertyTypeId: dto.BusinessLogic.PropertyTypeId,
+            PlcMapping: dto.BusinessLogic.PlcMapping,
+
             Code: dto.Ui!.Code,
             UiName: dto.Ui.UiName,
-            Role: dto.BusinessLogic.Role,
-            PropertyTypeId: dto.BusinessLogic.PropertyTypeId,
             ColumnType: dto.Ui.ColumnType,
             Width: dto.Ui.Width,
             Alignment: dto.Ui.Alignment,
-            PlcMapping: dto.BusinessLogic.PlcMapping,
             ReadOnly: readOnly,
             Calculation: calcDef
         );
@@ -174,9 +176,6 @@ public sealed class ConfigurationLoader : IConfigurationLoader
             return new ConfigurableEnumDefinition(dto);
 
         var sysType = Type.GetType(dto.SystemType, throwOnError: true, ignoreCase: true)!;
-
-        if (sysType == typeof(bool))
-            return new ConfigurableBooleanDefinition(dto);
 
         if (sysType == typeof(string))
             return new ConfigurableStringDefinition(dto);

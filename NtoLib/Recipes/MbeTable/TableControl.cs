@@ -415,6 +415,7 @@ public partial class TableControl : VisualControlBase
             palette,
             _colorScheme!,
             _plcRecipeStatusProvider!,
+            _recipeViewModel!,
             _debugLogger);
 
         _tableBehaviorManager.TableStyleSetup();

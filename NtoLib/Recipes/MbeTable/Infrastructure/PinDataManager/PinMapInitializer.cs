@@ -51,7 +51,7 @@ public sealed class PinMapInitializer : IPinMapInitializer
             for (var i = 0; i < group.PinQuantity; i++)
             {
                 var pinId = group.FirstPinId + i;
-                var pinName = $"{group.GroupName}{i}";
+                var pinName = $"{group.GroupName}{i + 1}";
                 groupNode.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), "");
             }
 

@@ -16,6 +16,8 @@ public sealed class PlcProtocol : IPlcProtocol
     private readonly ICommunicationSettingsProvider _communicationSettingsProvider;
     private readonly ILogger _debugLogger;
 
+    private const int OffsetNumberLines = 1;
+
     public PlcProtocol(
         IModbusTransport modbusTransport,
         ICommunicationSettingsProvider communicationSettingsProvider,
@@ -46,7 +48,7 @@ public sealed class PlcProtocol : IPlcProtocol
                 return writeResult;
         }
 
-        var writeRowCountResult = _modbusTransport.WriteSingleRegister(Settings.ControlBaseAddr + 2, rowCount);
+        var writeRowCountResult = _modbusTransport.WriteSingleRegister(Settings.ControlBaseAddr + OffsetNumberLines, rowCount);
         if (writeRowCountResult.IsFailed)
             return writeRowCountResult;
 
@@ -55,7 +57,7 @@ public sealed class PlcProtocol : IPlcProtocol
 
     public Result<int> ReadRowCount()
     {
-        var rowCountResult = _modbusTransport.ReadHoldingRegisters(Settings.ControlBaseAddr + 2, 1);
+        var rowCountResult = _modbusTransport.ReadHoldingRegisters(Settings.ControlBaseAddr + OffsetNumberLines, 1);
         if (rowCountResult.IsFailed)
             return rowCountResult.ToResult<int>();
         

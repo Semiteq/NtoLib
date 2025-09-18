@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -13,12 +14,16 @@ namespace NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
 public class DebugLogger : ILogger
 {
+    private static readonly object _fileLock = new();
+    private static readonly string _logFilePath = Path.Combine(AppContext.BaseDirectory, "debug_log.txt");
+
     public void Log(string message, [CallerMemberName] string caller = "")
     {
 #if DEBUG
         var output = $"{DateTime.Now:HH:mm:ss.fff} [{caller}] {message}";
         Debug.WriteLine(output);
         Console.WriteLine(output);
+        WriteToFile(output);
 #endif
     }
     
@@ -26,7 +31,10 @@ public class DebugLogger : ILogger
     {
 #if DEBUG
         var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+        var sb = new StringBuilder();
+
         var exceptionInfo = $"{timestamp} [ERROR] [{caller}] {ex.GetType().Name}: {ex.Message}";
+        sb.AppendLine(exceptionInfo);
         
         Debug.WriteLine(exceptionInfo);
         Console.WriteLine(exceptionInfo);
@@ -34,15 +42,36 @@ public class DebugLogger : ILogger
         if (contextData != null)
         {
             var contextInfo = $"{timestamp} [CONTEXT] [{caller}] {SerializeContext(contextData)}";
+            sb.AppendLine(contextInfo);
             Debug.WriteLine(contextInfo);
             Console.WriteLine(contextInfo);
         }
         
         if (!string.IsNullOrEmpty(ex.StackTrace))
         {
-            Debug.WriteLine($"{timestamp} [STACK] [{caller}] {ex.StackTrace}");
+            var stackTraceInfo = $"{timestamp} [STACK] [{caller}] {ex.StackTrace}";
+            sb.AppendLine(stackTraceInfo);
+            Debug.WriteLine(stackTraceInfo);
         }
+        
+        WriteToFile(sb.ToString());
 #endif
+    }
+
+    private void WriteToFile(string message)
+    {
+        try
+        {
+            lock (_fileLock)
+            {
+                File.AppendAllText(_logFilePath, message + Environment.NewLine);
+            }
+        }
+        catch (Exception fileEx)
+        {
+            // Fallback to debug output if file logging fails
+            Debug.WriteLine($"Failed to write to log file: {fileEx.Message}");
+        }
     }
 
     private string SerializeContext(object contextData)

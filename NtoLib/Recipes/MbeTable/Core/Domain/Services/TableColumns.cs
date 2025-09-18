@@ -49,13 +49,4 @@ public sealed class TableColumns
             ? definition
             : throw new KeyNotFoundException($"Column with key '{key.Value}' not found in schema.");
     }
-
-    /// <summary>
-    /// Gets all column definitions that have a specific semantic role.
-    /// </summary>
-    public IEnumerable<ColumnDefinition> GetColumnsByRole(string role)
-    {
-        return _columns.Where(c =>
-            string.Equals(c.Role, role, StringComparison.OrdinalIgnoreCase));
-    }
 }

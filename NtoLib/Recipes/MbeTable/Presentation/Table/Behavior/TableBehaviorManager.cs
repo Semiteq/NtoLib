@@ -46,6 +46,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
     ///
     /// Important: Any edits that "simplify" this code will almost certainly bring back the bug
     /// of partially uncolored cells during execution. Do not change without regression tests!
+    /// The OnViewModelUpdateEnd method was added as a final, targeted fix for this exact problem.
     /// </summary>
     public sealed class TableBehaviorManager : IDisposable
     {
@@ -56,15 +57,15 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
         private readonly IStatusManager? _statusManager;
         private readonly ILogger? _debugLogger;
         private readonly ICellStylePalette _palette;
+        private readonly RecipeViewModel _recipeViewModel;
         private ColorScheme _colorScheme;
 
         private bool _attached;
         private bool _disposed;
         private bool _clearedInitialPerCellStyles;
         private PlcRecipeStatus? _lastStatus;
-
-        // Value for configuring the visibility of elements in ComboBox (passed from TableControl).
-        private readonly Func<int>? _getComboMaxItems; // optional, if dynamic adjustment is needed.
+        
+        private readonly Func<int>? _getComboMaxItems;
 
         public TableBehaviorManager(
             DataGridView table,
@@ -74,6 +75,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             ICellStylePalette palette,
             ColorScheme colorScheme,
             IPlcRecipeStatusProvider statusProvider,
+            RecipeViewModel recipeViewModel,
             ILogger? debugLogger = null,
             Func<int>? getComboMaxItems = null)
         {
@@ -84,6 +86,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             _palette = palette ?? throw new ArgumentNullException(nameof(palette));
             _colorScheme = colorScheme ?? throw new ArgumentNullException(nameof(colorScheme));
             _statusProvider = statusProvider ?? throw new ArgumentNullException(nameof(statusProvider));
+            _recipeViewModel = recipeViewModel ?? throw new ArgumentNullException(nameof(recipeViewModel));
             _debugLogger = debugLogger;
             _getComboMaxItems = getComboMaxItems;
 
@@ -95,7 +98,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             _table.EditMode = DataGridViewEditMode.EditOnEnter;
             _table.EnableHeadersVisualStyles = false;
 
-            // "Mute" the standard selection color to avoid conflict with our row-level colors.
             void Equalize(DataGridViewCellStyle s)
             {
                 s.SelectionBackColor = s.BackColor;
@@ -121,6 +123,7 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             _table.EditingControlShowing += OnEditingControlShowing;
 
             _statusProvider.StatusChanged += OnStatusChanged;
+            _recipeViewModel.OnUpdateEnd += OnViewModelUpdateEnd;
             _lastStatus = _statusProvider.GetStatus();
 
             _attached = true;
@@ -140,9 +143,75 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             _table.EditingControlShowing -= OnEditingControlShowing;
 
             _statusProvider.StatusChanged -= OnStatusChanged;
+            _recipeViewModel.OnUpdateEnd -= OnViewModelUpdateEnd;
             _attached = false;
         }
 
+        /// <summary>
+        /// This method is the definitive fix for the "sticky cell state" bug.
+        /// PROBLEM: When an Action is changed, the underlying StepViewModel is replaced.
+        /// However, DataGridView aggressively caches cell states. If a cell's display value
+        /// doesn't change (e.g., empty to empty), DGV will often skip calling OnCellFormatting,
+        /// leaving the old ReadOnly status "stuck" on the cell. Standard invalidation methods
+        /// are not sufficient to reliably break this cache.
+        /// SOLUTION: After the ViewModel has finished its update, we check if the last operation
+        /// was a 'Replace'. If so, we bypass DGV's event system entirely. We manually iterate
+        /// through each cell of the affected row, get the true state from the new StepViewModel,
+        /// and directly set the cell's ReadOnly property. This guarantees state synchronization.
+        /// </summary>
+        private void OnViewModelUpdateEnd()
+        {
+            var lastChange = _recipeViewModel.LastChange;
+            if (lastChange?.Type != RecipeViewModel.ChangeType.Replace)
+            {
+                return;
+            }
+
+            int rowIndex = lastChange.Index;
+            if (rowIndex < 0 || rowIndex >= _table.Rows.Count)
+            {
+                return;
+            }
+
+            var row = _table.Rows[rowIndex];
+            if (row.DataBoundItem is not StepViewModel vm)
+            {
+                return;
+            }
+
+            _debugLogger?.Log($"OnViewModelUpdateEnd: Manually synchronizing ReadOnly state for row {rowIndex} after Action change.");
+
+            // Manually iterate through each cell and set its ReadOnly property
+            // from the source of truth (the ViewModel).
+            for (int i = 0; i < _table.Columns.Count; i++)
+            {
+                var cell = row.Cells[i];
+                var columnKey = _columns.GetColumnDefinition(i).Key;
+                var visualState = _stateManager.GetStateForCell(vm, columnKey, rowIndex);
+
+                if (cell.ReadOnly != visualState.IsReadonly)
+                {
+                    cell.ReadOnly = visualState.IsReadonly;
+                }
+                
+                // Also synchronize visual styles for specific cell types that depend on ReadOnly state.
+                if (cell is DataGridViewComboBoxCell comboCell)
+                {
+                    var desiredStyle = visualState.IsReadonly
+                        ? DataGridViewComboBoxDisplayStyle.Nothing
+                        : DataGridViewComboBoxDisplayStyle.DropDownButton;
+                    
+                    if (comboCell.DisplayStyle != desiredStyle)
+                    {
+                        comboCell.DisplayStyle = desiredStyle;
+                    }
+                }
+            }
+            
+            // Finally, force a repaint of the now-correctly-configured row.
+            _table.InvalidateRow(rowIndex);
+        }
+        
         private void OnTableDisposed(object? sender, EventArgs e)
         {
             try { Detach(); } catch { }
@@ -158,7 +227,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
         private void OnDataBindingComplete(object? sender, DataGridViewBindingCompleteEventArgs e)
         {
-            // Clear potentially outdated per-cell styles once, so they don't "burn" after data changes.
             if (_clearedInitialPerCellStyles) return;
             _clearedInitialPerCellStyles = true;
             try
@@ -173,7 +241,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
         private void OnSelectionChanged(object? sender, EventArgs e)
         {
-            // Update the focus outline only for the current cell.
             try
             {
                 var cur = _table.CurrentCell;
@@ -189,7 +256,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             var row = grid.Rows[e.RowIndex];
             if (row.DataBoundItem is not StepViewModel vm) return;
 
-            // Get global PLC status (whether the recipe is active and the current line).
             var status = _statusProvider.GetStatus();
             bool rowPassed = e.RowIndex < status.CurrentLine;
             bool rowCurrent = e.RowIndex == status.CurrentLine;
@@ -198,7 +264,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
             if (rowPassed || rowCurrent)
             {
-                // Row-level override: ALL cells in the row — one color (Passed/Current)
                 var forcedState = rowCurrent ? TableCellState.Current : TableCellState.Passed;
                 visual = _palette.Resolve(forcedState) with { IsReadonly = true };
             }
@@ -208,7 +273,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
                 visual = _stateManager.GetStateForCell(vm, columnKey, e.RowIndex);
             }
 
-            // Apply only e.CellStyle — NOT cell.Style (otherwise the style will "stick" after Action / VM changes).
             e.CellStyle.Font = visual.Font;
             e.CellStyle.ForeColor = visual.ForeColor;
             e.CellStyle.BackColor = visual.BackColor;
@@ -249,7 +313,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
             if (forceRowStyle)
             {
-                // Force again — even if someone changed it in Formatting.
                 var forcedState = rowCurrent ? TableCellState.Current : TableCellState.Passed;
                 rowVisual = _palette.Resolve(forcedState) with { IsReadonly = true };
             }
@@ -260,9 +323,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
             bool customComboReadonly = isCombo && rowVisual.IsReadonly;
 
-            // Custom drawing is needed:
-            // 1) For Current/Passed rows (forceRowStyle)
-            // 2) For any ComboBox in readonly (arrow removed, fill background ourselves)
             if (forceRowStyle || customComboReadonly)
             {
                 e.Handled = true;
@@ -291,8 +351,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
                 return;
             }
 
-            // Normal rows: let the standard logic draw the content,
-            // then draw the focus outline on top.
             e.Paint(e.ClipBounds, e.PaintParts);
             DrawFocusOutlineIfCurrent(grid, e);
             e.Handled = true;
@@ -310,11 +368,8 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
         private void OnEditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
         {
-            // Apply runtime correction for ComboBox (MaxDropDownItems / DropDownHeight),
-            // and synchronize the colors of the TextBox editor.
             if (_table.CurrentCell is null) return;
 
-            // Apply styles to TextBox (otherwise white background)
             if (e.Control is DataGridViewTextBoxEditingControl tb)
             {
                 var style = _table.CurrentCell.InheritedStyle;
@@ -334,17 +389,14 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
                     int desired = _getComboMaxItems?.Invoke() ?? cb.MaxDropDownItems;
                     if (desired <= 0) desired = 1;
 
-                    // The number of actual items in the current combo — limiter.
                     int actual = cb.Items.Count;
                     int visible = Math.Min(desired, actual);
 
                     cb.MaxDropDownItems = visible;
                     cb.IntegralHeight = false;
 
-                    // Forcefully set the list height:
                     if (cb.ItemHeight > 0)
                     {
-                        // +2 or + SystemInformation.VerticalScrollBarWidth / padding as desired
                         int extra = 2;
                         cb.DropDownHeight = cb.ItemHeight * visible + extra;
                     }
@@ -367,7 +419,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
             {
                 e.ThrowException = false;
                 e.Cancel = true;
-                _debugLogger?.Log($"ComboBox data error suppressed at r{e.RowIndex} c{e.ColumnIndex}: {e.Exception?.Message}");
                 return;
             }
 
@@ -392,7 +443,6 @@ namespace NtoLib.Recipes.MbeTable.Presentation.Table.Behavior
 
         private void OnRowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
         {
-            // Row numbering in the header.
             var grid = (DataGridView)sender!;
             var text = (e.RowIndex + 1).ToString();
             var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
