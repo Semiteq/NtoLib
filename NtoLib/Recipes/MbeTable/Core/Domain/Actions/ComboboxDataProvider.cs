@@ -26,12 +26,10 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
     {
         var action = _actionRepository.GetActionById(actionId);
         var column = action.Columns.FirstOrDefault(c => string.Equals(c.Key, columnKey, StringComparison.OrdinalIgnoreCase));
-        if (column is null) return new List<KeyValuePair<int, string>>();
+        if (column is null || string.IsNullOrWhiteSpace(column.GroupName)) return new List<KeyValuePair<int, string>>();
 
-        if (string.IsNullOrWhiteSpace(column.GroupName)) return new List<KeyValuePair<int, string>>();
-
-        return _actionTargetProvider.TryGetTargets(column.GroupName!, out var dict)
-            ? dict.ToList()
+        return _actionTargetProvider.TryGetTargets(column.GroupName!, out var dict) 
+            ? dict.Where(kvp => !string.IsNullOrEmpty(kvp.Value)).ToList() 
             : new List<KeyValuePair<int, string>>();
     }
 

@@ -2,15 +2,11 @@
 
 public record CommunicationSettings
 {
-    public int LineNumber;
-    
     public int ControlBaseAddr;
 
-    public int IntCount;
     public int IntBaseAddr;
     public int IntAreaSize;
 
-    public int FloatCount;
     public int FloatBaseAddr;
     public int FloatAreaSize;
 

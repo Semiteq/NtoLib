@@ -533,6 +533,7 @@
     <Content Include="NtoLibTableConfig\PinGroupDefs.yaml" />
     <Content Include="NtoLibTableConfig\PropertyDefs.yaml" />
     <Content Include="NtoLibTableConfig\ColumnDefs.yaml" />
+    <Content Include="Recipes\MbeTable\MbeTableFB.png" />
     <Content Include="Recipes\MbeTable\readme.md" />
     <Content Include="Recipes\MbeTable\Templates\MBE\ActionSchema.json" />
     <Content Include="Recipes\MbeTable\Templates\MBE\PinGroups.json" />
