@@ -20,7 +20,7 @@ public class PropertyColumnFactory : BaseColumnFactory
     /// <inheritdoc />
     protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition colDef)
     {
-        return new DataGridViewTextBoxColumn();
+        return new PropertyGridColumn();
     }
 
     /// <inheritdoc />
