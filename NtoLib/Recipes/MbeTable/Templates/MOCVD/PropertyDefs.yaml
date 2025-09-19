@@ -1,0 +1,70 @@
+# Property type catalogue
+- property_type_id: "Enum"
+  system_type: "System.Int32"
+  units: ""
+  format_kind: "Auto"
+
+- property_type_id: "Int"
+  system_type: "System.Int32"
+  units: ""
+  format_kind: "Auto"
+
+- property_type_id: "String"
+  system_type: "System.String"
+  units: ""
+  max_length: 255
+  format_kind: "Auto"
+
+- property_type_id: "Float"
+  system_type: "System.Single"
+  units: ""
+  format_kind: "Auto"
+
+- property_type_id: "Flow"
+  system_type: "System.Single"
+  units: "см³/мин"
+  min: 0
+  max: 100000
+  format_kind: "Auto"
+
+- property_type_id: "Percent"
+  system_type: "System.Single"
+  units: "%"
+  min: 0
+  max: 100
+  format_kind: "Auto"
+
+- property_type_id: "PowerSpeed"
+  system_type: "System.Single"
+  units: "%/мин"
+  min: -100
+  max: 100
+  format_kind: "Auto"
+
+- property_type_id: "Pressure"
+  system_type: "System.Single"
+  units: "Па"
+  min: 0
+  max: 200000
+  format_kind: "Scientific"
+
+- property_type_id: "Temp"
+  system_type: "System.Single"
+  units: "°C"
+  min: 0
+  max: 2000
+  format_kind: "Auto"
+
+- property_type_id: "TempSpeed"
+  system_type: "System.Single"
+  units: "°C/мин"
+  min: -1000
+  max: 1000
+  format_kind: "Auto"
+
+- property_type_id: "Time"
+  system_type: "System.Single"
+  units: "с"
+  min: 0
+  max: 86400
+  format_kind: "TimeHms"

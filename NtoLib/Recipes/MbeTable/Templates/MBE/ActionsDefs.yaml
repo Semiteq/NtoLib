@@ -1,0 +1,168 @@
+# Действия из ActionSchema.json
+- Id: 10
+  Name: "CLOSE"
+  GroupName: "Shutters"
+  DeployDuration: "Immediate"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    comment:
+      PropertyType: "String"
+- Id: 20
+  Name: "OPEN"
+  GroupName: "Shutters"
+  DeployDuration: "Immediate"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    comment:
+      PropertyType: "String"
+- Id: 30
+  Name: "OPEN TIME"
+  GroupName: "Shutters"
+  DeployDuration: "LongLasting"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    setpoint:
+      PropertyType: "Time"
+      DefaultValue: 1.0
+    comment:
+      PropertyType: "String"
+- Id: 40
+  Name: "CLOSE ALL"
+  GroupName: "Shutters"
+  DeployDuration: "Immediate"
+  Columns:
+    comment:
+      PropertyType: "String"
+- Id: 50
+  Name: "TEMP"
+  GroupName: "Heaters"
+  DeployDuration: "Immediate"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    setpoint:
+      PropertyType: "Temp"
+      DefaultValue: 500.0
+    comment:
+      PropertyType: "String"
+- Id: 60
+  Name: "TEMP + WAIT"
+  GroupName: "Heaters"
+  DeployDuration: "LongLasting"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    setpoint:
+      PropertyType: "Temp"
+      DefaultValue: 500.0
+    step-duration:
+      PropertyType: "Time"
+      DefaultValue: 60.0
+    comment:
+      PropertyType: "String"
+- Id: 70
+  Name: "TEMP SMOOTH"
+  GroupName: "Heaters"
+  DeployDuration: "LongLasting"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    initial-value:
+      PropertyType: "Temp"
+      DefaultValue: 500.0
+    setpoint:
+      PropertyType: "Temp"
+      DefaultValue: 600.0
+    speed:
+      PropertyType: "TempSpeed"
+      DefaultValue: 10.0
+    step-duration:
+      PropertyType: "Time"
+      DefaultValue: 600.0
+    comment:
+      PropertyType: "String"
+  CalculationRule:
+    Name: "SmoothRampCalculation"
+    Mapping:
+      Rate: "speed"
+      Duration: "step-duration"
+      Initial: "initial-value"
+      Final: "setpoint"
+- Id: 110
+  Name: "WAIT"
+  DeployDuration: "LongLasting"
+  Columns:
+    step-duration:
+      PropertyType: "Time"
+      DefaultValue: 60.0
+    comment:
+      PropertyType: "String"
+
+# Действия, перенесенные из ActionsDefs.txt
+- Id: 100
+  Name: "MOC"
+  GroupName: "MocCell"
+  DeployDuration: "Immediate"
+  Columns:
+    action-target: # 'channel' и 'mode' оба имеют роль action_target, выбран первый
+      PropertyType: "Enum"
+    initial-value:
+      PropertyType: "Flow"
+      DefaultValue: "10"
+    setpoint: # final_value -> setpoint
+      PropertyType: "Flow"
+      DefaultValue: "10"
+    # 'pressure' не имеет прямого аналога в новой схеме колонок
+    step-duration:
+      PropertyType: "Time"
+      DefaultValue: "10"
+    comment:
+      PropertyType: "String"
+- Id: 200
+  Name: "Ligature"
+  GroupName: "LigatureCell"
+  DeployDuration: "Immediate"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    initial-value:
+      PropertyType: "Flow"
+      DefaultValue: "0"
+    setpoint:
+      PropertyType: "Flow"
+      DefaultValue: "0"
+    step-duration:
+      PropertyType: "Time"
+      DefaultValue: "0"
+    comment:
+      PropertyType: "String"
+- Id: 1100
+  Name: "Open"
+  GroupName: "Valves"
+  DeployDuration: "Immediate"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    comment:
+      PropertyType: "String"
+- Id: 1110
+  Name: "Close"
+  GroupName: "Valves"
+  DeployDuration: "Immediate"
+  Columns:
+    action-target:
+      PropertyType: "Enum"
+    comment:
+      PropertyType: "String"
+- Id: 10
+  Name: "Wait_Time"
+  DeployDuration: "LongLasting"
+  Columns:
+    step-duration:
+      PropertyType: "Time"
+      DefaultValue: "0"
+    comment:
+      PropertyType: "String"
