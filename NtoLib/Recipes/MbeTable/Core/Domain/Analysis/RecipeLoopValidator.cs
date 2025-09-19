@@ -17,8 +17,8 @@ namespace NtoLib.Recipes.MbeTable.Core.Domain.Analysis;
 /// </summary>
 public class RecipeLoopValidator : IRecipeLoopValidator
 {
-    private const int ForLoopActionId = 120;
-    private const int EndForLoopActionId = 130;
+    private const int ForLoopActionId = 20;
+    private const int EndForLoopActionId = 30;
 
     private readonly ILogger _debugLogger;
     private const int MaxLoopDepth = 3;

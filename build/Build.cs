@@ -6,7 +6,9 @@ using Nuke.Common.Tools.MSBuild;
 using static Nuke.Common.Tools.MSBuild.MSBuildTasks;
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 class Build : NukeBuild
 {
@@ -20,10 +22,14 @@ class Build : NukeBuild
     Project NtoLibProject => Solution.GetProject("NtoLib");
 
     AbsolutePath SolutionDirectory => Solution.Directory;
-    AbsolutePath ILRepackExecutable => SolutionDirectory / "packages" / "ILRepack.2.0.40" / "tools" / "ilrepack.exe";
-    AbsolutePath DestinationDirectory => (AbsolutePath)@"C:\Program Files (x86)\MPSSoft\MasterSCADA";
+    AbsolutePath IlRepackExecutable => SolutionDirectory / "packages" / "ILRepack.2.0.40" / "tools" / "ilrepack.exe";
+    AbsolutePath DestinationDirectory => @"C:\Program Files (x86)\MPSSoft\MasterSCADA";
     
     AbsolutePath NtoLibTableConfigSource => NtoLibProject.Directory / "NtoLibTableConfig";
+    
+    AbsolutePath ArtifactsDirectory => RootDirectory / "Releases";
+
+    AbsolutePath NtoLibRegBat => NtoLibProject.Directory / "NtoLib_reg.bat";
 
     /// <summary>
     /// Recursively copies a directory and its contents to a new location.
@@ -45,8 +51,19 @@ class Build : NukeBuild
         foreach (var directory in Directory.GetDirectories(source))
         {
             var dirName = Path.GetFileName(directory);
-            CopyDirectoryRecursively((AbsolutePath)directory, destination / dirName);
+            CopyDirectoryRecursively(directory, destination / dirName);
         }
+    }
+    
+    private string GetAssemblyVersion()
+    {
+        var assemblyInfoContent = File.ReadAllText(NtoLibProject.Directory / "Properties" / "AssemblyInfo.cs");
+        var match = Regex.Match(assemblyInfoContent, @"\[assembly: AssemblyInformationalVersion\(""([^""]+)""\)\]");
+        if (match.Success)
+        {
+            return match.Groups[1].Value;
+        }
+        return "1.0.0";
     }
 
     Target Clean => _ => _
@@ -61,6 +78,8 @@ class Build : NukeBuild
                 if (dir.DirectoryExists())
                     dir.DeleteDirectory();
             }
+            
+            ArtifactsDirectory.CreateOrCleanDirectory();
         });
 
     Target Restore => _ => _
@@ -83,19 +102,19 @@ class Build : NukeBuild
                 .SetConfiguration(Configuration)
                 .SetMaxCpuCount(Environment.ProcessorCount)
                 .SetNodeReuse(true)
-                .When(Configuration == Configuration.Release, x => x
+                .When(s => Configuration == Configuration.Release, x => x
                     .SetProperty("Optimize", "true")
                     .SetProperty("DebugType", "pdbonly")
                     .SetProperty("DebugSymbols", "true")
                     .SetProperty("DefineConstants", "TRACE"))
-                .When(Configuration == Configuration.Debug, x => x
+                .When(s => Configuration == Configuration.Debug, x => x
                     .SetProperty("Optimize", "false")
                     .SetProperty("DebugType", "full")
                     .SetProperty("DebugSymbols", "true")
                     .SetProperty("DefineConstants", "DEBUG;TRACE")));
         });
 
-    Target ILRepack => _ => _
+    Target IlRepack => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
@@ -137,7 +156,7 @@ class Build : NukeBuild
             }.Concat(existingAssemblies.Select(a => $"\"{a}\""));
 
             var process = ProcessTasks.StartProcess(
-                ILRepackExecutable,
+                IlRepackExecutable,
                 string.Join(" ", arguments),
                 workingDirectory: targetDirectory);
                 
@@ -147,7 +166,7 @@ class Build : NukeBuild
         });
 
     Target CopyFiles => _ => _
-        .DependsOn(ILRepack) 
+        .DependsOn(IlRepack) 
         .Executes(() =>
         {
             var targetDirectory = NtoLibProject.Directory / "bin" / Configuration;
@@ -205,12 +224,66 @@ class Build : NukeBuild
             Console.WriteLine("Copy operation completed.");
         });
 
-    Target Deploy => _ => _
+    Target Archive => _ => _
         .DependsOn(CopyFiles)
+        .Executes(() =>
+        {
+            var version = GetAssemblyVersion();
+            var archiveName = $"NtoLib_v{version}.zip";
+            var archivePath = ArtifactsDirectory / archiveName;
+            
+            Console.WriteLine($"Creating archive: {archivePath}");
+
+            var tempArchiveDir = TemporaryDirectory / "archive";
+            tempArchiveDir.CreateOrCleanDirectory();
+
+            var sourceDir = NtoLibProject.Directory / "bin" / Configuration;
+
+            var filesToArchive = new[]
+            {
+                "NtoLib.dll",
+                "System.Resources.Extensions.dll"
+            };
+
+            foreach (var file in filesToArchive)
+            {
+                if ((sourceDir / file).FileExists())
+                {
+                    File.Copy(sourceDir / file, tempArchiveDir / file, overwrite: true);
+                }
+            }
+            
+            if (NtoLibTableConfigSource.DirectoryExists())
+            {
+                CopyDirectoryRecursively(NtoLibTableConfigSource, tempArchiveDir / "NtoLibTableConfig");
+            }
+
+            if (NtoLibRegBat.FileExists())
+            {
+                File.Copy(NtoLibRegBat, tempArchiveDir / "NtoLib_reg.bat", overwrite: true);
+            }
+            else
+            {
+                Console.WriteLine($"✗ Warning: NtoLib_reg.bat not found at {NtoLibRegBat}");
+            }
+            
+            if (archivePath.FileExists())
+            {
+                archivePath.DeleteFile();
+            }
+
+            ZipFile.CreateFromDirectory(tempArchiveDir, archivePath);
+            
+            Console.WriteLine($"✓ Archive created successfully: {archivePath}");
+        });
+        
+    Target Deploy => _ => _
+        .DependsOn(Archive)
         .Executes(() =>
         {
             Console.WriteLine("Build and deployment completed successfully!");
             Console.WriteLine($"Configuration: {Configuration}");
             Console.WriteLine($"Destination: {DestinationDirectory}");
+            Console.WriteLine($"Artifacts located at: {ArtifactsDirectory}");
         });
 }

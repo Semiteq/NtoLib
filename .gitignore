@@ -399,4 +399,4 @@ FodyWeavers.xsd
 .idea
 
 # nuke
-.nuke
+.nuke/
