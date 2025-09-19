@@ -16,45 +16,45 @@ public class DebugLogger : ILogger
 {
     private static readonly object _fileLock = new();
     private static readonly string _logFilePath = Path.Combine(AppContext.BaseDirectory, "debug_log.txt");
-
+    
     public void Log(string message, [CallerMemberName] string caller = "")
     {
-#if DEBUG
         var output = $"{DateTime.Now:HH:mm:ss.fff} [{caller}] {message}";
+        WriteToFile(output);
+
+
+#if DEBUG
         Debug.WriteLine(output);
         Console.WriteLine(output);
-        WriteToFile(output);
 #endif
     }
-    
+
     public void LogException(Exception ex, object? contextData = null, [CallerMemberName] string caller = "")
     {
-#if DEBUG
         var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
         var sb = new StringBuilder();
 
         var exceptionInfo = $"{timestamp} [ERROR] [{caller}] {ex.GetType().Name}: {ex.Message}";
         sb.AppendLine(exceptionInfo);
-        
-        Debug.WriteLine(exceptionInfo);
-        Console.WriteLine(exceptionInfo);
-        
+
         if (contextData != null)
         {
             var contextInfo = $"{timestamp} [CONTEXT] [{caller}] {SerializeContext(contextData)}";
             sb.AppendLine(contextInfo);
-            Debug.WriteLine(contextInfo);
-            Console.WriteLine(contextInfo);
         }
-        
+
         if (!string.IsNullOrEmpty(ex.StackTrace))
         {
             var stackTraceInfo = $"{timestamp} [STACK] [{caller}] {ex.StackTrace}";
             sb.AppendLine(stackTraceInfo);
-            Debug.WriteLine(stackTraceInfo);
         }
+
+        var fullMessage = sb.ToString();
+        WriteToFile(fullMessage);
         
-        WriteToFile(sb.ToString());
+#if DEBUG
+        Debug.Write(fullMessage);
+        Console.Write(fullMessage);
 #endif
     }
 
@@ -92,7 +92,7 @@ public class DebugLogger : ILogger
         if (obj == null) return "null";
 
         var type = obj.GetType();
-    
+
         // Handle primitives and strings
         if (type.IsPrimitive || type == typeof(string) || type == typeof(DateTime))
             return obj.ToString() ?? "null";
@@ -104,8 +104,13 @@ public class DebugLogger : ILogger
             foreach (var item in enumerable)
             {
                 items.Add(SerializeObject(item, depth + 1));
-                if (items.Count > 10) { items.Add("..."); break; } // Limit array size
+                if (items.Count > 10)
+                {
+                    items.Add("...");
+                    break;
+                } // Limit array size
             }
+
             return $"[{string.Join(",", items)}]";
         }
 
@@ -123,6 +128,7 @@ public class DebugLogger : ILogger
             sb.Append($"\"{prop.Name}\":{SerializeObject(value, depth + 1)}");
             first = false;
         }
+
         sb.Append("}");
         return sb.ToString();
     }
