@@ -26,7 +26,7 @@ public sealed class ActionDefsLoader : IActionDefsLoader
 
             var yaml = File.ReadAllText(configPath);
             var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(UnderscoredNamingConvention.Instance) // <--- ИЗМЕНЕНО
+                .WithNamingConvention(UnderscoredNamingConvention.Instance)
                 .IgnoreUnmatchedProperties()
                 .Build();
 

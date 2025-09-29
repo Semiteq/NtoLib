@@ -30,7 +30,7 @@ public sealed class PropertyDefinitionLoader : IPropertyDefinitionLoader
 
             var yaml = File.ReadAllText(path);
             var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(UnderscoredNamingConvention.Instance) // <--- ИЗМЕНЕНО
+                .WithNamingConvention(UnderscoredNamingConvention.Instance)
                 .IgnoreUnmatchedProperties()
                 .Build();
 

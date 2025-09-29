@@ -19,6 +19,8 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
     private readonly float? _max;
     private readonly string _formatKind;
 
+    private const int Precision = 2;
+
     /// <inheritdoc/>
     public string Units { get; }
 
@@ -34,7 +36,7 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         Units = dto.Units ?? string.Empty;
         _min = dto.Min;
         _max = dto.Max;
-        _formatKind = dto.FormatKind ?? "Auto";
+        _formatKind = dto.FormatKind ?? "Numeric";
     }
 
     /// <inheritdoc/>
@@ -87,7 +89,10 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         }
 
         if (float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var f))
+        {
+            f = (float)Math.Round(f, Precision, MidpointRounding.AwayFromZero);
             return Result.Ok<object>(f);
+        }
 
         return Result.Fail<object>("Unable to parse as float");
     }
@@ -98,7 +103,6 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         {
             int i => i,
             float f => f,
-            double d => (float)d,
             _ => float.NaN
         };
         
@@ -108,7 +112,7 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         var display = _formatKind switch
         {
             "Scientific" => numeric.ToString("0.##E0", CultureInfo.InvariantCulture),
-            "Auto" => numeric.ToString("0.##", CultureInfo.InvariantCulture),
+            "Numeric" => numeric.ToString("0.##", CultureInfo.InvariantCulture),
             _ => numeric.ToString(CultureInfo.InvariantCulture)
         };
 

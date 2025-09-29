@@ -18,7 +18,7 @@ public sealed class PropertyDefsValidator : IPropertyDefsValidator
     private static readonly HashSet<string> SupportedSystemTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "System.String",
-        "System.Int32",
+        "System.Int16",
         "System.Single",
     };
     

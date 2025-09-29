@@ -17,9 +17,6 @@ public sealed class YamlPropertyDefinition
     // String-specific
     public int? MaxLength { get; set; }
 
-    // Formatting strategy: Auto, Scientific, TimeHms, etc.
-    public string FormatKind { get; set; } = "Auto";
-
-    // Optional: reserved for future validation strategies
-    public string? ValidationKind { get; set; }
+    // Formatting strategy: Auto, Scientific, TimeHms.
+    public string FormatKind { get; set; } = "Numeric";
 }

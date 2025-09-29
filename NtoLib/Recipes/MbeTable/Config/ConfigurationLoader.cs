@@ -180,7 +180,7 @@ public sealed class ConfigurationLoader : IConfigurationLoader
         if (sysType == typeof(string))
             return new ConfigurableStringDefinition(dto);
 
-        if (sysType == typeof(int) || sysType == typeof(float) || sysType == typeof(double))
+        if (sysType == typeof(short) || sysType == typeof(float))
             return new ConfigurableNumericDefinition(dto);
         
         // This path should be unreachable if validation is correct.
