@@ -1,17 +1,16 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentResults;
 using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
 using NtoLib.Recipes.MbeTable.Core.Application.Services;
-using NtoLib.Recipes.MbeTable.Core.Domain.Actions;
 using NtoLib.Recipes.MbeTable.Core.Domain.Entities;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Binding;
 using NtoLib.Recipes.MbeTable.StateMachine;
 using NtoLib.Recipes.MbeTable.StateMachine.App;
 using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
@@ -20,16 +19,15 @@ using NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
 namespace NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 
 /// <summary>
-/// Acts as the main UI orchestrator for the recipe view. It owns the
-/// UI-bound collection of view models and coordinates changes by delegating
-/// business logic to application services.
+/// Main UI orchestrator for the recipe view. Manages collection of StepViewModels
+/// and coordinates changes via application services. Works with VirtualMode DataGridView.
 /// </summary>
 public sealed class RecipeViewModel
 {
-    /// <summary>
-    /// Gets the collection of StepViewModels for data binding.
-    /// </summary>
-    public DynamicBindingList ViewModels { get; }
+    private readonly List<StepViewModel> _viewModels = new();
+    private readonly TableColumns _tableColumns;
+
+    public IReadOnlyList<StepViewModel> ViewModels => _viewModels;
 
     private readonly IRecipeApplicationService _recipeService;
     private readonly IStepViewModelFactory _stepViewModelFactory;
@@ -38,30 +36,28 @@ public sealed class RecipeViewModel
     private readonly AppStateMachine _appStateMachine;
     private readonly TimerService _timerService;
 
+    /// <summary>
+    /// Occurs when a specific row needs to be invalidated (e.g., after Action change).
+    /// </summary>
+    public event Action<int>? RowInvalidationRequested;
+
+
+    private bool _initialFullRedrawDone;
+    private Action? _fullRedrawRequest;
+
     private IUiDispatcher _uiDispatcher = new ImmediateUiDispatcher();
     private Recipe _recipe;
 
     /// <summary>
-    /// Occurs when a view model update operation starts.
+    /// Occurs when the row count changes (add/remove). UI should update DataGridView.RowCount.
     /// </summary>
-    public event Action? OnUpdateStart;
+    public event Action<int>? RowCountChanged;
 
     /// <summary>
-    /// Occurs when a view model update operation ends.
+    /// Occurs when validation fails during SetCellValue. UI should display error and invalidate cell.
     /// </summary>
-    public event Action? OnUpdateEnd;
+    public event Action<int, string>? ValidationFailed;
 
-    /// <summary>
-    /// Gets the last structural change that was processed.
-    /// This is consumed by the UI layer (TableBehaviorManager) to apply targeted
-    /// refresh logic for complex updates that DataGridView might not handle correctly.
-    /// It is nullified after the OnUpdateEnd event to prevent stale state.
-    /// </summary>
-    public StructuralChange? LastChange { get; private set; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RecipeViewModel"/> class.
-    /// </summary>
     public RecipeViewModel(
         IRecipeApplicationService recipeService,
         IStepViewModelFactory stepViewModelFactory,
@@ -72,21 +68,17 @@ public sealed class RecipeViewModel
         ILogger debugLogger,
         TableColumns tableColumns)
     {
-        _recipeService = recipeService;
-        _stepViewModelFactory = stepViewModelFactory;
-        _appStateMachine = appStateMachine;
-        _timerService = timerService;
-        _statusManager = statusManager;
-        _debugLogger = debugLogger;
+        _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
+        _stepViewModelFactory = stepViewModelFactory ?? throw new ArgumentNullException(nameof(stepViewModelFactory));
+        _appStateMachine = appStateMachine ?? throw new ArgumentNullException(nameof(appStateMachine));
+        _timerService = timerService ?? throw new ArgumentNullException(nameof(timerService));
+        _statusManager = statusManager ?? throw new ArgumentNullException(nameof(statusManager));
+        _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
+        _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns));
 
-        ViewModels = new DynamicBindingList(tableColumns, registry);
         _recipe = _recipeService.CreateEmpty().Recipe;
     }
 
-    /// <summary>
-    /// Sets the UI dispatcher to marshal calls to the UI thread.
-    /// </summary>
-    /// <param name="uiDispatcher">The UI dispatcher implementation.</param>
     public void SetUiDispatcher(IUiDispatcher uiDispatcher)
     {
         _uiDispatcher = uiDispatcher ?? new ImmediateUiDispatcher();
@@ -94,165 +86,156 @@ public sealed class RecipeViewModel
         UpdateStateAndViewModels(initialResult);
     }
 
-    /// <summary>
-    /// Gets the current, immutable recipe domain object.
-    /// </summary>
-    /// <returns>The current <see cref="Recipe"/>.</returns>
     public Recipe GetCurrentRecipe() => _recipe;
 
-    /// <summary>
-    /// Replaces the entire recipe with a new one, e.g., from a file.
-    /// </summary>
-    /// <param name="newRecipe">The new recipe to display.</param>
     public void SetRecipe(Recipe newRecipe)
     {
         var newResult = _recipeService.AnalyzeRecipe(newRecipe);
         UpdateStateAndViewModels(newResult);
     }
 
-    /// <summary>
-    /// Adds a new default step at the specified index.
-    /// </summary>
-    /// <param name="rowIndex">The zero-based index at which to insert the new step.</param>
     public void AddNewStep(int rowIndex)
     {
-        var clampedIndex = Math.Max(0, Math.Min(rowIndex, ViewModels.Count));
+        var clampedIndex = Math.Max(0, Math.Min(rowIndex, _viewModels.Count));
         var result = _recipeService.AddDefaultStep(_recipe, clampedIndex);
-        UpdateStateAndViewModels(result, new StructuralChange(ChangeType.Add, clampedIndex));
+        UpdateStateAndViewModels(result);
+    }
+
+    public void RemoveStep(int rowIndex)
+    {
+        if (rowIndex < 0 || rowIndex >= _viewModels.Count) return;
+        var result = _recipeService.RemoveStep(_recipe, rowIndex);
+        UpdateStateAndViewModels(result);
     }
 
     /// <summary>
-    /// Removes the step at the specified index.
+    /// Gets the display value for a cell. Called by VirtualMode CellValueNeeded.
     /// </summary>
-    /// <param name="rowIndex">The zero-based index of the step to remove.</param>
-    public void RemoveStep(int rowIndex)
+    /// <param name="rowIndex">Zero-based row index.</param>
+    /// <param name="columnIndex">Zero-based column index.</param>
+    /// <returns>Formatted value for display.</returns>
+    public object? GetCellValue(int rowIndex, int columnIndex)
     {
-        if (rowIndex < 0 || rowIndex >= ViewModels.Count) return;
-        var result = _recipeService.RemoveStep(_recipe, rowIndex);
-        UpdateStateAndViewModels(result, new StructuralChange(ChangeType.Remove, rowIndex));
+        if (rowIndex < 0 || rowIndex >= _viewModels.Count)
+        {
+            return null;
+        }
+
+        var vm = _viewModels[rowIndex];
+        var columnKey = _tableColumns.GetColumnDefinition(columnIndex).Key;
+        var value = vm.GetPropertyValue(columnKey);
+
+        return value;
     }
 
-    private void OnStepPropertyChanged(int rowIndex, ColumnIdentifier key, object value)
+    /// <summary>
+    /// Sets a cell value from user input. Called by VirtualMode CellValuePushed.
+    /// Returns Result for validation feedback.
+    /// </summary>
+    /// <param name="rowIndex">Zero-based row index.</param>
+    /// <param name="columnIndex">Zero-based column index.</param>
+    /// <param name="value">User-provided value.</param>
+    /// <returns>Result indicating success or validation error.</returns>
+    public Result SetCellValue(int rowIndex, int columnIndex, object? value)
     {
-        bool isActionChange = key == WellKnownColumns.Action && value is int;
-        
-        var result = isActionChange
-            ? Result.Ok(_recipeService.ReplaceStepWithNewDefault(_recipe, rowIndex, (int)value))
-            : _recipeService.UpdateStepProperty(_recipe, rowIndex, key, value);
+        if (rowIndex < 0 || rowIndex >= _viewModels.Count)
+            return Result.Fail("Invalid row index");
+
+        var columnKey = _tableColumns.GetColumnDefinition(columnIndex).Key;
+        return OnStepPropertyChangedInternal(rowIndex, columnKey, value);
+    }
+
+    /// <summary>
+    /// Returns current row count for DataGridView.RowCount.
+    /// </summary>
+    public int GetRowCount() => _viewModels.Count;
+
+    private void OnStepPropertyChangedCallback(int rowIndex, ColumnIdentifier key, object value)
+    {
+        var result = OnStepPropertyChangedInternal(rowIndex, key, value);
 
         if (result.IsFailed)
         {
-            var error = result.Errors.First();
-            _debugLogger.Log(
-                $"Step property update failed. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'. Error: {error.Message}");
-            _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
-            _uiDispatcher.Post(() => ViewModels.ResetItem(rowIndex));
-            return;
+            ValidationFailed?.Invoke(rowIndex, result.Errors.First().Message);
         }
-        
-        var changeType = isActionChange ? ChangeType.Replace : ChangeType.Update;
-        _debugLogger.Log($"Step property updated. Row: {rowIndex}, Key: {key.Value}, Value: '{value}'");
-        UpdateStateAndViewModels(result.Value, new StructuralChange(changeType, rowIndex));
     }
 
-    private void UpdateStateAndViewModels(RecipeUpdateResult result, StructuralChange? change = null)
+    private Result OnStepPropertyChangedInternal(int rowIndex, ColumnIdentifier key, object value)
+    {
+        bool isActionChange = key == WellKnownColumns.Action && value is int;
+
+        var serviceResult = isActionChange
+            ? Result.Ok(_recipeService.ReplaceStepWithNewDefault(_recipe, rowIndex, (int)value))
+            : _recipeService.UpdateStepProperty(_recipe, rowIndex, key, value);
+
+        if (serviceResult.IsFailed)
+        {
+            var error = serviceResult.Errors.First();
+            _statusManager.WriteStatusMessage(error.Message, StatusMessage.Error);
+            return serviceResult.ToResult();
+        }
+
+        if (isActionChange)
+        {
+            UpdateStateAndViewModels(serviceResult.Value, () => RowInvalidationRequested?.Invoke(rowIndex));
+        }
+        else
+        {
+            UpdateStateAndViewModels(serviceResult.Value);
+        }
+
+        return Result.Ok();
+    }
+
+    private void UpdateStateAndViewModels(RecipeUpdateResult result, Action? afterUpdate = null)
     {
         _recipe = result.Recipe;
         _timerService.SetTimeAnalysisData(result.TimeResult);
         _appStateMachine.Dispatch(new VmLoopValidChanged(result.LoopResult.IsValid));
 
-        // Store the last change so the UI layer can query it.
-        LastChange = change;
-        
         _uiDispatcher.Post(() =>
         {
-            OnUpdateStart?.Invoke();
-            try
+            if (_viewModels.Count != result.Recipe.Steps.Count)
+                RebuildViewModelList(result);
+            else
+                UpdateExistingViewModels(result);
+
+            RowCountChanged?.Invoke(_viewModels.Count);
+
+            if (!_initialFullRedrawDone && _viewModels.Count > 0)
             {
-                if (change == null)
+                _initialFullRedrawDone = true;
+                try
                 {
-                    RebuildViewModelList(result);
+                    _fullRedrawRequest?.Invoke();
                 }
-                else
+                catch
                 {
-                    ApplyIncrementalUpdate(result, change);
                 }
             }
-            finally
-            {
-                OnUpdateEnd?.Invoke();
-                // Clear the state after the UI has had a chance to react.
-                LastChange = null; 
-            }
+
+            afterUpdate?.Invoke();
         });
     }
 
     private void RebuildViewModelList(RecipeUpdateResult result)
     {
-        ViewModels.RaiseListChangedEvents = false;
-        try
+        _viewModels.Clear();
+
+        for (var i = 0; i < result.Recipe.Steps.Count; i++)
         {
-            ViewModels.Clear();
-            for (var i = 0; i < result.Recipe.Steps.Count; i++)
-            {
-                ViewModels.Add(_stepViewModelFactory.Create(result.Recipe.Steps[i], i, result, OnStepPropertyChanged));
-            }
-        }
-        finally
-        {
-            ViewModels.RaiseListChangedEvents = true;
-            ViewModels.ResetBindings();
+            _viewModels.Add(_stepViewModelFactory.Create(
+                result.Recipe.Steps[i], i, result, OnStepPropertyChangedCallback));
         }
     }
 
-    private void ApplyIncrementalUpdate(RecipeUpdateResult result, StructuralChange change)
+    private void UpdateExistingViewModels(RecipeUpdateResult result)
     {
-        // Step 1: Apply the primary change to the BindingList.
-        if (change.Type == ChangeType.Add)
+        for (int i = 0; i < _viewModels.Count; i++)
         {
-            var newVm = _stepViewModelFactory.Create(result.Recipe.Steps[change.Index], change.Index, result, OnStepPropertyChanged);
-            ViewModels.Insert(change.Index, newVm);
-        }
-        else if (change.Type == ChangeType.Remove)
-        {
-            ViewModels.RemoveAt(change.Index);
-        }
-        else if (change.Type == ChangeType.Replace)
-        {
-            var newVm = _stepViewModelFactory.Create(result.Recipe.Steps[change.Index], change.Index, result, OnStepPropertyChanged);
-            ViewModels[change.Index] = newVm;
-        }
-        
-        // Step 2: Update the internal data of all affected and subsequent ViewModels.
-        // This is done without raising list change events to avoid UI flicker.
-        ViewModels.RaiseListChangedEvents = false;
-        try
-        {
-            for (int i = change.Index; i < ViewModels.Count; i++)
-            {
-                if (i >= result.Recipe.Steps.Count) break;
-                result.TimeResult.StepStartTimes.TryGetValue(i, out var startTime);
-                ViewModels[i].UpdateInPlace(result.Recipe.Steps[i], i, startTime);
-            }
-        }
-        finally
-        {
-            // Step 3: Now that the data is consistent, raise events to ask the UI to redraw.
-            ViewModels.RaiseListChangedEvents = true;
-            for (int i = change.Index; i < ViewModels.Count; i++)
-            {
-                ViewModels.ResetItem(i);
-            }
+            if (i >= result.Recipe.Steps.Count) break;
+            result.TimeResult.StepStartTimes.TryGetValue(i, out var startTime);
+            _viewModels[i].UpdateInPlace(result.Recipe.Steps[i], i, startTime);
         }
     }
-    
-    /// <summary>
-    /// Describes the type of change that occurred in the ViewModel list.
-    /// </summary>
-    public enum ChangeType { Add, Remove, Update, Replace }
-
-    /// <summary>
-    /// A record to hold information about a structural change.
-    /// </summary>
-    public sealed record StructuralChange(ChangeType Type, int Index);
 }

@@ -2,47 +2,21 @@
 
 using System;
 using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
+using System.Globalization;
 using System.Windows.Forms;
-using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
-using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Cells;
 
 /// <summary>
-/// A custom DataGridView cell that interacts directly with a StepProperty
-/// to provide advanced parsing and formatting of cell values.
+/// DataGridView cell for numeric property columns that lets the user type a number followed by arbitrary unit text.
+/// Only the leading numeric token (with optional sign and one decimal separator) is parsed and committed.
+/// The unit suffix is ignored on input. Display (value + units) is produced elsewhere (domain / view model).
 /// </summary>
-public class PropertyGridCell : DataGridViewTextBoxCell
+public sealed class PropertyGridCell : NonSelectableCellBase
 {
     /// <summary>
-    /// Overrides the painting logic to ensure consistent background color,
-    /// especially when the cell is selected.
-    /// </summary>
-    protected override void Paint(
-        Graphics graphics,
-        Rectangle clipBounds,
-        Rectangle cellBounds,
-        int rowIndex,
-        DataGridViewElementStates elementState,
-        object value,
-        object formattedValue,
-        string errorText,
-        DataGridViewCellStyle cellStyle,
-        DataGridViewAdvancedBorderStyle advancedBorderStyle,
-        DataGridViewPaintParts paintParts)
-    {
-        // Force non-selection background to avoid the default blue highlight.
-        paintParts &= ~DataGridViewPaintParts.SelectionBackground;
-        base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState, value, formattedValue, errorText,
-            cellStyle, advancedBorderStyle, paintParts);
-    }
-
-    /// <summary>
-    /// Converts a cell's display value into the actual underlying value for the data source.
-    /// This is where user input is parsed using the domain logic.
+    /// Parses user-entered text, extracting only the leading numeric part (including an optional sign)
+    /// and converting it to the column's ValueType (int or float). Unit suffix is ignored.
     /// </summary>
     public override object? ParseFormattedValue(
         object? formattedValue,
@@ -50,74 +24,100 @@ public class PropertyGridCell : DataGridViewTextBoxCell
         TypeConverter? formattedValueTypeConverter,
         TypeConverter? valueTypeConverter)
     {
-        if (formattedValue == null || DataGridView == null)
+        if (formattedValue == null)
+            return null;
+
+        var targetType = OwningColumn?.ValueType;
+        if (targetType != typeof(int) && targetType != typeof(float))
         {
             return base.ParseFormattedValue(formattedValue, cellStyle, formattedValueTypeConverter, valueTypeConverter);
         }
 
-        var property = GetStepProperty();
-        if (property == null)
+        var text = formattedValue.ToString() ?? string.Empty;
+        var token = ExtractLeadingNumericToken(text);
+        if (string.IsNullOrEmpty(token))
+            throw new FormatException("Invalid numeric value.");
+
+        if (targetType == typeof(int))
         {
-            // If there's no property (e.g., cell is disabled), do not attempt to parse.
-            return base.ParseFormattedValue(formattedValue, cellStyle, formattedValueTypeConverter, valueTypeConverter);
+            if (TryParseInt(token, out var intValue))
+                return intValue;
+            throw new FormatException("Invalid integer value.");
         }
 
-        // Use the domain model's "smart" parser.
-        var result = property.WithValue(formattedValue);
-
-        if (result.IsSuccess)
+        if (targetType == typeof(float))
         {
-            // If parsing is successful, return the raw, typed value (e.g., a float)
-            // that the data source expects.
-            return result.Value.GetValueAsObject();
+            if (TryParseFloat(token, out var floatValue))
+                return floatValue;
+            throw new FormatException("Invalid float value.");
         }
 
-        // If parsing fails, throw a FormatException.
-        // The DataGridView will catch this and raise the DataError event,
-        // which we will handle centrally in TableBehaviorManager.
-        throw new FormatException(result.Errors.First().Message);
+        return base.ParseFormattedValue(formattedValue, cellStyle, formattedValueTypeConverter, valueTypeConverter);
     }
 
-    /// <summary>
-    /// Converts the underlying data source value into a display-friendly format.
-    /// This is where the formatted string (e.g., with units) is generated.
-    /// </summary>
-    protected override object? GetFormattedValue(
-        object? value,
-        int rowIndex,
-        ref DataGridViewCellStyle cellStyle,
-        TypeConverter? valueTypeConverter,
-        TypeConverter? formattedValueTypeConverter,
-        DataGridViewDataErrorContexts context)
+    private static string ExtractLeadingNumericToken(string input)
     {
-        var property = GetStepProperty();
-        if (property != null)
+        if (string.IsNullOrEmpty(input))
+            return string.Empty;
+
+        int i = 0;
+        int length = input.Length;
+
+        while (i < length && char.IsWhiteSpace(input[i]))
+            i++;
+
+        if (i >= length)
+            return string.Empty;
+
+        int start = i;
+
+        if (input[i] == '+' || input[i] == '-')
+            i++;
+
+        bool hasDigits = false;
+        bool hasSeparator = false;
+
+        while (i < length)
         {
-            // Use the domain model's "smart" formatter.
-            return property.GetDisplayValue();
+            char c = input[i];
+            if (char.IsDigit(c))
+            {
+                hasDigits = true;
+                i++;
+                continue;
+            }
+
+            if ((c == '.' || c == ',') && !hasSeparator)
+            {
+                hasSeparator = true;
+                i++;
+                continue;
+            }
+
+            break;
         }
 
-        return base.GetFormattedValue(value, rowIndex, ref cellStyle, valueTypeConverter, formattedValueTypeConverter,
-            context);
+        if (!hasDigits)
+            return string.Empty;
+
+        return input.Substring(start, i - start);
     }
 
-    /// <summary>
-    /// A helper method to retrieve the StepProperty associated with this cell.
-    /// </summary>
-    private StepProperty? GetStepProperty()
+    private static bool TryParseInt(string token, out int value)
     {
-        if (DataGridView == null || RowIndex < 0 || ColumnIndex < 0)
-        {
-            return null;
-        }
+        if (int.TryParse(token, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+            return true;
+        if (int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+            return true;
+        return false;
+    }
 
-        if (DataGridView.Rows[RowIndex].DataBoundItem is not StepViewModel viewModel)
-        {
-            return null;
-        }
-
-        // Find the column key based on the cell's column index.
-        var columnKey = new ColumnIdentifier(DataGridView.Columns[ColumnIndex].Name);
-        return viewModel.GetProperty(columnKey);
+    private static bool TryParseFloat(string token, out float value)
+    {
+        if (float.TryParse(token, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.CurrentCulture, out value))
+            return true;
+        if (float.TryParse(token, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out value))
+            return true;
+        return false;
     }
 }

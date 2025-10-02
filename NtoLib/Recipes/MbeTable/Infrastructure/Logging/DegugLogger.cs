@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using NtoLib.Recipes.MbeTable.Errors;
 
 namespace NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 
@@ -52,6 +53,41 @@ public class DebugLogger : ILogger
         Debug.WriteLine(output);
         Console.WriteLine(output);
 #endif
+    }
+    
+    /// <inheritdoc />
+    public void LogError(RecipeError error, [CallerMemberName] string caller = "")
+    {
+        var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+        var messageBuilder = new StringBuilder();
+
+        var errorInfo = $"{timestamp} [ERROR] [{caller}] Code={error.Code}, Message={error.Message}";
+        messageBuilder.AppendLine(errorInfo);
+
+        if (error.Reasons.Count > 0)
+        {
+            var reasonsInfo = $"{timestamp} [REASONS] [{caller}] {string.Join("; ", error.Reasons.Select(r => r.Message))}";
+            messageBuilder.AppendLine(reasonsInfo);
+        }
+
+        if (error.Metadata.Count > 0)
+        {
+            var metadataInfo = $"{timestamp} [METADATA] [{caller}] {SerializeMetadata(error.Metadata)}";
+            messageBuilder.AppendLine(metadataInfo);
+        }
+
+        var fullMessage = messageBuilder.ToString();
+        WriteToFile(fullMessage);
+
+#if DEBUG
+        Debug.Write(fullMessage);
+        Console.Write(fullMessage);
+#endif
+    }
+
+    private string SerializeMetadata(Dictionary<string, object> metadata)
+    {
+        return string.Join(", ", metadata.Select(kvp => $"{kvp.Key}={kvp.Value}"));
     }
     
     /// <inheritdoc />

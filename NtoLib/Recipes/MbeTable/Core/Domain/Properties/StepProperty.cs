@@ -23,6 +23,7 @@ public sealed record StepProperty
 
     /// <summary>
     /// Updates the property with a new value and validates it against its type definition.
+    /// Returns the current property with error if validation or parsing fails.
     /// </summary>
     public Result<StepProperty> WithValue(object newValue)
     {
@@ -30,18 +31,18 @@ public sealed record StepProperty
 
         var parseResult = def.TryParse(newValue.ToString());
         if (parseResult.IsFailed)
-            return Result.Fail(new ConversionError(newValue.ToString(), def.SystemType.Name));
+            return Result.Fail<StepProperty>(new ConversionError(newValue.ToString(), def.SystemType.Name));
+
         var parsedValue = parseResult.Value;
-        
-        
         var validationResult = def.TryValidate(parsedValue);
         if (validationResult.IsFailed)
-            return Result.Fail(new ValidationError(validationResult.Errors));
+            return Result.Fail<StepProperty>(new ValidationError(validationResult.Errors));
 
         var newUnion = CreateUnionValue(parsedValue);
         var newPropertyValue = new PropertyValue(newUnion, PropertyTypeId);
         return Result.Ok(new StepProperty(newPropertyValue, PropertyRegistry));
     }
+
 
     /// <summary>
     /// Retrieves the value as T.

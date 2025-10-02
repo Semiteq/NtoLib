@@ -2,16 +2,21 @@
 
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
+using NtoLib.Recipes.MbeTable.Presentation.Context;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
 /// <summary>
 /// Creates DataGridViewTextBoxColumn instances for simple text display and editing.
 /// </summary>
-public class TextBoxColumnFactory : BaseColumnFactory
+public sealed class TextBoxColumnFactory : BaseColumnFactory
 {
-    /// <inheritdoc />
-    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition colDef)
+    public TextBoxColumnFactory(IComboBoxContext comboBoxContext)
+        : base(comboBoxContext)
+    {
+    }
+
+    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition columnDefinition)
     {
         return new DataGridViewTextBoxColumn();
     }

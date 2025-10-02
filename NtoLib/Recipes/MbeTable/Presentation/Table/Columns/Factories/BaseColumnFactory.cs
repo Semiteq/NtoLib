@@ -1,48 +1,67 @@
 ﻿using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
+using NtoLib.Recipes.MbeTable.Presentation.Context;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
-public abstract class BaseColumnFactory : IColumnFactory
+/// <summary>
+/// Base factory for creating DataGridView columns with consistent styling.
+/// Subclasses override CreateColumnInstance to provide specific column types.
+/// </summary>
+public abstract class BaseColumnFactory
 {
-    /// <inheritdoc >
+    private const int DefaultMinWidth = 50;
+    private const int CriticalMinWidth = 2; // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.datagridviewcolumn.minimumwidth?view=windowsdesktop-9.0#property-value
+    protected IComboBoxContext ComboBoxContext { get; }
 
-    private const int MinWidth = 50;
-
-    public DataGridViewColumn CreateColumn(ColumnDefinition colDef, ColorScheme colorScheme)
+    protected BaseColumnFactory(IComboBoxContext comboBoxContext)
     {
-        var column = CreateColumnInstance(colDef);
+        ComboBoxContext = comboBoxContext;
+    }
 
-        column.Name = colDef.Key.Value;
-        column.HeaderText = colDef.UiName;
+    /// <summary>
+    /// Creates and configures a DataGridView column based on column definition.
+    /// </summary>
+    /// <param name="columnDefinition">Column configuration from YAML.</param>
+    /// <param name="colorScheme">Color scheme for default cell styling.</param>
+    /// <returns>Configured DataGridView column ready for addition to DataGridView.</returns>
+    public DataGridViewColumn CreateColumn(ColumnDefinition columnDefinition, ColorScheme colorScheme)
+    {
+        var column = CreateColumnInstance(columnDefinition);
+
+        column.Name = columnDefinition.Key.Value;
+        column.HeaderText = columnDefinition.UiName;
         column.SortMode = DataGridViewColumnSortMode.NotSortable;
-        column.ReadOnly = colDef.ReadOnly;
-
-        column.DefaultCellStyle.Alignment = colDef.Alignment;
+        column.ReadOnly = columnDefinition.ReadOnly;
+        
+        column.DefaultCellStyle.Alignment = columnDefinition.Alignment;
         column.DefaultCellStyle.Font = colorScheme.LineFont;
         column.DefaultCellStyle.BackColor = colorScheme.LineBgColor;
         column.DefaultCellStyle.ForeColor = colorScheme.LineTextColor;
-
-        if (colDef.Width > 0)
-        {
-            column.Width = colDef.Width;
-            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-        }
-        else
-        {
-            column.MinimumWidth = MinWidth;
-            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-        }
-
-        ConfigureColumn(column, colDef, colorScheme);
-
+        
+        column.MinimumWidth = columnDefinition.MinimalWidth;
+        column.Width = columnDefinition.Width;
+        
+        column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+        
+        if (columnDefinition.MinimalWidth < CriticalMinWidth) column.MinimumWidth = DefaultMinWidth;
+        if (columnDefinition.Width < CriticalMinWidth) column.Width = columnDefinition.MinimalWidth;
+        if (columnDefinition.Width == -1) column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        
+        ConfigureColumn(column, columnDefinition, colorScheme);
         return column;
     }
 
-    protected abstract DataGridViewColumn CreateColumnInstance(ColumnDefinition colDef);
+    /// <summary>
+    /// Creates the specific column type. Implemented by subclasses.
+    /// </summary>
+    protected abstract DataGridViewColumn CreateColumnInstance(ColumnDefinition columnDefinition);
 
-    protected virtual void ConfigureColumn(DataGridViewColumn column, ColumnDefinition colDef, ColorScheme colorScheme)
+    /// <summary>
+    /// Performs additional column-specific configuration. Override if needed.
+    /// </summary>
+    protected virtual void ConfigureColumn(DataGridViewColumn column, ColumnDefinition columnDefinition, ColorScheme colorScheme)
     {
     }
 }

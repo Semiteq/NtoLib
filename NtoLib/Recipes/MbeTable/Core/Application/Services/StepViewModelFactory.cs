@@ -19,11 +19,6 @@ public sealed class StepViewModelFactory : IStepViewModelFactory
     private readonly IComboboxDataProvider _comboboxDataProvider;
     private readonly ILogger _debugLogger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="StepViewModelFactory"/> class.
-    /// </summary>
-    /// <param name="comboboxDataProvider">A provider for combobox data sources.</param>
-    /// <param name="debugLogger">The logger instance for debugging purposes.</param>
     public StepViewModelFactory(IComboboxDataProvider comboboxDataProvider, ILogger debugLogger)
     {
         _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
@@ -43,9 +38,9 @@ public sealed class StepViewModelFactory : IStepViewModelFactory
             throw ex;
         }
 
-        // This closure captures the actionId to provide enum options specific to the step's action.
-        List<KeyValuePair<int, string>> EnumOptionsProvider(ColumnIdentifier key) => 
-            _comboboxDataProvider.GetEnumOptions(actionId.Value, key.Value);
+        // Pass actionId as parameter instead of capturing it in closure
+        List<KeyValuePair<int, string>> EnumOptionsProvider(int currentActionId, ColumnIdentifier key) => 
+            _comboboxDataProvider.GetEnumOptions(currentActionId, key.Value);
 
         return new StepViewModel(
             step,

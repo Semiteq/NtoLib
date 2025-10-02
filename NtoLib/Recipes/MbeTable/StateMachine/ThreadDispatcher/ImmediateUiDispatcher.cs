@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using NtoLib.Recipes.MbeTable.StateMachine.Contracts;
 
 namespace NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
@@ -12,7 +14,6 @@ public sealed class ImmediateUiDispatcher : IUiDispatcher
     /// <inheritdoc />
     public void Post(Action action)
     {
-        if (action == null) return;
-        action();
+        action?.Invoke();
     }
 }

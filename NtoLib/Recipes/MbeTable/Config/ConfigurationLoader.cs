@@ -142,7 +142,6 @@ public sealed class ConfigurationLoader : IConfigurationLoader
     private ColumnDefinition ConvertToColumnDefinition(YamlColumnDefinition dto)
     {
         CalculationDefinition? calcDef = null;
-        var readOnly = dto.BusinessLogic.ReadOnly;
 
         if (dto.BusinessLogic.Calculation != null)
         {
@@ -159,9 +158,11 @@ public sealed class ConfigurationLoader : IConfigurationLoader
             Code: dto.Ui!.Code,
             UiName: dto.Ui.UiName,
             ColumnType: dto.Ui.ColumnType,
+            MaxDropdownItems: dto.Ui.MaxDropdownItems,
             Width: dto.Ui.Width,
+            MinimalWidth: dto.Ui.MinWidth,
             Alignment: dto.Ui.Alignment,
-            ReadOnly: readOnly,
+            ReadOnly: dto.BusinessLogic.ReadOnly,
             Calculation: calcDef
         );
     }

@@ -1,34 +1,37 @@
 ﻿#nullable enable
 
-using System; 
+using System;
 using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.Config.Yaml.Models.Columns;
-using NtoLib.Recipes.MbeTable.Core.Domain.Properties; 
+using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
+using NtoLib.Recipes.MbeTable.Presentation.Context;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
 
 namespace NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
 
-public class PropertyColumnFactory : BaseColumnFactory
+/// <summary>
+/// Creates DataGridView columns for property fields (numeric/string values with units).
+/// Uses PropertyGridCell for advanced parsing and formatting.
+/// </summary>
+public sealed class PropertyColumnFactory : BaseColumnFactory
 {
-    private readonly PropertyDefinitionRegistry _registry;
+    private readonly PropertyDefinitionRegistry _propertyDefinitionRegistry;
 
-    public PropertyColumnFactory(PropertyDefinitionRegistry registry)
+    public PropertyColumnFactory(IComboBoxContext comboBoxContext, PropertyDefinitionRegistry propertyDefinitionRegistry)
+        : base(comboBoxContext)
     {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        _propertyDefinitionRegistry = propertyDefinitionRegistry ?? throw new ArgumentNullException(nameof(propertyDefinitionRegistry));
     }
 
-    /// <inheritdoc />
-    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition colDef)
+    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition columnDefinition)
     {
         return new PropertyGridColumn();
     }
 
-    /// <inheritdoc />
-    protected override void ConfigureColumn(DataGridViewColumn column, ColumnDefinition colDef, ColorScheme colorScheme)
+    protected override void ConfigureColumn(DataGridViewColumn column, ColumnDefinition columnDefinition, ColorScheme colorScheme)
     {
-        var propertyTypeId = colDef.PropertyTypeId;
-        var propertyDefinition = _registry.GetDefinition(propertyTypeId);
+        var propertyTypeId = columnDefinition.PropertyTypeId;
+        var propertyDefinition = _propertyDefinitionRegistry.GetDefinition(propertyTypeId);
         column.ValueType = propertyDefinition.SystemType;
-
     }
 }

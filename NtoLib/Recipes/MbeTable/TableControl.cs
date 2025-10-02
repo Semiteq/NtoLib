@@ -9,19 +9,23 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FB.VisualFB;
 using Microsoft.Extensions.DependencyInjection;
-using NtoLib.Recipes.MbeTable.Config;
 using NtoLib.Recipes.MbeTable.Config.Models.Actions;
 using NtoLib.Recipes.MbeTable.Core.Application.ViewModels;
 using NtoLib.Recipes.MbeTable.Core.Domain.Properties;
 using NtoLib.Recipes.MbeTable.Core.Domain.Services;
 using NtoLib.Recipes.MbeTable.Infrastructure.Logging;
 using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+using NtoLib.Recipes.MbeTable.Presentation.Context;
+using NtoLib.Recipes.MbeTable.Presentation.DataSource;
+using NtoLib.Recipes.MbeTable.Presentation.Extensions;
+using NtoLib.Recipes.MbeTable.Presentation.Initialization;
 using NtoLib.Recipes.MbeTable.Presentation.Status;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Behavior;
-using NtoLib.Recipes.MbeTable.Presentation.Table.CellState;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Columns;
-using NtoLib.Recipes.MbeTable.Presentation.Table.Columns.Factories;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Cells;
+using NtoLib.Recipes.MbeTable.Presentation.Table.Rendering;
+using NtoLib.Recipes.MbeTable.Presentation.Table.State;
 using NtoLib.Recipes.MbeTable.Presentation.Table.Style;
+using NtoLib.Recipes.MbeTable.Presentation.Table.VirtualMode;
 using NtoLib.Recipes.MbeTable.StateMachine;
 using NtoLib.Recipes.MbeTable.StateMachine.App;
 using NtoLib.Recipes.MbeTable.StateMachine.ThreadDispatcher;
@@ -33,32 +37,29 @@ namespace NtoLib.Recipes.MbeTable;
 [Guid("8161DF32-8D80-4B81-AF52-3021AE0AD293")]
 public partial class TableControl : VisualControlBase
 {
-    // DI and services
     [NonSerialized] private IServiceProvider? _sp;
     [NonSerialized] private RecipeViewModel? _recipeViewModel;
     [NonSerialized] private TableColumns? _tableSchema;
     [NonSerialized] private PropertyDefinitionRegistry? _registry;
     [NonSerialized] private IStatusManager? _statusManager;
-    [NonSerialized] private IPlcStateMonitor? _plcStateMonitor;
     [NonSerialized] private IActionTargetProvider? _actionTargetProvider;
     [NonSerialized] private IComboboxDataProvider? _comboboxDataProvider;
-    [NonSerialized] private TableCellStateManager? _tableCellStateManager;
     [NonSerialized] private IPlcRecipeStatusProvider? _plcRecipeStatusProvider;
     [NonSerialized] private ILogger? _debugLogger;
     [NonSerialized] private AppStateMachine? _appStateMachine;
     [NonSerialized] private AppStateUiProjector? _uiProjector;
 
-    // UI artifacts
+    [NonSerialized] private VirtualModeDataManager? _virtualModeManager;
+    [NonSerialized] private ITableRenderCoordinator? _tableRenderCoordinator;
     [NonSerialized] private TableBehaviorManager? _tableBehaviorManager;
-    [NonSerialized] private ButtonStateStyler? _buttonStyler;
     [NonSerialized] private OpenFileDialog? _openFileDialog;
     [NonSerialized] private SaveFileDialog? _saveFileDialog;
-    [NonSerialized] private ColorScheme? _colorScheme;
+    [NonSerialized] private IColorSchemeProvider? _colorSchemeProvider;
+    [NonSerialized] private IComboBoxContext? _comboBoxContext;
+    [NonSerialized] private IRowExecutionStateProvider? _rowExecutionStateProvider;
 
-    // Subscriptions container
     [NonSerialized] private readonly List<IDisposable> _eventSubscriptions = new();
 
-    // Appearance (design-time props)
     [NonSerialized] private Color? _controlBgColor;
     [NonSerialized] private Color? _tableBgColor;
     [NonSerialized] private Font? _headerFont;
@@ -73,10 +74,11 @@ public partial class TableControl : VisualControlBase
     [NonSerialized] private Font? _passedLineFont;
     [NonSerialized] private Color? _passedLineTextColor;
     [NonSerialized] private Color? _passedLineBgColor;
+    [NonSerialized] private Color? _blockedBgColor;
     [NonSerialized] private Color? _buttonsColor;
     [NonSerialized] private int? _rowHeight;
     [NonSerialized] private Color? _statusBgColor;
-
+    
     public TableControl() : base(true)
     {
         InitializeComponent();
@@ -87,12 +89,12 @@ public partial class TableControl : VisualControlBase
         base.put_DesignMode(bDesignMode);
         if (FBConnector == null) return;
 
-        if (!FBConnector.DesignMode) // Entering Runtime
+        if (!FBConnector.DesignMode)
         {
             InitializeServicesAndEvents();
             _appStateMachine?.Dispatch(new EnterRuntime());
         }
-        else // Entering Design-Time
+        else
         {
             _appStateMachine?.Dispatch(new EnterEditor());
             CleanupRuntimeState();
@@ -284,6 +286,18 @@ public partial class TableControl : VisualControlBase
         }
     }
 
+    [DisplayName("Цвет фона заблокированной ячейки")]
+    public Color BlockedBgColor
+    {
+        get => _blockedBgColor ??= Color.FromArgb(224, 224, 224);
+        set
+        {
+            if (_blockedBgColor == value) return;
+            _blockedBgColor = value;
+            UpdateColorScheme();
+        }
+    }
+
     [DisplayName("Цвет кнопок")]
     public Color ButtonsColor
     {
@@ -359,21 +373,19 @@ public partial class TableControl : VisualControlBase
         _tableSchema = _sp.GetRequiredService<TableColumns>();
         _registry = _sp.GetRequiredService<PropertyDefinitionRegistry>();
         _statusManager = _sp.GetRequiredService<IStatusManager>();
-        _plcStateMonitor = _sp.GetRequiredService<IPlcStateMonitor>();
         _openFileDialog = _sp.GetRequiredService<OpenFileDialog>();
         _saveFileDialog = _sp.GetRequiredService<SaveFileDialog>();
         _actionTargetProvider = _sp.GetRequiredService<IActionTargetProvider>();
         _comboboxDataProvider = _sp.GetRequiredService<IComboboxDataProvider>();
-        _tableCellStateManager = _sp.GetRequiredService<TableCellStateManager>();
         _plcRecipeStatusProvider = _sp.GetRequiredService<IPlcRecipeStatusProvider>();
         _appStateMachine = _sp.GetRequiredService<AppStateMachine>();
         _uiProjector = _sp.GetRequiredService<AppStateUiProjector>();
+        _colorSchemeProvider = _sp.GetRequiredService<IColorSchemeProvider>();
+        _comboBoxContext = _sp.GetRequiredService<IComboBoxContext>();
+        _rowExecutionStateProvider = _sp.GetRequiredService<IRowExecutionStateProvider>();
 
         var uiDispatcher = new WinFormsUiDispatcher(this);
         _recipeViewModel.SetUiDispatcher(uiDispatcher);
-
-        _colorScheme = _sp.GetService<ColorScheme>() ?? new ColorScheme();
-
         UpdateColorScheme();
         _actionTargetProvider.RefreshTargets();
 
@@ -388,53 +400,111 @@ public partial class TableControl : VisualControlBase
         ClearSubscriptions();
 
         InitButtonStyling();
-        EnableDoubleBufferDataGridView();
 
-        var tableColumnManager = new TableColumnManager(
+        var tableInitializer = new TableInitializer(
             _table,
+            _colorSchemeProvider!,
             _tableSchema!,
             _registry!,
-            _colorScheme!,
-            _comboboxDataProvider!);
-        
-        tableColumnManager.InitializeHeaders();
-        tableColumnManager.InitializeTableColumns();
-        tableColumnManager.InitializeTableRows();
+            _comboboxDataProvider!,
+            _comboBoxContext!,
+            _debugLogger!);
 
-        _table.RowHeadersWidth = 50;
-        _table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-        _table.DataSource = _recipeViewModel!.ViewModels;
+        tableInitializer.InitializeTable();
+
+        InitializeComboBoxCellStrategies();
+
+        _table.VirtualMode = true;
+        _table.RowCount = _recipeViewModel!.GetRowCount();
         _table.Invalidate();
 
-        var palette = _sp!.GetRequiredService<ICellStylePalette>();
+        _virtualModeManager = new VirtualModeDataManager(
+            _recipeViewModel!,
+            _tableSchema!,
+            _table,
+            _debugLogger!);
+
+        _table.CellValueNeeded += OnCellValueNeeded;
+        _table.CellValuePushed += OnCellValuePushed;
+
+        Subscribe(() => _recipeViewModel!.RowCountChanged += OnRowCountChanged,
+                  () => _recipeViewModel!.RowCountChanged -= OnRowCountChanged);
+
+        Subscribe(() => _recipeViewModel!.ValidationFailed += OnValidationFailed,
+                  () => _recipeViewModel!.ValidationFailed -= OnValidationFailed);
+
+        var rowExecutionStateProvider = _sp!.GetRequiredService<IRowExecutionStateProvider>();
+        var cellStateResolver = _sp!.GetRequiredService<ICellStateResolver>();
+        
+        _tableRenderCoordinator = new TableRenderCoordinator(
+            _table,
+            rowExecutionStateProvider,
+            cellStateResolver,
+            _recipeViewModel!,
+            _tableSchema!,
+            _debugLogger!,
+            _colorSchemeProvider!);
+
+        _tableRenderCoordinator.Initialize();
+
         _tableBehaviorManager = new TableBehaviorManager(
             _table,
-            _tableSchema!,
-            _tableCellStateManager!,
             _statusManager,
-            palette,
-            _colorScheme!,
-            _plcRecipeStatusProvider!,
-            _recipeViewModel!,
+            _colorSchemeProvider!.Current,
             _debugLogger);
 
-        _tableBehaviorManager.TableStyleSetup();
         _tableBehaviorManager.Attach();
-
-        // UI + VM subscriptions
-        // DataError is fully handled inside TableBehaviorManager now; no need to subscribe here.
-
-        Subscribe(() => _recipeViewModel!.OnUpdateStart += OnVmUpdateStart,
-                  () => _recipeViewModel!.OnUpdateStart -= OnVmUpdateStart);
-
-        Subscribe(() => _recipeViewModel!.OnUpdateEnd += OnVmUpdateEnd,
-                  () => _recipeViewModel!.OnUpdateEnd -= OnVmUpdateEnd);
 
         Subscribe(() => _statusManager!.StatusUpdated += OnStatusUpdated,
                   () => _statusManager!.StatusUpdated -= OnStatusUpdated);
 
         Subscribe(() => _statusManager!.StatusCleared += OnStatusCleared,
                   () => _statusManager!.StatusCleared -= OnStatusCleared);
+
+        Subscribe(() => _recipeViewModel!.RowInvalidationRequested += OnRowInvalidationRequested,
+            () => _recipeViewModel!.RowInvalidationRequested -= OnRowInvalidationRequested);
+    }
+
+    private void InitializeComboBoxCellStrategies()
+    {
+        var scheme = _colorSchemeProvider!.Current;
+        
+        foreach (DataGridViewColumn column in _table.Columns)
+        {
+            if (column.Tag is not Type strategyType)
+            {
+                continue;
+            }
+
+            IComboBoxDataSourceStrategy? strategy = null;
+
+            if (strategyType == typeof(ColumnStaticDataSource))
+            {
+                strategy = new ColumnStaticDataSource();
+            }
+            else if (strategyType == typeof(RowDynamicDataSource))
+            {
+                strategy = new RowDynamicDataSource();
+            }
+
+            if (strategy == null)
+            {
+                continue;
+            }
+
+            if (column.CellTemplate is RecipeComboBoxCell templateCell)
+            {
+                templateCell.Initialize(_comboBoxContext!, strategy, scheme, _rowExecutionStateProvider!);
+            }
+        }
+    }
+
+    private void OnRowInvalidationRequested(int rowIndex)
+    {
+        SafeUi(() =>
+        {
+            _virtualModeManager!.InvalidateRow(rowIndex);
+        });
     }
 
     private void InitializeAppState()
@@ -461,54 +531,105 @@ public partial class TableControl : VisualControlBase
 
     protected override void Dispose(bool disposing)
     {
-        Debug.WriteLine($"!!! TableControl.Dispose(disposing={disposing}) called !!!");
-        if (disposing)
+        try
         {
-            CleanupRuntimeState();
-            components?.Dispose();
+            if (disposing)
+            {
+                CleanupRuntimeState();
+                components?.Dispose();
 
-            TryDisposeFont(_headerFont);
-            TryDisposeFont(_lineFont);
-            TryDisposeFont(_selectedLineFont);
-            TryDisposeFont(_passedLineFont);
+                TryDisposeFont(_headerFont);
+                TryDisposeFont(_lineFont);
+                TryDisposeFont(_selectedLineFont);
+                TryDisposeFont(_passedLineFont);
+            }
         }
-        base.Dispose(disposing);
+        finally
+        {
+            base.Dispose(disposing);
+        }
     }
 
     private void CleanupRuntimeState()
     {
-        _debugLogger?.Log("Cleaning up runtime state and subscriptions.");
         ClearSubscriptions();
 
-        try { _buttonStyler?.Dispose(); } catch { /* ignore */ }
-        try { _tableBehaviorManager?.Dispose(); } catch { /* ignore */ }
+        try { _tableBehaviorManager?.Dispose(); } catch { }
+        try { _tableRenderCoordinator?.Dispose(); } catch { }
 
         _sp = null;
         _recipeViewModel = null;
         _tableSchema = null;
         _statusManager = null;
-        _plcStateMonitor = null;
         _actionTargetProvider = null;
         _comboboxDataProvider = null;
-        _tableCellStateManager = null;
         _plcRecipeStatusProvider = null;
         _appStateMachine = null;
         _uiProjector = null;
         _openFileDialog = null;
         _saveFileDialog = null;
-        _colorScheme = null;
+        _colorSchemeProvider = null;
+        _comboBoxContext = null;
         _tableBehaviorManager = null;
-        _buttonStyler = null;
+        _tableRenderCoordinator = null;
+        _virtualModeManager = null;
 
         _debugLogger = null;
+        
+    }
+
+    #endregion
+
+    #region VirtualMode Event Handlers
+
+    private void OnCellValueNeeded(object? sender, DataGridViewCellValueEventArgs e)
+    {
+        e.Value = _virtualModeManager!.GetCellValue(e.RowIndex, e.ColumnIndex);
+    }
+
+    private void OnCellValuePushed(object? sender, DataGridViewCellValueEventArgs e)
+    {
+        var currentCell = _table.CurrentCell;
+        int currentRow = currentCell?.RowIndex ?? -1;
+        int currentCol = currentCell?.ColumnIndex ?? -1;
+
+        var result = _virtualModeManager!.SetCellValue(e.RowIndex, e.ColumnIndex, e.Value);
+
+        if (result.IsFailed)
+        {
+            try
+            {
+                _table.CancelEdit();
+                _table.EndEdit();
+                _virtualModeManager.InvalidateCell(e.RowIndex, e.ColumnIndex);
+            }
+            catch { }
+        }
+    }
+
+    private int _previousRowCount = 0;
+    
+    private void OnRowCountChanged(int newCount)
+    {
+        SafeUi(() =>
+        {
+            _virtualModeManager!.RefreshRowCount();
+            _previousRowCount = newCount;
+        });
+    }
+
+    private void OnValidationFailed(int rowIndex, string errorMessage)
+    {
+        SafeUi(() =>
+        {
+            _statusManager?.WriteStatusMessage(errorMessage, StatusMessage.Error);
+            _virtualModeManager!.InvalidateRow(rowIndex);
+        });
     }
 
     #endregion
 
     #region Event handlers
-
-    private void OnVmUpdateStart() => _table.SuspendLayout();
-    private void OnVmUpdateEnd() => _table.ResumeLayout();
 
     private void OnStatusUpdated(string message, StatusMessage statusMessage)
     {
@@ -549,51 +670,28 @@ public partial class TableControl : VisualControlBase
         });
     }
 
-    private void Table_DataError(object? sender, DataGridViewDataErrorEventArgs e)
-    {
-        if (e.Cancel || _sp == null) return;
-        _statusManager?.WriteStatusMessage(
-            $"DataError in [{e.RowIndex}, {e.ColumnIndex}]: {e.Exception?.Message}", StatusMessage.Error);
-        e.ThrowException = false;
-    }
-
     #endregion
 
     #region Visual helpers
 
     private void InitButtonStyling()
     {
-        _buttonStyler?.Dispose();
-        _buttonStyler = new ButtonStateStyler
-        {
-            DisabledBackColor = Color.FromArgb(170, 170, 170),
-            DisabledForeColor = Color.Gainsboro
-        };
+        var disabledBack = Color.FromArgb(170, 170, 170);
+        var disabledFore = Color.Gainsboro;
 
-        _buttonStyler.Register(_buttonOpen);
-        _buttonStyler.Register(_buttonSave);
-        _buttonStyler.Register(_buttonAddBefore);
-        _buttonStyler.Register(_buttonAddAfter);
-        _buttonStyler.Register(_buttonDel);
-        _buttonStyler.Register(_buttonWrite);
-    }
-
-    private void EnableDoubleBufferDataGridView()
-    {
-        typeof(DataGridView).InvokeMember(
-            "DoubleBuffered",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
-            System.Reflection.BindingFlags.SetProperty,
-            null,
-            _table,
-            new object[] { true });
+        _buttonOpen.SetupDisabledStyle(disabledBack, disabledFore);
+        _buttonSave.SetupDisabledStyle(disabledBack, disabledFore);
+        _buttonAddBefore.SetupDisabledStyle(disabledBack, disabledFore);
+        _buttonAddAfter.SetupDisabledStyle(disabledBack, disabledFore);
+        _buttonDel.SetupDisabledStyle(disabledBack, disabledFore);
+        _buttonWrite.SetupDisabledStyle(disabledBack, disabledFore);
     }
 
     private void UpdateColorScheme()
     {
-        if (_sp == null) return;
+        if (_colorSchemeProvider == null) return;
 
-        var newScheme = new ColorScheme() with
+        var newScheme = new ColorScheme
         {
             ControlBackgroundColor = this.ControlBgColor,
             TableBackgroundColor = this.TableBgColor,
@@ -606,12 +704,12 @@ public partial class TableControl : VisualControlBase
             LineTextColor = this.LineTextColor,
             SelectedLineTextColor = this.SelectedLineTextColor,
             PassedLineTextColor = this.PassedLineTextColor,
-            BlockedTextColor = this.PassedLineTextColor,
+            BlockedTextColor = this.LineTextColor,
             HeaderBgColor = this.HeaderBgColor,
             LineBgColor = this.LineBgColor,
             SelectedLineBgColor = this.SelectedLineBgColor,
             PassedLineBgColor = this.PassedLineBgColor,
-            BlockedBgColor = this.HeaderBgColor,
+            BlockedBgColor = this.BlockedBgColor,
             ButtonsColor = this.ButtonsColor,
             BlockedButtonsColor = Darken(this.ButtonsColor),
             LineHeight = this.RowLineHeight,
@@ -620,15 +718,10 @@ public partial class TableControl : VisualControlBase
             SelectedOutlineThickness = 1
         };
 
-        _colorScheme = newScheme;
-
-        var tableCellStateManager = _sp.GetService<TableCellStateManager>();
-        tableCellStateManager?.UpdateColorScheme(newScheme);
-
-        var palette = _sp.GetService<ICellStylePalette>();
-        palette?.UpdateColorScheme(newScheme);
-
-        _tableBehaviorManager?.RefreshTheme(newScheme);
+        if (_colorSchemeProvider is DesignTimeColorSchemeProvider provider)
+        {
+            provider.Update(newScheme);
+        }
     }
 
     private static Color Darken(Color c)
@@ -639,7 +732,7 @@ public partial class TableControl : VisualControlBase
     }
 
     #endregion
-    
+
     #region Button click handlers
 
     private void ClickButton_Delete(object sender, EventArgs e)
@@ -685,7 +778,7 @@ public partial class TableControl : VisualControlBase
     #endregion
 
     #region Infrastructure helpers
-    
+
     private void SafeUi(Action action)
     {
         try
@@ -710,20 +803,17 @@ public partial class TableControl : VisualControlBase
     private void ClearSubscriptions()
     {
         if (_eventSubscriptions.Count == 0) return;
-        
-        _debugLogger?.Log($"Clearing {_eventSubscriptions.Count} event subscriptions.");
-        Debug.WriteLine($"Clearing {_eventSubscriptions.Count} subs.");
 
         for (int i = _eventSubscriptions.Count - 1; i >= 0; i--)
         {
-            try { _eventSubscriptions[i]?.Dispose(); } catch { /* ignore */ }
+            try { _eventSubscriptions[i]?.Dispose(); } catch { }
         }
         _eventSubscriptions.Clear();
     }
 
     private static void TryDisposeFont(Font? f)
     {
-        try { f?.Dispose(); } catch { /* ignore */ }
+        try { f?.Dispose(); } catch { }
     }
 
     private sealed class DisposableAction : IDisposable
