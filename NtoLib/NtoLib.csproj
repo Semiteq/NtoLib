@@ -541,9 +541,14 @@
     <Content Include="Recipes\MbeTable\MbeTableFB.png" />
     <Content Include="Recipes\MbeTable\Presentation\readme.md" />
     <Content Include="Recipes\MbeTable\readme.md" />
-    <Content Include="Recipes\MbeTable\Templates\MBE\ActionSchema.json" />
-    <Content Include="Recipes\MbeTable\Templates\MBE\PinGroups.json" />
-    <Content Include="Recipes\MbeTable\Templates\MBE\TableSchema.json" />
+    <Content Include="Recipes\MbeTable\Templates\MBE\ActionsDefs.yaml" />
+    <Content Include="Recipes\MbeTable\Templates\MBE\ColumnDefs.yaml" />
+    <Content Include="Recipes\MbeTable\Templates\MBE\PinGroups.yaml" />
+    <Content Include="Recipes\MbeTable\Templates\MBE\PropertyDefs.yaml" />
+    <Content Include="Recipes\MbeTable\Templates\MOCVD\ActionsDefs.yaml" />
+    <Content Include="Recipes\MbeTable\Templates\MOCVD\ColumnDefs.yaml" />
+    <Content Include="Recipes\MbeTable\Templates\MOCVD\PinGroupDefs.yaml" />
+    <Content Include="Recipes\MbeTable\Templates\MOCVD\PropertyDefs.yaml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="PostBuild" AfterTargets="Build">
