@@ -256,7 +256,14 @@ class Build : NukeBuild
                 targetDirectory / "YamlDotNet.dll",
                 targetDirectory / "Microsoft.Extensions.Logging.Abstractions.dll",
                 targetDirectory / "Microsoft.Extensions.DependencyInjection.dll",
-                targetDirectory / "Microsoft.Extensions.DependencyInjection.Abstractions.dll"
+                targetDirectory / "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+                targetDirectory / "Polly.dll",
+                targetDirectory / "Serilog.Extensions.Logging.dll",
+                targetDirectory / "Serilog.Sinks.Console.dll",
+                targetDirectory / "Serilog.dll",
+                targetDirectory / "Serilog.Sinks.File.dll",
+                targetDirectory / "Serilog.Sinks.Debug.dll", 
+                targetDirectory / "System.Diagnostics.DiagnosticSource.dll",
             };
 
             var existingAssemblies = assemblyPaths.Where(assembly => assembly.FileExists()).ToArray();
