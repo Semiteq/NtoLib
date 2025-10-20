@@ -39,56 +39,27 @@ public sealed class UiStateService : IUiStateService
         var isBusy = state.ActiveOperation != null || state.RecipeActive;
 
         _debugLogger.LogDebug(
-            "Calculating UI permissions: EnaSendOk={EnaSendOk}, IsBusy={IsBusy}",
+            "Calculating UI permissions: EnaSendOk={EnaSendOk}, IsBusy={IsBusy}, RecipeActive={RecipeActive}",
             state.EnaSendOk,
-            isBusy);
-        
+            isBusy,
+            state.RecipeActive);
+
         return new UiPermissions(
             CanWriteRecipe: state.EnaSendOk && !isBusy,
             CanOpenFile: !isBusy,
             CanAddStep: !isBusy,
             CanDeleteStep: !isBusy,
-            CanSaveFile: !isBusy
+            CanSaveFile: !isBusy,
+            IsGridReadOnly: state.RecipeActive
         );
     }
 
-    public void NotifyValidationChanged(bool isValid)
-    {
-        _uiStateManager.NotifyValidationChanged(isValid);
-    }
-
-    public void NotifyPlcStateChanged(bool enaSendOk, bool recipeActive)
-    {
-        _uiStateManager.NotifyPlcStateChanged(enaSendOk, recipeActive);
-    }
-
-    public void NotifyOperationStarted(OperationKind kind)
-    {
-        _uiStateManager.NotifyOperationStarted(kind);
-    }
-
-    public void NotifyOperationCompleted()
-    {
-        _uiStateManager.NotifyOperationCompleted();
-    }
-
-    public void ShowError(string message)
-    {
-        _uiStateManager.ShowError(message);
-    }
-
-    public void ShowInfo(string message)
-    {
-        _uiStateManager.ShowInfo(message);
-    }
-
-    public void ShowWarning(string message)
-    {
-        _uiStateManager.ShowWarning(message);
-    }
-
-    public void ClearMessage()
-    {
-        _uiStateManager.ClearMessage();
-    }
+    public void NotifyValidationChanged(bool isValid) => _uiStateManager.NotifyValidationChanged(isValid);
+    public void NotifyPlcStateChanged(bool enaSendOk, bool recipeActive) => _uiStateManager.NotifyPlcStateChanged(enaSendOk, recipeActive);
+    public void NotifyOperationStarted(OperationKind kind) => _uiStateManager.NotifyOperationStarted(kind);
+    public void NotifyOperationCompleted() => _uiStateManager.NotifyOperationCompleted();
+    public void ShowError(string message) => _uiStateManager.ShowError(message);
+    public void ShowInfo(string message) => _uiStateManager.ShowInfo(message);
+    public void ShowWarning(string message) => _uiStateManager.ShowWarning(message);
+    public void ClearMessage() => _uiStateManager.ClearMessage();
 }

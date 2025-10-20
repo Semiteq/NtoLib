@@ -249,7 +249,19 @@ public partial class TableControl
         _buttonAddAfter.Enabled = permissions.CanAddStep;
         _buttonDel.Enabled = permissions.CanDeleteStep;
         _buttonWrite.Enabled = permissions.CanWriteRecipe;
-        _logger!.LogDebug("Permissions changed: {Permissions}", permissions);
+        
+        if (_table != null)
+        {
+            var makeReadOnly = permissions.IsGridReadOnly;
+            if (_table.ReadOnly != makeReadOnly)
+            {
+                if (makeReadOnly)
+                {
+                    try { _table.EndEdit(); } catch { }
+                }
+                _table.ReadOnly = makeReadOnly;
+            }
+        }
     }
 
     private ITablePresenter CreatePresenter(ITableView view)

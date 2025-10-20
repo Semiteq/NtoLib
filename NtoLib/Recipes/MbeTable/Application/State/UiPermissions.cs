@@ -10,5 +10,6 @@ public sealed record UiPermissions(
     bool CanOpenFile,
     bool CanAddStep,
     bool CanDeleteStep,
-    bool CanSaveFile
+    bool CanSaveFile,
+    bool IsGridReadOnly
 );
