@@ -6,11 +6,11 @@
 
 ## Оглавление
 
-- [Конфигурация через YAML-файлы](./ModuleConfig/README.md)
-- [Взаимодействие с ПЛК по Modbus TCP](./ServiceModbusTCP/README.md)
-- [Импорт и экспорт рецептов в CSV](./ServiceCsv/README.md)
-- [Пины функционального блока (FB Pins)](./ModuleInfrastructure/README.md)
-- [Диагностика](./ServiceLogger/README.md)
+- [Конфигурация через YAML-файлы](./ModuleConfig/readme.md)
+- [Взаимодействие с ПЛК по Modbus TCP](./ServiceModbusTCP/readme.md)
+- [Импорт и экспорт рецептов в CSV](./ServiceCsv/readme.md)
+- [Пины функционального блока (FB Pins)](./ModuleInfrastructure/readme.md)
+- [Диагностика](./ServiceLogger/readme.md)
 
 ## 1. Ключевые возможности
 
