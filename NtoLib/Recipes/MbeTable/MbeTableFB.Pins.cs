@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 
 using FB;
-using NtoLib.Recipes.MbeTable.Config;
+
 using InSAT.OPC;
 using MasterSCADA.Hlp;
+
+using NtoLib.Recipes.MbeTable.ModuleConfig;
 
 namespace NtoLib.Recipes.MbeTable;
 

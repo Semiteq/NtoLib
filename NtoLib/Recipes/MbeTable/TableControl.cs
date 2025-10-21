@@ -6,11 +6,11 @@ using FB.VisualFB;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Presentation;
-using NtoLib.Recipes.MbeTable.Presentation.Abstractions;
-using NtoLib.Recipes.MbeTable.Presentation.Behavior;
-using NtoLib.Recipes.MbeTable.Presentation.Rendering;
-using NtoLib.Recipes.MbeTable.Presentation.Style;
+using NtoLib.Recipes.MbeTable.ModulePresentation;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable;
 

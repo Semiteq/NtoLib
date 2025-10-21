@@ -7,10 +7,11 @@ using System.Runtime.InteropServices;
 using FB;
 using FB.VisualFB;
 using InSAT.Library.Interop;
-using NtoLib.Recipes.MbeTable.Config;
-using NtoLib.Recipes.MbeTable.Core.Services;
-using NtoLib.Recipes.MbeTable.Infrastructure.ActionTartget;
-using NtoLib.Recipes.MbeTable.Infrastructure.PinDataManager;
+
+using NtoLib.Recipes.MbeTable.ModuleConfig;
+using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 
 namespace NtoLib.Recipes.MbeTable;
 

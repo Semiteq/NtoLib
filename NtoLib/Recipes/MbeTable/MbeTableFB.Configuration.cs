@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-using NtoLib.Recipes.MbeTable.Config;
+using NtoLib.Recipes.MbeTable.ModuleConfig;
 
 namespace NtoLib.Recipes.MbeTable;
 

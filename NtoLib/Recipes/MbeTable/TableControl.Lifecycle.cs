@@ -6,22 +6,23 @@ using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Config.Domain.Columns;
-using NtoLib.Recipes.MbeTable.Presentation;
-using NtoLib.Recipes.MbeTable.Presentation.Adapters;
-using NtoLib.Recipes.MbeTable.Presentation.Behavior;
-using NtoLib.Recipes.MbeTable.Presentation.Columns;
-using NtoLib.Recipes.MbeTable.Presentation.Initialization;
-using NtoLib.Recipes.MbeTable.Presentation.Style;
-using NtoLib.Recipes.MbeTable.Journaling.Status;
-using NtoLib.Recipes.MbeTable.Application.Services;
-using NtoLib.Recipes.MbeTable.Application.State;
-using NtoLib.Recipes.MbeTable.Application.ViewModels;
-using NtoLib.Recipes.MbeTable.Presentation.Abstractions;
-using NtoLib.Recipes.MbeTable.Presentation.Commands;
-using NtoLib.Recipes.MbeTable.Presentation.Rendering;
-using NtoLib.Recipes.MbeTable.Presentation.State;
-using NtoLib.Recipes.MbeTable.Presentation.StateProviders;
+using NtoLib.Recipes.MbeTable.ModuleApplication;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
+using NtoLib.Recipes.MbeTable.ModuleApplication.State;
+using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.Recipes.MbeTable.ModulePresentation;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
+using NtoLib.Recipes.MbeTable.ModulePresentation.State;
+using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
+using NtoLib.Recipes.MbeTable.ServiceStatus;
 
 namespace NtoLib.Recipes.MbeTable;
 
@@ -38,8 +39,8 @@ public partial class TableControl
         try
         {
             InitializeLogger();
-            SubscribeGlobalServices();
             InitializeColorScheme();
+            SubscribeGlobalServices();
 
             ConfigureRecipeTable();
             AttachBehaviorManager();
@@ -65,13 +66,12 @@ public partial class TableControl
 
     private void SubscribeGlobalServices()
     {
-        var statusManager = _serviceProvider!.GetRequiredService<IStatusManager>();
-        statusManager.StatusUpdated += OnStatusUpdated;
-        statusManager.StatusCleared += OnStatusCleared;
-
         var uiStateService = _serviceProvider!.GetRequiredService<IUiStateService>();
-        uiStateService.StatusMessagePosted += OnUiStatusMessage;
         uiStateService.PermissionsChanged += OnPermissionsChanged;
+
+        var status = _serviceProvider!.GetRequiredService<IStatusService>();
+        var scheme = _serviceProvider!.GetRequiredService<ColorScheme>();
+        status.AttachLabel(_labelStatus, scheme);
     }
 
     private void InitializeColorScheme()
@@ -170,7 +170,7 @@ public partial class TableControl
                 OnPermissionsChanged(permissions);
             }
         }
-        catch { /* ignored */ }
+        catch { }
     }
 
     private void HandleInitializationError(Exception ex)
@@ -185,54 +185,6 @@ public partial class TableControl
             MessageBoxIcon.Error);
 
         throw ex;
-    }
-
-    private void OnStatusUpdated(string message, StatusMessage status)
-    {
-        if (_labelStatus.InvokeRequired)
-        {
-            _labelStatus.BeginInvoke(new Action(() => OnStatusUpdated(message, status)));
-            return;
-        }
-
-        _labelStatus.Text = message;
-        _labelStatus.BackColor = status switch
-        {
-            StatusMessage.Error => Color.LightCoral,
-            StatusMessage.Warning => Color.LightYellow,
-            StatusMessage.Success => Color.LightGreen,
-            _ => _statusBgColor ?? ColorScheme.Default.StatusBgColor
-        };
-    }
-
-    private void OnStatusCleared()
-    {
-        if (_labelStatus.InvokeRequired)
-        {
-            _labelStatus.BeginInvoke(new Action(OnStatusCleared));
-            return;
-        }
-
-        _labelStatus.Text = string.Empty;
-        _labelStatus.BackColor = _statusBgColor ?? ColorScheme.Default.StatusBgColor;
-    }
-
-    private void OnUiStatusMessage(string message, StatusKind kind)
-    {
-        if (_labelStatus.InvokeRequired)
-        {
-            _labelStatus.BeginInvoke(new Action(() => OnUiStatusMessage(message, kind)));
-            return;
-        }
-
-        _labelStatus.Text = message;
-        _labelStatus.BackColor = kind switch
-        {
-            StatusKind.Error => Color.LightCoral,
-            StatusKind.Warning => Color.LightYellow,
-            StatusKind.Info => Color.LightGreen,
-            _ => _statusBgColor ?? ColorScheme.Default.StatusBgColor
-        };
     }
 
     private void OnPermissionsChanged(UiPermissions permissions)
@@ -266,7 +218,7 @@ public partial class TableControl
 
     private ITablePresenter CreatePresenter(ITableView view)
     {
-        var app = _serviceProvider!.GetRequiredService<Application.IRecipeApplicationService>();
+        var app = _serviceProvider!.GetRequiredService<IRecipeApplicationService>();
         var rowStateProvider = _serviceProvider!.GetRequiredService<IRowExecutionStateProvider>();
         var loadCmd = _serviceProvider!.GetRequiredService<LoadRecipeCommand>();
         var saveCmd = _serviceProvider!.GetRequiredService<SaveRecipeCommand>();
@@ -342,19 +294,14 @@ public partial class TableControl
 
     private void UnsubscribeGlobalServices()
     {
-        var statusManager = _serviceProvider!.GetService<IStatusManager>();
-        if (statusManager != null)
-        {
-            statusManager.StatusUpdated -= OnStatusUpdated;
-            statusManager.StatusCleared -= OnStatusCleared;
-        }
-
         var uiStateService = _serviceProvider!.GetService<IUiStateService>();
         if (uiStateService != null)
         {
-            uiStateService.StatusMessagePosted -= OnUiStatusMessage;
             uiStateService.PermissionsChanged -= OnPermissionsChanged;
         }
+
+        var status = _serviceProvider!.GetService<IStatusService>();
+        try { status?.Detach(); } catch { }
     }
 
     private void DisposeRuntimeComponents()
@@ -396,6 +343,6 @@ public partial class TableControl
 
     private static void TryDisposeFont(Font? font)
     {
-        try { font?.Dispose(); } catch { /* ignored */ }
+        try { font?.Dispose(); } catch { }
     }
 }
