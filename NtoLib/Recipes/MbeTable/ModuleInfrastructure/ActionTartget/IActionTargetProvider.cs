@@ -10,12 +10,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
 public interface IActionTargetProvider
 {
     /// <summary>
-    /// Refreshes the internal snapshot of targets from the MbeTableFB instance.
-    /// Safe to call multiple times.
-    /// </summary>
-    void RefreshTargets();
-
-    /// <summary>
     /// Tries to get the map of available targets for a given group.
     /// Keys are zero-based target IDs (0..N-1), values are display names (string).
     /// </summary>

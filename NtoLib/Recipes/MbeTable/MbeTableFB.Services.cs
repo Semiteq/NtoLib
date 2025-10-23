@@ -31,8 +31,6 @@ public partial class MbeTableFB
 
             // Activate bridge so it subscribes to runtime state events
             _ = _serviceProvider.GetRequiredService<PlcUiStateBridge>();
-
-            _actionTargetProvider.RefreshTargets();
             _timerService.TimesUpdated += OnTimesUpdated;
         }
         catch (Exception ex)

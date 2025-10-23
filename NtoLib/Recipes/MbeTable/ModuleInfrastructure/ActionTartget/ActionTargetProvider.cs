@@ -5,16 +5,9 @@ using System.Linq;
 
 namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
 
-/// <summary>
-/// Default implementation of <see cref="IActionTargetProvider"/> backed by <see cref="MbeTableFB"/>.
-/// </summary>
 public sealed class ActionTargetProvider : IActionTargetProvider
 {
     private readonly MbeTableFB _fb;
-
-    // Snapshot of current targets. Outer and inner dictionaries are read-only to callers.
-    private IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> _targetsByGroup =
-        new ReadOnlyDictionary<string, IReadOnlyDictionary<int, string>>(new Dictionary<string, IReadOnlyDictionary<int, string>>(StringComparer.OrdinalIgnoreCase));
 
     public ActionTargetProvider(MbeTableFB fb)
     {
@@ -23,25 +16,24 @@ public sealed class ActionTargetProvider : IActionTargetProvider
 
     public void RefreshTargets()
     {
-        var groups = _fb.GetDefinedGroupNames();
-        var updated = new Dictionary<string, IReadOnlyDictionary<int, string>>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var group in groups)
-        {
-            var map = _fb.ReadTargets(group);
-
-            // Defensive copy to a read-only dictionary
-            var readonlyMap = new ReadOnlyDictionary<int, string>(new Dictionary<int, string>(map));
-            updated[group] = readonlyMap;
-        }
-
-        _targetsByGroup = new ReadOnlyDictionary<string, IReadOnlyDictionary<int, string>>(updated);
+        // No-op by design. Data is fetched on demand from MbeTableFB.
     }
 
     public bool TryGetTargets(string groupName, out IReadOnlyDictionary<int, string> targets)
     {
         if (groupName == null) throw new ArgumentNullException(nameof(groupName));
-        return _targetsByGroup.TryGetValue(groupName, out targets!);
+        targets = default!;
+
+        var groups = _fb.GetDefinedGroupNames();
+        var exists = groups.Any(g => string.Equals(g, groupName, StringComparison.OrdinalIgnoreCase));
+        if (!exists)
+        {
+            return false;
+        }
+
+        var map = _fb.ReadTargets(groupName);
+        targets = new ReadOnlyDictionary<int, string>(new Dictionary<int, string>(map));
+        return true;
     }
 
     public int GetMinimalTargetId(string groupName)
@@ -55,7 +47,19 @@ public sealed class ActionTargetProvider : IActionTargetProvider
         return targets.Keys.Min();
     }
 
-    public IReadOnlyCollection<string> GetDefinedGroups() => _targetsByGroup.Keys.ToArray();
+    public IReadOnlyCollection<string> GetDefinedGroups() => _fb.GetDefinedGroupNames();
 
-    public IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> GetAllTargetsSnapshot() => _targetsByGroup;
+    public IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> GetAllTargetsSnapshot()
+    {
+        var groups = _fb.GetDefinedGroupNames();
+        var result = new Dictionary<string, IReadOnlyDictionary<int, string>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var group in groups)
+        {
+            var map = _fb.ReadTargets(group);
+            result[group] = new ReadOnlyDictionary<int, string>(new Dictionary<int, string>(map));
+        }
+
+        return new ReadOnlyDictionary<string, IReadOnlyDictionary<int, string>>(result);
+    }
 }
