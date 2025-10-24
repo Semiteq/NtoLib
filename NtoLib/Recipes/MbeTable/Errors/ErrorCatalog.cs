@@ -26,6 +26,7 @@ public sealed class ErrorCatalog : IErrorCatalog
             [Codes.PlcInvalidResponse] = "Получен некорректный ответ от контроллера",
             [Codes.PlcCapacityExceeded] = "Размер рецепта превышает память контроллера",
             [Codes.PlcVerificationFailed] = "Ошибка проверки: данные в ПЛК не совпадают с отправленными",
+            [Codes.PlcZeroRowsRead] = "Рецепт в контроллере пуст",
 
             // === Операции с CSV файлами (4xxx) ===
             [Codes.CsvInvalidData] = "Некорректные данные или структура в CSV файле",

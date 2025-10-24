@@ -56,7 +56,7 @@ internal sealed class ModbusTransport : IModbusTransport
 
             if (_client?.Connected == true)
             {
-                var pingRes = await PingDirectAsync(settings, ct).ConfigureAwait(false);
+                var pingRes = await TryPingDirectAsync(settings, ct).ConfigureAwait(false);
                 if (pingRes.IsSuccess)
                     return Result.Ok();
 
@@ -89,22 +89,11 @@ internal sealed class ModbusTransport : IModbusTransport
         await _operationLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            var res = await ExecuteWithRetryAsync(
+            return await ExecuteWithRetryAsync(
                 () => _client!.ReadHoldingRegisters(address, length), 
                 length, 
                 "Read", 
                 ct).ConfigureAwait(false);
-        
-            if (res.IsSuccess)
-            {
-                var preview = res.Value.Length <= 20 
-                    ? res.Value 
-                    : res.Value.Take(20).ToArray();
-                _logger.LogTrace("Read from {address} holding result: [{Values}]", 
-                    address, string.Join(", ", preview));
-            }
-
-            return res;
         }
         finally
         {
@@ -147,7 +136,7 @@ internal sealed class ModbusTransport : IModbusTransport
             await Task.Run(_client!.Connect, ct).ConfigureAwait(false);
             _logger.LogDebug("Connected to PLC {Ip}:{Port}", settings.IpAddress, settings.Port);
 
-            return await PingDirectAsync(settings, ct).ConfigureAwait(false);
+            return await TryPingDirectAsync(settings, ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or SocketException)
         {
@@ -161,27 +150,38 @@ internal sealed class ModbusTransport : IModbusTransport
         }
     }
 
-    private async Task<Result> PingDirectAsync(RuntimeOptions settings, CancellationToken ct)
+    private async Task<Result> TryPingDirectAsync(RuntimeOptions settings, CancellationToken ct)
     {
         _logger.LogTrace("Pinging PLC");
-        
-        var res = await ExecuteDirectAsync(
-            () => _client!.ReadHoldingRegisters(settings.ControlRegister, 1),
-            1, "Ping", ct).ConfigureAwait(false);
-        
-        if (res.IsFailed)
-            return res.ToResult();
-
-        var magicValue = res.Value[0];
-        _logger.LogTrace("Read magic value: {Value}, expecting {Expecting}", magicValue, settings.MagicNumber);
-        
-        if (magicValue != settings.MagicNumber)
+        try
         {
-            return Fail(Codes.PlcInvalidResponse,
-                $"Control register validation failed. Expected {settings.MagicNumber}, got {magicValue}");
-        }
+            var res = await ExecuteDirectAsync(
+                () => _client!.ReadHoldingRegisters(settings.ControlRegister, 1),
+                1, "Ping", ct).ConfigureAwait(false);
 
-        return Result.Ok();
+            if (res.IsFailed)
+                return res.ToResult();
+
+            var magicValue = res.Value[0];
+            _logger.LogTrace("Read magic value: {Value}, expecting {Expecting}", magicValue, settings.MagicNumber);
+
+            if (magicValue != settings.MagicNumber)
+            {
+                return Fail(Codes.PlcInvalidResponse,
+                    $"Control register validation failed. Expected {settings.MagicNumber}, got {magicValue}");
+            }
+
+            return Result.Ok();
+        }
+        catch (Exception ex) when (ex is IOException or SocketException)
+        {
+            DisconnectInternal();
+            return Fail(Codes.PlcTimeout, ex.Message);
+        }
+        catch (ModbusException mex)
+        {
+            return Fail(Codes.PlcReadFailed, mex.Message);
+        }
     }
 
     private async Task<Result<T>> ExecuteWithRetryAsync<T>(

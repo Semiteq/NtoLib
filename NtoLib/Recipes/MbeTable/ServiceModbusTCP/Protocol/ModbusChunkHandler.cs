@@ -40,7 +40,7 @@ public sealed class ModbusChunkHandler : IModbusChunkHandler
             var slice = new int[size];
             Array.Copy(data, offset, slice, 0, size);
 
-            _logger.LogTrace("Writing chunk: offset={Offset}, size={Size}", offset, size);
+            _logger.LogTrace("Writing chunk at: {address}, size={Size}", offset+baseAddress, size);
             
             var result = await transport
                 .WriteHoldingAsync(baseAddress + offset, slice, ct)
@@ -72,7 +72,7 @@ public sealed class ModbusChunkHandler : IModbusChunkHandler
         {
             var size = Math.Min(chunkSize, totalRegisters - offset);
             
-            _logger.LogTrace("Reading chunk: offset={Offset}, size={Size}", offset, size);
+            _logger.LogTrace("Reading chunk at: {address}, size={Size}", offset+baseAddress, size);
             
             var readResult = await transport
                 .ReadHoldingAsync(baseAddress + offset, size, ct)

@@ -19,6 +19,7 @@ public enum Codes
     PlcInvalidResponse = 3005,
     PlcCapacityExceeded = 3006,
     PlcVerificationFailed = 3007,
+    PlcZeroRowsRead = 3008,
 
     // === CSV (4xxx) ===
     CsvInvalidData = 4001,

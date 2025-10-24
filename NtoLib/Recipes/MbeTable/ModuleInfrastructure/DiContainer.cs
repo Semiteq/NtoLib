@@ -243,6 +243,7 @@ public static class MbeTableServiceConfigurator
             var plcService = sp.GetRequiredService<IRecipePlcService>();
             var assemblyService = sp.GetRequiredService<IRecipeAssemblyService>();
             var comparator = sp.GetRequiredService<RecipeComparator>();
+            var logger = sp.GetRequiredService<ILogger<ModbusTcpService>>();
             return new ModbusTcpService(plcService, assemblyService, comparator);
         });
 
@@ -312,16 +313,14 @@ public static class MbeTableServiceConfigurator
             Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
             AddExtension = true,
             Multiselect = false,
-            Title = @"Select recipe file",
-            RestoreDirectory = true
+            Title = @"Select recipe file"
         });
 
         services.AddSingleton(_ => new SaveFileDialog
         {
             Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
             AddExtension = true,
-            Title = @"Save recipe file",
-            RestoreDirectory = true
+            Title = @"Save recipe file"
         });
     }
 }

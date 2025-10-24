@@ -218,7 +218,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             var result = await SendRecipeInternalAsync();
             _resolver.Resolve(result, new ResolveOptions(
                 Operation: "Отправка рецепта",
-                SuccessMessage: "Рецепт успешно отправлен",
+                SuccessMessage: "Рецепт успешно отправлен в контроллер",
                 SilentOnPureSuccess: false));
 
             return result;
@@ -244,7 +244,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             
             _resolver.Resolve(result, new ResolveOptions(
                 Operation: "Чтение рецепта",
-                SuccessMessage: "Рецепт успешно прочитан",
+                SuccessMessage: "Рецепт успешно прочитан из контроллера",
                 SilentOnPureSuccess: false));
 
             return result;
@@ -313,9 +313,9 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     private async Task<Result> ReceiveRecipeInternalAsync()
     {
         var receiveResult = await _modbusTcpService.ReceiveRecipeAsync();
-        if (receiveResult.IsFailed)
+        if (receiveResult.IsFailed || receiveResult.Successes.Count > 0)
             return receiveResult.ToResult();
-
+        
         var setResult = _recipeService.SetRecipe(receiveResult.Value);
         
         if (setResult.IsSuccess)
@@ -323,7 +323,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             _viewModel.OnRecipeStructureChanged();
         }
         
-        return setResult.WithReasons(receiveResult.Reasons);
+        return setResult;
     }
 
     private void OnRowCountChanged(int newCount)

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 
 using FluentResults;
 
+using Microsoft.Extensions.Logging;
+
 using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP;
@@ -25,7 +27,7 @@ public sealed class ModbusTcpService : IModbusTcpService
     public ModbusTcpService(
         IRecipePlcService plcService,
         IRecipeAssemblyService assemblyService,
-        RecipeComparator comparator) 
+        RecipeComparator comparator)
     {
         _plcService = plcService ?? throw new ArgumentNullException(nameof(plcService));
         _assemblyService = assemblyService ?? throw new ArgumentNullException(nameof(assemblyService));
@@ -46,7 +48,7 @@ public sealed class ModbusTcpService : IModbusTcpService
         
         if (rowCount == 0) return Result.Ok().WithSuccess(
             new Success("PLC returned zero rows; verification skipped")
-            .WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
+            .WithMetadata(nameof(Codes), Codes.PlcZeroRowsRead));
         
         var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
         if (assembleResult.IsFailed) return assembleResult.ToResult();
@@ -64,7 +66,7 @@ public sealed class ModbusTcpService : IModbusTcpService
         
         if (rowCount == 0) return Result.Ok().
             WithSuccess(new Success("PLC returned zero rows; verification skipped").
-                WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
+                WithMetadata(nameof(Codes), Codes.PlcZeroRowsRead));
         
         var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
         return assembleResult;
