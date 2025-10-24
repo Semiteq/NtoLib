@@ -10,15 +10,15 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 /// </summary>
 internal sealed class MetricsStopwatch : IDisposable
 {
-    private readonly ILogger  _logger;
-    private readonly string   _operation;
+    private readonly ILogger _logger;
+    private readonly string _operation;
     private readonly Stopwatch _sw;
 
     private MetricsStopwatch(string operation, ILogger logger)
     {
-        _operation  = operation;
-        _logger     = logger;
-        _sw         = Stopwatch.StartNew();
+        _operation = operation;
+        _logger = logger;
+        _sw = Stopwatch.StartNew();
     }
 
     public static MetricsStopwatch Start(string operation, ILogger logger) =>
@@ -27,6 +27,6 @@ internal sealed class MetricsStopwatch : IDisposable
     public void Dispose()
     {
         _sw.Stop();
-        _logger.LogDebug("{Operation} completed in {SwElapsedMilliseconds} ms", _operation, _sw.ElapsedMilliseconds);
+        _logger.LogDebug("{Operation} completed in {ElapsedMilliseconds} ms", _operation, _sw.ElapsedMilliseconds);
     }
 }

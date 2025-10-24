@@ -25,7 +25,7 @@ public sealed class ActionRepository : IActionRepository
             return Result.Ok(action);
 
         return Result.Fail(new Error($"Action with id {id} not found")
-            .WithMetadata("code", Codes.CoreNoActionFound)
+            .WithMetadata("code", Codes.CoreActionNotFound)
             .WithMetadata("actionId", id));
     }
 
@@ -34,7 +34,7 @@ public sealed class ActionRepository : IActionRepository
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail(new Error("Action name is empty")
-                .WithMetadata("code", Codes.CoreNoActionFound));
+                .WithMetadata("code", Codes.CoreActionNotFound));
         }
 
         var action = Actions.Values.FirstOrDefault(a => 
@@ -44,7 +44,7 @@ public sealed class ActionRepository : IActionRepository
             return Result.Ok(action);
 
         return Result.Fail(new Error($"Action with name '{name}' not found")
-            .WithMetadata("code", Codes.CoreNoActionFound)
+            .WithMetadata("code", Codes.CoreActionNotFound)
             .WithMetadata("actionName", name));
     }
 
@@ -55,6 +55,6 @@ public sealed class ActionRepository : IActionRepository
             return Result.Ok(first.Id);
 
         return Result.Fail(new Error("No actions defined in configuration")
-            .WithMetadata("code", Codes.CoreNoActionFound));
+            .WithMetadata("code", Codes.CoreActionNotFound));
     }
 }

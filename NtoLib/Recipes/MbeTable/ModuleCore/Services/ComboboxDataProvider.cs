@@ -46,8 +46,6 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
     public IReadOnlyDictionary<short, string> GetActions()
         => _actions.Actions.Values.ToDictionary(a => a.Id, a => a.Name);
 
-    // ---------- helpers ----------
-
     private static Result<PropertyConfig> GetColumn(ActionDefinition action, string columnKey)
     {
         var col = action.Columns.FirstOrDefault(c =>
@@ -56,7 +54,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
         return col == null
             ? Result.Fail<PropertyConfig>(new Error(
                     $"Action '{action.Name}' (ID: {action.Id}) does not contain column '{columnKey}'")
-                .WithMetadata("code", Codes.CoreNoSuchColumn))
+                .WithMetadata("code", Codes.CoreColumnNotFound))
             : Result.Ok(col);
     }
 
@@ -64,7 +62,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
     {
         if (string.IsNullOrWhiteSpace(column.GroupName))
             return Result.Fail<PropertyConfig>(new Error("Column GroupName is empty")
-                .WithMetadata("code", Codes.CoreInvalidColumnKey));
+                .WithMetadata("code", Codes.ConfigInvalidSchema));
 
         return Result.Ok(column);
     }
@@ -73,7 +71,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
     {
         if (!_targets.TryGetTargets(groupName, out var targets))
             return Result.Fail<IReadOnlyDictionary<short, string>>(new Error("No targets defined")
-                .WithMetadata("code", Codes.CoreNoActionFound));
+                .WithMetadata("code", Codes.CoreTargetNotFound));
 
         return Result.Ok<IReadOnlyDictionary<short, string>>(targets
             .Where(kv => !string.IsNullOrEmpty(kv.Value))

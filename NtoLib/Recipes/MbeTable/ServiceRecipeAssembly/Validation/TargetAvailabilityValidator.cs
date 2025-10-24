@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
@@ -31,7 +32,7 @@ public sealed class TargetAvailabilityValidator
 
             var actionResult = actionRepository.GetResultActionDefinitionById((short)actionId);
             if (actionResult.IsFailed) continue;
-            
+
             var action = actionResult.Value;
 
             foreach (var col in action.Columns)
@@ -42,32 +43,38 @@ public sealed class TargetAvailabilityValidator
                 var keyId = new ColumnIdentifier(col.Key);
                 if (!step.Properties.TryGetValue(keyId, out var prop) || prop is null)
                 {
-                    errors.Add($"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' requires a target from group '{col.GroupName}', but value is empty.");
+                    errors.Add(
+                        $"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' requires a target from group '{col.GroupName}', but value is empty.");
                     continue;
                 }
 
                 var targetId = prop.GetValue<short>();
                 if (!snapshot.TryGetValue(col.GroupName!, out var dict))
                 {
-                    errors.Add($"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' references group '{col.GroupName}', which is not available.");
+                    errors.Add(
+                        $"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' references group '{col.GroupName}', which is not available.");
                     continue;
                 }
 
                 if (dict.Count == 0)
                 {
-                    errors.Add($"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' group '{col.GroupName}' has no targets configured.");
+                    errors.Add(
+                        $"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' group '{col.GroupName}' has no targets configured.");
                     continue;
                 }
 
                 if (!dict.ContainsKey(targetId))
                 {
-                    errors.Add($"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' targetId={targetId} not found in group '{col.GroupName}'.");
+                    errors.Add(
+                        $"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' targetId={targetId} not found in group '{col.GroupName}'.");
                 }
             }
         }
 
         return errors.Count == 0
             ? Result.Ok()
-            : Result.Fail("Missing or invalid targets in current environment: " + string.Join("; ", errors));
+            : Result.Fail(
+                new Error("Missing or invalid targets in current environment: " + string.Join("; ", errors))
+                    .WithMetadata(nameof(Codes), Codes.CoreTargetNotFound));
     }
 }

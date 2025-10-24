@@ -19,13 +19,6 @@ public class RecipeTimeCalculator
 {
     private const int ForLoopActionId = (int)ServiceActions.ForLoop;
     private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;
-    
-    private readonly ILogger _debugLogger;
-
-    public RecipeTimeCalculator(ILogger debugLogger)
-    {
-        _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
-    }
 
     /// <summary>
     /// Calculates timing information for all steps in the recipe.
@@ -88,7 +81,7 @@ public class RecipeTimeCalculator
         if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
         {
             var error = new Error("Step does not have an action property.")
-                .WithMetadata("code", Codes.CoreNoActionFound)
+                .WithMetadata("code", Codes.CoreActionNotFound)
                 .WithMetadata("stepIndex", stepIndex);
             return Result.Fail(error);
         }
@@ -164,7 +157,7 @@ public class RecipeTimeCalculator
     private static Result CreateMissingIterationCountError(int stepIndex)
     {
         var error = new Error("ForLoop step is missing iteration count.")
-            .WithMetadata("code", Codes.CoreForLoopFailure)
+            .WithMetadata("code", Codes.CoreForLoopError)
             .WithMetadata("stepIndex", stepIndex);
         return Result.Fail(error);
     }
@@ -172,7 +165,7 @@ public class RecipeTimeCalculator
     private static Result CreateInvalidIterationCountError(int stepIndex, float iterations)
     {
         var error = new Error($"Invalid iteration count: {iterations}.")
-            .WithMetadata("code", Codes.CoreForLoopFailure)
+            .WithMetadata("code", Codes.CoreInvalidStepDuration)
             .WithMetadata("stepIndex", stepIndex)
             .WithMetadata("iterations", iterations);
         return Result.Fail(error);
@@ -181,7 +174,7 @@ public class RecipeTimeCalculator
     private static Result<TimeSpan> CreateUnmatchedEndForLoopError(int stepIndex)
     {
         var error = new Error("Unmatched 'EndForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopFailure)
+            .WithMetadata("code", Codes.CoreForLoopError)
             .WithMetadata("stepIndex", stepIndex);
         return Result.Fail(error);
     }
@@ -189,7 +182,7 @@ public class RecipeTimeCalculator
     private static Result<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)> CreateUnmatchedForLoopError(int stepIndex)
     {
         var error = new Error("Unmatched 'ForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopFailure)
+            .WithMetadata("code", Codes.CoreForLoopError)
             .WithMetadata("stepIndex", stepIndex);
         return Result.Fail(error);
     }

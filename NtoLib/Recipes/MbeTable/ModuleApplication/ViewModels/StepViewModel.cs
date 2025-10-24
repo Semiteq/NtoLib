@@ -38,14 +38,14 @@ public sealed class StepViewModel
         if (!_step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty))
         {
             return Result.Fail(new Error("Step does not have Action property")
-                .WithMetadata("code", Codes.CoreNoActionFound)
+                .WithMetadata("code", Codes.CoreActionNotFound)
                 .WithMetadata("rowIndex", _rowIndex));
         }
 
         if (actionProperty == null)
         {
             return Result.Fail(new Error("Step Action property is null")
-                .WithMetadata("code", Codes.CoreNoActionFound)
+                .WithMetadata("code", Codes.CoreActionNotFound)
                 .WithMetadata("rowIndex", _rowIndex));
         }
 
@@ -92,7 +92,7 @@ public sealed class StepViewModel
         catch (Exception ex)
         {
             return Result.Fail(new Error($"Failed to get property value: {ex.Message}")
-                .WithMetadata("code", Codes.CellValueRetrievalFailed)
+                .WithMetadata("code", Codes.PropertyConversionFailed)
                 .WithMetadata("rowIndex", _rowIndex)
                 .WithMetadata("propertyKey", identifier.Value));
         }

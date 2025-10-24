@@ -2,19 +2,14 @@
 using System.Globalization;
 using System.IO;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 using Serilog;
 using Serilog.Core;
-using Serilog.Extensions.Logging;
 
 namespace NtoLib.Recipes.MbeTable.ServiceLogger;
 
 public sealed class LoggingBootstrapper : IDisposable
 {
     private readonly Logger? _serilogLogger;
-    private readonly ILoggerFactory _factory;
 
     public LoggingBootstrapper(LoggingOptions options)
     {
@@ -22,30 +17,17 @@ public sealed class LoggingBootstrapper : IDisposable
 
         if (!options.Enabled)
         {
-            _factory = NullLoggerFactory.Instance;
             _serilogLogger = null;
             return;
         }
 
         _serilogLogger = BuildSerilogLogger(options);
-        _factory = new SerilogLoggerFactory(_serilogLogger, dispose: false);
+        Log.Logger = _serilogLogger;
     }
-
-    public ILoggerFactory Factory => _factory;
-
-    public ILogger<T> CreateLogger<T>() => _factory.CreateLogger<T>();
 
     public void Dispose()
     {
-        try
-        {
-            if (!ReferenceEquals(_factory, NullLoggerFactory.Instance))
-                _factory.Dispose();
-        }
-        finally
-        {
-            _serilogLogger?.Dispose();
-        }
+        _serilogLogger?.Dispose();
     }
 
     private static Logger BuildSerilogLogger(LoggingOptions options)
@@ -54,7 +36,7 @@ public sealed class LoggingBootstrapper : IDisposable
         var invariant = CultureInfo.InvariantCulture;
 
         var config = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Verbose()
             .Enrich.FromLogContext()
             .Enrich.With(new UtcTimestampEnricher())
             .WriteTo.Console(outputTemplate: template, formatProvider: invariant)
@@ -86,9 +68,6 @@ public sealed class LoggingBootstrapper : IDisposable
             if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
         }
-        catch
-        {
-            // Intentionally swallow exceptions; logging will continue to console/debug.
-        }
+        catch { /* ignoring */ }
     }
 }

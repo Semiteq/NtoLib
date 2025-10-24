@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 
@@ -33,7 +34,7 @@ public abstract class CommandBase
 
     protected async Task<Result> ExecuteWithBusyAsync(Func<CancellationToken, Task<Result>> runner, CancellationToken ct)
     {
-        if (!CanExecute()) return Result.Fail("UI is busy");
+        if (!CanExecute()) return Result.Fail(new Error("UI is busy").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
 
         using (_busy.Enter(GetOperationKind()))
         {
@@ -43,11 +44,11 @@ public abstract class CommandBase
             }
             catch (OperationCanceledException)
             {
-                return Result.Fail("Operation canceled");
+                return Result.Fail(new Error("Operation canceled").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
             }
             catch (Exception ex)
             {
-                return Result.Fail(ex.Message);
+                return Result.Fail(new Error(ex.Message).WithMetadata(nameof(Codes), Codes.UnknownError));
             }
         }
     }

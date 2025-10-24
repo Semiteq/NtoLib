@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
@@ -14,9 +15,8 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 /// </summary>
 public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
 {
-    
     public FormatKind FormatKind => FormatKind.TimeHms;
-    
+
     /// <summary>
     /// Initializes a new instance.
     /// </summary>
@@ -34,7 +34,8 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
             _ => 0f
         };
         var t = TimeSpan.FromSeconds(seconds);
-        return $"{t.Hours:D2}:{t.Minutes:D2}:{(t.Seconds + t.Milliseconds / 1000.0).ToString("00.###", CultureInfo.InvariantCulture)}";    
+        return
+            $"{t.Hours:D2}:{t.Minutes:D2}:{(t.Seconds + t.Milliseconds / 1000.0).ToString("00.###", CultureInfo.InvariantCulture)}";
     }
 
     /// <inheritdoc/>
@@ -50,19 +51,27 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
             var regex = new Regex(@"^(?<h>\d{1,2}):(?<m>\d{1,2})(:(?<s>\d{1,2})(\.(?<ms>\d+))?)?$");
             var match = regex.Match(sanitized);
             if (!match.Success)
-                return Result.Fail<object>("Invalid time format");
+                return Result.Fail<object>(
+                    new Error("Invalid time format").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
 
             if (!short.TryParse(match.Groups["h"].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var h))
-                return Result.Fail<object>("Invalid hours value");
+                return Result.Fail<object>(
+                    new Error("Invalid hours value").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
             if (!short.TryParse(match.Groups["m"].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var m))
-                return Result.Fail<object>("Invalid minutes value");
+                return Result.Fail<object>(
+                    new Error("Invalid minutes value").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
 
             var s = 0;
             var ms = 0f;
-            if (match.Groups["s"].Success && !int.TryParse(match.Groups["s"].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out s))
-                return Result.Fail<object>("Invalid seconds value");
-            if (match.Groups["ms"].Success && !float.TryParse($"0.{match.Groups["ms"].Value}", NumberStyles.Float, CultureInfo.InvariantCulture, out ms))
-                return Result.Fail<object>("Invalid milliseconds value");
+            if (match.Groups["s"].Success && !int.TryParse(match.Groups["s"].Value, NumberStyles.Integer,
+                    CultureInfo.InvariantCulture, out s))
+                return Result.Fail<object>(
+                    new Error("Invalid seconds value").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
+            if (match.Groups["ms"].Success && !float.TryParse($"0.{match.Groups["ms"].Value}", NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out ms))
+                return Result.Fail<object>(
+                    new Error("Invalid milliseconds value").WithMetadata(nameof(Codes),
+                        Codes.PropertyConversionFailed));
 
             var total = h * 3600 + m * 60 + s + ms;
             return Result.Ok<object>(total);

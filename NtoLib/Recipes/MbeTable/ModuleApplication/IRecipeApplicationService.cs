@@ -32,11 +32,6 @@ public interface IRecipeApplicationService
     event Action<int>? StepDataChanged;
 
     /// <summary>
-    /// Raised when recipe validation state changes.
-    /// </summary>
-    event Action<bool>? ValidationStateChanged;
-
-    /// <summary>
     /// Gets the current recipe entity for direct read access.
     /// </summary>
     /// <returns>Current recipe.</returns>

@@ -60,13 +60,13 @@ public partial class TableControl
 
     private void InitializeLogger()
     {
-        _logger = _serviceProvider!.GetRequiredService<ILogger>();
+        _logger = _serviceProvider!.GetRequiredService<ILogger<TableControl>>();
         _logger.LogDebug("Starting TableControl initialization");
     }
 
     private void SubscribeGlobalServices()
     {
-        var uiStateService = _serviceProvider!.GetRequiredService<IUiStateService>();
+        var uiStateService = _serviceProvider!.GetRequiredService<IUiPermissionService>();
         uiStateService.PermissionsChanged += OnPermissionsChanged;
 
         var status = _serviceProvider!.GetRequiredService<IStatusService>();
@@ -88,7 +88,7 @@ public partial class TableControl
             _table,
             _serviceProvider!.GetRequiredService<IColorSchemeProvider>(),
             _serviceProvider!.GetRequiredService<IReadOnlyList<ColumnDefinition>>(),
-            _serviceProvider!.GetRequiredService<IColumnFactoryRegistry>());
+            _serviceProvider!.GetRequiredService<FactoryColumnRegistry>());
 
         configurator.Configure();
     }
@@ -103,13 +103,7 @@ public partial class TableControl
     {
         _renderCoordinator = ActivatorUtilities.CreateInstance<TableRenderCoordinator>(
             _serviceProvider!,
-            _table,
-            _serviceProvider!.GetRequiredService<IRowExecutionStateProvider>(),
-            _serviceProvider!.GetRequiredService<ICellStateResolver>(),
-            _serviceProvider!.GetRequiredService<RecipeViewModel>(),
-            _serviceProvider!.GetRequiredService<IReadOnlyList<ColumnDefinition>>(),
-            _serviceProvider!.GetRequiredService<ILogger>(),
-            _serviceProvider!.GetRequiredService<IColorSchemeProvider>());
+            _table);
 
         _renderCoordinator.Initialize();
     }
@@ -155,7 +149,7 @@ public partial class TableControl
         try
         {
             _logger!.LogDebug("Applying initial permissions");
-            var uiState = _serviceProvider?.GetService<IUiStateService>();
+            var uiState = _serviceProvider?.GetService<IUiPermissionService>();
             if (uiState == null) return;
 
             var permissions = uiState.GetCurrentPermissions();
@@ -175,7 +169,7 @@ public partial class TableControl
 
     private void HandleInitializationError(Exception ex)
     {
-        var logger = _serviceProvider?.GetService<ILogger>();
+        var logger = _serviceProvider?.GetService<ILogger<TableControl>>();
         logger?.LogCritical(ex, "TableControl initialization failed");
 
         MessageBox.Show(
@@ -226,7 +220,6 @@ public partial class TableControl
         var receiveCmd = _serviceProvider!.GetRequiredService<ReceiveRecipeCommand>();
         var addCmd = _serviceProvider!.GetRequiredService<AddStepCommand>();
         var removeCmd = _serviceProvider!.GetRequiredService<RemoveStepCommand>();
-        _logger = _serviceProvider!.GetRequiredService<ILogger>();
 
         return new TablePresenter(
             view,
@@ -294,7 +287,7 @@ public partial class TableControl
 
     private void UnsubscribeGlobalServices()
     {
-        var uiStateService = _serviceProvider!.GetService<IUiStateService>();
+        var uiStateService = _serviceProvider!.GetService<IUiPermissionService>();
         if (uiStateService != null)
         {
             uiStateService.PermissionsChanged -= OnPermissionsChanged;

@@ -54,7 +54,7 @@ public static class ValidationCheck
         if (!set.Add(value))
         {
             return Result.Fail(new Error($"{context}: Duplicate value for '{fieldName}': '{value}'.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata("code", Codes.ConfigDuplicateValue)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName)
                 .WithMetadata("value", value.ToString() ?? "null"));

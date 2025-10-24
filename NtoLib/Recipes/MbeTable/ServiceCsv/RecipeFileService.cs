@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,7 +26,7 @@ public sealed class RecipeFileService : IRecipeFileService
     private readonly IRecipeWriter _writer;
     private readonly IMetadataService _metadataService;
     private readonly IIntegrityService _integrityService;
-    private readonly ILogger _logger;
+    private readonly ILogger<RecipeFileService> _logger;
     private readonly object _fileLock = new();
 
     public RecipeFileService(
@@ -33,7 +34,7 @@ public sealed class RecipeFileService : IRecipeFileService
         IRecipeWriter writer,
         IMetadataService metadataService,
         IIntegrityService integrityService,
-        ILogger logger)
+        ILogger<RecipeFileService> logger)
     {
         _dataExtractor = dataExtractor ?? throw new ArgumentNullException(nameof(dataExtractor));
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
@@ -42,7 +43,7 @@ public sealed class RecipeFileService : IRecipeFileService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<Result<CsvRawData>> ReadRawDataAsync(string filePath, Encoding? encoding = null)
+    public async Task<Result<CsvRawData>> ReadRawDataAndCheckIntegrityAsync(string filePath, Encoding? encoding = null)
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {
@@ -54,7 +55,7 @@ public sealed class RecipeFileService : IRecipeFileService
         {
             lock (_fileLock)
             {
-                return ReadRawDataInternal(filePath, encoding);
+                return ReadRawDataAndCheckIntegrityInternal(filePath, encoding);
             }
         });
     }
@@ -64,13 +65,13 @@ public sealed class RecipeFileService : IRecipeFileService
         if (recipe == null)
         {
             return Result.Fail(new Error("Recipe cannot be null")
-                .WithMetadata(nameof(Codes), Codes.BusinessInvariantViolation));
+                .WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
         }
 
         if (string.IsNullOrWhiteSpace(filePath))
         {
             return Result.Fail(new Error("File path cannot be empty")
-                .WithMetadata(nameof(Codes), Codes.IoWriteError));
+                .WithMetadata(nameof(Codes), Codes.IoFileNotFound));
         }
 
         return await Task.Run(() =>
@@ -82,7 +83,9 @@ public sealed class RecipeFileService : IRecipeFileService
         });
     }
 
-    private Result<CsvRawData> ReadRawDataInternal(string filePath, Encoding? encoding)
+
+    /// <returns>Result with Reasons if any errors occured</returns>
+    private Result<CsvRawData> ReadRawDataAndCheckIntegrityInternal(string filePath, Encoding? encoding)
     {
         if (!File.Exists(filePath))
         {
@@ -94,35 +97,26 @@ public sealed class RecipeFileService : IRecipeFileService
 
         try
         {
-            var actualEncoding = encoding ?? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true, throwOnInvalidBytes: true);
-            
+            var actualEncoding = encoding ??
+                                 new UTF8Encoding(encoderShouldEmitUTF8Identifier: true, throwOnInvalidBytes: true);
+
             using var stream = File.OpenRead(filePath);
             using var reader = new StreamReader(stream, actualEncoding);
-            
+
             var fullText = reader.ReadToEnd();
-            
+
             var (metadata, metadataLineCount) = _metadataService.ReadMetadata(fullText);
-            
             var bodyText = ExtractBodyText(fullText, metadataLineCount);
-            
+
             using var bodyReader = new StringReader(bodyText);
-            var extractResult = _dataExtractor.ExtractRawData(bodyReader);
-            
-            if (extractResult.IsFailed)
-            {
-                return extractResult;
-            }
-            
-            var rawData = extractResult.Value;
-            rawData.Metadata = metadata;
-            
-            var integrityResult = VerifyIntegrity(metadata, rawData);
-            if (integrityResult.IsFailed)
-            {
-                _logger.LogWarning($"Integrity check failed for: {filePath}");
-            }
-            
-            return Result.Ok(rawData);
+
+            var extractedRawData = _dataExtractor.ExtractRawData(bodyReader);
+
+            if (extractedRawData.IsFailed) return extractedRawData;
+            var integrityResult = VerifyIntegrity(metadata, extractedRawData.Value);
+
+            // keeping the result with reasons even if mismatch
+            return Result.Ok(extractedRawData.Value).WithReasons(integrityResult.Reasons);
         }
         catch (Exception ex)
         {
@@ -136,7 +130,7 @@ public sealed class RecipeFileService : IRecipeFileService
     private Result WriteRecipeInternal(Recipe recipe, string filePath, Encoding? encoding)
     {
         var tempPath = $"{filePath}.tmp";
-        
+
         try
         {
             var directory = Path.GetDirectoryName(filePath);
@@ -161,7 +155,7 @@ public sealed class RecipeFileService : IRecipeFileService
             }
 
             ReplaceFile(tempPath, filePath);
-            
+
             _logger.LogDebug($"Successfully wrote recipe to: {filePath}");
             return Result.Ok();
         }
@@ -181,41 +175,54 @@ public sealed class RecipeFileService : IRecipeFileService
     private string ExtractBodyText(string fullText, int metadataLineCount)
     {
         using var stringReader = new StringReader(fullText);
-        
+
         for (var i = 0; i < metadataLineCount; i++)
         {
             stringReader.ReadLine();
         }
-        
+
         return stringReader.ReadToEnd() ?? string.Empty;
     }
 
     private Result VerifyIntegrity(RecipeFileMetadata metadata, CsvRawData rawData)
     {
+        var result = Result.Ok();
+
         if (metadata.Rows > 0 && metadata.Rows != rawData.Rows.Count)
         {
-            return Result.Fail(new Error("Row count mismatch")
+            var metainfo = new Success("Row count mismatch")
                 .WithMetadata(nameof(Codes), Codes.IoReadError)
                 .WithMetadata("Expected", metadata.Rows)
-                .WithMetadata("Actual", rawData.Rows.Count));
+                .WithMetadata("Actual", rawData.Rows.Count);
+
+            result = result.WithSuccess(metainfo);
         }
-        
+
         if (!string.IsNullOrWhiteSpace(metadata.BodyHashBase64))
         {
             var actualHash = _integrityService.CalculateHash(rawData.Rows);
             var integrityCheck = _integrityService.VerifyIntegrity(metadata.BodyHashBase64, actualHash);
-            
+
             if (!integrityCheck.IsValid)
             {
-                return Result.Fail(new Error("Data integrity check failed")
-                    .WithMetadata(nameof(Codes), Codes.IoReadError)
+                var metainfo = new Success("Data integrity check failed")
+                    .WithMetadata(nameof(Codes), Codes.CsvHashMismatch)
                     .WithMetadata("ExpectedHash", integrityCheck.ExpectedHash)
-                    .WithMetadata("ActualHash", integrityCheck.ActualHash));
+                    .WithMetadata("ActualHash", integrityCheck.ActualHash);
+
+                result = result.WithSuccess(metainfo);
             }
         }
-        
-        return Result.Ok();
+        else
+        {
+            var metainfo = new Success("No body hash present in metadata; integrity check skipped")
+                .WithMetadata(nameof(Codes), Codes.CsvHashMismatch);
+            result = result.WithSuccess(metainfo);
+        }
+
+        return result;
     }
+
 
     private static void ReplaceFile(string sourcePath, string targetPath)
     {

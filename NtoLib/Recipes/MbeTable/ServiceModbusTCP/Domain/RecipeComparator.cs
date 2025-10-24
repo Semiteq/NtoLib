@@ -5,6 +5,7 @@ using System.Linq;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
@@ -30,14 +31,16 @@ public sealed class RecipeComparator
 
         if (recipe1.Steps.Count != recipe2.Steps.Count)
             return Result.Fail(
-                new Error($"Row count differs: {recipe1.Steps.Count} vs {recipe2.Steps.Count}"));
+                new Error($"Row count differs: {recipe1.Steps.Count} vs {recipe2.Steps.Count}").WithMetadata(
+                    nameof(Codes), Codes.PlcVerificationFailed));
 
         for (var i = 0; i < recipe1.Steps.Count; i++)
         {
             var cmp = CompareSteps(recipe1.Steps[i], recipe2.Steps[i]);
             if (cmp.IsFailed)
                 return Result.Fail(
-                    new Error($"Row {i} differs: {string.Join("; ", cmp.Errors.Select(e => e.Message))}"));
+                    new Error($"Row {i} differs: {string.Join("; ", cmp.Errors.Select(e => e.Message))}").WithMetadata(
+                        nameof(Codes), Codes.PlcVerificationFailed));
         }
 
         return Result.Ok();

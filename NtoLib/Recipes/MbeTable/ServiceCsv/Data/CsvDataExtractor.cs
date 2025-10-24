@@ -61,7 +61,7 @@ public sealed class CsvDataExtractor : ICsvDataExtractor
         
         while (csvReader.Read())
         {
-            var record = csvReader.Context.Reader.Parser.Record ?? Array.Empty<string>();
+            var record = csvReader.Context.Reader?.Parser.Record ?? Array.Empty<string>();
             var canonicalRow = BuildCanonicalRow(record);
             
             rows.Add(canonicalRow);

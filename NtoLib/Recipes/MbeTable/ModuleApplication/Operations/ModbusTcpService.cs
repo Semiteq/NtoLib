@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
@@ -13,7 +14,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 
 /// <summary>
 /// Implements async recipe operations (file IO and PLC exchange) without any direct UI
-/// or logging dependencies. Uses <see cref="FluentResults"/> for error propagation.
+/// or logging dependencies. Uses FluentResults for error propagation.
 /// </summary>
 public sealed class ModbusTcpService : IModbusTcpService
 {
@@ -33,42 +34,39 @@ public sealed class ModbusTcpService : IModbusTcpService
 
     public async Task<Result> SendRecipeAsync(Recipe recipe)
     {
-        if (recipe is null)
-            return Result.Fail("Recipe is null.");
+        if (recipe is null) return Result.Fail("Recipe is null.");
 
-        // Send recipe to PLC
         var sendResult = await _plcService.SendAsync(recipe, CancellationToken.None);
-        if (sendResult.IsFailed)
-            return sendResult;
+        if (sendResult.IsFailed) return sendResult;
 
-        // Read back for verification
-        var readResult = await _plcService.ReceiveAsync(CancellationToken.None);
-        if (readResult.IsFailed)
-            return readResult.ToResult();
+        var receiveResult = await _plcService.ReceiveAsync(CancellationToken.None);
+        if (receiveResult.IsFailed) return receiveResult.ToResult();
 
-        // Assemble recipe from raw data
-        var (intData, floatData, rowCount) = readResult.Value;
+        var (intData, floatData, rowCount) = receiveResult.Value;
+        
+        if (rowCount == 0) return Result.Ok().WithSuccess(
+            new Success("PLC returned zero rows; verification skipped")
+            .WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
+        
         var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
-        if (assembleResult.IsFailed)
-            return Result.Fail("Failed to verify: could not assemble recipe from PLC data")
-                .WithErrors(assembleResult.Errors);
-
-        // Compare with original
+        if (assembleResult.IsFailed) return assembleResult.ToResult();
+        
         var compareResult = _comparator.Compare(recipe, assembleResult.Value);
-        if (compareResult.IsFailed)
-            return Result.Fail("Verification failed: PLC data does not match sent recipe")
-                .WithErrors(compareResult.Errors);
-
-        return Result.Ok().WithSuccess("Recipe successfully sent and verified");
+        return compareResult;
     }
 
     public async Task<Result<Recipe>> ReceiveRecipeAsync()
     {
         var readResult = await _plcService.ReceiveAsync(CancellationToken.None);
-        if (readResult.IsFailed)
-            return readResult.ToResult<Recipe>();
+        if (readResult.IsFailed) return readResult.ToResult();
 
         var (intData, floatData, rowCount) = readResult.Value;
-        return _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
+        
+        if (rowCount == 0) return Result.Ok().
+            WithSuccess(new Success("PLC returned zero rows; verification skipped").
+                WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
+        
+        var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
+        return assembleResult;
     }
 }

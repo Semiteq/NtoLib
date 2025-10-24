@@ -85,7 +85,7 @@ public sealed class CsvAssemblyStrategy
         if (actionResult.IsFailed)
         {
             return Result.Fail<Step>(new Error($"Line {lineNumber}: Unknown action ID {actionId}")
-                .WithMetadata(nameof(Codes), Codes.CoreNoActionFound)
+                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
                 .CausedBy(actionResult.Errors));
         }
         
@@ -151,16 +151,16 @@ public sealed class CsvAssemblyStrategy
         
         var actionValue = record[actionIndex];
         
-        if (!int.TryParse(actionValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var actionId))
+        if (!short.TryParse(actionValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var actionId))
         {
             return Result.Fail<short>(new Error($"Invalid action ID: '{actionValue}'")
-                .WithMetadata(nameof(Codes), Codes.CsvInvalidData));
+                .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
         }
         
         return Result.Ok((short)actionId);
     }
 
-    private static int FindColumnIndex(CsvHeaderBinder.Binding binding, ColumnIdentifier key)
+    private static short FindColumnIndex(CsvHeaderBinder.Binding binding, ColumnIdentifier key)
     {
         foreach (var kvp in binding.FileIndexToColumn)
         {
@@ -180,13 +180,13 @@ public sealed class CsvAssemblyStrategy
             return Result.Ok<object>(rawValue);
         }
         
-        if (targetType == typeof(int))
+        if (targetType == typeof(short))
         {
-            if (int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+            if (short.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var shortValue))
             {
-                return Result.Ok<object>(intValue);
+                return Result.Ok<object>(shortValue);
             }
-            return Result.Fail("Value must be a valid integer");
+            return Result.Fail(new Error("Value must be a valid integer").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
         }
         
         if (targetType == typeof(float))
@@ -195,18 +195,9 @@ public sealed class CsvAssemblyStrategy
             {
                 return Result.Ok<object>(floatValue);
             }
-            return Result.Fail("Value must be a valid floating-point number");
+            return Result.Fail(new Error("Value must be a valid floating-point number").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
         }
         
-        if (targetType == typeof(bool))
-        {
-            if (bool.TryParse(rawValue, out var boolValue))
-            {
-                return Result.Ok<object>(boolValue);
-            }
-            return Result.Fail("Value must be a valid boolean");
-        }
-        
-        return Result.Fail($"Unsupported type: {targetType.Name}");
+        return Result.Fail(new Error($"Unsupported type: {targetType.Name}").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
     }
 }

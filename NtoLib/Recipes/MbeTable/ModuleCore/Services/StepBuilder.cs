@@ -79,7 +79,7 @@ public sealed class StepBuilder
         if (propertyResult.IsFailed)
         {
             return Result.Fail<StepBuilder>(new Error($"Failed to set property '{key.Value}'")
-                .WithMetadata("code", Codes.PropertyValueError)
+                .WithMetadata("code", Codes.PropertyValueInvalid)
                 .WithMetadata("propertyKey", key.Value)
                 .CausedBy(propertyResult.Errors));
         }
@@ -124,7 +124,7 @@ public sealed class StepBuilder
         catch (Exception ex)
         {
             return Result.Fail(new Error(ex.Message)
-                .WithMetadata("code", Codes.PropertyValueError));
+                .WithMetadata("code", Codes.PropertyValueInvalid));
         }
     }
 
@@ -163,7 +163,7 @@ public sealed class StepBuilder
         {
             return Result.Fail<object>(
                     new Error($"Invalid default value '{column.DefaultValue}' for column '{column.Key}'")
-                        .WithMetadata("code", Codes.PropertyValueError))
+                        .WithMetadata("code", Codes.PropertyValueInvalid))
                 .WithErrors(parseResult.Errors);
         }
 
@@ -178,7 +178,7 @@ public sealed class StepBuilder
             Type t when t == typeof(float) => Result.Ok<object>(0f),
             Type t when t == typeof(short) => Result.Ok<object>((short)0),
             _ => Result.Fail<object>(new Error($"No default value defined for type '{systemType.Name}'")
-                .WithMetadata("code", Codes.PropertyValueError))
+                .WithMetadata("code", Codes.PropertyValueInvalid))
         };
     }
 
@@ -192,7 +192,7 @@ public sealed class StepBuilder
         catch (Exception ex)
         {
             return Result.Fail(new Error(ex.Message)
-                .WithMetadata("code", Codes.PropertyValueError)
+                .WithMetadata("code", Codes.ConfigInvalidSchema)
                 .WithMetadata("propertyKey", key.Value)
                 .WithMetadata("propertyTypeId", propertyTypeId));
         }

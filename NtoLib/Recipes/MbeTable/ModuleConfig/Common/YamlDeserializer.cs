@@ -30,7 +30,7 @@ public sealed class YamlDeserializer : IYamlDeserializer
         if (string.IsNullOrWhiteSpace(yaml))
         {
             return Result.Fail(new Error("YAML content is empty or null.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema));
+                .WithMetadata("code", Codes.ConfigParseError));
         }
 
         try

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Models;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
@@ -21,7 +22,7 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
     private readonly ICellStateResolver _cellStateResolver;
     private readonly RecipeViewModel _recipeViewModel;
     private readonly IReadOnlyList<ColumnDefinition> _columns;
-    private readonly ILogger _logger;
+    private readonly ILogger<TableRenderCoordinator> _logger;
     private readonly IColorSchemeProvider _colorSchemeProvider;
 
     private bool _initialized;
@@ -33,11 +34,12 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
         ICellStateResolver cellStateResolver,
         RecipeViewModel recipeViewModel,
         IReadOnlyList<ColumnDefinition> columns,
-        ILogger logger,
+        ILogger<TableRenderCoordinator> logger,
         IColorSchemeProvider colorSchemeProvider)
     {
         _table = table ?? throw new ArgumentNullException(nameof(table));
-        _rowExecutionStateProvider = rowExecutionStateProvider ?? throw new ArgumentNullException(nameof(rowExecutionStateProvider));
+        _rowExecutionStateProvider = rowExecutionStateProvider ??
+                                     throw new ArgumentNullException(nameof(rowExecutionStateProvider));
         _cellStateResolver = cellStateResolver ?? throw new ArgumentNullException(nameof(cellStateResolver));
         _recipeViewModel = recipeViewModel ?? throw new ArgumentNullException(nameof(recipeViewModel));
         _columns = columns ?? throw new ArgumentNullException(nameof(columns));
@@ -50,13 +52,9 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
         if (_initialized || _disposed)
             return;
 
-        _table.CellFormatting += OnCellFormatting;
-        _table.CellBeginEdit += OnCellBeginEdit;
-        _table.CurrentCellDirtyStateChanged += OnCurrentCellDirtyStateChanged;
-        _rowExecutionStateProvider.CurrentLineChanged += OnCurrentLineChanged;
-        _colorSchemeProvider.Changed += OnColorSchemeChanged;
-
+        AttachEventHandlers();
         _initialized = true;
+        ForceInitialFormatting();
     }
 
     public void Dispose()
@@ -67,138 +65,349 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
         _disposed = true;
 
         if (_initialized)
+            DetachEventHandlers();
+    }
+
+    private void AttachEventHandlers()
+    {
+        _table.CellFormatting += OnCellFormatting;
+        _table.CellBeginEdit += OnCellBeginEdit;
+        _table.CurrentCellDirtyStateChanged += OnCurrentCellDirtyStateChanged;
+        _table.CellPainting += OnCellPaintingPreFormat;
+        _rowExecutionStateProvider.CurrentLineChanged += OnCurrentLineChanged;
+        _colorSchemeProvider.Changed += OnColorSchemeChanged;
+    }
+
+    private void DetachEventHandlers()
+    {
+        try
         {
-            try { _table.CellFormatting -= OnCellFormatting; } catch { }
-            try { _table.CellBeginEdit -= OnCellBeginEdit; } catch { }
-            try { _table.CurrentCellDirtyStateChanged -= OnCurrentCellDirtyStateChanged; } catch { }
-            try { _rowExecutionStateProvider.CurrentLineChanged -= OnCurrentLineChanged; } catch { }
-            try { _colorSchemeProvider.Changed -= OnColorSchemeChanged; } catch { }
+            _table.CellFormatting -= OnCellFormatting;
+        }
+        catch
+        {
+            /* ignored */
+        }
+
+        try
+        {
+            _table.CellBeginEdit -= OnCellBeginEdit;
+        }
+        catch
+        {
+            /* ignored */
+        }
+
+        try
+        {
+            _table.CurrentCellDirtyStateChanged -= OnCurrentCellDirtyStateChanged;
+        }
+        catch
+        {
+            /* ignored */
+        }
+
+        try
+        {
+            _table.CellPainting -= OnCellPaintingPreFormat;
+        }
+        catch
+        {
+            /* ignored */
+        }
+
+        try
+        {
+            _rowExecutionStateProvider.CurrentLineChanged -= OnCurrentLineChanged;
+        }
+        catch
+        {
+            /* ignored */
+        }
+
+        try
+        {
+            _colorSchemeProvider.Changed -= OnColorSchemeChanged;
+        }
+        catch
+        {
+            /* ignored */
         }
     }
 
-    private void OnColorSchemeChanged(ColorScheme obj)
+    private void ForceInitialFormatting()
     {
-        try { _table.Invalidate(); }
+        if (!_table.IsHandleCreated || _table.IsDisposed)
+            return;
+
+        InvokeOnUiThread(FormatAllCells);
+    }
+
+    private void FormatAllCells()
+    {
+        for (int row = 0; row < _table.RowCount; row++)
+        {
+            for (int col = 0; col < _table.ColumnCount; col++)
+            {
+                ApplyCellFormattingSafe(row, col);
+            }
+        }
+    }
+
+    private void OnCellPaintingPreFormat(object? sender, DataGridViewCellPaintingEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            return;
+
+        ApplyCellFormattingSafe(e.RowIndex, e.ColumnIndex);
+    }
+
+    private void OnColorSchemeChanged(ColorScheme colorScheme)
+    {
+        InvokeOnUiThread(RefreshTableAppearance);
+    }
+
+    private void RefreshTableAppearance()
+    {
+        try
+        {
+            FormatAllCells();
+            _table.Invalidate();
+        }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "Failed to invalidate table on ColorScheme change");
+            _logger.LogError(ex, "Failed to refresh table appearance after color scheme change");
         }
     }
 
     private void OnCellBeginEdit(object? sender, DataGridViewCellCancelEventArgs e)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+        if (ShouldCancelEdit(e.RowIndex, e.ColumnIndex))
+        {
+            e.Cancel = true;
+            _logger.LogDebug("Edit cancelled for cell [{Row},{Column}]", e.RowIndex, e.ColumnIndex);
+        }
+    }
+
+    private bool ShouldCancelEdit(int rowIndex, int columnIndex)
+    {
+        if (rowIndex < 0 || columnIndex < 0)
+            return false;
 
         try
         {
-            var cell = _table.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            if (IsCellReadOnlyByVisualState(rowIndex, columnIndex))
+                return true;
 
-            if (cell.Tag is CellVisualState visual && visual.IsReadOnly)
-            {
-                e.Cancel = true;
-                return;
-            }
+            if (IsCellDisabled(rowIndex, columnIndex))
+                return true;
 
-            var state = _recipeViewModel.GetCellState(e.RowIndex, e.ColumnIndex);
-            if (state == PropertyState.Disabled)
-            {
-                e.Cancel = true;
-            }
+            return false;
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "Failed during CellBeginEdit");
-            e.Cancel = true;
+            _logger.LogError(ex, "Failed to validate edit permissions for cell [{Row},{Column}]", rowIndex,
+                columnIndex);
+            return true;
         }
+    }
+
+    private bool IsCellReadOnlyByVisualState(int rowIndex, int columnIndex)
+    {
+        var cell = _table.Rows[rowIndex].Cells[columnIndex];
+        return cell.Tag is CellVisualState visual && visual.IsReadOnly;
+    }
+
+    private bool IsCellDisabled(int rowIndex, int columnIndex)
+    {
+        var state = _recipeViewModel.GetCellState(rowIndex, columnIndex);
+        return state == PropertyState.Disabled;
     }
 
     private void OnCurrentCellDirtyStateChanged(object? sender, EventArgs e)
     {
-        if (_table.IsCurrentCellDirty && _table.CurrentCell != null)
-        {
-            var rowIndex = _table.CurrentCell.RowIndex;
-            var columnIndex = _table.CurrentCell.ColumnIndex;
+        if (!_table.IsCurrentCellDirty || _table.CurrentCell == null)
+            return;
 
-            if (rowIndex >= 0 && rowIndex < _recipeViewModel.ViewModels.Count &&
-                columnIndex >= 0 && columnIndex < _columns.Count)
-            {
-                var state = _recipeViewModel.GetCellState(rowIndex, columnIndex);
-                if (state == PropertyState.Disabled)
-                {
-                    _table.CancelEdit();
-                }
-            }
-        }
+        if (IsCellDisabled(_table.CurrentCell.RowIndex, _table.CurrentCell.ColumnIndex))
+            _table.CancelEdit();
     }
 
     private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
     {
-        if (e.RowIndex < 0
-            || e.ColumnIndex < 0
-            || e.ColumnIndex >= _columns.Count
-            || e.RowIndex >= _recipeViewModel.ViewModels.Count)
+        if (e.RowIndex < 0 || e.ColumnIndex < 0)
             return;
 
-        var visual = _cellStateResolver.Resolve(e.RowIndex, e.ColumnIndex, _recipeViewModel);
+        ApplyCellFormattingSafe(e.RowIndex, e.ColumnIndex, e.CellStyle);
+    }
 
-        e.CellStyle.Font = visual.Font;
-        e.CellStyle.ForeColor = visual.ForeColor;
-        e.CellStyle.BackColor = visual.BackColor;
-        e.CellStyle.SelectionBackColor = visual.BackColor;
-        e.CellStyle.SelectionForeColor = visual.ForeColor;
+    private void ApplyCellFormattingSafe(int rowIndex, int columnIndex, DataGridViewCellStyle? targetStyle = null)
+    {
+        if (_table.InvokeRequired)
+            InvokeOnUiThread(() => ApplyCellFormatting(rowIndex, columnIndex, targetStyle));
+        else
+            ApplyCellFormatting(rowIndex, columnIndex, targetStyle);
+    }
 
-        var grid = (DataGridView)sender!;
-        var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+    private void ApplyCellFormatting(int rowIndex, int columnIndex, DataGridViewCellStyle? targetStyle = null)
+    {
+        if (!IsValidCellCoordinate(rowIndex, columnIndex))
+            return;
 
-        // Publish visual to cell.Tag for custom paint (e.g., ComboBox cells)
+        if (_table.IsDisposed || !_table.IsHandleCreated)
+            return;
+
+        try
+        {
+            var visual = ResolveCellVisualState(rowIndex, columnIndex);
+            ApplyVisualStateToCell(rowIndex, columnIndex, visual, targetStyle);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to apply formatting for cell [{Row},{Column}]", rowIndex, columnIndex);
+        }
+    }
+
+    private bool IsValidCellCoordinate(int rowIndex, int columnIndex)
+    {
+        return columnIndex < _columns.Count && rowIndex < _recipeViewModel.ViewModels.Count;
+    }
+
+    private CellVisualState ResolveCellVisualState(int rowIndex, int columnIndex)
+    {
+        return _cellStateResolver.Resolve(rowIndex, columnIndex, _recipeViewModel);
+    }
+
+    private void ApplyVisualStateToCell(
+        int rowIndex,
+        int columnIndex,
+        CellVisualState visual,
+        DataGridViewCellStyle? targetStyle)
+    {
+        if (targetStyle != null)
+            ApplyVisualStateToStyle(visual, targetStyle);
+
+        var cell = _table.Rows[rowIndex].Cells[columnIndex];
         cell.Tag = visual;
 
-        var currentReadOnly = cell.ReadOnly;
-        if (currentReadOnly != visual.IsReadOnly)
-        {
-            try
-            {
-                cell.ReadOnly = visual.IsReadOnly;
-            }
-            catch (InvalidOperationException)
-            {
-                if (grid.IsHandleCreated && !grid.IsDisposed)
-                {
-                    grid.BeginInvoke(new Action(() =>
-                    {
-                        if (!grid.IsDisposed && e.RowIndex < grid.Rows.Count)
-                        {
-                            try
-                            {
-                                grid.Rows[e.RowIndex].Cells[e.ColumnIndex].ReadOnly = visual.IsReadOnly;
-                            }
-                            catch { }
-                        }
-                    }));
-                }
-            }
-        }
+        UpdateCellReadOnlyState(rowIndex, columnIndex, cell, visual.IsReadOnly);
+        UpdateComboBoxDisplayStyle(cell, visual.ComboDisplayStyle);
 
-        if (cell is DataGridViewComboBoxCell combo)
+        if (targetStyle == null)
+            ApplyVisualStateToCellStyle(cell, visual);
+    }
+
+    private void ApplyVisualStateToStyle(CellVisualState visual, DataGridViewCellStyle style)
+    {
+        style.Font = visual.Font;
+        style.ForeColor = visual.ForeColor;
+        style.BackColor = visual.BackColor;
+        style.SelectionBackColor = visual.BackColor;
+        style.SelectionForeColor = visual.ForeColor;
+    }
+
+    private void UpdateCellReadOnlyState(int rowIndex, int columnIndex, DataGridViewCell cell, bool isReadOnly)
+    {
+        if (IsCellCurrentlyEditing(rowIndex, columnIndex))
+            return;
+
+        if (cell.ReadOnly != isReadOnly)
+            cell.ReadOnly = isReadOnly;
+    }
+
+    private bool IsCellCurrentlyEditing(int rowIndex, int columnIndex)
+    {
+        return _table.IsCurrentCellInEditMode &&
+               _table.CurrentCell?.RowIndex == rowIndex &&
+               _table.CurrentCell?.ColumnIndex == columnIndex;
+    }
+
+    private void UpdateComboBoxDisplayStyle(DataGridViewCell cell, DataGridViewComboBoxDisplayStyle displayStyle)
+    {
+        if (cell is DataGridViewComboBoxCell combo && combo.DisplayStyle != displayStyle)
+            combo.DisplayStyle = displayStyle;
+        else if (cell is RecipeComboBoxCell recipeCombo && recipeCombo.DisplayStyle != displayStyle)
+            recipeCombo.DisplayStyle = displayStyle;
+    }
+
+    private void ApplyVisualStateToCellStyle(DataGridViewCell cell, CellVisualState visual)
+    {
+        if (!cell.HasStyle)
+            return;
+
+        var currentStyle = cell.InheritedStyle;
+        if (ShouldUpdateCellStyle(currentStyle, visual))
         {
-            if (combo.DisplayStyle != visual.ComboDisplayStyle)
-                combo.DisplayStyle = visual.ComboDisplayStyle;
+            cell.Style.Font = visual.Font;
+            cell.Style.ForeColor = visual.ForeColor;
+            cell.Style.BackColor = visual.BackColor;
+            cell.Style.SelectionBackColor = visual.BackColor;
+            cell.Style.SelectionForeColor = visual.ForeColor;
         }
+    }
+
+    private bool ShouldUpdateCellStyle(DataGridViewCellStyle currentStyle, CellVisualState visual)
+    {
+        return !Equals(currentStyle.Font, visual.Font) ||
+               currentStyle.ForeColor != visual.ForeColor ||
+               currentStyle.BackColor != visual.BackColor;
     }
 
     private void OnCurrentLineChanged(int oldIndex, int newIndex)
     {
+        InvokeOnUiThread(() => RefreshExecutionStateRows(oldIndex, newIndex));
+    }
+
+    private void RefreshExecutionStateRows(int oldIndex, int newIndex)
+    {
         try
         {
-            if (oldIndex >= 0 && oldIndex < _table.Rows.Count)
-                _table.InvalidateRow(oldIndex);
-
-            if (newIndex >= 0 && newIndex < _table.Rows.Count)
-                _table.InvalidateRow(newIndex);
+            RefreshRowIfValid(oldIndex);
+            RefreshRowIfValid(newIndex);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "Failed to invalidate rows on CurrentLineChanged");
+            _logger.LogError(ex, "Failed to refresh execution state rows (old: {OldIndex}, new: {NewIndex})", oldIndex,
+                newIndex);
+        }
+    }
+
+    private void RefreshRowIfValid(int rowIndex)
+    {
+        if (rowIndex < 0 || rowIndex >= _table.Rows.Count)
+            return;
+
+        FormatRowCells(rowIndex);
+        _table.InvalidateRow(rowIndex);
+    }
+
+    private void FormatRowCells(int rowIndex)
+    {
+        for (int col = 0; col < _table.ColumnCount; col++)
+        {
+            ApplyCellFormattingSafe(rowIndex, col);
+        }
+    }
+
+    private void InvokeOnUiThread(Action action)
+    {
+        if (_table.IsDisposed || !_table.IsHandleCreated)
+            return;
+
+        if (_table.InvokeRequired)
+        {
+            try
+            {
+                _table.BeginInvoke(action);
+            }
+            catch (ObjectDisposedException ex)
+            {
+                _logger.LogDebug(ex, "Cannot invoke on UI thread - control already disposed");
+            }
+        }
+        else
+        {
+            action();
         }
     }
 }

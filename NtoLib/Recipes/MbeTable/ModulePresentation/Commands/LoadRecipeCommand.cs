@@ -5,6 +5,7 @@ using System.Windows.Forms;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
@@ -36,7 +37,7 @@ public sealed class LoadRecipeCommand : CommandBase
         if (_dialog.ShowDialog() != DialogResult.OK) return Result.Ok();
 
         var path = _dialog.FileName;
-        if (!File.Exists(path)) return Result.Fail("File not found");
+        if (!File.Exists(path)) return Result.Fail(new Error("File not found").WithMetadata(nameof(Codes), Codes.IoFileNotFound));
 
         return await _app.LoadRecipeAsync(path).ConfigureAwait(false);
     }

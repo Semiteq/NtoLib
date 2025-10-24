@@ -87,6 +87,6 @@ public sealed record Property
             float f => Result.Ok<OneOf<short, float, string>>(f),
             string s => Result.Ok<OneOf<short, float, string>>(s),
             _ => Result.Fail(new Error($"Unsupported type '{value.GetType().Name}' for property value.")
-                .WithMetadata("code", Codes.PropertyConversionFailed))
+                .WithMetadata("code", Codes.PropertyValueInvalid))
         };
 }

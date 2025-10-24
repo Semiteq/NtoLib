@@ -2,6 +2,7 @@
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
 
@@ -21,7 +22,7 @@ public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
     public Type SystemType => typeof(string);
 
     public FormatKind FormatKind => FormatKind.Numeric;
-    
+
     /// <summary>
     /// Initializes a new instance from a DTO.
     /// </summary>
@@ -35,7 +36,9 @@ public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
     {
         var s = value?.ToString() ?? string.Empty;
         return s.Length > _maxLength
-            ? Result.Fail($"String length must be <= {_maxLength}")
+            ? Result.Fail(
+                new Error($"String length must be <= {_maxLength}").WithMetadata(nameof(Codes),
+                    Codes.PropertyValidationFailed))
             : Result.Ok();
     }
 

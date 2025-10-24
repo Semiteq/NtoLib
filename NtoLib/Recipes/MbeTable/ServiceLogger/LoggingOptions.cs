@@ -1,13 +1,16 @@
-﻿namespace NtoLib.Recipes.MbeTable.ServiceLogger;
+﻿using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+
+namespace NtoLib.Recipes.MbeTable.ServiceLogger;
 
 public sealed class LoggingOptions
 {
     public bool Enabled { get; }
     public string FilePath { get; }
 
-    public LoggingOptions(bool enabled, string filePath)
+    public LoggingOptions(IRuntimeOptionsProvider runtimeOptionsProvider)
     {
-        Enabled = enabled;
-        FilePath = filePath ?? string.Empty;
+        var runtimeOptions = runtimeOptionsProvider.GetCurrent();
+        Enabled = runtimeOptions.LogToFile;
+        FilePath = runtimeOptions.LogFilePath ?? string.Empty;
     }
 }

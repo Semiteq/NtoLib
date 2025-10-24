@@ -39,11 +39,37 @@ public sealed class PlcCapacityCalculator
         if (requiredInt > settings.IntAreaSize)
             return Result.Fail(
                 new Error($"INT area capacity exceeded: need {requiredInt}, available {settings.IntAreaSize}")
-                    .WithMetadata(nameof(Codes), Codes.PlcInvalidResponse));
+                    .WithMetadata(nameof(Codes), Codes.PlcCapacityExceeded));
 
         if (requiredFloat > settings.FloatAreaSize)
             return Result.Fail(
                 new Error($"FLOAT area capacity exceeded: need {requiredFloat}, available {settings.FloatAreaSize}")
+                    .WithMetadata(nameof(Codes), Codes.PlcCapacityExceeded));
+
+        return Result.Ok();
+    }
+
+    public Result ValidateReadCapacity(int rowCount)
+    {
+        if (rowCount < 0)
+            return Result.Fail(new Error("Invalid negative row count")
+                .WithMetadata(nameof(Codes), Codes.PlcReadFailed));
+            
+        if (rowCount == 0)
+            return Result.Ok();
+
+        var settings = _optionsProvider.GetCurrent();
+        var requiredInt = rowCount * _layout.IntColumnCount;
+        var requiredFloat = rowCount * _layout.FloatColumnCount * 2;
+
+        if (requiredInt > settings.IntAreaSize)
+            return Result.Fail(
+                new Error($"INT area read capacity exceeded: need {requiredInt}, available {settings.IntAreaSize}")
+                    .WithMetadata(nameof(Codes), Codes.PlcInvalidResponse));
+
+        if (requiredFloat > settings.FloatAreaSize)
+            return Result.Fail(
+                new Error($"FLOAT area read capacity exceeded: need {requiredFloat}, available {settings.FloatAreaSize}")
                     .WithMetadata(nameof(Codes), Codes.PlcInvalidResponse));
 
         return Result.Ok();

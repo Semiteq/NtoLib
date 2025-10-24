@@ -35,7 +35,7 @@ public sealed class RecipeService : IRecipeService
         _mutator = mutator ?? throw new ArgumentNullException(nameof(mutator));
         _attributesService = attributesService ?? throw new ArgumentNullException(nameof(attributesService));
         _currentRecipe = Recipe.Empty;
-        
+
         var analysisResult = _attributesService.UpdateAttributes(_currentRecipe);
         if (analysisResult.IsFailed)
         {

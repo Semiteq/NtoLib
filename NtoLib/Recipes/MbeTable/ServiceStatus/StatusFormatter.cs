@@ -9,10 +9,10 @@ public class StatusFormatter
 {
     private readonly int? _maxLength;
 
-    public StatusFormatter(int? maxLength = 500)
+    public StatusFormatter(int? maxLength = 100)
     {
+        _maxLength = maxLength;
         if (maxLength is <= 0) _maxLength = null;
-        else _maxLength = maxLength;
     }
 
     public string Format(string message)

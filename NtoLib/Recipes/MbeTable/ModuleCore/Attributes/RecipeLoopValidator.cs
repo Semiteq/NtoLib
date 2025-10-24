@@ -21,13 +21,6 @@ public class RecipeLoopValidator
     private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;
     private const int MaxLoopDepth = 3;
 
-    private readonly ILogger _debugLogger;
-
-    public RecipeLoopValidator(ILogger debugLogger)
-    {
-        _debugLogger = debugLogger ?? throw new ArgumentNullException(nameof(debugLogger));
-    }
-
     /// <summary>
     /// Calculates the nesting level for each step and validates the overall loop structure.
     /// </summary>
@@ -106,7 +99,7 @@ public class RecipeLoopValidator
     private static Result<IReadOnlyDictionary<int, int>> CreateMaxDepthExceededError(int stepIndex)
     {
         var error = new Error($"Exceeded max loop depth of {MaxLoopDepth}.")
-            .WithMetadata("code", Codes.CoreForLoopFailure)
+            .WithMetadata("code", Codes.CoreForLoopError)
             .WithMetadata("stepIndex", stepIndex);
         return Result.Fail(error);
     }
@@ -114,7 +107,7 @@ public class RecipeLoopValidator
     private static Result<IReadOnlyDictionary<int, int>> CreateUnmatchedEndForLoopError(int stepIndex)
     {
         var error = new Error("Unmatched 'EndForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopFailure)
+            .WithMetadata("code", Codes.CoreForLoopError)
             .WithMetadata("stepIndex", stepIndex);
         return Result.Fail(error);
     }
@@ -122,7 +115,7 @@ public class RecipeLoopValidator
     private static Result<IReadOnlyDictionary<int, int>> CreateUnmatchedForLoopError(int stepIndex)
     {
         var error = new Error("Unmatched 'ForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopFailure)
+            .WithMetadata("code", Codes.CoreForLoopError)
             .WithMetadata("stepIndex", stepIndex);
         return Result.Fail(error);
     }
@@ -132,7 +125,7 @@ public class RecipeLoopValidator
         if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
         {
             var error = new Error("Step does not have an action property.")
-                .WithMetadata("code", Codes.CoreNoActionFound);
+                .WithMetadata("code", Codes.CoreActionNotFound);
             return Result.Fail(error);
         }
         return Result.Ok(actionProperty);

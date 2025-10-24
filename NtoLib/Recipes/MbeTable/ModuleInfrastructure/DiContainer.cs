@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
@@ -20,6 +21,8 @@ using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
@@ -42,6 +45,8 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Strategies;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
 
+using Serilog;
+
 namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
 public static class MbeTableServiceConfigurator
@@ -53,7 +58,7 @@ public static class MbeTableServiceConfigurator
         var runtimeOptionsProvider = new FbRuntimeOptionsProvider(mbeTableFb);
         services.AddSingleton<IRuntimeOptionsProvider>(runtimeOptionsProvider);
 
-        RegisterLogging(services, runtimeOptionsProvider);
+        RegisterLogging(services);
 
         RegisterConfiguration(services, configurationState);
         RegisterSharedInstances(services, mbeTableFb, configurationState);
@@ -71,15 +76,17 @@ public static class MbeTableServiceConfigurator
         return services.BuildServiceProvider();
     }
 
-    private static void RegisterLogging(IServiceCollection services, IRuntimeOptionsProvider runtimeOptionsProvider)
+    private static void RegisterLogging(IServiceCollection services)
     {
-        var opts = runtimeOptionsProvider.GetCurrent();
-        var loggingOptions = new LoggingOptions(opts.LogToFile, opts.LogFilePath);
-
-        services.AddSingleton(sp => new LoggingBootstrapper(loggingOptions));
-        services.AddSingleton<ILoggerFactory>(sp => sp.GetRequiredService<LoggingBootstrapper>().Factory);
-        services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
-        services.AddSingleton<ILogger>(sp =>
+        services.AddSingleton<LoggingOptions>();
+        services.AddSingleton<LoggingBootstrapper>();
+        services.AddLogging(builder =>
+        {
+            var provider = builder.Services.BuildServiceProvider();
+            provider.GetRequiredService<LoggingBootstrapper>();
+            builder.AddSerilog(dispose: false);
+        });
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(sp =>
         {
             var factory = sp.GetRequiredService<ILoggerFactory>();
             return factory.CreateLogger("NtoLib.Recipes.MbeTable");
@@ -126,8 +133,7 @@ public static class MbeTableServiceConfigurator
 
     private static void RegisterJournalingServices(IServiceCollection services)
     {
-        // Status facade and default formatter.
-        services.AddSingleton(_ => new StatusFormatter(500));
+        services.AddSingleton(_ => new StatusFormatter(100));
         services.AddSingleton<IStatusService, StatusService>();
     }
 
@@ -185,6 +191,8 @@ public static class MbeTableServiceConfigurator
             var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
             return new RecipeColumnLayout(columns);
         });
+        
+        services.AddSingleton<IModbusChunkHandler, ModbusChunkHandler>();
         services.AddSingleton<PlcCapacityCalculator>();
         services.AddSingleton<RecipeComparator>();
         services.AddSingleton<PlcRecipeSerializer>();
@@ -206,12 +214,18 @@ public static class MbeTableServiceConfigurator
     private static void RegisterApplicationServices(IServiceCollection services)
     {
         services.AddSingleton<UiStateManager>();
-        services.AddSingleton<IUiStateService>(sp =>
+        services.AddSingleton<IErrorCatalog, ErrorCatalog>();
+        services.AddSingleton<ResultResolver>();
+        services.AddSingleton<ActionComboBox>();
+        services.AddSingleton<TargetComboBox>();
+        services.AddSingleton<TextBoxExtension>();
+        services.AddSingleton<StepStartTime>();
+        
+        services.AddSingleton<IUiPermissionService>(sp =>
         {
             var manager = sp.GetRequiredService<UiStateManager>();
-            var logger = sp.GetRequiredService<ILogger>();
-            var status = sp.GetRequiredService<IStatusService>();
-            return new UiStateService(manager, logger, status);
+            var logger = sp.GetRequiredService<ILogger<UiPermissionService>>();
+            return new UiPermissionService(manager, logger);
         });
 
         services.AddSingleton<RecipeViewModel>(sp =>
@@ -220,7 +234,7 @@ public static class MbeTableServiceConfigurator
             var comboboxData = sp.GetRequiredService<IComboboxDataProvider>();
             var propertyState = sp.GetRequiredService<PropertyStateProvider>();
             var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
-            var logger = sp.GetRequiredService<ILogger>();
+            var logger = sp.GetRequiredService<ILogger<RecipeViewModel>>();
             return new RecipeViewModel(recipeService, comboboxData, propertyState, columns, logger);
         });
 
@@ -237,7 +251,7 @@ public static class MbeTableServiceConfigurator
             var fileService = sp.GetRequiredService<IRecipeFileService>();
             var assemblyService = sp.GetRequiredService<IRecipeAssemblyService>();
             var validator = sp.GetRequiredService<AssemblyValidator>();
-            var logger = sp.GetRequiredService<ILogger>();
+            var logger = sp.GetRequiredService<ILogger<CsvService>>();
             return new CsvService(fileService, assemblyService, validator, logger);
         });
 
@@ -246,9 +260,10 @@ public static class MbeTableServiceConfigurator
             var recipeService = sp.GetRequiredService<IRecipeService>();
             var modbusTcpService = sp.GetRequiredService<IModbusTcpService>();
             var csvOperations = sp.GetRequiredService<ICsvService>();
-            var uiStateService = sp.GetRequiredService<IUiStateService>();
+            var uiStateService = sp.GetRequiredService<IUiPermissionService>();
             var viewModel = sp.GetRequiredService<RecipeViewModel>();
-            var logger = sp.GetRequiredService<ILogger>();
+            var logger = sp.GetRequiredService<ILogger<RecipeApplicationService>>();
+            var resultResolver = sp.GetRequiredService<ResultResolver>();
 
             return new RecipeApplicationService(
                 recipeService,
@@ -256,7 +271,8 @@ public static class MbeTableServiceConfigurator
                 csvOperations,
                 uiStateService,
                 viewModel,
-                logger);
+                logger,
+                resultResolver);
         });
 
         services.AddSingleton<PlcUiStateBridge>();
@@ -279,18 +295,10 @@ public static class MbeTableServiceConfigurator
 
         services.AddScoped<ITableRenderCoordinator, TableRenderCoordinator>();
 
-        services.AddTransient<ActionComboBoxColumnFactory>();
-        services.AddTransient<ActionTargetComboBoxColumnFactory>();
-        services.AddTransient<TextBoxColumnFactory>();
-        services.AddTransient<PropertyColumnFactory>();
-        services.AddTransient<StepStartTimeColumnFactory>();
+        services.AddTransient<TargetComboBox>();
+        services.AddTransient<StepStartTime>();
 
-        services.AddSingleton<IColumnFactoryRegistry>(sp =>
-        {
-            var registry = new ColumnFactoryRegistry(sp);
-            registry.RegisterDefaultMappings();
-            return registry;
-        });
+        services.AddSingleton<FactoryColumnRegistry>();
 
         services.AddSingleton<LoadRecipeCommand>();
         services.AddSingleton<SaveRecipeCommand>();

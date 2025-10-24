@@ -19,13 +19,13 @@ public sealed class RecipeAssemblyService : IRecipeAssemblyService
     private readonly ModbusAssemblyStrategy _modbusStrategy;
     private readonly CsvAssemblyStrategy _csvStrategy;
     private readonly AssemblyValidator _validator;
-    private readonly ILogger _logger;
+    private readonly ILogger<RecipeAssemblyService> _logger;
 
     public RecipeAssemblyService(
         ModbusAssemblyStrategy modbusStrategy,
         CsvAssemblyStrategy csvStrategy,
         AssemblyValidator validator,
-        ILogger logger)
+        ILogger<RecipeAssemblyService> logger)
     {
         _modbusStrategy = modbusStrategy ?? throw new ArgumentNullException(nameof(modbusStrategy));
         _csvStrategy = csvStrategy ?? throw new ArgumentNullException(nameof(csvStrategy));

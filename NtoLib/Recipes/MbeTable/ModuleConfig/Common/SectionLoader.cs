@@ -48,7 +48,7 @@ public sealed class SectionLoader<TDto> : ISectionLoader<TDto> where TDto : clas
         if (string.IsNullOrWhiteSpace(path))
         {
             return Result.Fail(new Error("File path cannot be empty.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema));
+                .WithMetadata("code", Codes.ConfigFileNotFound));
         }
 
         return Result.Ok(path);
@@ -76,7 +76,7 @@ public sealed class SectionLoader<TDto> : ISectionLoader<TDto> where TDto : clas
         catch (Exception ex)
         {
             return Result.Fail(new Error($"Failed to read file '{path}': {ex.Message}")
-                .WithMetadata("code", Codes.ConfigParseError)
+                .WithMetadata("code", Codes.IoReadError)
                 .WithMetadata("filePath", path)
                 .CausedBy(ex));
         }

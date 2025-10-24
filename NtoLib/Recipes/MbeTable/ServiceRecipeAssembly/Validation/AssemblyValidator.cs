@@ -40,22 +40,13 @@ public sealed class AssemblyValidator
         var errors = new List<IError>();
         
         var structureResult = ValidateStructure(recipe);
-        if (structureResult.IsFailed)
-        {
-            errors.AddRange(structureResult.Errors);
-        }
+        if (structureResult.IsFailed) errors.AddRange(structureResult.Errors);
         
         var loopResult = ValidateLoops(recipe);
-        if (loopResult.IsFailed)
-        {
-            errors.AddRange(loopResult.Errors);
-        }
+        if (loopResult.IsFailed) errors.AddRange(loopResult.Errors);
         
         var targetResult = ValidateTargets(recipe);
-        if (targetResult.IsFailed)
-        {
-            errors.AddRange(targetResult.Errors);
-        }
+        if (targetResult.IsFailed) errors.AddRange(targetResult.Errors);
         
         return errors.Count > 0 
             ? Result.Fail(errors) 

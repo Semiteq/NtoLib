@@ -23,14 +23,14 @@ public sealed class RecipeMutator
     private readonly IActionTargetProvider _actionTargetProvider;
     private readonly PropertyDefinitionRegistry _propertyRegistry;
     private readonly IReadOnlyList<ColumnDefinition> _tableColumns;
-    private readonly ILogger _logger;
+    private readonly ILogger<RecipeMutator> _logger;
 
     public RecipeMutator(
         IActionRepository actionRepository,
         IActionTargetProvider actionTargetProvider,
         PropertyDefinitionRegistry propertyRegistry,
         IReadOnlyList<ColumnDefinition> tableColumns,
-        ILogger logger)
+        ILogger<RecipeMutator> logger)
     {
         _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
         _actionTargetProvider = actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));

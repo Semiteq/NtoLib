@@ -4,6 +4,7 @@ using System.Linq;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -17,25 +18,27 @@ public sealed class CsvHeaderBinder : ICsvHeaderBinder
 {
     public sealed record Binding(
         IReadOnlyList<string> FileTokens,
-        IReadOnlyDictionary<int, ColumnDefinition> FileIndexToColumn
+        IReadOnlyDictionary<short, ColumnDefinition> FileIndexToColumn
     );
 
     public Result<Binding> Bind(string[] headerTokens, TableColumns columns)
     {
         if (headerTokens.Length == 0)
-            return Result.Fail("Empty header");
+            return Result.Fail(new Error("Empty header").WithMetadata(nameof(Codes), Codes.CsvHeaderMismatch));
 
         var byCode = columns.GetColumns().ToDictionary(c => c.Code, StringComparer.OrdinalIgnoreCase);
 
-        var map = new Dictionary<int, ColumnDefinition>(headerTokens.Length);
+        var map = new Dictionary<short, ColumnDefinition>(headerTokens.Length);
         var tokens = new List<string>(headerTokens.Length);
 
-        for (var i = 0; i < headerTokens.Length; i++)
+        for (short i = 0; i < headerTokens.Length; i++)
         {
             var token = headerTokens[i].Trim();
             if (!byCode.TryGetValue(token, out var def))
-                return Result.Fail($"Unknown column in header at index {i}: '{token}'");
-            
+                return Result.Fail(
+                    new Error($"Unknown column in header at index {i}: '{token}'").WithMetadata(nameof(Codes),
+                        Codes.CsvHeaderMismatch));
+
             map[i] = def;
             tokens.Add(token);
         }
@@ -46,7 +49,9 @@ public sealed class CsvHeaderBinder : ICsvHeaderBinder
             .ToArray();
 
         if (!expected.SequenceEqual(tokens, StringComparer.OrdinalIgnoreCase))
-            return Result.Fail("Header mismatch: file columns do not match current TableSchema");
+            return Result.Fail(
+                new Error("Header mismatch: file columns do not match current TableSchema").WithMetadata(nameof(Codes),
+                    Codes.CsvHeaderMismatch));
 
         return Result.Ok(new Binding(tokens, map));
     }

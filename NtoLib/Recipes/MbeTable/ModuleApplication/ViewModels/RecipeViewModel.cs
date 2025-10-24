@@ -25,14 +25,14 @@ public sealed class RecipeViewModel
     private readonly IRecipeService _recipeService;
     private readonly IComboboxDataProvider _comboboxDataProvider;
     private readonly PropertyStateProvider _propertyStateProvider;
-    private readonly ILogger _logger;
+    private readonly ILogger<RecipeViewModel> _logger;
 
     public RecipeViewModel(
         IRecipeService recipeService,
         IComboboxDataProvider comboboxDataProvider,
         PropertyStateProvider propertyStateProvider,
         IReadOnlyList<ColumnDefinition> tableColumns,
-        ILogger logger)
+        ILogger<RecipeViewModel> logger)
     {
         _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
         _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
@@ -72,7 +72,7 @@ public sealed class RecipeViewModel
         if (rowIndex < 0 || rowIndex >= _viewModels.Count)
         {
             return Result.Fail(new Error("Invalid row index in GetCellValue")
-                .WithMetadata("code", Codes.InvalidRowIndex)
+                .WithMetadata("code", Codes.CoreIndexOutOfRange)
                 .WithMetadata("rowIndex", rowIndex)
                 .WithMetadata("viewModelsCount", _viewModels.Count));
         }
@@ -80,7 +80,7 @@ public sealed class RecipeViewModel
         if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
         {
             return Result.Fail(new Error("Invalid column index in GetCellValue")
-                .WithMetadata("code", Codes.InvalidColumnIndex)
+                .WithMetadata("code", Codes.CoreIndexOutOfRange)
                 .WithMetadata("columnIndex", columnIndex)
                 .WithMetadata("columnsCount", _tableColumns.Count));
         }
@@ -102,7 +102,6 @@ public sealed class RecipeViewModel
 
             if (columnDefinition.ReadOnly)
                 return Result.Ok<object?>(null);
-            
 
             _logger.LogDebug($"GetCellValue failed for row {rowIndex}, column '{columnKey.Value}': property not found but cell is not disabled");
             return propertyValueResult;

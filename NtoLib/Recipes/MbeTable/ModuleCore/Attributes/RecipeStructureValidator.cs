@@ -15,13 +15,13 @@ public sealed class RecipeStructureValidator
         if (recipe == null)
         {
             return Result.Fail(new Error("Recipe cannot be null")
-                .WithMetadata("code", Codes.BusinessInvariantViolation));
+                .WithMetadata("code", Codes.CoreValidationFailed));
         }
 
         if (recipe.Steps == null)
         {
             return Result.Fail(new Error("Recipe.Steps cannot be null")
-                .WithMetadata("code", Codes.BusinessInvariantViolation));
+                .WithMetadata("code", Codes.CoreValidationFailed));
         }
 
         for (int i = 0; i < recipe.Steps.Count; i++)
@@ -31,14 +31,14 @@ public sealed class RecipeStructureValidator
             if (step == null)
             {
                 return Result.Fail(new Error($"Step at index {i} is null")
-                    .WithMetadata("code", Codes.BusinessInvariantViolation)
+                    .WithMetadata("code", Codes.CoreValidationFailed)
                     .WithMetadata("stepIndex", i));
             }
 
             if (!step.Properties.ContainsKey(MandatoryColumns.Action))
             {
                 return Result.Fail(new Error($"Step at index {i} is missing Action property")
-                    .WithMetadata("code", Codes.CoreNoActionFound)
+                    .WithMetadata("code", Codes.CoreActionNotFound)
                     .WithMetadata("stepIndex", i));
             }
 
@@ -46,7 +46,7 @@ public sealed class RecipeStructureValidator
             if (actionProperty == null)
             {
                 return Result.Fail(new Error($"Step at index {i} has null Action property")
-                    .WithMetadata("code", Codes.CoreNoActionFound)
+                    .WithMetadata("code", Codes.CoreActionNotFound)
                     .WithMetadata("stepIndex", i));
             }
         }

@@ -6,6 +6,7 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
@@ -23,7 +24,7 @@ public sealed class RecipePlcService : IRecipePlcService
     private readonly PlcCapacityCalculator _capacity;
     private readonly RecipeColumnLayout _layout;
     private readonly IRuntimeOptionsProvider _runtimeOptionsProvider;
-    private readonly ILogger _logger;
+    private readonly ILogger<RecipePlcService> _logger;
 
     public RecipePlcService(
         IPlcProtocol protocol,
@@ -32,7 +33,7 @@ public sealed class RecipePlcService : IRecipePlcService
         PlcCapacityCalculator capacity,
         RecipeColumnLayout layout,
         IRuntimeOptionsProvider runtimeOptionsProvider,
-        ILogger logger)
+        ILogger<RecipePlcService> logger)
     {
         _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
@@ -46,7 +47,7 @@ public sealed class RecipePlcService : IRecipePlcService
     public async Task<Result> SendAsync(Recipe recipe, CancellationToken ct = default)
     {
         if (recipe is null) 
-            return Result.Fail("Recipe is null");
+            return Result.Fail(new Error("Recipe is null").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
 
         try
         {
@@ -55,34 +56,27 @@ public sealed class RecipePlcService : IRecipePlcService
             
             using var _ = MetricsStopwatch.Start("SendRecipe", _logger);
 
-            var cap = _capacity.TryCheckCapacity(recipe);
-            if (cap.IsFailed) return cap;
+            var capacityCheck = _capacity.TryCheckCapacity(recipe);
+            if (capacityCheck.IsFailed) 
+                return capacityCheck;
 
             var (intArr, floatArr) = _serializer.ToRegisters(recipe.Steps);
 
-            var write = await _protocol
+            var writeResult = await _protocol
                 .WriteAllAreasAsync(intArr, floatArr, recipe.Steps.Count, ct)
                 .ConfigureAwait(false);
             
-            if (write.IsFailed) return write;
+            if (writeResult.IsFailed) 
+                return writeResult;
 
-            // Delay before verification
             if (verifyDelayMs > 0)
                 await Task.Delay(verifyDelayMs, ct).ConfigureAwait(false);
 
-            // Read back for verification
-            var readBack = await ReceiveRawDataAsync(ct).ConfigureAwait(false);
-            if (readBack.IsFailed) 
-                return readBack.ToResult();
-
-            // Return raw data for comparison at higher level
-            // Since we don't have RecipeAssemblyService here, we'll need to adjust this
-            // For now, return success - actual verification will happen in Application layer
             return Result.Ok().WithSuccess("Recipe successfully written to PLC");
         }
         catch (OperationCanceledException)
         {
-            return Result.Fail("Operation cancelled");
+            return Result.Fail(new Error("Operation cancelled").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
         }
         finally
         {
@@ -95,38 +89,42 @@ public sealed class RecipePlcService : IRecipePlcService
     {
         try
         {
-            return await ReceiveRawDataAsync(ct).ConfigureAwait(false);
+            using var _ = MetricsStopwatch.Start("ReceiveRecipe", _logger);
+
+            var rowResult = await _protocol.ReadRowCountAsync(ct).ConfigureAwait(false);
+            if (rowResult.IsFailed) 
+                return rowResult.ToResult<(int[], int[], int)>();
+
+            var rows = rowResult.Value;
+            if (rows == 0)
+            {
+                _logger.LogDebug("No rows in PLC. Nothing to read");
+                return Result.Ok((Array.Empty<int>(), Array.Empty<int>(), 0));
+            }
+
+            _logger.LogDebug("Received {RowCount} rows from PLC", rows);
+            
+            var validationResult = _capacity.ValidateReadCapacity(rows);
+            if (validationResult.IsFailed)
+                return validationResult.ToResult<(int[], int[], int)>();
+            
+            var intSize = _layout.IntColumnCount * rows;
+            var floatSize = _layout.FloatColumnCount * 2 * rows;
+            
+            var intResult = await _protocol.ReadIntAreaAsync(intSize, ct).ConfigureAwait(false);
+            if (intResult.IsFailed) 
+                return intResult.ToResult<(int[], int[], int)>();
+
+            var floatResult = await _protocol.ReadFloatAreaAsync(floatSize, ct).ConfigureAwait(false);
+            if (floatResult.IsFailed) 
+                return floatResult.ToResult<(int[], int[], int)>();
+
+            return Result.Ok((intResult.Value, floatResult.Value, rows));
         }
-        finally
+        catch (OperationCanceledException)
         {
-            _transport.Disconnect();
+            return Result.Fail("Operation cancelled")
+                .ToResult<(int[], int[], int)>();
         }
-    }
-
-    private async Task<Result<(int[] IntData, int[] FloatData, int RowCount)>> ReceiveRawDataAsync(
-        CancellationToken ct)
-    {
-        using var _ = MetricsStopwatch.Start("ReceiveRecipe", _logger);
-
-        var rowRes = await _protocol.ReadRowCountAsync(ct).ConfigureAwait(false);
-        if (rowRes.IsFailed) 
-            return rowRes.ToResult<(int[], int[], int)>();
-
-        var rows = rowRes.Value;
-        if (rows == 0)
-            return Result.Ok((Array.Empty<int>(), Array.Empty<int>(), 0));
-
-        var intSize = _layout.IntColumnCount * rows;
-        var floatSize = _layout.FloatColumnCount * 2 * rows;
-
-        var intsRes = await _protocol.ReadIntAreaAsync(intSize, ct).ConfigureAwait(false);
-        if (intsRes.IsFailed) 
-            return intsRes.ToResult<(int[], int[], int)>();
-
-        var floatsRes = await _protocol.ReadFloatAreaAsync(floatSize, ct).ConfigureAwait(false);
-        if (floatsRes.IsFailed) 
-            return floatsRes.ToResult<(int[], int[], int)>();
-
-        return Result.Ok((intsRes.Value, floatsRes.Value, rows));
     }
 }

@@ -19,7 +19,7 @@ public interface IRecipeFileService
     /// <param name="filePath">Path to the CSV file.</param>
     /// <param name="encoding">Text encoding. Defaults to UTF-8 with BOM.</param>
     /// <returns>Result containing raw CSV data or error information.</returns>
-    Task<Result<CsvRawData>> ReadRawDataAsync(string filePath, Encoding? encoding = null);
+    Task<Result<CsvRawData>> ReadRawDataAndCheckIntegrityAsync(string filePath, Encoding? encoding = null);
 
     /// <summary>
     /// Writes a recipe to the specified file path.

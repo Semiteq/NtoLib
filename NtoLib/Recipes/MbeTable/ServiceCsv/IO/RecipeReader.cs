@@ -20,13 +20,13 @@ public sealed class RecipeReader : IRecipeReader
     private readonly ICsvDataExtractor _dataExtractor;
     private readonly IMetadataService _metadataService;
     private readonly IIntegrityService _integrityService;
-    private readonly ILogger _logger;
+    private readonly ILogger<RecipeReader> _logger;
 
     public RecipeReader(
         ICsvDataExtractor dataExtractor,
         IMetadataService metadataService,
         IIntegrityService integrityService,
-        ILogger logger)
+        ILogger<RecipeReader> logger)
     {
         _dataExtractor = dataExtractor ?? throw new ArgumentNullException(nameof(dataExtractor));
         _metadataService = metadataService ?? throw new ArgumentNullException(nameof(metadataService));

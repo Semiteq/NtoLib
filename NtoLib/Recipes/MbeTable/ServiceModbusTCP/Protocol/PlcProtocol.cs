@@ -14,19 +14,22 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 
 internal sealed class PlcProtocol : IPlcProtocol
 {
-    private const int Chunk = 123;
+    private const int ChunkSize = 123;
     private const int OffsetRowCount = 1;
 
     private readonly IModbusTransport _transport;
+    private readonly IModbusChunkHandler _chunkHandler;
     private readonly IRuntimeOptionsProvider _optionsProvider;
-    private readonly ILogger _logger;
+    private readonly ILogger<PlcProtocol> _logger;
 
     public PlcProtocol(
         IModbusTransport transport,
+        IModbusChunkHandler chunkHandler,
         IRuntimeOptionsProvider optionsProvider,
-        ILogger logger)
+        ILogger<PlcProtocol> logger)
     {
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+        _chunkHandler = chunkHandler ?? throw new ArgumentNullException(nameof(chunkHandler));
         _optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -38,20 +41,30 @@ internal sealed class PlcProtocol : IPlcProtocol
         
         var settings = _optionsProvider.GetCurrent();
 
+        _logger.LogTrace("Int data length: {IntDataLength}", intData.Length);
         if (intData.Length > 0)
         {
-            var r = await WriteChunkedAsync(settings.IntBaseAddr, intData, ct)
+            _logger.LogTrace("Writing {IntDataCount} int registers to address {IntBaseAddr}", 
+                intData.Length, settings.IntBaseAddr);
+            var result = await _chunkHandler.WriteChunkedAsync(
+                _transport, settings.IntBaseAddr, intData, ChunkSize, ct)
                 .ConfigureAwait(false);
-            if (r.IsFailed) return r;
+            if (result.IsFailed) return result;
         }
 
+        _logger.LogTrace("Float data length: {FloatDataLength}", floatData.Length);
         if (floatData.Length > 0)
         {
-            var r = await WriteChunkedAsync(settings.FloatBaseAddr, floatData, ct)
+            _logger.LogTrace("Writing {FloatDataCount} float registers to address {FloatBaseAddr}", 
+                floatData.Length, settings.FloatBaseAddr);
+            var result = await _chunkHandler.WriteChunkedAsync(
+                _transport, settings.FloatBaseAddr, floatData, ChunkSize, ct)
                 .ConfigureAwait(false);
-            if (r.IsFailed) return r;
+            if (result.IsFailed) return result;
         }
 
+        _logger.LogTrace("Writing row count {RowCount} to address {ControlRegister}", 
+            rowCount, settings.ControlRegister + OffsetRowCount);
         return await _transport.WriteHoldingAsync(
             settings.ControlRegister + OffsetRowCount,
             new[] { rowCount }, ct).ConfigureAwait(false);
@@ -61,54 +74,49 @@ internal sealed class PlcProtocol : IPlcProtocol
     {
         var settings = _optionsProvider.GetCurrent();
         
+        _logger.LogTrace("Reading row count from address {ControlRegister}", 
+            settings.ControlRegister + OffsetRowCount);
         var result = await _transport
             .ReadHoldingAsync(settings.ControlRegister + OffsetRowCount, 1, ct)
             .ConfigureAwait(false);
-
+        
         if (result.IsFailed)
             return result.ToResult<int>();
 
-        var val = result.Value[0];
-        return val < 0
-            ? Result.Fail(new Error("Invalid row count")
-                .WithMetadata(nameof(Codes), Codes.PlcInvalidRowCount))
-            : Result.Ok(val);
+        var value = result.Value[0];
+        _logger.LogTrace("Read row count: {RowCount}", value);
+        
+        return value < 0
+            ? Result.Fail(new Error($"Invalid row count: {value}")
+                .WithMetadata(nameof(Codes), Codes.PlcReadFailed))
+            : Result.Ok(value);
     }
 
-    public Task<Result<int[]>> ReadIntAreaAsync(int regs, CancellationToken ct)
+    public async Task<Result<int[]>> ReadIntAreaAsync(int registers, CancellationToken ct)
     {
-        if (regs == 0)
-            return Task.FromResult(Result.Ok(Array.Empty<int>()));
+        if (registers == 0)
+            return Result.Ok(Array.Empty<int>());
         
         var settings = _optionsProvider.GetCurrent();
-        return _transport.ReadHoldingAsync(settings.IntBaseAddr, regs, ct);
+        _logger.LogTrace("Reading {Registers} int registers from address {IntBaseAddr}", 
+            registers, settings.IntBaseAddr);
+        
+        return await _chunkHandler.ReadChunkedAsync(
+            _transport, settings.IntBaseAddr, registers, ChunkSize, ct)
+            .ConfigureAwait(false);
     }
 
-    public Task<Result<int[]>> ReadFloatAreaAsync(int regs, CancellationToken ct)
+    public async Task<Result<int[]>> ReadFloatAreaAsync(int registers, CancellationToken ct)
     {
-        if (regs == 0)
-            return Task.FromResult(Result.Ok(Array.Empty<int>()));
+        if (registers == 0)
+            return Result.Ok(Array.Empty<int>());
         
         var settings = _optionsProvider.GetCurrent();
-        return _transport.ReadHoldingAsync(settings.FloatBaseAddr, regs, ct);
-    }
-
-    private async Task<Result> WriteChunkedAsync(int baseAddr, int[] data, CancellationToken ct)
-    {
-        var offset = 0;
-        while (offset < data.Length)
-        {
-            var size = Math.Min(Chunk, data.Length - offset);
-            var slice = new int[size];
-            Array.Copy(data, offset, slice, 0, size);
-
-            var res = await _transport
-                .WriteHoldingAsync(baseAddr + offset, slice, ct)
-                .ConfigureAwait(false);
-
-            if (res.IsFailed) return res;
-            offset += size;
-        }
-        return Result.Ok();
+        _logger.LogTrace("Reading {Registers} float registers from address {FloatBaseAddr}", 
+            registers, settings.FloatBaseAddr);
+        
+        return await _chunkHandler.ReadChunkedAsync(
+            _transport, settings.FloatBaseAddr, registers, ChunkSize, ct)
+            .ConfigureAwait(false);
     }
 }

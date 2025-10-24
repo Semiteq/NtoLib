@@ -22,13 +22,13 @@ public sealed class RecipeWriter : IRecipeWriter
     private readonly ICsvDataFormatter _dataFormatter;
     private readonly IMetadataService _metadataService;
     private readonly IIntegrityService _integrityService;
-    private readonly ILogger _logger;
+    private readonly ILogger<RecipeWriter> _logger;
 
     public RecipeWriter(
         ICsvDataFormatter dataFormatter,
         IMetadataService metadataService,
         IIntegrityService integrityService,
-        ILogger logger)
+        ILogger<RecipeWriter> logger)
     {
         _dataFormatter = dataFormatter ?? throw new ArgumentNullException(nameof(dataFormatter));
         _metadataService = metadataService ?? throw new ArgumentNullException(nameof(metadataService));

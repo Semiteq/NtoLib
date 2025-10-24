@@ -8,18 +8,12 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 /// Service for managing UI state and permissions.
 /// Provides API for querying current state and notifying about state changes.
 /// </summary>
-public interface IUiStateService
+public interface IUiPermissionService
 {
     /// <summary>
     /// Raised when UI permissions change.
     /// </summary>
     event Action<UiPermissions>? PermissionsChanged;
-
-    /// <summary>
-    /// Raised when a status message should be displayed.
-    /// Parameters: message text, status kind.
-    /// </summary>
-    event Action<string, StatusKind>? StatusMessagePosted;
 
     /// <summary>
     /// Gets current UI permissions.
@@ -50,27 +44,4 @@ public interface IUiStateService
     /// Notifies that a long-running operation has completed.
     /// </summary>
     void NotifyOperationCompleted();
-
-    /// <summary>
-    /// Posts an error message to the UI.
-    /// </summary>
-    /// <param name="message">Error message text.</param>
-    void ShowError(string message);
-
-    /// <summary>
-    /// Posts an informational message to the UI.
-    /// </summary>
-    /// <param name="message">Info message text.</param>
-    void ShowInfo(string message);
-
-    /// <summary>
-    /// Posts a warning message to the UI.
-    /// </summary>
-    /// <param name="message">Warning message text.</param>
-    void ShowWarning(string message);
-
-    /// <summary>
-    /// Clears the current status message.
-    /// </summary>
-    void ClearMessage();
 }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
@@ -27,5 +28,5 @@ public sealed class AddStepCommand : CommandBase
     protected override OperationKind GetOperationKind() => OperationKind.None;
 
     protected override Task<Result> ExecuteInternalAsync(CancellationToken ct)
-        => Task.FromResult(Result.Fail("Index is required"));
+        => Task.FromResult(Result.Fail(new Error("Index is required").WithMetadata(nameof(Codes), Codes.UiOperationFailed)));
 }
