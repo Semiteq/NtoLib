@@ -313,6 +313,7 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\StepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\TableColumns.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\TimerService.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\TypeConverter.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\FactoryColumnComboBoxBase.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ComboBox\ActionComboBox.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ComboBox\TargetComboBox.cs" />

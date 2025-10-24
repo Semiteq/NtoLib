@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+
 namespace NtoLib.Recipes.MbeTable;
 
 public partial class MbeTableFB
@@ -14,6 +16,7 @@ public partial class MbeTableFB
     private uint _maxRetries = 3;
     private uint _backoffDelayMs = 200;
     private uint _magicNumber = 69;
+    private WordOrder _wordOrder = WordOrder.LowHigh;
     private uint _controlBaseAddr = 8000;
     private uint _floatBaseAddr = 8100;
     private uint _floatAreaSize = 19600;
@@ -99,8 +102,17 @@ public partial class MbeTableFB
         get => _magicNumber;
         set => _magicNumber = value;
     }
+    
+    [DisplayName("11. Порядок слов")]
+    [Description("Порядок байт при передаче 32-битных значений (Float, DWord)")]
+    [TypeConverter(typeof(WordOrderConverter))]
+    public WordOrder WordOrder
+    {
+        get => _wordOrder;
+        set => _wordOrder = value;
+    }
 
-    [DisplayName("11. Адрес системной области данных")]
+    [DisplayName("12. Адрес системной области данных")]
     [Description("Определяет начальный адрес, где располагается зона системных данных (10 регистров)")]
     public uint UControlBaseAddr
     {
@@ -108,7 +120,7 @@ public partial class MbeTableFB
         set => _controlBaseAddr = value;
     }
 
-    [DisplayName("12. Базовый адрес хранения данных типа Real (Float)")]
+    [DisplayName("13. Базовый адрес хранения данных типа Real (Float)")]
     [Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
     public uint UFloatBaseAddr
     {
@@ -116,7 +128,7 @@ public partial class MbeTableFB
         set => _floatBaseAddr = value;
     }
 
-    [DisplayName("13. Размер области хранения данных типа Real (Float)")]
+    [DisplayName("14. Размер области хранения данных типа Real (Float)")]
     [Description("Определяет размер области для данных типа 'вещественный'.")]
     public uint UFloatAreaSize
     {
@@ -124,7 +136,7 @@ public partial class MbeTableFB
         set => _floatAreaSize = value;
     }
 
-    [DisplayName("14. Базовый адрес хранения данных типа Int")]
+    [DisplayName("15. Базовый адрес хранения данных типа Int")]
     [Description("Определяет начальный адрес, куда помещаются данные типа 'целый 16 бит'")]
     public uint UIntBaseAddr
     {
@@ -132,7 +144,7 @@ public partial class MbeTableFB
         set => _intBaseAddr = value;
     }
 
-    [DisplayName("15. Размер области хранения данных типа Int")]
+    [DisplayName("16. Размер области хранения данных типа Int")]
     [Description("Определяет размер области для данных типа 'целый 16 бит'")]
     public uint UIntAreaSize
     {
@@ -140,7 +152,7 @@ public partial class MbeTableFB
         set => _intAreaSize = value;
     }
 
-    [DisplayName("16. Эпсилон")]
+    [DisplayName("17. Эпсилон")]
     [Description("Допуск сравнения чисел с плавающей точкой")]
     public float Epsilon
     {
@@ -148,7 +160,7 @@ public partial class MbeTableFB
         set => _epsilon = value;
     }
 
-    [DisplayName("17. Записывать лог в файл")]
+    [DisplayName("18. Записывать лог в файл")]
     [Description("Если включено, все операции чтения/записи будут логироваться в файл.")]
     public bool LogToFile
     {
@@ -156,7 +168,7 @@ public partial class MbeTableFB
         set => _logToFile = value;
     }
 
-    [DisplayName("18. Путь к каталогу логов")]
+    [DisplayName("19. Путь к каталогу логов")]
     [Description("Каталог, куда будут записываться логи. Можно использовать переменные окружения.")]
     public string LogDirPath
     {

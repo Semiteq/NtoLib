@@ -24,7 +24,7 @@ public sealed class FbRuntimeOptionsProvider : IRuntimeOptionsProvider
         });
 
         var verifyDelayMs = 200;
-        var wordOrder = WordOrder.HighLow;
+        var wordOrder = _fb.WordOrder;
 
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var defaultLogsDir = Path.Combine(appData, "NtoLibLogs");
