@@ -1,29 +1,22 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
-using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 
-public sealed class ActionComboBoxColumnFactory : BaseColumnFactory
+public abstract class FactoryColumnComboBoxBase : FactoryColumnBase
 {
-    private readonly IComboboxDataProvider _comboProvider;
-    private readonly IServiceProvider _serviceProvider;
+    protected readonly IServiceProvider ServiceProvider;
 
-    public ActionComboBoxColumnFactory(
-        IComboboxDataProvider comboProvider,
-        IServiceProvider serviceProvider)
+    protected FactoryColumnComboBoxBase(IServiceProvider serviceProvider)
     {
-        _comboProvider = comboProvider;
-        _serviceProvider = serviceProvider;
+        ServiceProvider = serviceProvider;
     }
 
     protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition)
@@ -36,7 +29,7 @@ public sealed class ActionComboBoxColumnFactory : BaseColumnFactory
             FlatStyle = FlatStyle.Flat,
             DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton,
             DisplayStyleForCurrentCellOnly = true,
-            ValueType = typeof(int?),
+            ValueType = typeof(short?),
             MaxDropDownItems = definition.MaxDropdownItems,
             DataPropertyName = definition.Key.Value
         };
@@ -44,28 +37,24 @@ public sealed class ActionComboBoxColumnFactory : BaseColumnFactory
         return column;
     }
 
-    protected override void ConfigureColumn(
-        DataGridViewColumn column,
-        ColumnDefinition definition,
-        ColorScheme scheme)
+    protected override void ConfigureColumn(DataGridViewColumn column)
     {
         if (column is not DataGridViewComboBoxColumn combo) return;
 
-        combo.DataSource = _comboProvider
-            .GetActions()
-            .Select(kv => kv)
-            .ToList();
+        combo.DataSource = GetDataSource();
         combo.DisplayMember = "Value";
         combo.ValueMember = "Key";
     }
 
+    protected abstract IList<KeyValuePair<short, string>> GetDataSource();
+
+    protected abstract void AssignItemsProvider(RecipeComboBoxCell cell);
+
     private RecipeComboBoxCell CreateCell()
     {
         var cell = new RecipeComboBoxCell();
-
-        cell.SetItemsProvider(_serviceProvider.GetRequiredService<ActionItemsProvider>());
-        cell.SetRenderer(_serviceProvider.GetRequiredService<ICellRenderer>());
-
+        AssignItemsProvider(cell);
+        cell.SetRenderer(ServiceProvider.GetRequiredService<ICellRenderer>());
         return cell;
     }
 }

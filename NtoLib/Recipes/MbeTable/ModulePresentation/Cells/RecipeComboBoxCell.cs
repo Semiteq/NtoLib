@@ -1,4 +1,8 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
@@ -49,9 +53,45 @@ public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
 
         if (items.Count > 0)
         {
-            comboBox.DataSource = items;
-            comboBox.DisplayMember = "Value";
-            comboBox.ValueMember = "Key";
+            var currentValue = Value;
+
+            comboBox.SelectedIndexChanged -= OnComboBoxSelectedIndexChanged;
+
+            try
+            {
+                comboBox.DataSource = null;
+                comboBox.Items.Clear();
+
+                comboBox.DataSource = items;
+                comboBox.DisplayMember = "Value";
+                comboBox.ValueMember = "Key";
+
+                if (currentValue != null)
+                {
+                    if (short.TryParse(currentValue.ToString(), out var sv) && items.Any(kv => kv.Key == sv))
+                        comboBox.SelectedValue = sv;
+                    else
+                        comboBox.SelectedIndex = 0;
+                }
+                else
+                {
+                    comboBox.SelectedIndex = 0;
+                }
+            }
+            finally
+            {
+                comboBox.SelectedIndexChanged += OnComboBoxSelectedIndexChanged;
+            }
+
+            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        }
+    }
+
+    private void OnComboBoxSelectedIndexChanged(object? sender, EventArgs e)
+    {
+        if (DataGridView != null && !DataGridView.IsDisposed)
+        {
+            DataGridView.NotifyCurrentCellDirty(true);
         }
     }
 
@@ -68,23 +108,132 @@ public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
         DataGridViewAdvancedBorderStyle advancedBorderStyle,
         DataGridViewPaintParts paintParts)
     {
-        // Use renderer only when visual is provided by coordinator.
-        if (_renderer is null || Tag is not CellVisualState visual)
+        // Always render via custom renderer to avoid default white painting of ComboBox cells.
+        if (_renderer != null)
         {
-            base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState,
-                value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
-            return;
+            // Prefer CellVisualState from Tag (set by TableRenderCoordinator).
+            // Fallback to cellStyle values if Tag is not yet populated.
+            Font font;
+            Color fore;
+            Color back;
+
+            if (Tag is CellVisualState visual)
+            {
+                font = visual.Font;
+                fore = visual.ForeColor;
+                back = visual.BackColor;
+
+                // Keep DisplayStyle in sync in case renderer relies on it visually.
+                if (DisplayStyle != visual.ComboDisplayStyle)
+                    DisplayStyle = visual.ComboDisplayStyle;
+            }
+            else
+            {
+                font = cellStyle?.Font ?? DataGridView?.Font ?? Control.DefaultFont;
+                fore = cellStyle?.ForeColor.IsEmpty == false ? cellStyle.ForeColor : SystemColors.ControlText;
+                back = cellStyle?.BackColor.IsEmpty == false ? cellStyle.BackColor : SystemColors.Window;
+            }
+
+            var text = GetDisplayText(value, rowIndex);
+
+            var ctx = new CellRenderContext(
+                Graphics: graphics,
+                Bounds: cellBounds,
+                IsCurrent: ReferenceEquals(DataGridView?.CurrentCell, this),
+                Font: font,
+                ForeColor: fore,
+                BackColor: back,
+                FormattedValue: text);
+
+            _renderer.Render(ctx);
+            return; // do not call base.Paint to prevent white background
         }
 
-        var ctx = new CellRenderContext(
-            Graphics: graphics,
-            Bounds: cellBounds,
-            IsCurrent: ReferenceEquals(DataGridView?.CurrentCell, this),
-            Font: visual.Font,
-            ForeColor: visual.ForeColor,
-            BackColor: visual.BackColor,
-            FormattedValue: formattedValue);
+        // Fallback if renderer not injected.
+        base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState,
+            value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
+    }
 
-        _renderer.Render(ctx);
+    private string GetDisplayText(object? value, int rowIndex)
+    {
+        if (value == null) return string.Empty;
+
+        if (!short.TryParse(value.ToString(), out var sv))
+            return value.ToString() ?? string.Empty;
+
+        if (_itemsProvider != null && OwningColumn != null && rowIndex >= 0)
+        {
+            var key = new ColumnIdentifier(OwningColumn.Name);
+            var items = _itemsProvider.GetItems(rowIndex, key);
+            var match = items.FirstOrDefault(kv => kv.Key == sv);
+            if (!match.Equals(default(KeyValuePair<short, string>)))
+                return match.Value;
+        }
+
+        return value.ToString() ?? string.Empty;
+    }
+
+    protected override bool SetValue(int rowIndex, object? value)
+    {
+        if (value == null)
+            return base.SetValue(rowIndex, null);
+
+        if (!short.TryParse(value.ToString(), out var sv))
+            return base.SetValue(rowIndex, null);
+
+        if (_itemsProvider != null && OwningColumn != null)
+        {
+            var key = new ColumnIdentifier(OwningColumn.Name);
+            var items = _itemsProvider.GetItems(rowIndex, key);
+            if (items.Count > 0 && !items.Any(kv => kv.Key == sv))
+                return base.SetValue(rowIndex, items[0].Key);
+        }
+
+        return base.SetValue(rowIndex, sv);
+    }
+
+    public override object? ParseFormattedValue(
+        object? formattedValue,
+        DataGridViewCellStyle? cellStyle,
+        TypeConverter? formattedValueTypeConverter,
+        TypeConverter? valueTypeConverter)
+    {
+        if (formattedValue == null)
+            return null;
+
+        if (formattedValue is KeyValuePair<short, string> kvp)
+            return kvp.Key;
+
+        var s = formattedValue.ToString();
+        if (string.IsNullOrEmpty(s))
+            return null;
+
+        if (_itemsProvider != null && OwningColumn != null && RowIndex >= 0)
+        {
+            var key = new ColumnIdentifier(OwningColumn.Name);
+            var items = _itemsProvider.GetItems(RowIndex, key);
+
+            var byText = items.FirstOrDefault(kv => kv.Value == s);
+            if (!byText.Equals(default(KeyValuePair<short, string>)))
+                return byText.Key;
+
+            if (short.TryParse(s, out var parsed) && items.Any(kv => kv.Key == parsed))
+                return parsed;
+
+            return items.Count > 0 ? (short?)items[0].Key : null;
+        }
+
+        return short.TryParse(s, out var val) ? val : null;
+    }
+
+    protected override object? GetFormattedValue(
+        object? value,
+        int rowIndex,
+        ref DataGridViewCellStyle cellStyle,
+        TypeConverter? valueTypeConverter,
+        TypeConverter? formattedValueTypeConverter,
+        DataGridViewDataErrorContexts context)
+    {
+        return GetDisplayText(value, rowIndex);
     }
 }

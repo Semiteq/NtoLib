@@ -15,21 +15,21 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
 /// </summary>
 public sealed class TableConfigurator
 {
-    private readonly DataGridView           _grid;
-    private readonly IColorSchemeProvider   _schemeProvider;
+    private readonly DataGridView _grid;
+    private readonly IColorSchemeProvider _schemeProvider;
     private readonly IReadOnlyList<ColumnDefinition> _columnDefinitions;
-    private readonly IColumnFactoryRegistry _factoryRegistry;
+    private readonly FactoryColumnRegistry _registry;
 
     public TableConfigurator(
-        DataGridView           grid,
-        IColorSchemeProvider   schemeProvider,
+        DataGridView grid,
+        IColorSchemeProvider schemeProvider,
         IReadOnlyList<ColumnDefinition> columnDefinitions,
-        IColumnFactoryRegistry factoryRegistry)
+        FactoryColumnRegistry registry)
     {
-        _grid             = grid ?? throw new ArgumentNullException(nameof(grid));
-        _schemeProvider   = schemeProvider;
-        _columnDefinitions= columnDefinitions;
-        _factoryRegistry  = factoryRegistry;
+        _grid = grid ?? throw new ArgumentNullException(nameof(grid));
+        _schemeProvider = schemeProvider;
+        _columnDefinitions = columnDefinitions;
+        _registry = registry;
     }
 
     /// <summary>
@@ -38,12 +38,10 @@ public sealed class TableConfigurator
     /// </summary>
     public void Configure()
     {
-        GridOptionsApplier.Apply(_grid);               // базовые флаги
-        ApplyScheme(_schemeProvider.Current);          // цвета/шрифты
-        BuildColumns();                                // фабрики
+        GridOptionsApplier.Apply(_grid);
+        ApplyScheme(_schemeProvider.Current);
+        BuildColumns();
     }
-
-    // ---------------- Internal helpers ----------------
 
     private void BuildColumns()
     {
@@ -51,25 +49,22 @@ public sealed class TableConfigurator
 
         foreach (var def in _columnDefinitions)
         {
-            var column = _factoryRegistry.CreateColumn(def);
+            var column = _registry.CreateColumn(def);
             _grid.Columns.Add(column);
         }
     }
 
     private void ApplyScheme(ColorScheme scheme)
     {
-        // Header
         _grid.ColumnHeadersDefaultCellStyle.BackColor = scheme.HeaderBgColor;
         _grid.ColumnHeadersDefaultCellStyle.ForeColor = scheme.HeaderTextColor;
-        _grid.ColumnHeadersDefaultCellStyle.Font      = scheme.HeaderFont;
+        _grid.ColumnHeadersDefaultCellStyle.Font = scheme.HeaderFont;
 
-        // Lines
         _grid.DefaultCellStyle.BackColor = scheme.LineBgColor;
         _grid.DefaultCellStyle.ForeColor = scheme.LineTextColor;
-        _grid.DefaultCellStyle.Font      = scheme.LineFont;
-        _grid.RowTemplate.Height         = scheme.LineHeight;
+        _grid.DefaultCellStyle.Font = scheme.LineFont;
+        _grid.RowTemplate.Height = scheme.LineHeight;
 
-        // Control-level
         _grid.BackgroundColor = scheme.TableBackgroundColor;
     }
 }

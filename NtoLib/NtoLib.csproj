@@ -220,15 +220,19 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
+    <Compile Include="Recipes\MbeTable\Errors\ErrorExtension.cs" />
+    <Compile Include="Recipes\MbeTable\Errors\IErrorCatalog.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\IRecipeApplicationService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\CsvService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\ICsvService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\IModbusTcpService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\ModbusTcpService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\RecipeApplicationService.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\IUiStateService.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\IUiPermissionService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Services\PlcUiStateBridge.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\UiStateService.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\ResolveOptions.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\ResultResolver.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\UiPermissionService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\OperationKind.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\StatusKind.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\UiPermissions.cs" />
@@ -292,7 +296,6 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Entities\Step.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\IRecipeService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Properties\Contracts\IPropertyTypeDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleCore\Properties\Definitions\ConfigurableBooleanDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Properties\Definitions\ConfigurableEnumDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Properties\Definitions\ConfigurableNumericDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Properties\Definitions\ConfigurableStringDefinition.cs" />
@@ -310,6 +313,11 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\StepBuilder.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\TableColumns.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\TimerService.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\FactoryColumnComboBoxBase.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ComboBox\ActionComboBox.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ComboBox\TargetComboBox.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\Text\StepStartTime.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\Text\TextBoxExtension.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Data\CsvDataExtractor.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Data\CsvDataFormatter.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Data\CsvRawData.cs" />
@@ -333,7 +341,7 @@
     <Compile Include="Recipes\MbeTable\ServiceCsv\Parsing\ICsvHelperFactory.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\RecipeFileService.cs" />
     <Compile Include="Recipes\MbeTable\Errors\Codes.cs" />
-    <Compile Include="Recipes\MbeTable\Errors\ErrorMessageMap.cs" />
+    <Compile Include="Recipes\MbeTable\Errors\ErrorCatalog.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTartget\ActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTartget\IActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\FbPinAccessor.cs" />
@@ -345,11 +353,12 @@
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\IRuntimeOptionsProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\RuntimeOptioins.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\DiContainer.cs" />
+    <Compile Include="Recipes\MbeTable\ServiceModbusTCP\Protocol\IModbusChunkHandler.cs" />
+    <Compile Include="Recipes\MbeTable\ServiceModbusTCP\Protocol\ModbusChunkHandler.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\IStatusService.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\IStatusSink.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\LabelStatusSink.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusFormatter.cs" />
-    <Compile Include="Recipes\MbeTable\ServiceStatus\StatusPalette.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusService.cs" />
     <Compile Include="Recipes\MbeTable\ServiceLogger\LoggingBootstrapper.cs" />
     <Compile Include="Recipes\MbeTable\ServiceLogger\LoggingOptions.cs" />
@@ -378,19 +387,10 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\Abstractions\ITableView.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Adapters\GridOptionApplier.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableBehaviorManager.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Cells\PropertyGridCell.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Cells\RecipeComboBoxCell.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ActionComboBoxColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ActionTargetComboBoxColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\BaseColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ColumnFactoryRegistry.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ColumnFactoryRegistryExtensions.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\IColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\IColumnFactoryRegistry.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\PropertyColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\PropertyGridColumn.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\StepStartTimeColumnFactory.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\TextBoxColumnFactory.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\FactoryColumnBase.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\FactoryColumnRegistry.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\IFactoryColumn.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Commands\AddStepCommand.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Commands\CommandBase.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Commands\LoadRecipeCommand.cs" />

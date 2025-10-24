@@ -14,5 +14,5 @@ public interface IComboBoxItemsProvider
     /// Returns a list of id->display pairs for the given row/column.
     /// Never returns null; return an empty list when there are no items.
     /// </summary>
-    List<KeyValuePair<int, string>> GetItems(int rowIndex, ColumnIdentifier columnKey);
+    List<KeyValuePair<short, string>> GetItems(int rowIndex, ColumnIdentifier columnKey);
 }

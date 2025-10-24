@@ -9,7 +9,7 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 /// Factory that builds and fully configures a <see cref="DataGridViewColumn"/>
 /// according to YAML <see cref="ColumnDefinition"/> and active <see cref="ColorScheme"/>.
 /// </summary>
-public interface IColumnFactory
+public interface IFactoryColumn
 {
     /// <summary>
     /// Creates a <see cref="DataGridViewColumn"/> instance and applies default styling.

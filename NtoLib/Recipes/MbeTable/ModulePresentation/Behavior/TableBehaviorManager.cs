@@ -8,10 +8,6 @@ using NtoLib.Recipes.MbeTable.ServiceStatus;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 
-/// <summary>
-/// Handles minimal DataGridView behaviors: numbering, focus outline (except disabled combo custom paints),
-/// data errors, editing control styling.
-/// </summary>
 public sealed class TableBehaviorManager : IDisposable
 {
     private readonly DataGridView _table;
@@ -46,6 +42,7 @@ public sealed class TableBehaviorManager : IDisposable
         _table.DataError += OnDataError;
         _table.RowPostPaint += OnRowPostPaint;
         _table.EditingControlShowing += OnEditingControlShowing;
+        _table.CellValidating += OnCellValidating;
 
         _attached = true;
     }
@@ -58,6 +55,7 @@ public sealed class TableBehaviorManager : IDisposable
         _table.DataError -= OnDataError;
         _table.RowPostPaint -= OnRowPostPaint;
         _table.EditingControlShowing -= OnEditingControlShowing;
+        _table.CellValidating -= OnCellValidating;
 
         _attached = false;
     }
@@ -83,6 +81,27 @@ public sealed class TableBehaviorManager : IDisposable
     private void OnTableDisposed(object? sender, EventArgs e)
     {
         try { Detach(); } catch { /* ignored */ }
+    }
+    
+    private void OnCellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+        
+        var cell = _table.Rows[e.RowIndex].Cells[e.ColumnIndex];
+        
+        // Force commit for ComboBox cells
+        if (cell is RecipeComboBoxCell && _table.IsCurrentCellInEditMode)
+        {
+            try
+            {
+                _table.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                _table.EndEdit();
+            }
+            catch
+            {
+                // Ignore validation errors - will be handled in DataError event
+            }
+        }
     }
 
     private void OnCellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
@@ -129,6 +148,9 @@ public sealed class TableBehaviorManager : IDisposable
 
         if (e.Control is ComboBox comboBox)
         {
+            // Ensure dropdown list mode
+            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            
             var desired = comboBox.MaxDropDownItems;
             if (desired <= 0) desired = 1;
 
@@ -142,6 +164,27 @@ public sealed class TableBehaviorManager : IDisposable
             {
                 const int extra = 2;
                 comboBox.DropDownHeight = comboBox.ItemHeight * visible + extra;
+            }
+            
+            // Add handler to auto-commit on selection change
+            comboBox.SelectionChangeCommitted -= OnComboBoxSelectionChangeCommitted;
+            comboBox.SelectionChangeCommitted += OnComboBoxSelectionChangeCommitted;
+        }
+    }
+    
+    private void OnComboBoxSelectionChangeCommitted(object? sender, EventArgs e)
+    {
+        // Force immediate commit when user selects an item
+        if (_table.IsCurrentCellInEditMode)
+        {
+            try
+            {
+                _table.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                _table.EndEdit();
+            }
+            catch
+            {
+                // Ignore commit errors
             }
         }
     }
@@ -164,14 +207,13 @@ public sealed class TableBehaviorManager : IDisposable
         if (cell is DataGridViewComboBoxCell || grid.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn)
         {
             e.ThrowException = false;
-            e.Cancel = true;
+            e.Cancel = false; // Allow the operation to continue
             return;
         }
 
         if (e.Exception is FormatException)
         {
             _statusService?.ShowError(e.Exception.Message);
-
             e.ThrowException = false;
 
             try

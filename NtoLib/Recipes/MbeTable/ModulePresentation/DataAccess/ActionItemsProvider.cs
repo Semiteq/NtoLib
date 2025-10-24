@@ -18,10 +18,10 @@ public sealed class ActionItemsProvider : IComboBoxItemsProvider
         _provider = provider;
     }
 
-    public List<KeyValuePair<int, string>> GetItems(int rowIndex, ColumnIdentifier columnKey)
+    public List<KeyValuePair<short, string>> GetItems(int rowIndex, ColumnIdentifier columnKey)
     {
         return _provider.GetActions()
-            .Select(kv => new KeyValuePair<int, string>(kv.Key, kv.Value))
+            .Select(kv => new KeyValuePair<short, string>(kv.Key, kv.Value))
             .ToList();
     }
 }

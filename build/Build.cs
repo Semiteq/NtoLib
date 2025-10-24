@@ -247,23 +247,39 @@ class Build : NukeBuild
             var assemblyPaths = new[]
             {
                 targetPath,
-                targetDirectory / "COMDeviceSDK.dll",
-                targetDirectory / "EasyModbus.dll", 
-                targetDirectory / "OneOf.dll",
                 targetDirectory / "System.Collections.Immutable.dll",
-                targetDirectory / "CsvHelper.dll",
-                targetDirectory / "FluentResults.dll",
-                targetDirectory / "YamlDotNet.dll",
-                targetDirectory / "Microsoft.Extensions.Logging.Abstractions.dll",
-                targetDirectory / "Microsoft.Extensions.DependencyInjection.dll",
-                targetDirectory / "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
-                targetDirectory / "Polly.dll",
-                targetDirectory / "Serilog.Extensions.Logging.dll",
-                targetDirectory / "Serilog.Sinks.Console.dll",
-                targetDirectory / "Serilog.dll",
-                targetDirectory / "Serilog.Sinks.File.dll",
-                targetDirectory / "Serilog.Sinks.Debug.dll", 
                 targetDirectory / "System.Diagnostics.DiagnosticSource.dll",
+                
+                targetDirectory / "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+                targetDirectory / "Microsoft.Extensions.DependencyInjection.dll",
+                
+                targetDirectory / "Microsoft.Extensions.Logging.Abstractions.dll",
+                targetDirectory / "Microsoft.Extensions.Logging.dll",
+                
+                targetDirectory / "Microsoft.Extensions.Options.dll",
+                
+                targetDirectory / "Serilog.dll",
+                
+                targetDirectory / "Serilog.Sinks.Console.dll",
+                targetDirectory / "Serilog.Sinks.Debug.dll",
+                targetDirectory / "Serilog.Sinks.File.dll",
+                
+                targetDirectory / "Serilog.Extensions.Logging.dll",
+                
+                targetDirectory / "Polly.dll",
+                
+                targetDirectory / "OneOf.dll",
+                
+                targetDirectory / "FluentResults.dll",
+                
+                targetDirectory / "CsvHelper.dll",
+                
+                targetDirectory / "YamlDotNet.dll",
+                
+                targetDirectory / "EasyModbus.dll",
+                
+                targetDirectory / "COMDeviceSDK.dll",
+                
             };
 
             var existingAssemblies = assemblyPaths.Where(assembly => assembly.FileExists()).ToArray();
