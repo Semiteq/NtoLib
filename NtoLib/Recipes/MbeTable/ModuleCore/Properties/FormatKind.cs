@@ -6,12 +6,12 @@
 public enum FormatKind
 {
     /// <summary>
-    /// Standard numeric format (e.g., "123.45").
+    /// Standard numeric format (e.g., "123.456").
     /// </summary>
     Numeric = 0,
 
     /// <summary>
-    /// Scientific notation format (e.g., "1.23E+02").
+    /// Scientific notation format (e.g., "1.234E+02").
     /// </summary>
     Scientific = 1,
 
