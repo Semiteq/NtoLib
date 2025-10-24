@@ -32,13 +32,12 @@ public sealed class LoggingBootstrapper : IDisposable
 
     private static Logger BuildSerilogLogger(LoggingOptions options)
     {
-        const string template = "{UtcTimestamp:O} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
+        const string template = "{Timestamp:O} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
         var invariant = CultureInfo.InvariantCulture;
 
         var config = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .Enrich.FromLogContext()
-            .Enrich.With(new UtcTimestampEnricher())
             .WriteTo.Console(outputTemplate: template, formatProvider: invariant)
             .WriteTo.Debug(outputTemplate: template, formatProvider: invariant);
 
