@@ -6,6 +6,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
@@ -39,8 +40,7 @@ public sealed class CsvService : ICsvService
     public async Task<Result<Recipe>> ReadCsvAsync(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            return Result.Fail(
-                new Error("File path cannot be empty").WithMetadata(nameof(Codes), Codes.IoFileNotFound));
+            return ResultBox.Fail(Codes.IoFileNotFound);
 
         try
         {
@@ -65,21 +65,17 @@ public sealed class CsvService : ICsvService
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Unexpected error reading CSV from {FilePath}", filePath);
-            return Result.Fail<Recipe>(
-                new Error($"Unexpected error reading CSV: {ex.Message}").WithMetadata(nameof(Codes),
-                    Codes.IoReadError));
+            return ResultBox.Fail<Recipe>(Codes.IoReadError);
         }
     }
 
     public async Task<Result> WriteCsvAsync(Recipe recipe, string filePath)
     {
         if (recipe == null)
-            return Result.Fail(
-                new Error("Recipe cannot be null").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
+            return ResultBox.Fail(Codes.CoreInvalidOperation);
 
         if (string.IsNullOrWhiteSpace(filePath))
-            return Result.Fail(
-                new Error("File path cannot be empty").WithMetadata(nameof(Codes), Codes.IoFileNotFound));
+            return ResultBox.Fail(Codes.IoFileNotFound);
 
         try
         {
@@ -96,8 +92,7 @@ public sealed class CsvService : ICsvService
         {
             _logger.LogCritical(ex, "Unexpected error writing CSV to {FilePath}. Step count: {StepCount}", filePath,
                 recipe.Steps.Count);
-            return Result.Fail(new Error($"Unexpected error writing CSV: {ex.Message}").WithMetadata(nameof(Codes),
-                Codes.IoReadError));
+            return ResultBox.Fail(Codes.IoWriteError);
         }
     }
 }

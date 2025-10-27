@@ -28,7 +28,6 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
@@ -67,6 +66,7 @@ public static class MbeTableServiceConfigurator
         RegisterLoggerServices(services);
         RegisterStatusService(services);
         RegisterResultExtension(services);
+        AddMbeTableStateProvider(services);
         RegisterCoreServices(services);
         RegisterCsvServices(services);
         RegisterInfrastructureServices(services);
@@ -146,9 +146,15 @@ public static class MbeTableServiceConfigurator
     private static void RegisterResultExtension(IServiceCollection services)
     {
         services.AddSingleton<ErrorDefinitionRegistry>();
-        
     }
 
+    public static IServiceCollection AddMbeTableStateProvider(this IServiceCollection services)
+    {
+        services.AddSingleton<ErrorDefinitionRegistry>();
+        services.AddSingleton<IStateProvider, StateProvider>();
+        return services;
+    }
+    
     private static void RegisterCoreServices(IServiceCollection services)
     {
         services.AddSingleton<IActionRepository, ActionRepository>();
@@ -156,20 +162,12 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<PropertyDefinitionRegistry>();
         services.AddSingleton<PropertyStateProvider>();
         services.AddSingleton<TimerService>();
-
         services.AddSingleton<RecipeStructureValidator>();
         services.AddSingleton<RecipeLoopValidator>();
         services.AddSingleton<RecipeTimeCalculator>();
         services.AddSingleton<IRecipeAttributesService, RecipeAttributesService>();
-
         services.AddSingleton<RecipeMutator>();
-        services.AddSingleton<IRecipeService>(sp =>
-        {
-            var mutator = sp.GetRequiredService<RecipeMutator>();
-            var attributesService = sp.GetRequiredService<IRecipeAttributesService>();
-            var logger = sp.GetRequiredService<ILogger<RecipeService>>();
-            return new RecipeService(mutator, attributesService, logger);
-        });
+        services.AddSingleton<IRecipeService, RecipeService>();
     }
 
     private static void RegisterCsvServices(IServiceCollection services)
@@ -178,17 +176,13 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<ICsvDataExtractor, CsvDataExtractor>();
         services.AddSingleton<ICsvDataFormatter, CsvDataFormatter>();
         services.AddSingleton<ICsvHeaderBinder, CsvHeaderBinder>();
-
         services.AddSingleton<IMetadataService, MetadataService>();
         services.AddSingleton<RecipeFileMetadataSerializer>();
         services.AddSingleton<IIntegrityService, IntegrityService>();
-
         services.AddSingleton<IRecipeReader, RecipeReader>();
         services.AddSingleton<IRecipeWriter, RecipeWriter>();
-
         services.AddSingleton<CsvAssemblyStrategy>();
         services.AddSingleton<AssemblyValidator>();
-
         services.AddSingleton<IRecipeFileService, RecipeFileService>();
     }
 
@@ -204,13 +198,17 @@ public static class MbeTableServiceConfigurator
             var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
             return new RecipeColumnLayout(columns);
         });
-        
+    
         services.AddSingleton<IModbusChunkHandler, ModbusChunkHandler>();
         services.AddSingleton<PlcCapacityCalculator>();
         services.AddSingleton<RecipeComparator>();
         services.AddSingleton<PlcRecipeSerializer>();
-        services.AddSingleton<IPlcProtocol, PlcProtocol>();
+        services.AddSingleton<MagicNumberValidator>();
+        services.AddSingleton<ModbusConnectionManager>();
         services.AddSingleton<IModbusTransport, ModbusTransport>();
+        services.AddSingleton<IPlcReader, PlcReader>();
+        services.AddSingleton<IPlcWriter, PlcWriter>();
+        services.AddSingleton<IDisconnectStrategy, KeepAliveStrategy>();
         services.AddSingleton<IRecipePlcService, RecipePlcService>();
     }
 
@@ -220,76 +218,21 @@ public static class MbeTableServiceConfigurator
 
         services.AddSingleton<AssemblyValidator>();
         services.AddSingleton<TargetAvailabilityValidator>();
-
         services.AddSingleton<IRecipeAssemblyService, RecipeAssemblyService>();
     }
 
     private static void RegisterApplicationServices(IServiceCollection services)
     {
-        services.AddSingleton<UiStateManager>();
         services.AddSingleton<ResultResolver>();
         services.AddSingleton<ActionComboBox>();
         services.AddSingleton<TargetComboBox>();
         services.AddSingleton<TextBoxExtension>();
         services.AddSingleton<StepStartTime>();
-        
-        services.AddSingleton<IUiPermissionService>(sp =>
-        {
-            var manager = sp.GetRequiredService<UiStateManager>();
-            var recipeService = sp.GetRequiredService<IRecipeService>();
-            return new UiPermissionService(manager, recipeService);
-        });
-
-        services.AddSingleton<RecipeViewModel>(sp =>
-        {
-            var recipeService = sp.GetRequiredService<IRecipeService>();
-            var comboboxData = sp.GetRequiredService<IComboboxDataProvider>();
-            var propertyState = sp.GetRequiredService<PropertyStateProvider>();
-            var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
-            var logger = sp.GetRequiredService<ILogger<RecipeViewModel>>();
-            return new RecipeViewModel(recipeService, comboboxData, propertyState, columns, logger);
-        });
-
-        services.AddSingleton<IModbusTcpService>(sp =>
-        {
-            var plcService = sp.GetRequiredService<IRecipePlcService>();
-            var assemblyService = sp.GetRequiredService<IRecipeAssemblyService>();
-            var comparator = sp.GetRequiredService<RecipeComparator>();
-            return new ModbusTcpService(plcService, assemblyService, comparator);
-        });
-
-        services.AddSingleton<ICsvService>(sp =>
-        {
-            var fileService = sp.GetRequiredService<IRecipeFileService>();
-            var assemblyService = sp.GetRequiredService<IRecipeAssemblyService>();
-            var validator = sp.GetRequiredService<AssemblyValidator>();
-            var logger = sp.GetRequiredService<ILogger<CsvService>>();
-            return new CsvService(fileService, assemblyService, validator, logger);
-        });
-
-        services.AddSingleton<IRecipeApplicationService>(sp =>
-        {
-            var recipeService = sp.GetRequiredService<IRecipeService>();
-            var modbusTcpService = sp.GetRequiredService<IModbusTcpService>();
-            var csvOperations = sp.GetRequiredService<ICsvService>();
-            var uiStateService = sp.GetRequiredService<IUiPermissionService>();
-            var viewModel = sp.GetRequiredService<RecipeViewModel>();
-            var errorDefinitionRegistry = sp.GetRequiredService<ErrorDefinitionRegistry>();
-            var logger = sp.GetRequiredService<ILogger<RecipeApplicationService>>();
-            var resultResolver = sp.GetRequiredService<ResultResolver>();
-
-            return new RecipeApplicationService(
-                recipeService,
-                modbusTcpService,
-                csvOperations,
-                uiStateService,
-                viewModel,
-                errorDefinitionRegistry,
-                logger,
-                resultResolver);
-        });
-
-        services.AddSingleton<PlcUiStateBridge>();
+        services.AddSingleton<IStateProvider, StateProvider>();
+        services.AddSingleton<RecipeViewModel>();
+        services.AddSingleton<IModbusTcpService, ModbusTcpService>();
+        services.AddSingleton<ICsvService,CsvService>();
+        services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
     }
 
     private static void RegisterPresentationServices(IServiceCollection services)

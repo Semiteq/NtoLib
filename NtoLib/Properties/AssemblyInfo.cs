@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("Библиотека для высокопроизводительных вычислений и работы с данными.")]
 [assembly: AssemblyConfiguration("Release")]
 [assembly: AssemblyCompany("Semiteq")]
-[assembly: AssemblyProduct("NtoLib SDK 1.9.0-beta5")]
+[assembly: AssemblyProduct("NtoLib SDK 1.9.0-beta6")]
 
 [assembly: AssemblyCopyright("Copyright Semiteq©, 2025")]
 [assembly: AssemblyTrademark("Semiteq™")]
@@ -33,4 +33,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.9.0.0")]
 [assembly: AssemblyFileVersion("1.9.0.0")]
-[assembly: AssemblyInformationalVersion("1.9.0-beta5")]
+[assembly: AssemblyInformationalVersion("1.9.0-beta6")]

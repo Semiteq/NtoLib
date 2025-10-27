@@ -250,6 +250,13 @@ public sealed class ErrorDefinitionRegistry
                 ErrorSeverity.Error,
                 BlockingScope.SaveAndSend
             ),
+            
+            [Codes.CoreEmptyRecipe] = new(
+                Codes.CoreEmptyRecipe,
+                "Рецепт не содержит шагов",
+                ErrorSeverity.Warning,
+                BlockingScope.SaveAndSend
+            ),
 
             [Codes.PropertyConversionFailed] = new(
                 Codes.PropertyConversionFailed,

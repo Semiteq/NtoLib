@@ -7,9 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
-using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
@@ -19,7 +17,6 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
-using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
@@ -66,8 +63,8 @@ public partial class TableControl
 
     private void SubscribeGlobalServices()
     {
-        var uiStateService = _serviceProvider!.GetRequiredService<IUiPermissionService>();
-        uiStateService.PermissionsChanged += OnPermissionsChanged;
+        var stateProvider = _serviceProvider!.GetRequiredService<IStateProvider>();
+        stateProvider.PermissionsChanged += OnPermissionsChanged;
 
         var status = _serviceProvider!.GetRequiredService<IStatusService>();
         var scheme = _serviceProvider!.GetRequiredService<ColorScheme>();
@@ -149,10 +146,10 @@ public partial class TableControl
         try
         {
             _logger!.LogDebug("Applying initial permissions");
-            var uiState = _serviceProvider?.GetService<IUiPermissionService>();
-            if (uiState == null) return;
+            var stateProvider = _serviceProvider?.GetService<IStateProvider>();
+            if (stateProvider == null) return;
 
-            var permissions = uiState.GetCurrentPermissions();
+            var permissions = stateProvider.GetUiPermissions();
             _logger!.LogDebug("Current permissions: {Permissions}", permissions);
             
             if (InvokeRequired)
@@ -296,15 +293,17 @@ public partial class TableControl
 
     private void UnsubscribeGlobalServices()
     {
-        var uiStateService = _serviceProvider!.GetService<IUiPermissionService>();
-        if (uiStateService != null)
+        var stateProvider = _serviceProvider!.GetService<IStateProvider>();
+        if (stateProvider != null)
         {
-            uiStateService.PermissionsChanged -= OnPermissionsChanged;
+            stateProvider.PermissionsChanged -= OnPermissionsChanged;
         }
 
         var status = _serviceProvider!.GetService<IStatusService>();
         try { status?.Detach(); } catch { }
     }
+
+
 
     private void DisposeRuntimeComponents()
     {

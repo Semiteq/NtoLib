@@ -43,6 +43,7 @@ public enum Codes
     CoreForLoopError = 6008,
     CoreInvalidStepDuration = 6009,
     CoreExeedForLoopDepth = 6010,
+    CoreEmptyRecipe = 6011,
 
     // === Properties (7xxx) ===
     PropertyConversionFailed = 7001,

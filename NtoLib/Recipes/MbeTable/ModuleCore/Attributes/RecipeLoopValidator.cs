@@ -38,16 +38,18 @@ public class RecipeLoopValidator
                 case ForLoopActionId:
                 {
                     var processResult = ProcessForLoopStart(currentDepth, i, nestingLevels);
-                    if (processResult.IsFailed)
+                    if (processResult.GetStatus() == ResultStatus.Warning)
                         return processResult;
+                    
                     currentDepth++;
                     break;
                 }
                 case EndForLoopActionId:
                 {
                     var processResult = ProcessForLoopEnd(currentDepth, i, nestingLevels);
-                    if (processResult.IsFailed)
-                        return processResult;
+                    if (processResult.GetStatus() == ResultStatus.Warning)
+                         return processResult;
+
                     currentDepth--;
                     break;
                 }
@@ -68,7 +70,7 @@ public class RecipeLoopValidator
     private static Result<IReadOnlyDictionary<int, int>> ProcessForLoopStart(
         int currentDepth,
         int stepIndex,
-        Dictionary<int, int> nestingLevels)
+        IDictionary<int, int> nestingLevels)
     {
         if (currentDepth >= MaxLoopDepth)
             return CreateMaxDepthExceededError(stepIndex);
@@ -80,7 +82,7 @@ public class RecipeLoopValidator
     private static Result<IReadOnlyDictionary<int, int>> ProcessForLoopEnd(
         int currentDepth,
         int stepIndex,
-        Dictionary<int, int> nestingLevels)
+        IDictionary<int, int> nestingLevels)
     {
         if (currentDepth - 1 < 0)
             return CreateUnmatchedEndForLoopError(stepIndex);

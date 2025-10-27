@@ -4,78 +4,44 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-using EasyModbus;
 using EasyModbus.Exceptions;
 
 using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 using Polly;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
-internal sealed class ModbusTransport : IModbusTransport, IDisposable
+internal sealed class ModbusTransport : IModbusTransport
 {
-    private readonly IRuntimeOptionsProvider _optionsProvider;
+    private readonly ModbusConnectionManager _connectionManager;
     private readonly ILogger<ModbusTransport> _logger;
-    private readonly SemaphoreSlim _connectionLock = new(1, 1);
     private readonly SemaphoreSlim _operationLock = new(1, 1);
 
-    private AsyncPolicy? _connectRetryPolicy;
     private AsyncPolicy? _operationRetryPolicy;
-    private ModbusClient? _client;
-    private string? _lastConnectionString;
 
     public ModbusTransport(
-        IRuntimeOptionsProvider optionsProvider,
+        ModbusConnectionManager connectionManager,
         ILogger<ModbusTransport> logger)
     {
-        _optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
+        _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<Result> EnsureConnectedAsync(CancellationToken ct)
     {
-        await _connectionLock.WaitAsync(ct).ConfigureAwait(false);
-        try
+        var result = await _connectionManager.EnsureConnectedAsync(ct).ConfigureAwait(false);
+        
+        if (result.IsSuccess && _operationRetryPolicy == null)
         {
-            var settings = _optionsProvider.GetCurrent();
-            var currentConnectionString = $"{settings.IpAddress}:{settings.Port}:{settings.UnitId}";
-
-            if (_lastConnectionString != null &&
-                _lastConnectionString != currentConnectionString)
-            {
-                _logger.LogDebug("Connection parameters changed, reconnecting");
-                DisconnectInternal();
-            }
-
-            if (_client?.Connected == true)
-            {
-                var validateRes = await ValidateMagicNumberAsync(settings, ct).ConfigureAwait(false);
-                if (validateRes.IsSuccess)
-                    return Result.Ok();
-
-                DisconnectInternal();
-            }
-
-            _connectRetryPolicy = PollyPolicyFactory.Create(settings.MaxRetries, settings.BackoffDelayMs, _logger);
-            _operationRetryPolicy = PollyPolicyFactory.CreateOperationPolicy(settings.MaxRetries, settings.BackoffDelayMs, _logger);
-
-            InitializeClient(settings);
-            _lastConnectionString = currentConnectionString;
-
-            return await _connectRetryPolicy
-                .ExecuteAsync(_ => ConnectAndValidateAsync(settings, ct), ct)
-                .ConfigureAwait(false);
+            _operationRetryPolicy = PollyPolicyFactory.CreateOperationPolicy(3, 200, _logger);
         }
-        finally
-        {
-            _connectionLock.Release();
-        }
+
+        return result;
     }
 
     public async Task<Result<int[]>> ReadHoldingAsync(int address, int length, CancellationToken ct)
@@ -84,7 +50,8 @@ internal sealed class ModbusTransport : IModbusTransport, IDisposable
         try
         {
             return await ExecuteWithRetryAsync(
-                () => _client!.ReadHoldingRegisters(address, length),
+                () => _connectionManager.Client!.ReadHoldingRegisters(address, length),
+                address,
                 length,
                 "Read",
                 ct).ConfigureAwait(false);
@@ -102,9 +69,9 @@ internal sealed class ModbusTransport : IModbusTransport, IDisposable
         {
             var res = await ExecuteWithRetryAsync(() =>
             {
-                _client!.WriteMultipleRegisters(address, data);
+                _connectionManager.Client!.WriteMultipleRegisters(address, data);
                 return true;
-            }, data.Length, "Write", ct).ConfigureAwait(false);
+            }, address, data.Length, "Write", ct).ConfigureAwait(false);
 
             return res.ToResult();
         }
@@ -114,158 +81,70 @@ internal sealed class ModbusTransport : IModbusTransport, IDisposable
         }
     }
 
-    public void Disconnect() => DisconnectInternal();
+    public void Disconnect() => _connectionManager.Disconnect("manual");
 
     public void Dispose()
     {
-        DisconnectInternal();
-        _connectionLock.Dispose();
+        _connectionManager.Dispose();
         _operationLock.Dispose();
-    }
-
-    private void InitializeClient(RuntimeOptions settings)
-    {
-        _client = new ModbusClient(settings.IpAddress.ToString(), settings.Port)
-        {
-            UnitIdentifier = settings.UnitId,
-            ConnectionTimeout = settings.TimeoutMs
-        };
-    }
-
-    private async Task<Result> ConnectAndValidateAsync(RuntimeOptions settings, CancellationToken ct)
-    {
-        try
-        {
-            await Task.Run(_client!.Connect, ct).ConfigureAwait(false);
-            _logger.LogDebug("Connected to PLC {Ip}:{Port}", settings.IpAddress, settings.Port);
-
-            return await ValidateMagicNumberAsync(settings, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is IOException or SocketException)
-        {
-            DisconnectInternal();
-            _logger.LogError(ex, "Communication error during PLC connection");
-            return Fail(Codes.PlcFailedToPing, ex.Message);
-        }
-        catch (ModbusException mex)
-        {
-            DisconnectInternal();
-            _logger.LogError(mex, "PLC connection failed");
-            return Fail(Codes.PlcFailedToPing, mex.Message);
-        }
-    }
-
-    private async Task<Result> ValidateMagicNumberAsync(RuntimeOptions settings, CancellationToken ct)
-    {
-        _logger.LogTrace("Validating PLC magic number");
-        try
-        {
-            var res = await ExecuteDirectAsync(
-                () => _client!.ReadHoldingRegisters(settings.ControlRegister, 1),
-                1, "Validate", ct).ConfigureAwait(false);
-
-            if (res.IsFailed)
-                return res.ToResult();
-
-            var magicValue = res.Value[0];
-            _logger.LogTrace("Read magic value: {Value}, expected {Expected}", magicValue, settings.MagicNumber);
-
-            if (magicValue != settings.MagicNumber)
-            {
-                return Fail(Codes.PlcInvalidResponse,
-                    $"Control register validation failed. Expected {settings.MagicNumber}, got {magicValue}");
-            }
-
-            return Result.Ok();
-        }
-        catch (Exception ex) when (ex is IOException or SocketException)
-        {
-            DisconnectInternal();
-            _logger.LogError(ex, "Communication error during PLC validation");
-            return Fail(Codes.PlcTimeout, ex.Message);
-        }
-        catch (ModbusException mex)
-        {
-            DisconnectInternal();
-            _logger.LogError(mex, "PLC validation failed");
-            return Fail(Codes.PlcReadFailed, mex.Message);
-        }
     }
 
     private async Task<Result<T>> ExecuteWithRetryAsync<T>(
         Func<T> operation,
+        int address,
         int size,
         string opName,
         CancellationToken ct)
     {
+        var opContext = new OperationContext(opName, address, size, _connectionManager.CurrentConnectionId);
+
         using var _ = MetricsStopwatch.Start($"{opName} {size} reg", _logger);
 
         var ensure = await EnsureConnectedAsync(ct).ConfigureAwait(false);
         if (ensure.IsFailed)
+        {
+            _logger.LogError("Operation [{OperationId}] failed during ensure connected: {Type} addr={Address} size={Size}",
+                opContext.OperationId, opContext.Type, opContext.Address, opContext.Size);
             return ensure.ToResult<T>();
+        }
 
         if (_operationRetryPolicy != null)
         {
             return await _operationRetryPolicy
-                .ExecuteAsync(_ => ExecuteOperationAsync(operation, ct), ct)
+                .ExecuteAsync(_ => ExecuteOperationAsync(operation, opContext, ct), ct)
                 .ConfigureAwait(false);
         }
 
-        return await ExecuteOperationAsync(operation, ct).ConfigureAwait(false);
+        return await ExecuteOperationAsync(operation, opContext, ct).ConfigureAwait(false);
     }
 
-    private async Task<Result<T>> ExecuteDirectAsync<T>(
+    private async Task<Result<T>> ExecuteOperationAsync<T>(
         Func<T> operation,
-        int size,
-        string opName,
+        OperationContext opContext,
         CancellationToken ct)
-    {
-        using var _ = MetricsStopwatch.Start($"{opName} {size} reg", _logger);
-        return await ExecuteOperationAsync(operation, ct).ConfigureAwait(false);
-    }
-
-    private async Task<Result<T>> ExecuteOperationAsync<T>(Func<T> operation, CancellationToken ct)
     {
         try
         {
             var result = await Task.Run(operation, ct).ConfigureAwait(false);
             return Result.Ok(result);
         }
-        catch (Exception ex) when (ex is IOException or SocketException)
+        catch (Exception ex) when (ex is IOException or SocketException or ConnectionException)
         {
-            DisconnectInternal();
-            _logger.LogError(ex, "Communication error during PLC operation");
-            return Fail(Codes.PlcTimeout, ex.Message).ToResult<T>();
+            _connectionManager.Disconnect("operation_error");
+            _logger.LogError(ex,
+                "Communication error [{OperationId}]: {Type} addr={Address} size={Size} conn=[{ConnectionId}] exception=[{ExceptionType}]",
+                opContext.OperationId, opContext.Type, opContext.Address, opContext.Size,
+                opContext.ConnectionId, ex.GetType().Name);
+            return Result.Fail(new Error(ex.Message).WithMetadata(nameof(Codes), Codes.PlcTimeout)).ToResult<T>();
         }
         catch (ModbusException mex)
         {
-            DisconnectInternal();
-            _logger.LogError(mex, "PLC operation failed");
-            return Fail(Codes.PlcReadFailed, mex.Message).ToResult<T>();
+            _connectionManager.Disconnect("operation_error");
+            _logger.LogError(mex,
+                "PLC operation failed [{OperationId}]: {Type} addr={Address} size={Size} conn=[{ConnectionId}]",
+                opContext.OperationId, opContext.Type, opContext.Address, opContext.Size,
+                opContext.ConnectionId);
+            return Result.Fail(new Error(mex.Message).WithMetadata(nameof(Codes), Codes.PlcReadFailed)).ToResult<T>();
         }
     }
-
-    private void DisconnectInternal()
-    {
-        try
-        {
-            if (_client?.Connected == true)
-            {
-                _client.Disconnect();
-                _logger.LogDebug("PLC disconnected");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Error on disconnect: {Message}", ex.Message);
-        }
-        finally
-        {
-            _client = null;
-            _lastConnectionString = null;
-        }
-    }
-
-    private static Result Fail(Codes code, string message) =>
-        Result.Fail(new Error(message).WithMetadata(nameof(Codes), code));
 }

@@ -29,8 +29,6 @@ public partial class MbeTableFB
             _runtimeState = _serviceProvider.GetRequiredService<IRecipeRuntimeState>();
             _actionTargetProvider = _serviceProvider.GetRequiredService<IActionTargetProvider>();
 
-            // Activate bridge so it subscribes to runtime state events
-            _ = _serviceProvider.GetRequiredService<PlcUiStateBridge>();
             _timerService.TimesUpdated += OnTimesUpdated;
         }
         catch (Exception ex)

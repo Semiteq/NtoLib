@@ -9,8 +9,6 @@ namespace NtoLib.Recipes.MbeTable.ResultsExtension;
 
 public static class ResultBox
 {
-    private const string CodeMetadataKey = "Code";
-
     public static Result Ok()
     {
         return Result.Ok();
@@ -23,12 +21,12 @@ public static class ResultBox
 
     public static Result Fail(Codes code)
     {
-        return Result.Fail(new Error(string.Empty).WithMetadata(CodeMetadataKey, code));
+        return Result.Fail(new Error(string.Empty).WithMetadata(nameof(Codes), code));
     }
 
     public static Result<T> Fail<T>(Codes code)
     {
-        return Result.Fail<T>(new Error(string.Empty).WithMetadata(CodeMetadataKey, code));
+        return Result.Fail<T>(new Error(string.Empty).WithMetadata(nameof(Codes), code));
     }
 
     public static Result Warn(Codes code)
@@ -49,9 +47,7 @@ public static class ResultBox
             return true;
         }
 
-        if (reason?.Metadata != null &&
-            reason.Metadata.TryGetValue(CodeMetadataKey, out var value) &&
-            value is Codes c)
+        if (reason.Metadata?.TryGetValue(nameof(Codes), out var value) == true && value is Codes c)
         {
             code = c;
             return true;

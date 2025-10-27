@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using FluentResults;
 
@@ -20,12 +21,13 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     private readonly RecipeStructureValidator _structureValidator;
     private readonly RecipeLoopValidator _loopValidator;
     private readonly RecipeTimeCalculator _timeCalculator;
+    private readonly ErrorDefinitionRegistry _errorRegistry;
+    private readonly ILogger<RecipeAttributesService> _logger;
 
     private IReadOnlyDictionary<int, int> _loopNestingLevels;
     private IReadOnlyDictionary<int, TimeSpan> _stepStartTimes;
     private TimeSpan _totalDuration;
     private bool _isValid;
-    private readonly ILogger<RecipeAttributesService> _logger;
 
     public event Action<bool>? ValidationStateChanged;
 
@@ -33,11 +35,13 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         RecipeStructureValidator structureValidator,
         RecipeLoopValidator loopValidator,
         RecipeTimeCalculator timeCalculator,
+        ErrorDefinitionRegistry errorRegistry,
         ILogger<RecipeAttributesService> logger)
     {
         _structureValidator = structureValidator ?? throw new ArgumentNullException(nameof(structureValidator));
         _loopValidator = loopValidator ?? throw new ArgumentNullException(nameof(loopValidator));
         _timeCalculator = timeCalculator ?? throw new ArgumentNullException(nameof(timeCalculator));
+        _errorRegistry = errorRegistry ?? throw new ArgumentNullException(nameof(errorRegistry));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _loopNestingLevels = new Dictionary<int, int>();
@@ -53,47 +57,41 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         var structureResult = _structureValidator.Validate(recipe);
         if (structureResult.IsFailed)
         {
-            ResetToInvalidState();
-            NotifyValidationStateChanged(previousValidState);
+            ResetToInvalidState(previousValidState);
             return structureResult;
         }
 
         var loopResult = _loopValidator.Validate(recipe);
         if (loopResult.IsFailed)
         {
-            ResetToInvalidState();
-            NotifyValidationStateChanged(previousValidState);
+            ResetToInvalidState(previousValidState);
             return loopResult.ToResult();
         }
-
         _loopNestingLevels = loopResult.Value;
 
         var timeResult = _timeCalculator.Calculate(recipe);
         if (timeResult.IsFailed)
         {
-            ResetToInvalidState();
-            NotifyValidationStateChanged(previousValidState);
+            ResetToInvalidState(previousValidState);
             return timeResult.ToResult();
         }
-
-        _totalDuration = timeResult.Value.Item1;
-        _stepStartTimes = timeResult.Value.Item2;
-
-        var reasons = new List<IReason>();
-        if (loopResult.Reasons.Count > 0)
-            reasons.AddRange(loopResult.Reasons);
-        if (timeResult.Reasons.Count > 0)
-            reasons.AddRange(timeResult.Reasons);
-
-        _isValid = !ContainsCoreForLoopError(reasons);
+        (_totalDuration, _stepStartTimes) = timeResult.Value;
         
+        var allReasons = loopResult.Reasons.Concat(timeResult.Reasons).ToList();
+
+        _isValid = !allReasons
+            .Select(reason => reason.TryGetCode(out var code) ? code : Codes.UnknownError)
+            .Any(code => _errorRegistry.Blocks(code, BlockingScope.SaveAndSend));
+
         NotifyValidationStateChanged(previousValidState);
 
-        var ok = Result.Ok();
-        if (reasons.Count > 0)
-            ok = ok.WithReasons(reasons);
+        var finalResult = Result.Ok();
+        if (allReasons.Any())
+        {
+            finalResult.WithReasons(allReasons);
+        }
 
-        return ok;
+        return finalResult;
     }
 
     public Result<int> GetLoopNestingLevel(int stepIndex)
@@ -122,12 +120,13 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
 
     public bool IsValid() => _isValid;
 
-    private void ResetToInvalidState()
+    private void ResetToInvalidState(bool previousState)
     {
         _isValid = false;
         _loopNestingLevels = new Dictionary<int, int>();
         _stepStartTimes = new Dictionary<int, TimeSpan>();
         _totalDuration = TimeSpan.Zero;
+        NotifyValidationStateChanged(previousState);
     }
 
     private void NotifyValidationStateChanged(bool previousState)
@@ -136,16 +135,5 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         {
             ValidationStateChanged?.Invoke(_isValid);
         }
-    }
-
-    private static bool ContainsCoreForLoopError(IEnumerable<IReason> reasons)
-    {
-        foreach (var reason in reasons)
-        {
-            if (reason.TryGetCode(out var code) && code == Codes.CoreForLoopError)
-                return true;
-        }
-
-        return false;
     }
 }

@@ -37,7 +37,7 @@ public sealed class ModbusTcpService : IModbusTcpService
 
     public async Task<Result> SendRecipeAsync(Recipe recipe)
     {
-        if (recipe is null) return Result.Fail("Recipe is null.");
+        if (recipe is null) return ResultBox.Fail(Codes.CoreInvalidOperation);
 
         var sendResult = await _plcService.SendAsync(recipe, CancellationToken.None);
         if (sendResult.IsFailed) return sendResult;
@@ -63,7 +63,7 @@ public sealed class ModbusTcpService : IModbusTcpService
 
         var (intData, floatData, rowCount) = readResult.Value;
         
-        if (rowCount == 0) return Result.Ok().WithReason(new ValidationIssue(Codes.PlcZeroRowsRead));
+        if (rowCount == 0) return Result.Ok(Recipe.Empty).WithReason(new ValidationIssue(Codes.PlcZeroRowsRead));
         
         var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
         return assembleResult;

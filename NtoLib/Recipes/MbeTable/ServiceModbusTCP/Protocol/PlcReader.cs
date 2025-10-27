@@ -12,7 +12,7 @@ using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 
-internal sealed class PlcProtocol : IPlcProtocol
+internal sealed class PlcReader : IPlcReader
 {
     private const int ChunkSize = 123;
     private const int OffsetRowCount = 1;
@@ -20,13 +20,13 @@ internal sealed class PlcProtocol : IPlcProtocol
     private readonly IModbusTransport _transport;
     private readonly IModbusChunkHandler _chunkHandler;
     private readonly IRuntimeOptionsProvider _optionsProvider;
-    private readonly ILogger<PlcProtocol> _logger;
+    private readonly ILogger<PlcReader> _logger;
 
-    public PlcProtocol(
+    public PlcReader(
         IModbusTransport transport,
         IModbusChunkHandler chunkHandler,
         IRuntimeOptionsProvider optionsProvider,
-        ILogger<PlcProtocol> logger)
+        ILogger<PlcReader> logger)
     {
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         _chunkHandler = chunkHandler ?? throw new ArgumentNullException(nameof(chunkHandler));
@@ -34,58 +34,23 @@ internal sealed class PlcProtocol : IPlcProtocol
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<Result> WriteAllAreasAsync(
-        int[] intData, int[] floatData, int rowCount, CancellationToken ct)
-    {
-        using var _ = MetricsStopwatch.Start("WriteAllAreas", _logger);
-        
-        var settings = _optionsProvider.GetCurrent();
-
-        _logger.LogTrace("Int data length: {IntDataLength}", intData.Length);
-        if (intData.Length > 0)
-        {
-            _logger.LogTrace("Writing {IntDataCount} int registers to address {IntBaseAddr}", 
-                intData.Length, settings.IntBaseAddr);
-            var result = await _chunkHandler.WriteChunkedAsync(
-                _transport, settings.IntBaseAddr, intData, ChunkSize, ct)
-                .ConfigureAwait(false);
-            if (result.IsFailed) return result;
-        }
-
-        _logger.LogTrace("Float data length: {FloatDataLength}", floatData.Length);
-        if (floatData.Length > 0)
-        {
-            _logger.LogTrace("Writing {FloatDataCount} float registers to address {FloatBaseAddr}", 
-                floatData.Length, settings.FloatBaseAddr);
-            var result = await _chunkHandler.WriteChunkedAsync(
-                _transport, settings.FloatBaseAddr, floatData, ChunkSize, ct)
-                .ConfigureAwait(false);
-            if (result.IsFailed) return result;
-        }
-
-        _logger.LogTrace("Writing row count {RowCount} to address {ControlRegister}", 
-            rowCount, settings.ControlRegister + OffsetRowCount);
-        return await _transport.WriteHoldingAsync(
-            settings.ControlRegister + OffsetRowCount,
-            new[] { rowCount }, ct).ConfigureAwait(false);
-    }
-
     public async Task<Result<int>> ReadRowCountAsync(CancellationToken ct)
     {
         var settings = _optionsProvider.GetCurrent();
-        
-        _logger.LogTrace("Reading row count from address {ControlRegister}", 
+
+        _logger.LogTrace("Reading row count from address {Address}",
             settings.ControlRegister + OffsetRowCount);
+
         var result = await _transport
             .ReadHoldingAsync(settings.ControlRegister + OffsetRowCount, 1, ct)
             .ConfigureAwait(false);
-        
+
         if (result.IsFailed)
             return result.ToResult<int>();
 
         var value = result.Value[0];
         _logger.LogTrace("Read row count: {RowCount}", value);
-        
+
         return value < 0
             ? Result.Fail(new Error($"Invalid row count: {value}")
                 .WithMetadata(nameof(Codes), Codes.PlcReadFailed))
@@ -96,11 +61,11 @@ internal sealed class PlcProtocol : IPlcProtocol
     {
         if (registers == 0)
             return Result.Ok(Array.Empty<int>());
-        
+
         var settings = _optionsProvider.GetCurrent();
-        _logger.LogTrace("Reading {Registers} int registers from address {IntBaseAddr}", 
+        _logger.LogTrace("Reading {Registers} int registers from address {Address}",
             registers, settings.IntBaseAddr);
-        
+
         return await _chunkHandler.ReadChunkedAsync(
             _transport, settings.IntBaseAddr, registers, ChunkSize, ct)
             .ConfigureAwait(false);
@@ -110,11 +75,11 @@ internal sealed class PlcProtocol : IPlcProtocol
     {
         if (registers == 0)
             return Result.Ok(Array.Empty<int>());
-        
+
         var settings = _optionsProvider.GetCurrent();
-        _logger.LogTrace("Reading {Registers} float registers from address {FloatBaseAddr}", 
+        _logger.LogTrace("Reading {Registers} float registers from address {Address}",
             registers, settings.FloatBaseAddr);
-        
+
         return await _chunkHandler.ReadChunkedAsync(
             _transport, settings.FloatBaseAddr, registers, ChunkSize, ct)
             .ConfigureAwait(false);
