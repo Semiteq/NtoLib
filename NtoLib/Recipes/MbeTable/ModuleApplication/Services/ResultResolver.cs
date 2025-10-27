@@ -4,9 +4,8 @@ using System.Text;
 
 using FluentResults;
 
-using Microsoft.Extensions.Logging;
-
-using NtoLib.Recipes.MbeTable.Errors;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Services;
@@ -14,171 +13,121 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 public sealed class ResultResolver
 {
     private readonly IStatusService _status;
-    private readonly ILogger<ResultResolver> _logger;
-    private readonly IErrorCatalog _catalog;
+    private readonly ErrorDefinitionRegistry _registry;
 
-    public ResultResolver(IStatusService statusService,
-        ILogger<ResultResolver> logger,
-        IErrorCatalog catalog)
+    public ResultResolver(
+        IStatusService statusService,
+        ErrorDefinitionRegistry registry)
     {
         _status = statusService ?? throw new ArgumentNullException(nameof(statusService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
     }
 
-    public void Resolve(Result result, ResolveOptions options)
+    public void Resolve(Result result, string operation, string successMessage = null)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
-        if (options == null) throw new ArgumentNullException(nameof(options));
+        if (string.IsNullOrWhiteSpace(operation)) throw new ArgumentException("Operation cannot be empty", nameof(operation));
 
-        if (result.IsFailed)
+        switch (result.GetStatus())
         {
-            HandleError(result, options);
+            case ResultStatus.Failure:
+                HandleFailure(result, operation);
+                break;
+
+            case ResultStatus.Warning:
+                HandleWarning(result, operation);
+                break;
+
+            case ResultStatus.Success:
+                HandleSuccess(successMessage);
+                break;
+
+            default:
+                throw new InvalidOperationException("Unknown result status");
+        }
+    }
+
+    public void Resolve<T>(Result<T> result, string operation, string successMessage = null)
+    {
+        if (result == null) throw new ArgumentNullException(nameof(result));
+        Resolve(result.ToResult(), operation, successMessage);
+    }
+
+    private void HandleFailure(Result result, string operation)
+    {
+        if (!result.TryGetCode(out var code))
+        {
+            _status.ShowError($"Не удалось {operation}");
             return;
         }
 
-        if (HasReasons(result))
+        var definition = _registry.GetDefinition(code);
+        _status.ShowError($"[{(int)code}] {definition.Message}");
+    }
+
+    private void HandleWarning(Result result, string operation)
+    {
+        if (!result.TryGetCode(out var code))
         {
-            HandleWarning(result, options);
+            _status.ShowWarning($"{ToSentence(operation)} завершена с предупреждением");
             return;
         }
 
-        if (!options.SilentOnPureSuccess)
+        var definition = _registry.GetDefinition(code);
+        _status.ShowWarning($"{ToSentence(operation)} завершена с предупреждением: [{(int)code}] {definition.Message}");
+    }
+
+    private void HandleSuccess(string successMessage)
+    {
+        _status.Clear();
+        
+        if (!string.IsNullOrWhiteSpace(successMessage))
         {
-            var msg = $"{ToSentence(options.SuccessMessage)}";
-            _status.ShowInfo(msg);
-            _logger.LogInformation("{Operation} succeeded", options.Operation);
+            _status.ShowInfo(ToSentence(successMessage));
         }
     }
 
-    public void Resolve<T>(Result<T> result, ResolveOptions options)
+    private static string ToSentence(string text)
     {
-        if (result == null) throw new ArgumentNullException(nameof(result));
-        Resolve(result.ToResult(), options);
+        if (string.IsNullOrWhiteSpace(text)) return "Операция";
+        return char.ToUpperInvariant(text[0]) + text.Substring(1);
     }
 
-    private void HandleError(Result result, ResolveOptions options)
-    {
-        var hasCode = result.TryGetCode(out var code);
-        var uiText = hasCode
-            ? $"[{(int)code}] {_catalog.GetMessageOrDefault(code)}"
-            : $"Не удалось {options.Operation}";
-
-        _status.ShowError(uiText);
-
-        var logDetails = BuildDetailedFailureLog(result);
-        if (hasCode)
-        {
-            _logger.LogError("Failed to {Operation}. Code={Code} ({CodeInt}). Details: {Details}",
-                options.Operation, code, (int)code, logDetails);
-        }
-        else
-        {
-            _logger.LogError("Failed to {Operation}. Details: {Details}", options.Operation, logDetails);
-        }
-    }
-
-    private void HandleWarning(Result result, ResolveOptions options)
-    {
-        var warningMessage = TryGetWarningMessageFromCatalog(result)
-                             ?? TryGetWarningMessageFromSuccesses(result)
-                             ?? "Завершена с предупреждением";
-
-        var uiText = $"{ToSentence(options.Operation)} завершена с предупреждением: {warningMessage}";
-        _status.ShowWarning(uiText);
-
-        var details = BuildDetailedReasonsLog(result);
-        _logger.LogWarning("{Operation} completed with warnings. Details: {Details}", options.Operation, details);
-    }
-
-    private string? TryGetWarningMessageFromCatalog(Result result)
-    {
-        try
-        {
-            var firstSuccess = result.Successes.FirstOrDefault();
-            if (firstSuccess?.Metadata.TryGetValue(nameof(Codes), out var metadataCode) == true
-                && metadataCode is Codes code
-                && _catalog.TryGetMessage(code, out var catalogMessage))
-            {
-                return catalogMessage;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Failed to retrieve warning message from catalog metadata");
-        }
-
-        return null;
-    }
-
-    private static string? TryGetWarningMessageFromSuccesses(Result result)
-    {
-        return result.Successes.FirstOrDefault()?.Message;
-    }
-
-
-    private static bool HasReasons(Result result)
-    {
-        return result.IsSuccess && result.Reasons.Count > 0;
-    }
-
-    private static string ToSentence(string operation)
-    {
-        if (string.IsNullOrWhiteSpace(operation)) return "Операция";
-        return char.ToUpperInvariant(operation[0]) + operation.Substring(1);
-    }
-
-    private static string BuildDetailedFailureLog(Result result)
+    private static string BuildDetails(Result result)
     {
         var sb = new StringBuilder();
 
         if (result.Errors.Count > 0)
         {
             sb.Append("Errors=[");
-            sb.Append(string.Join(" | ", result.Errors.Select(e => e.Message)));
+            sb.Append(string.Join(" | ", result.Errors.Select(FormatReason)));
             sb.Append(']');
         }
 
-        if (result.Reasons.Count > 0)
+        var warnings = result.Reasons.Where(r => r is ValidationIssue).ToList();
+        if (warnings.Count > 0)
         {
             if (sb.Length > 0) sb.Append(' ');
-            sb.Append("Reasons=[");
-            sb.Append(string.Join(" | ", result.Reasons.Select(r => r.Message)));
-            sb.Append(']');
-        }
-
-        var allMeta = result.Reasons.SelectMany(r => r.Metadata).ToList();
-        if (allMeta.Count > 0)
-        {
-            if (sb.Length > 0) sb.Append(' ');
-            sb.Append("Metadata=[");
-            sb.Append(string.Join(", ", allMeta.Select(kv => $"{kv.Key}={kv.Value}")));
+            sb.Append("Warnings=[");
+            sb.Append(string.Join(" | ", warnings.Select(FormatReason)));
             sb.Append(']');
         }
 
         return sb.Length > 0 ? sb.ToString() : "No details available";
     }
 
-    private static string BuildDetailedReasonsLog(Result result)
+    private static string FormatReason(IReason reason)
     {
-        var sb = new StringBuilder();
+        if (!reason.TryGetCode(out var code))
+            return "Unknown";
 
-        if (result.Reasons.Count > 0)
-        {
-            sb.Append("Reasons=[");
-            sb.Append(string.Join(" | ", result.Reasons.Select(r => r.Message)));
-            sb.Append(']');
-        }
+        var metadata = reason.Metadata
+            .Where(kv => kv.Key != "Code" && kv.Key != "Codes")
+            .Select(kv => $"{kv.Key}={kv.Value}");
 
-        var allMeta = result.Reasons.SelectMany(r => r.Metadata).ToList();
-        if (allMeta.Count > 0)
-        {
-            if (sb.Length > 0) sb.Append(' ');
-            sb.Append("Metadata=[");
-            sb.Append(string.Join(", ", allMeta.Select(kv => $"{kv.Key}={kv.Value}")));
-            sb.Append(']');
-        }
-
-        return sb.Length > 0 ? sb.ToString() : "No details available";
+        var meta = string.Join(", ", metadata);
+        return meta.Length > 0 
+            ? $"Code={code}({(int)code}) {meta}" 
+            : $"Code={code}({(int)code})";
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 
@@ -21,7 +21,7 @@ public static class ValidationCheck
         if (string.IsNullOrWhiteSpace(value))
         {
             return Result.Fail(new Error($"{context}: Field '{fieldName}' is empty or missing.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName));
         }
@@ -37,7 +37,7 @@ public static class ValidationCheck
         if (value <= 0)
         {
             return Result.Fail(new Error($"{context}: Field '{fieldName}' must be greater than zero. Actual: {value}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName)
                 .WithMetadata("value", value.ToString()));
@@ -54,7 +54,7 @@ public static class ValidationCheck
         if (!set.Add(value))
         {
             return Result.Fail(new Error($"{context}: Duplicate value for '{fieldName}': '{value}'.")
-                .WithMetadata("code", Codes.ConfigDuplicateValue)
+                .WithMetadata(nameof(Codes), Codes.ConfigDuplicateValue)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName)
                 .WithMetadata("value", value.ToString() ?? "null"));
@@ -71,7 +71,7 @@ public static class ValidationCheck
         if (!existingSet.Contains(value))
         {
             return Result.Fail(new Error($"{context}: Reference '{fieldName}' with value '{value}' does not exist.")
-                .WithMetadata("code", Codes.ConfigMissingReference)
+                .WithMetadata(nameof(Codes), Codes.ConfigMissingReference)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName)
                 .WithMetadata("value", value?.ToString() ?? "null"));
@@ -88,7 +88,7 @@ public static class ValidationCheck
         if (value < min || value > max)
         {
             return Result.Fail(new Error($"{context}: Field '{fieldName}' must be between {min} and {max}. Actual: {value}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName)
                 .WithMetadata("value", value.ToString())
@@ -107,7 +107,7 @@ public static class ValidationCheck
         if (string.IsNullOrWhiteSpace(value))
         {
             return Result.Fail(new Error($"{context}: Field '{fieldName}' is empty.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName));
         }
@@ -116,7 +116,7 @@ public static class ValidationCheck
         {
             var allowedValues = string.Join(", ", Enum.GetNames(typeof(TEnum)));
             return Result.Fail(new Error($"{context}: Field '{fieldName}' has invalid value '{value}'. Allowed: {allowedValues}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName)
                 .WithMetadata("value", value)
@@ -134,7 +134,7 @@ public static class ValidationCheck
         if (string.IsNullOrWhiteSpace(value))
         {
             return Result.Fail(new Error($"{context}: Field '{fieldName}' is empty.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName));
         }
@@ -143,7 +143,7 @@ public static class ValidationCheck
         {
             var allowed = string.Join(", ", allowedValues);
             return Result.Fail(new Error($"{context}: Field '{fieldName}' has invalid value '{value}'. Allowed: {allowed}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName)
                 .WithMetadata("value", value)
@@ -161,7 +161,7 @@ public static class ValidationCheck
         if (collection == null || collection.Count == 0)
         {
             return Result.Fail(new Error($"{context}: Collection is empty or null.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context));
         }
 
@@ -176,7 +176,7 @@ public static class ValidationCheck
         if (value == null)
         {
             return Result.Fail(new Error($"{context}: Field '{fieldName}' is null.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("field", fieldName));
         }
@@ -195,7 +195,7 @@ public static class ValidationCheck
             {
                 // todo: remove?
                 return Result.Fail(new Error($"{context}, Column '{columnKey}': Width=-1 is only allowed for 'comment' column.")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("context", context)
                     .WithMetadata("columnKey", columnKey)
                     .WithMetadata("width", width.ToString()));
@@ -206,7 +206,7 @@ public static class ValidationCheck
         if (width <= 2)
         {
             return Result.Fail(new Error($"{context}, Column '{columnKey}': Width must be > 2 or -1. Actual: {width}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("columnKey", columnKey)
                 .WithMetadata("width", width.ToString()));
@@ -223,7 +223,7 @@ public static class ValidationCheck
         if (minWidth <= 2)
         {
             return Result.Fail(new Error($"{context}, Column '{columnKey}': MinWidth must be > 2. Actual: {minWidth}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("columnKey", columnKey)
                 .WithMetadata("minWidth", minWidth.ToString()));

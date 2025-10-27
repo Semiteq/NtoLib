@@ -4,10 +4,10 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Actions;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
@@ -85,7 +85,7 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
         if (!Enum.TryParse<DeployDuration>(action.DeployDuration, ignoreCase: true, out _))
         {
             return Result.Fail(new Error($"{context}: Unknown deploy_duration '{action.DeployDuration}'. Allowed: Immediate, LongLasting.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("deployDuration", action.DeployDuration));
         }
@@ -129,7 +129,7 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
         if (string.IsNullOrWhiteSpace(column.GroupName))
         {
             return Result.Fail(new Error($"{context}: Column with property_type_id='Enum' must have a 'group_name'.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("columnKey", column.Key)
                 .WithMetadata("propertyTypeId", column.PropertyTypeId));
@@ -149,7 +149,7 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
         if (!hasStepDuration)
         {
             return Result.Fail(new Error($"{context}: Action with deploy_duration='LongLasting' must include column 'step_duration'.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("deployDuration", action.DeployDuration));
         }

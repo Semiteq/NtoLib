@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using FluentResults;
 
-using Microsoft.Extensions.Logging;
-
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
@@ -21,11 +19,6 @@ public class RecipeLoopValidator
     private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;
     private const int MaxLoopDepth = 3;
 
-    /// <summary>
-    /// Calculates the nesting level for each step and validates the overall loop structure.
-    /// </summary>
-    /// <param name="recipe">The recipe to analyze.</param>
-    /// <returns>A result object containing nesting levels or a validation error.</returns>
     public Result<IReadOnlyDictionary<int, int>> Validate(Recipe recipe)
     {
         var nestingLevels = new Dictionary<int, int>();
@@ -98,26 +91,20 @@ public class RecipeLoopValidator
 
     private static Result<IReadOnlyDictionary<int, int>> CreateMaxDepthExceededError(int stepIndex)
     {
-        var error = new Error($"Exceeded max loop depth of {MaxLoopDepth}.")
-            .WithMetadata("code", Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex);
-        return Result.Fail(error);
+        return Result.Ok<IReadOnlyDictionary<int, int>>(new Dictionary<int, int>())
+            .WithReason(new ValidationIssue(Codes.CoreExeedForLoopDepth).WithMetadata("stepIndex", stepIndex));
     }
 
     private static Result<IReadOnlyDictionary<int, int>> CreateUnmatchedEndForLoopError(int stepIndex)
     {
-        var error = new Error("Unmatched 'EndForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex);
-        return Result.Fail(error);
+        return Result.Ok<IReadOnlyDictionary<int, int>>(new Dictionary<int, int>())
+            .WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", stepIndex));
     }
 
     private static Result<IReadOnlyDictionary<int, int>> CreateUnmatchedForLoopError(int stepIndex)
     {
-        var error = new Error("Unmatched 'ForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex);
-        return Result.Fail(error);
+        return Result.Ok<IReadOnlyDictionary<int, int>>(new Dictionary<int, int>())
+            .WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", stepIndex));
     }
 
     private static Result<Property> GetActionPropertyIfExistsInStep(Step step)
@@ -125,7 +112,7 @@ public class RecipeLoopValidator
         if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
         {
             var error = new Error("Step does not have an action property.")
-                .WithMetadata("code", Codes.CoreActionNotFound);
+                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound);
             return Result.Fail(error);
         }
         return Result.Ok(actionProperty);

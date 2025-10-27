@@ -6,8 +6,8 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;

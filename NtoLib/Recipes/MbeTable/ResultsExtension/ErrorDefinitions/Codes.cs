@@ -1,4 +1,4 @@
-﻿namespace NtoLib.Recipes.MbeTable.Errors;
+﻿namespace NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 public enum Codes
 {
@@ -20,6 +20,7 @@ public enum Codes
     PlcCapacityExceeded = 3006,
     PlcVerificationFailed = 3007,
     PlcZeroRowsRead = 3008,
+    PlcFailedToPing = 3009,
 
     // === CSV (4xxx) ===
     CsvInvalidData = 4001,
@@ -41,6 +42,7 @@ public enum Codes
     CoreValidationFailed = 6007,
     CoreForLoopError = 6008,
     CoreInvalidStepDuration = 6009,
+    CoreExeedForLoopDepth = 6010,
 
     // === Properties (7xxx) ===
     PropertyConversionFailed = 7001,

@@ -5,11 +5,11 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -79,7 +79,7 @@ public sealed class StepBuilder
         if (propertyResult.IsFailed)
         {
             return Result.Fail<StepBuilder>(new Error($"Failed to set property '{key.Value}'")
-                .WithMetadata("code", Codes.PropertyValueInvalid)
+                .WithMetadata(nameof(Codes), Codes.PropertyValueInvalid)
                 .WithMetadata("propertyKey", key.Value)
                 .CausedBy(propertyResult.Errors));
         }
@@ -124,7 +124,7 @@ public sealed class StepBuilder
         catch (Exception ex)
         {
             return Result.Fail(new Error(ex.Message)
-                .WithMetadata("code", Codes.PropertyValueInvalid));
+                .WithMetadata(nameof(Codes), Codes.PropertyValueInvalid));
         }
     }
 
@@ -163,7 +163,7 @@ public sealed class StepBuilder
         {
             return Result.Fail<object>(
                     new Error($"Invalid default value '{column.DefaultValue}' for column '{column.Key}'")
-                        .WithMetadata("code", Codes.PropertyValueInvalid))
+                        .WithMetadata(nameof(Codes), Codes.PropertyValueInvalid))
                 .WithErrors(parseResult.Errors);
         }
 
@@ -178,7 +178,7 @@ public sealed class StepBuilder
             Type t when t == typeof(float) => Result.Ok<object>(0f),
             Type t when t == typeof(short) => Result.Ok<object>((short)0),
             _ => Result.Fail<object>(new Error($"No default value defined for type '{systemType.Name}'")
-                .WithMetadata("code", Codes.PropertyValueInvalid))
+                .WithMetadata(nameof(Codes), Codes.PropertyValueInvalid))
         };
     }
 
@@ -192,7 +192,7 @@ public sealed class StepBuilder
         catch (Exception ex)
         {
             return Result.Fail(new Error(ex.Message)
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("propertyKey", key.Value)
                 .WithMetadata("propertyTypeId", propertyTypeId));
         }

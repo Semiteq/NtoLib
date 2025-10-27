@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,21 +11,21 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 using Polly;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
-internal sealed class ModbusTransport : IModbusTransport
+internal sealed class ModbusTransport : IModbusTransport, IDisposable
 {
     private readonly IRuntimeOptionsProvider _optionsProvider;
     private readonly ILogger<ModbusTransport> _logger;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
     private readonly SemaphoreSlim _operationLock = new(1, 1);
 
-    private AsyncPolicy? _retryPolicy;
+    private AsyncPolicy? _connectRetryPolicy;
     private AsyncPolicy? _operationRetryPolicy;
     private ModbusClient? _client;
     private string? _lastConnectionString;
@@ -56,26 +55,21 @@ internal sealed class ModbusTransport : IModbusTransport
 
             if (_client?.Connected == true)
             {
-                var pingRes = await TryPingDirectAsync(settings, ct).ConfigureAwait(false);
-                if (pingRes.IsSuccess)
+                var validateRes = await ValidateMagicNumberAsync(settings, ct).ConfigureAwait(false);
+                if (validateRes.IsSuccess)
                     return Result.Ok();
 
                 DisconnectInternal();
             }
 
-            _retryPolicy = PollyPolicyFactory.Create(settings.MaxRetries, settings.BackoffDelayMs, _logger);
-            _operationRetryPolicy = PollyPolicyFactory.CreateOperationPolicy(2, settings.BackoffDelayMs, _logger);
+            _connectRetryPolicy = PollyPolicyFactory.Create(settings.MaxRetries, settings.BackoffDelayMs, _logger);
+            _operationRetryPolicy = PollyPolicyFactory.CreateOperationPolicy(settings.MaxRetries, settings.BackoffDelayMs, _logger);
 
-            _client = new ModbusClient(settings.IpAddress.ToString(), settings.Port)
-            {
-                UnitIdentifier = settings.UnitId,
-                ConnectionTimeout = settings.TimeoutMs
-            };
-
+            InitializeClient(settings);
             _lastConnectionString = currentConnectionString;
 
-            return await _retryPolicy
-                .ExecuteAsync(_ => ConnectAndPingAsync(settings, ct), ct)
+            return await _connectRetryPolicy
+                .ExecuteAsync(_ => ConnectAndValidateAsync(settings, ct), ct)
                 .ConfigureAwait(false);
         }
         finally
@@ -90,9 +84,9 @@ internal sealed class ModbusTransport : IModbusTransport
         try
         {
             return await ExecuteWithRetryAsync(
-                () => _client!.ReadHoldingRegisters(address, length), 
-                length, 
-                "Read", 
+                () => _client!.ReadHoldingRegisters(address, length),
+                length,
+                "Read",
                 ct).ConfigureAwait(false);
         }
         finally
@@ -129,41 +123,52 @@ internal sealed class ModbusTransport : IModbusTransport
         _operationLock.Dispose();
     }
 
-    private async Task<Result> ConnectAndPingAsync(RuntimeOptions settings, CancellationToken ct)
+    private void InitializeClient(RuntimeOptions settings)
+    {
+        _client = new ModbusClient(settings.IpAddress.ToString(), settings.Port)
+        {
+            UnitIdentifier = settings.UnitId,
+            ConnectionTimeout = settings.TimeoutMs
+        };
+    }
+
+    private async Task<Result> ConnectAndValidateAsync(RuntimeOptions settings, CancellationToken ct)
     {
         try
         {
             await Task.Run(_client!.Connect, ct).ConfigureAwait(false);
             _logger.LogDebug("Connected to PLC {Ip}:{Port}", settings.IpAddress, settings.Port);
 
-            return await TryPingDirectAsync(settings, ct).ConfigureAwait(false);
+            return await ValidateMagicNumberAsync(settings, ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or SocketException)
         {
             DisconnectInternal();
-            return Fail(Codes.PlcConnectionFailed, ex.Message);
+            _logger.LogError(ex, "Communication error during PLC connection");
+            return Fail(Codes.PlcFailedToPing, ex.Message);
         }
         catch (ModbusException mex)
         {
             DisconnectInternal();
-            return Fail(Codes.PlcConnectionFailed, mex.Message);
+            _logger.LogError(mex, "PLC connection failed");
+            return Fail(Codes.PlcFailedToPing, mex.Message);
         }
     }
 
-    private async Task<Result> TryPingDirectAsync(RuntimeOptions settings, CancellationToken ct)
+    private async Task<Result> ValidateMagicNumberAsync(RuntimeOptions settings, CancellationToken ct)
     {
-        _logger.LogTrace("Pinging PLC");
+        _logger.LogTrace("Validating PLC magic number");
         try
         {
             var res = await ExecuteDirectAsync(
                 () => _client!.ReadHoldingRegisters(settings.ControlRegister, 1),
-                1, "Ping", ct).ConfigureAwait(false);
+                1, "Validate", ct).ConfigureAwait(false);
 
             if (res.IsFailed)
                 return res.ToResult();
 
             var magicValue = res.Value[0];
-            _logger.LogTrace("Read magic value: {Value}, expecting {Expecting}", magicValue, settings.MagicNumber);
+            _logger.LogTrace("Read magic value: {Value}, expected {Expected}", magicValue, settings.MagicNumber);
 
             if (magicValue != settings.MagicNumber)
             {
@@ -176,10 +181,13 @@ internal sealed class ModbusTransport : IModbusTransport
         catch (Exception ex) when (ex is IOException or SocketException)
         {
             DisconnectInternal();
+            _logger.LogError(ex, "Communication error during PLC validation");
             return Fail(Codes.PlcTimeout, ex.Message);
         }
         catch (ModbusException mex)
         {
+            DisconnectInternal();
+            _logger.LogError(mex, "PLC validation failed");
             return Fail(Codes.PlcReadFailed, mex.Message);
         }
     }
@@ -226,10 +234,13 @@ internal sealed class ModbusTransport : IModbusTransport
         catch (Exception ex) when (ex is IOException or SocketException)
         {
             DisconnectInternal();
+            _logger.LogError(ex, "Communication error during PLC operation");
             return Fail(Codes.PlcTimeout, ex.Message).ToResult<T>();
         }
         catch (ModbusException mex)
         {
+            DisconnectInternal();
+            _logger.LogError(mex, "PLC operation failed");
             return Fail(Codes.PlcReadFailed, mex.Message).ToResult<T>();
         }
     }

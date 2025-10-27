@@ -220,8 +220,12 @@
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
-    <Compile Include="Recipes\MbeTable\Errors\ErrorExtension.cs" />
-    <Compile Include="Recipes\MbeTable\Errors\IErrorCatalog.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\BlockingScope.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\Codes.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\ErrorDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\ErrorDefinitionRegistry.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\ErrorSevirity.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ResultBox.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\IRecipeApplicationService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\CsvService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\ICsvService.cs" />
@@ -283,7 +287,7 @@
     <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\ISectionValidator.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\PinGroupDefsValidator.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\PropertyDefsValidator.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\AttributesService.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\RecipeAttributesService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\IRecipeAttributesService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\RecipeLoopValidator.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\RecipeStructureValidator.cs" />
@@ -319,6 +323,8 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ComboBox\TargetComboBox.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\Text\StepStartTime.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\Text\TextBoxExtension.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ResultStatus.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\ValidationIssue.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Data\CsvDataExtractor.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Data\CsvDataFormatter.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Data\CsvRawData.cs" />
@@ -341,8 +347,6 @@
     <Compile Include="Recipes\MbeTable\ServiceCsv\Parsing\ICsvHeaderBinder.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Parsing\ICsvHelperFactory.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\RecipeFileService.cs" />
-    <Compile Include="Recipes\MbeTable\Errors\Codes.cs" />
-    <Compile Include="Recipes\MbeTable\Errors\ErrorCatalog.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTartget\ActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTartget\IActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\FbPinAccessor.cs" />

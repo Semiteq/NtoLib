@@ -5,7 +5,7 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Errors;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Metadata;

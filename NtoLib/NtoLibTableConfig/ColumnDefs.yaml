@@ -22,6 +22,7 @@
 # (Детальное описание см. в документации)
 # --- End Of Example ---
 
+# Имя команды
 - key: "action"
   ui:
     code: "action"
@@ -36,10 +37,11 @@
       area: "Int"
       index: 0
 
-- key: "target"
+# Канал
+- key: "channel"
   ui:
-    code: "target"
-    ui_name: "Объект"
+    code: "channel"
+    ui_name: "Канал"
     column_type: "action_target_combo_box"
     width: 100
     alignment: 32
@@ -50,10 +52,26 @@
       area: "Int"
       index: 1
 
-- key: "task"
+# Режим
+- key: "mode"
   ui:
-    code: "task"
-    ui_name: "Задание"
+    code: "mode"
+    ui_name: "Режим"
+    column_type: "action_target_combo_box"
+    width: 100
+    alignment: 32
+  business_logic:
+    property_type_id: "Enum"
+    read_only: false
+    plc_mapping:
+      area: "Int"
+      index: 2
+
+# Значение
+- key: "target_value"
+  ui:
+    code: "target_value"
+    ui_name: "Значение"
     column_type: "property_field"
     width: 160
     alignment: 32
@@ -64,10 +82,11 @@
       area: "Float"
       index: 0
 
-- key: "initial_value"
+# Разбавление
+- key: "dilution"
   ui:
-    code: "initial_value"
-    ui_name: "Начальное значение"
+    code: "dilution"
+    ui_name: "Разбавление"
     column_type: "property_field"
     width: 230
     alignment: 32
@@ -78,10 +97,11 @@
       area: "Float"
       index: 1
 
-- key: "speed"
+# Давление
+- key: "pressure"
   ui:
-    code: "speed"
-    ui_name: "Скорость"
+    code: "pressure"
+    ui_name: "Давление"
     column_type: "property_field"
     width: 110
     alignment: 32
@@ -91,6 +111,36 @@
     plc_mapping:
       area: "Float"
       index: 2
+
+# Смешивание
+- key: "mixing"
+  ui:
+    code: "mixing"
+    ui_name: "Смешивание"
+    column_type: "property_field"
+    width: 140
+    alignment: 32
+  business_logic:
+    property_type_id: "Flow"
+    read_only: false
+    plc_mapping:
+      area: "Float"
+      index: 3
+
+# Транспорт
+- key: "transport"
+  ui:
+    code: "transport"
+    ui_name: "Транспорт"
+    column_type: "property_field"
+    width: 120
+    alignment: 32
+  business_logic:
+    property_type_id: "Flow"
+    read_only: false
+    plc_mapping:
+      area: "Float"
+      index: 4
 
 # Время
 - key: "step_duration"
@@ -105,7 +155,7 @@
     read_only: false
     plc_mapping:
       area: "Float"
-      index: 3
+      index: 5
 
 # Время абсолютное
 - key: "step_start_time"

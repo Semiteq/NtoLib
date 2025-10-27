@@ -5,11 +5,11 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 
@@ -58,6 +58,23 @@ public sealed class RecipeViewModel
         }
     }
 
+    public void OnTimeRecalculated(int fromStepIndex)
+    {
+        if (fromStepIndex < 0 || fromStepIndex >= _viewModels.Count)
+            return;
+
+        var recipe = _recipeService.GetCurrentRecipe();
+
+        for (var i = fromStepIndex; i < _viewModels.Count; i++)
+        {
+            var startTimeResult = _recipeService.GetStepStartTime(i);
+            var startTime = startTimeResult.IsSuccess ? startTimeResult.Value : TimeSpan.Zero;
+
+            _viewModels[i].UpdateInPlace(recipe.Steps[i], i, startTime);
+            RowInvalidationRequested?.Invoke(i);
+        }
+    }
+
     public PropertyState GetCellState(int rowIndex, int columnIndex)
     {
         var recipe = _recipeService.GetCurrentRecipe();
@@ -72,7 +89,7 @@ public sealed class RecipeViewModel
         if (rowIndex < 0 || rowIndex >= _viewModels.Count)
         {
             return Result.Fail(new Error("Invalid row index in GetCellValue")
-                .WithMetadata("code", Codes.CoreIndexOutOfRange)
+                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
                 .WithMetadata("rowIndex", rowIndex)
                 .WithMetadata("viewModelsCount", _viewModels.Count));
         }
@@ -80,7 +97,7 @@ public sealed class RecipeViewModel
         if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
         {
             return Result.Fail(new Error("Invalid column index in GetCellValue")
-                .WithMetadata("code", Codes.CoreIndexOutOfRange)
+                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
                 .WithMetadata("columnIndex", columnIndex)
                 .WithMetadata("columnsCount", _tableColumns.Count));
         }
@@ -103,7 +120,8 @@ public sealed class RecipeViewModel
             if (columnDefinition.ReadOnly)
                 return Result.Ok<object?>(null);
 
-            _logger.LogDebug($"GetCellValue failed for row {rowIndex}, column '{columnKey.Value}': property not found but cell is not disabled");
+            _logger.LogDebug("GetCellValue failed for row {RowIndex}, column '{ColumnKey}': property not found but cell is not disabled",
+                rowIndex, columnKey.Value);
             return propertyValueResult;
         }
 

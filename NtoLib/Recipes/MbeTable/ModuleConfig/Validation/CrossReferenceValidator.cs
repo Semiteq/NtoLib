@@ -4,10 +4,10 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Sections;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
@@ -198,7 +198,7 @@ public sealed class CrossReferenceValidator
                 if (readOnlyColumns.Contains(column.Key))
                 {
                     return Result.Fail(new Error($"{context}, ColumnKey='{column.Key}': Cannot set default_value for read_only column.")
-                        .WithMetadata("code", Codes.ConfigInvalidSchema)
+                        .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                         .WithMetadata("context", context)
                         .WithMetadata("columnKey", column.Key));
                 }
@@ -247,7 +247,7 @@ public sealed class CrossReferenceValidator
         if (propertyDefinition.MaxLength.HasValue && defaultValue.Length > propertyDefinition.MaxLength.Value)
         {
             return Result.Fail(new Error($"{context}: default_value exceeds max_length. Value length: {defaultValue.Length}, MaxLength: {propertyDefinition.MaxLength.Value}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("defaultValue", defaultValue)
                 .WithMetadata("maxLength", propertyDefinition.MaxLength.Value.ToString()));
@@ -269,7 +269,7 @@ public sealed class CrossReferenceValidator
             if (!short.TryParse(defaultValue, out var shortValue))
             {
                 return Result.Fail(new Error($"{context}: default_value '{defaultValue}' is not a valid Int16.")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("context", context)
                     .WithMetadata("defaultValue", defaultValue));
             }
@@ -280,7 +280,7 @@ public sealed class CrossReferenceValidator
             if (!int.TryParse(defaultValue, out var intValue))
             {
                 return Result.Fail(new Error($"{context}: default_value '{defaultValue}' is not a valid Int32.")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("context", context)
                     .WithMetadata("defaultValue", defaultValue));
             }
@@ -298,7 +298,7 @@ public sealed class CrossReferenceValidator
         if (!float.TryParse(defaultValue, out var parsedValue))
         {
             return Result.Fail(new Error($"{context}: default_value '{defaultValue}' is not a valid Float.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("defaultValue", defaultValue));
         }
@@ -311,7 +311,7 @@ public sealed class CrossReferenceValidator
         if (propertyDefinition.Min.HasValue && parsedValue < propertyDefinition.Min.Value)
         {
             return Result.Fail(new Error($"{context}: default_value {parsedValue} is less than min {propertyDefinition.Min.Value}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("defaultValue", parsedValue.ToString())
                 .WithMetadata("min", propertyDefinition.Min.Value.ToString()));
@@ -320,7 +320,7 @@ public sealed class CrossReferenceValidator
         if (propertyDefinition.Max.HasValue && parsedValue > propertyDefinition.Max.Value)
         {
             return Result.Fail(new Error($"{context}: default_value {parsedValue} exceeds max {propertyDefinition.Max.Value}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("defaultValue", parsedValue.ToString())
                 .WithMetadata("max", propertyDefinition.Max.Value.ToString()));

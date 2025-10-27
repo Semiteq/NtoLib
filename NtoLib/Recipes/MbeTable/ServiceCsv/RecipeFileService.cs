@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,8 +7,9 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
 using NtoLib.Recipes.MbeTable.ServiceCsv.IO;
@@ -17,9 +17,6 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Metadata;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv;
 
-/// <summary>
-/// Handles raw file I/O operations for recipe CSV files.
-/// </summary>
 public sealed class RecipeFileService : IRecipeFileService
 {
     private readonly ICsvDataExtractor _dataExtractor;
@@ -83,15 +80,13 @@ public sealed class RecipeFileService : IRecipeFileService
         });
     }
 
-
-    /// <returns>Result with Reasons if any errors occured</returns>
     private Result<CsvRawData> ReadRawDataAndCheckIntegrityInternal(string filePath, Encoding? encoding)
     {
         if (!File.Exists(filePath))
         {
             var error = new Error($"File not found: {filePath}")
                 .WithMetadata(nameof(Codes), Codes.IoReadError);
-            _logger.LogError($"Read failed - file not found: {filePath}");
+            _logger.LogError("Read failed - file not found: {FilePath}", filePath);
             return Result.Fail(error);
         }
 
@@ -111,11 +106,11 @@ public sealed class RecipeFileService : IRecipeFileService
             using var bodyReader = new StringReader(bodyText);
 
             var extractedRawData = _dataExtractor.ExtractRawData(bodyReader);
-
-            if (extractedRawData.IsFailed) return extractedRawData;
+            if (extractedRawData.IsFailed) 
+                return extractedRawData;
+            
             var integrityResult = VerifyIntegrity(metadata, extractedRawData.Value);
-
-            // keeping the result with reasons even if mismatch
+            
             return Result.Ok(extractedRawData.Value).WithReasons(integrityResult.Reasons);
         }
         catch (Exception ex)
@@ -156,7 +151,7 @@ public sealed class RecipeFileService : IRecipeFileService
 
             ReplaceFile(tempPath, filePath);
 
-            _logger.LogDebug($"Successfully wrote recipe to: {filePath}");
+            _logger.LogDebug("Successfully wrote recipe to: {FilePath}", filePath);
             return Result.Ok();
         }
         catch (Exception ex)
@@ -190,12 +185,16 @@ public sealed class RecipeFileService : IRecipeFileService
 
         if (metadata.Rows > 0 && metadata.Rows != rawData.Rows.Count)
         {
-            var metainfo = new Success("Row count mismatch")
-                .WithMetadata(nameof(Codes), Codes.IoReadError)
+            _logger.LogWarning(
+                "Row count mismatch. Expected={Expected}, Actual={Actual}", 
+                metadata.Rows, 
+                rawData.Rows.Count);
+
+            var issue = new ValidationIssue(Codes.CsvInvalidData)
                 .WithMetadata("Expected", metadata.Rows)
                 .WithMetadata("Actual", rawData.Rows.Count);
 
-            result = result.WithSuccess(metainfo);
+            result = result.WithReason(issue);
         }
 
         if (!string.IsNullOrWhiteSpace(metadata.BodyHashBase64))
@@ -205,24 +204,21 @@ public sealed class RecipeFileService : IRecipeFileService
 
             if (!integrityCheck.IsValid)
             {
-                var metainfo = new Success("Data integrity check failed")
-                    .WithMetadata(nameof(Codes), Codes.CsvHashMismatch)
+                _logger.LogWarning(
+                    "Hash mismatch. Expected={Expected}, Actual={Actual}",
+                    integrityCheck.ExpectedHash,
+                    integrityCheck.ActualHash);
+
+                var issue = new ValidationIssue(Codes.CsvHashMismatch)
                     .WithMetadata("ExpectedHash", integrityCheck.ExpectedHash)
                     .WithMetadata("ActualHash", integrityCheck.ActualHash);
 
-                result = result.WithSuccess(metainfo);
+                result = result.WithReason(issue);
             }
-        }
-        else
-        {
-            var metainfo = new Success("No body hash present in metadata; integrity check skipped")
-                .WithMetadata(nameof(Codes), Codes.CsvHashMismatch);
-            result = result.WithSuccess(metainfo);
         }
 
         return result;
     }
-
 
     private static void ReplaceFile(string sourcePath, string targetPath)
     {

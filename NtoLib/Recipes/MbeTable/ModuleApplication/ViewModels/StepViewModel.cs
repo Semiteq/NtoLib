@@ -4,11 +4,11 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 
@@ -38,14 +38,14 @@ public sealed class StepViewModel
         if (!_step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty))
         {
             return Result.Fail(new Error("Step does not have Action property")
-                .WithMetadata("code", Codes.CoreActionNotFound)
+                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
                 .WithMetadata("rowIndex", _rowIndex));
         }
 
         if (actionProperty == null)
         {
             return Result.Fail(new Error("Step Action property is null")
-                .WithMetadata("code", Codes.CoreActionNotFound)
+                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
                 .WithMetadata("rowIndex", _rowIndex));
         }
 
@@ -56,7 +56,7 @@ public sealed class StepViewModel
         catch (InvalidCastException ex)
         {
             return Result.Fail(new Error($"Failed to cast Action property to int: {ex.Message}")
-                .WithMetadata("code", Codes.PropertyConversionFailed)
+                .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed)
                 .WithMetadata("rowIndex", _rowIndex));
         }
     }
@@ -68,11 +68,10 @@ public sealed class StepViewModel
 
         if (!_step.Properties.TryGetValue(identifier, out var property))
         {
-            // Log all available properties for debugging
             var availableProps = string.Join(", ", _step.Properties.Keys.Select(k => k.Value));
             
             return Result.Fail(new Error($"Property '{identifier.Value}' not found in step")
-                .WithMetadata("code", Codes.CorePropertyNotFound)
+                .WithMetadata(nameof(Codes), Codes.CorePropertyNotFound)
                 .WithMetadata("rowIndex", _rowIndex)
                 .WithMetadata("propertyKey", identifier.Value)
                 .WithMetadata("availableProperties", availableProps));
@@ -92,7 +91,7 @@ public sealed class StepViewModel
         catch (Exception ex)
         {
             return Result.Fail(new Error($"Failed to get property value: {ex.Message}")
-                .WithMetadata("code", Codes.PropertyConversionFailed)
+                .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed)
                 .WithMetadata("rowIndex", _rowIndex)
                 .WithMetadata("propertyKey", identifier.Value));
         }
@@ -103,7 +102,7 @@ public sealed class StepViewModel
         if (!_step.Properties.ContainsKey(identifier))
         {
             return Result.Fail(new Error($"Property '{identifier.Value}' does not exist in step")
-                .WithMetadata("code", Codes.CorePropertyNotFound)
+                .WithMetadata(nameof(Codes), Codes.CorePropertyNotFound)
                 .WithMetadata("rowIndex", _rowIndex)
                 .WithMetadata("propertyKey", identifier.Value));
         }

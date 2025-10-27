@@ -4,9 +4,9 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -25,7 +25,7 @@ public sealed class ActionRepository : IActionRepository
             return Result.Ok(action);
 
         return Result.Fail(new Error($"Action with id {id} not found")
-            .WithMetadata("code", Codes.CoreActionNotFound)
+            .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
             .WithMetadata("actionId", id));
     }
 
@@ -34,7 +34,7 @@ public sealed class ActionRepository : IActionRepository
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail(new Error("Action name is empty")
-                .WithMetadata("code", Codes.CoreActionNotFound));
+                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound));
         }
 
         var action = Actions.Values.FirstOrDefault(a => 
@@ -44,7 +44,7 @@ public sealed class ActionRepository : IActionRepository
             return Result.Ok(action);
 
         return Result.Fail(new Error($"Action with name '{name}' not found")
-            .WithMetadata("code", Codes.CoreActionNotFound)
+            .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
             .WithMetadata("actionName", name));
     }
 
@@ -55,6 +55,6 @@ public sealed class ActionRepository : IActionRepository
             return Result.Ok(first.Id);
 
         return Result.Fail(new Error("No actions defined in configuration")
-            .WithMetadata("code", Codes.CoreActionNotFound));
+            .WithMetadata(nameof(Codes), Codes.CoreActionNotFound));
     }
 }

@@ -4,8 +4,8 @@ using System.IO;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 
@@ -48,7 +48,7 @@ public sealed class SectionLoader<TDto> : ISectionLoader<TDto> where TDto : clas
         if (string.IsNullOrWhiteSpace(path))
         {
             return Result.Fail(new Error("File path cannot be empty.")
-                .WithMetadata("code", Codes.ConfigFileNotFound));
+                .WithMetadata(nameof(Codes), Codes.ConfigFileNotFound));
         }
 
         return Result.Ok(path);
@@ -59,7 +59,7 @@ public sealed class SectionLoader<TDto> : ISectionLoader<TDto> where TDto : clas
         if (!File.Exists(path))
         {
             return Result.Fail(new Error($"Configuration file not found at: '{path}'")
-                .WithMetadata("code", Codes.ConfigFileNotFound)
+                .WithMetadata(nameof(Codes), Codes.ConfigFileNotFound)
                 .WithMetadata("filePath", path));
         }
 
@@ -76,7 +76,7 @@ public sealed class SectionLoader<TDto> : ISectionLoader<TDto> where TDto : clas
         catch (Exception ex)
         {
             return Result.Fail(new Error($"Failed to read file '{path}': {ex.Message}")
-                .WithMetadata("code", Codes.IoReadError)
+                .WithMetadata(nameof(Codes), Codes.IoReadError)
                 .WithMetadata("filePath", path)
                 .CausedBy(ex));
         }

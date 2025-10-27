@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 
 using FluentResults;
 
@@ -10,9 +10,6 @@ using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
 
-/// <summary>
-/// Consolidates all recipe validation logic for assembly service.
-/// </summary>
 public sealed class AssemblyValidator
 {
     private readonly RecipeStructureValidator _structureValidator;
@@ -37,35 +34,23 @@ public sealed class AssemblyValidator
 
     public Result ValidateRecipe(Recipe recipe)
     {
-        var errors = new List<IError>();
+        var result = Result.Ok();
         
-        var structureResult = ValidateStructure(recipe);
-        if (structureResult.IsFailed) errors.AddRange(structureResult.Errors);
+        var structureResult = _structureValidator.Validate(recipe);
+        if (structureResult.IsFailed)
+            return structureResult;
         
-        var loopResult = ValidateLoops(recipe);
-        if (loopResult.IsFailed) errors.AddRange(loopResult.Errors);
+        var loopResult = _loopValidator.Validate(recipe);
+        if (loopResult.IsFailed)
+            return loopResult.ToResult();
         
-        var targetResult = ValidateTargets(recipe);
-        if (targetResult.IsFailed) errors.AddRange(targetResult.Errors);
+        if (loopResult.Reasons.Count > 0)
+            result = result.WithReasons(loopResult.Reasons);
         
-        return errors.Count > 0 
-            ? Result.Fail(errors) 
-            : Result.Ok();
-    }
-
-    private Result ValidateStructure(Recipe recipe)
-    {
-        return _structureValidator.Validate(recipe);
-    }
-
-    private Result ValidateLoops(Recipe recipe)
-    {
-        var result = _loopValidator.Validate(recipe);
-        return result.IsSuccess ? Result.Ok() : result.ToResult();
-    }
-
-    private Result ValidateTargets(Recipe recipe)
-    {
-        return _targetValidator.Validate(recipe, _actionRepository, _targetProvider);
+        var targetResult = _targetValidator.Validate(recipe, _actionRepository, _targetProvider);
+        if (targetResult.IsFailed)
+            return targetResult;
+        
+        return result;
     }
 }

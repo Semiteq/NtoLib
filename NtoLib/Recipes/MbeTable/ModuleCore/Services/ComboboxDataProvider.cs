@@ -4,9 +4,9 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -54,7 +54,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
         return col == null
             ? Result.Fail<PropertyConfig>(new Error(
                     $"Action '{action.Name}' (ID: {action.Id}) does not contain column '{columnKey}'")
-                .WithMetadata("code", Codes.CoreColumnNotFound))
+                .WithMetadata(nameof(Codes), Codes.CoreColumnNotFound))
             : Result.Ok(col);
     }
 
@@ -62,7 +62,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
     {
         if (string.IsNullOrWhiteSpace(column.GroupName))
             return Result.Fail<PropertyConfig>(new Error("Column GroupName is empty")
-                .WithMetadata("code", Codes.ConfigInvalidSchema));
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema));
 
         return Result.Ok(column);
     }
@@ -71,7 +71,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
     {
         if (!_targets.TryGetTargets(groupName, out var targets))
             return Result.Fail<IReadOnlyDictionary<short, string>>(new Error("No targets defined")
-                .WithMetadata("code", Codes.CoreTargetNotFound));
+                .WithMetadata(nameof(Codes), Codes.CoreTargetNotFound));
 
         return Result.Ok<IReadOnlyDictionary<short, string>>(targets
             .Where(kv => !string.IsNullOrEmpty(kv.Value))

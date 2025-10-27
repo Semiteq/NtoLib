@@ -11,9 +11,6 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
 
-/// <summary>
-/// Coordinates recipe assembly from different data sources using strategy pattern.
-/// </summary>
 public sealed class RecipeAssemblyService : IRecipeAssemblyService
 {
     private readonly ModbusAssemblyStrategy _modbusStrategy;
@@ -35,7 +32,7 @@ public sealed class RecipeAssemblyService : IRecipeAssemblyService
 
     public Result<Recipe> AssembleFromModbusData(int[] intData, int[] floatData, int rowCount)
     {
-        _logger.LogDebug($"Starting Modbus assembly for {rowCount} rows");
+        _logger.LogDebug("Starting Modbus assembly for {RowCount} rows", rowCount);
         
         var assemblyResult = _modbusStrategy.AssembleFromModbusData(intData, floatData, rowCount);
         if (assemblyResult.IsFailed)
@@ -51,11 +48,15 @@ public sealed class RecipeAssemblyService : IRecipeAssemblyService
         if (validationResult.IsFailed)
         {
             _logger.LogError("Recipe validation failed after Modbus assembly");
-            return Result.Ok(recipe).WithErrors(validationResult.Errors);
+            return validationResult.ToResult<Recipe>();
         }
         
+        var result = Result.Ok(recipe);
+        if (validationResult.Reasons.Count > 0)
+            result = result.WithReasons(validationResult.Reasons);
+        
         _logger.LogDebug("Modbus assembly completed successfully");
-        return Result.Ok(recipe);
+        return result;
     }
 
     public Result<Recipe> AssembleFromCsvData(object csvData)
@@ -65,7 +66,7 @@ public sealed class RecipeAssemblyService : IRecipeAssemblyService
             return Result.Fail<Recipe>("Invalid CSV data type");
         }
         
-        _logger.LogDebug($"Starting CSV assembly for {rawData.Records.Count} rows");
+        _logger.LogDebug("Starting CSV assembly for {RecordCount} rows", rawData.Records.Count);
         
         var assemblyResult = _csvStrategy.AssembleFromRawData(rawData);
         if (assemblyResult.IsFailed)
@@ -75,16 +76,20 @@ public sealed class RecipeAssemblyService : IRecipeAssemblyService
         }
         
         var recipe = assemblyResult.Value;
-        _logger.LogDebug($"Assembled {recipe.Steps.Count} steps from CSV");
+        _logger.LogDebug("Assembled {StepsCount} steps from CSV", recipe.Steps.Count);
         
         var validationResult = _validator.ValidateRecipe(recipe);
         if (validationResult.IsFailed)
         {
             _logger.LogError("Recipe validation failed after CSV assembly");
-            return Result.Ok(recipe).WithErrors(validationResult.Errors);
+            return validationResult.ToResult<Recipe>();
         }
         
+        var result = Result.Ok(recipe);
+        if (validationResult.Reasons.Count > 0)
+            result = result.WithReasons(validationResult.Reasons);
+        
         _logger.LogDebug("CSV assembly completed successfully");
-        return Result.Ok(recipe);
+        return result;
     }
 }

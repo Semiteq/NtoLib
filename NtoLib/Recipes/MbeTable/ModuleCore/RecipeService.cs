@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using FluentResults;
 
+using Microsoft.Extensions.Logging;
+
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
@@ -20,6 +22,7 @@ public sealed class RecipeService : IRecipeService
 
     private readonly RecipeMutator _mutator;
     private readonly IRecipeAttributesService _attributesService;
+    private readonly ILogger<RecipeService> _logger;
 
     public event Action<bool>? ValidationStateChanged
     {
@@ -30,10 +33,12 @@ public sealed class RecipeService : IRecipeService
     /// <exception cref="InvalidOperationException">If recipe attributes update fails</exception>
     public RecipeService(
         RecipeMutator mutator,
-        IRecipeAttributesService attributesService)
+        IRecipeAttributesService attributesService,
+        ILogger<RecipeService> logger)
     {
         _mutator = mutator ?? throw new ArgumentNullException(nameof(mutator));
         _attributesService = attributesService ?? throw new ArgumentNullException(nameof(attributesService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _currentRecipe = Recipe.Empty;
 
         var analysisResult = _attributesService.UpdateAttributes(_currentRecipe);
@@ -68,7 +73,8 @@ public sealed class RecipeService : IRecipeService
             return analysisResult;
 
         _currentRecipe = recipe;
-        return Result.Ok();
+        // Propagate reasons (warnings/validation issues) to callers
+        return analysisResult;
     }
 
     public Result AddStep(int rowIndex)
@@ -100,12 +106,13 @@ public sealed class RecipeService : IRecipeService
             return analysisResult;
 
         _currentRecipe = mutationResult.Value;
-        return Result.Ok();
+        return analysisResult;
     }
 
     public Result ReplaceStepAction(int rowIndex, short newActionId)
     {
         var mutationResult = _mutator.ReplaceStepAction(_currentRecipe, rowIndex, newActionId);
+        _logger.LogDebug("Replacing step action at row {RowIndex} with new action ID {NewActionId}", rowIndex, newActionId);
         if (mutationResult.IsFailed)
             return mutationResult.ToResult();
 

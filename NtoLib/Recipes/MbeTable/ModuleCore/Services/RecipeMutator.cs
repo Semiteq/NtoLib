@@ -6,11 +6,11 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -58,7 +58,7 @@ public sealed class RecipeMutator
         if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
         {
             return Result.Fail(new Error("Row index is out of range")
-                .WithMetadata("code", Codes.CoreIndexOutOfRange)
+                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
                 .WithMetadata("rowIndex", rowIndex)
                 .WithMetadata("stepCount", recipe.Steps.Count));
         }
@@ -75,7 +75,7 @@ public sealed class RecipeMutator
         if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
         {
             return Result.Fail(new Error("Row index is out of range")
-                .WithMetadata("code", Codes.CoreIndexOutOfRange)
+                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
                 .WithMetadata("rowIndex", rowIndex)
                 .WithMetadata("stepCount", recipe.Steps.Count));
         }
@@ -85,7 +85,7 @@ public sealed class RecipeMutator
         if (!step.Properties.TryGetValue(key, out var property) || property == null)
         {
             return Result.Fail(new Error($"Property '{key.Value}' not found in step")
-                .WithMetadata("code", Codes.CorePropertyNotFound)
+                .WithMetadata(nameof(Codes), Codes.CorePropertyNotFound)
                 .WithMetadata("rowIndex", rowIndex)
                 .WithMetadata("propertyKey", key.Value));
         }
@@ -150,7 +150,7 @@ public sealed class RecipeMutator
     
     private static Result<Recipe> IndexOutOfRange(int rowIndex, int count) =>
         Result.Fail<Recipe>(new Error("Row index is out of range")
-            .WithMetadata("code", Codes.CoreIndexOutOfRange)
+            .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
             .WithMetadata("rowIndex", rowIndex)
             .WithMetadata("stepCount", count));
 }

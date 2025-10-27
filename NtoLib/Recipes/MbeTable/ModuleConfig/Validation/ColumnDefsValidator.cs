@@ -4,11 +4,11 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
@@ -65,7 +65,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         {
             var missing = string.Join(", ", missingKeys);
             return Result.Fail(new Error($"ColumnDefs.yaml: Missing mandatory columns: {missing}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("MissingColumns", missing));
         }
 
@@ -84,7 +84,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         {
             var info = string.Join(", ", unsupported.Select(c => $"'{c.Key}' ({c.ColumnType})"));
             return Result.Fail(new Error($"ColumnDefs.yaml: Unsupported column types: {info}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("UnsupportedColumns", info));
         }
 
@@ -163,7 +163,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         if (col.Ui.MaxDropdownItems <= 0)
         {
             return Result.Fail(new Error($"{context}: max_dropdown_items must be > 0. Actual: {col.Ui.MaxDropdownItems}.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("columnKey", col.Key)
                 .WithMetadata("maxDropdownItems", col.Ui.MaxDropdownItems.ToString()));
@@ -181,7 +181,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         if (!string.Equals(col.Key, "action", StringComparison.OrdinalIgnoreCase))
         {
             return Result.Fail(new Error($"{context}: column_type 'action_combo_box' can only be used with key='action'.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("context", context)
                 .WithMetadata("columnKey", col.Key)
                 .WithMetadata("columnType", col.Ui.ColumnType));

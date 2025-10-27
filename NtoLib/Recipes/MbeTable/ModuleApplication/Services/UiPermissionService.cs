@@ -1,49 +1,41 @@
 ﻿using System;
 
-using Microsoft.Extensions.Logging;
-
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
+using NtoLib.Recipes.MbeTable.ModuleCore;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 
-/// <summary>
-/// Service managing UI state and permissions.
-/// Wraps UiStateManager and provides application-level API.
-/// </summary>
 public sealed class UiPermissionService : IUiPermissionService
 {
     private readonly UiStateManager _uiStateManager;
-    private readonly ILogger<UiPermissionService> _logger;
+    private readonly IRecipeService _recipeService;
 
-    public event Action<UiPermissions>? PermissionsChanged
-    {
-        add => _uiStateManager.PermissionsChanged += value;
-        remove => _uiStateManager.PermissionsChanged -= value;
-    }
+    public event Action<UiPermissions>? PermissionsChanged;
 
-    public UiPermissionService(UiStateManager uiStateManager, ILogger<UiPermissionService> logger)
+    public UiPermissionService(
+        UiStateManager uiStateManager,
+        IRecipeService recipeService)
     {
         _uiStateManager = uiStateManager ?? throw new ArgumentNullException(nameof(uiStateManager));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
+        _uiStateManager.StateChanged += OnStateChanged;
     }
 
     public UiPermissions GetCurrentPermissions()
     {
         var state = _uiStateManager.CurrentState;
         var isBusy = state.ActiveOperation != null || state.RecipeActive;
+        var isValid = _recipeService.IsValid();
 
-        _logger.LogDebug(
-            "Calculating UI permissions: EnaSendOk={EnaSendOk}, IsBusy={IsBusy}, RecipeActive={RecipeActive}",
-            state.EnaSendOk,
-            isBusy,
-            state.RecipeActive);
+        var canSave = !isBusy && isValid;
+        var canSend = state.EnaSendOk && !isBusy && isValid;
 
         return new UiPermissions(
-            CanWriteRecipe: state.EnaSendOk && !isBusy,
+            CanWriteRecipe: canSend,
             CanOpenFile: !isBusy,
             CanAddStep: !isBusy,
             CanDeleteStep: !isBusy,
-            CanSaveFile: !isBusy,
+            CanSaveFile: canSave,
             IsGridReadOnly: state.RecipeActive
         );
     }
@@ -66,5 +58,11 @@ public sealed class UiPermissionService : IUiPermissionService
     public void NotifyOperationCompleted()
     {
         _uiStateManager.NotifyOperationCompleted();
+    }
+
+    private void OnStateChanged()
+    {
+        var permissions = GetCurrentPermissions();
+        PermissionsChanged?.Invoke(permissions);
     }
 }

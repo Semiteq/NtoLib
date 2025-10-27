@@ -4,41 +4,37 @@ using System.Collections.Immutable;
 
 using FluentResults;
 
-using Microsoft.Extensions.Logging;
-
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
 /// <summary>
-/// Calculates the total execution time and start times for each step in a recipe.
-/// Handles loop structures to accurately compute time based on iteration counts.
+/// Calculates total execution time and per-step absolute start times.
+/// Supports nested For/EndFor loops, LongLasting/Immediate steps,
+/// loop iteration count from MandatoryColumns.Task (short),
+/// and step duration from MandatoryColumns.StepDuration (float, seconds).
 /// </summary>
 public class RecipeTimeCalculator
 {
     private const int ForLoopActionId = (int)ServiceActions.ForLoop;
     private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;
 
-    /// <summary>
-    /// Calculates timing information for all steps in the recipe.
-    /// </summary>
-    /// <param name="recipe">The recipe to analyze.</param>
-    /// <returns>Analysis result containing total time and individual step start times.</returns>
     public Result<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)> Calculate(Recipe recipe)
     {
         var stepStartTimes = new Dictionary<int, TimeSpan>(recipe.Steps.Count);
         var accumulatedTime = TimeSpan.Zero;
-        var loopStack = new Stack<(int Iterations, TimeSpan BodyStartTime)>();
+        var loopStack = new Stack<LoopFrame>();
 
         for (var i = 0; i < recipe.Steps.Count; i++)
         {
             stepStartTimes[i] = accumulatedTime;
+
             var step = recipe.Steps[i];
-            
             var actionPropertyResult = GetActionPropertyIfExistsInStep(step, i);
             if (actionPropertyResult.IsFailed)
-                return actionPropertyResult.ToResult();
+                return actionPropertyResult.ToResult<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)>();
 
             var actionId = actionPropertyResult.Value;
 
@@ -48,23 +44,23 @@ public class RecipeTimeCalculator
                 {
                     var processResult = ProcessForLoopStart(step, accumulatedTime, loopStack, i);
                     if (processResult.IsFailed)
-                        return processResult;
+                        return processResult.ToResult<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)>();
                     break;
                 }
+
                 case EndForLoopActionId:
                 {
-                    var processResult = ProcessForLoopEnd(accumulatedTime, loopStack, i);
+                    var processResult = ProcessForLoopEnd(ref accumulatedTime, loopStack, i);
                     if (processResult.IsFailed)
-                        return processResult.ToResult();
-                    accumulatedTime = processResult.Value;
+                        return processResult.ToResult<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)>();
                     break;
                 }
+
                 default:
                 {
-                    var processResult = ProcessRegularStep(step, accumulatedTime, i);
+                    var processResult = ProcessRegularStep(step, ref accumulatedTime, i);
                     if (processResult.IsFailed)
-                        return processResult.ToResult();
-                    accumulatedTime = processResult.Value;
+                        return processResult.ToResult<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)>();
                     break;
                 }
             }
@@ -81,7 +77,7 @@ public class RecipeTimeCalculator
         if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
         {
             var error = new Error("Step does not have an action property.")
-                .WithMetadata("code", Codes.CoreActionNotFound)
+                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
                 .WithMetadata("stepIndex", stepIndex);
             return Result.Fail(error);
         }
@@ -92,50 +88,54 @@ public class RecipeTimeCalculator
     private static Result ProcessForLoopStart(
         Step step,
         TimeSpan accumulatedTime,
-        Stack<(int Iterations, TimeSpan BodyStartTime)> loopStack,
+        Stack<LoopFrame> loopStack,
         int stepIndex)
     {
-        if (!step.Properties.TryGetValue(MandatoryColumns.StepDuration, out var durationProperty) || durationProperty == null)
-            return CreateMissingIterationCountError(stepIndex);
+        if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
+            return CreateMissingIterationCountWarning(stepIndex);
 
-        var rawIterations = durationProperty.GetValue<float>();
-        var iterations = Math.Max(1, (int)Math.Round(rawIterations, MidpointRounding.AwayFromZero));
-        
+        var iterations = (int)taskProperty.GetValue<short>();
         if (iterations <= 0)
-            return CreateInvalidIterationCountError(stepIndex, rawIterations);
+            return CreateInvalidIterationCountError(stepIndex, iterations);
 
-        loopStack.Push((iterations, accumulatedTime));
+        loopStack.Push(new LoopFrame
+        {
+            Iterations = iterations,
+            LoopStartTime = accumulatedTime,
+            BodyStartTime = accumulatedTime
+        });
+
         return Result.Ok();
     }
 
-    private static Result<TimeSpan> ProcessForLoopEnd(
-        TimeSpan accumulatedTime,
-        Stack<(int Iterations, TimeSpan BodyStartTime)> loopStack,
+    private static Result ProcessForLoopEnd(
+        ref TimeSpan accumulatedTime,
+        Stack<LoopFrame> loopStack,
         int stepIndex)
     {
         if (loopStack.Count == 0)
-            return CreateUnmatchedEndForLoopError(stepIndex);
+            return CreateUnmatchedEndForLoopWarning(stepIndex);
 
-        var (iterations, bodyStart) = loopStack.Pop();
-        var bodyDuration = accumulatedTime - bodyStart;
+        var frame = loopStack.Pop();
 
-        if (iterations > 1 && bodyDuration > TimeSpan.Zero)
-            return Result.Ok(accumulatedTime + TimeSpan.FromTicks(bodyDuration.Ticks * (iterations - 1)));
+        var singleIterationDuration = accumulatedTime - frame.BodyStartTime;
+        var totalLoopTime = TimeSpan.FromTicks(singleIterationDuration.Ticks * frame.Iterations);
+        accumulatedTime = frame.LoopStartTime + totalLoopTime;
 
-        return Result.Ok(accumulatedTime);
+        return Result.Ok();
     }
 
-    private static Result<TimeSpan> ProcessRegularStep(Step step, TimeSpan accumulatedTime, int stepIndex)
+    private static Result ProcessRegularStep(Step step, ref TimeSpan accumulatedTime, int stepIndex)
     {
         var stepDurationResult = GetStepDuration(step, stepIndex);
         if (stepDurationResult.IsFailed)
-            return stepDurationResult;
+            return stepDurationResult.ToResult();
 
         var stepDuration = stepDurationResult.Value;
         if (stepDuration > TimeSpan.Zero)
-            return Result.Ok(accumulatedTime + stepDuration);
+            accumulatedTime += stepDuration;
 
-        return Result.Ok(accumulatedTime);
+        return Result.Ok();
     }
 
     private static Result<TimeSpan> GetStepDuration(Step step, int stepIndex)
@@ -147,53 +147,52 @@ public class RecipeTimeCalculator
             return Result.Ok(TimeSpan.Zero);
 
         var seconds = durationProperty.GetValue<float>();
-
         if (seconds < 0f)
             return CreateNegativeStepDurationError(stepIndex, seconds);
 
         return Result.Ok(seconds > 0f ? TimeSpan.FromSeconds(seconds) : TimeSpan.Zero);
     }
 
-    private static Result CreateMissingIterationCountError(int stepIndex)
+    private static Result CreateMissingIterationCountWarning(int stepIndex)
     {
-        var error = new Error("ForLoop step is missing iteration count.")
-            .WithMetadata("code", Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex);
-        return Result.Fail(error);
+        return Result.Ok()
+            .WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", stepIndex));
     }
 
-    private static Result CreateInvalidIterationCountError(int stepIndex, float iterations)
+    private static Result CreateInvalidIterationCountError(int stepIndex, int iterations)
     {
         var error = new Error($"Invalid iteration count: {iterations}.")
-            .WithMetadata("code", Codes.CoreInvalidStepDuration)
+            .WithMetadata(nameof(Codes), Codes.CoreInvalidStepDuration)
             .WithMetadata("stepIndex", stepIndex)
             .WithMetadata("iterations", iterations);
         return Result.Fail(error);
     }
 
-    private static Result<TimeSpan> CreateUnmatchedEndForLoopError(int stepIndex)
+    private static Result CreateUnmatchedEndForLoopWarning(int stepIndex)
     {
-        var error = new Error("Unmatched 'EndForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex);
-        return Result.Fail(error);
+        return Result.Ok()
+            .WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", stepIndex));
     }
 
     private static Result<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)> CreateUnmatchedForLoopError(int stepIndex)
     {
-        var error = new Error("Unmatched 'ForLoop' found.")
-            .WithMetadata("code", Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex);
-        return Result.Fail(error);
+        return Result.Ok((TimeSpan.Zero, (IReadOnlyDictionary<int, TimeSpan>)new Dictionary<int, TimeSpan>()))
+            .WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", stepIndex));
     }
-
 
     private static Result<TimeSpan> CreateNegativeStepDurationError(int stepIndex, float seconds)
     {
         var error = new Error($"Negative step duration: {seconds}.")
-            .WithMetadata("code", Codes.CoreInvalidStepDuration)
+            .WithMetadata(nameof(Codes), Codes.CoreInvalidStepDuration)
             .WithMetadata("stepIndex", stepIndex)
             .WithMetadata("duration", seconds);
         return Result.Fail(error);
+    }
+
+    private sealed class LoopFrame
+    {
+        public int Iterations { get; set; }
+        public TimeSpan LoopStartTime { get; set; }
+        public TimeSpan BodyStartTime { get; set; }
     }
 }

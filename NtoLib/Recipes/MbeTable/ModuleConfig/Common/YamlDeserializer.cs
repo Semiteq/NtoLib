@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -30,7 +30,7 @@ public sealed class YamlDeserializer : IYamlDeserializer
         if (string.IsNullOrWhiteSpace(yaml))
         {
             return Result.Fail(new Error("YAML content is empty or null.")
-                .WithMetadata("code", Codes.ConfigParseError));
+                .WithMetadata(nameof(Codes), Codes.ConfigParseError));
         }
 
         try
@@ -41,7 +41,7 @@ public sealed class YamlDeserializer : IYamlDeserializer
         catch (Exception ex)
         {
             return Result.Fail(new Error($"Failed to deserialize YAML: {ex.Message}")
-                .WithMetadata("code", Codes.ConfigParseError)
+                .WithMetadata(nameof(Codes), Codes.ConfigParseError)
                 .CausedBy(ex));
         }
     }

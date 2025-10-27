@@ -189,13 +189,16 @@ public partial class TableControl
             return;
         }
 
-        _buttonOpen.Enabled = permissions.CanOpenFile;
-        _buttonSave.Enabled = permissions.CanSaveFile;
-        _buttonAddBefore.Enabled = permissions.CanAddStep;
-        _buttonAddAfter.Enabled = permissions.CanAddStep;
-        _buttonDel.Enabled = permissions.CanDeleteStep;
-        _buttonWrite.Enabled = permissions.CanWriteRecipe;
-        
+        var scheme = _serviceProvider?.GetService<ColorScheme>();
+        if (scheme == null) return;
+
+        ApplyButtonPermission(_buttonOpen, permissions.CanOpenFile, scheme);
+        ApplyButtonPermission(_buttonSave, permissions.CanSaveFile, scheme);
+        ApplyButtonPermission(_buttonAddBefore, permissions.CanAddStep, scheme);
+        ApplyButtonPermission(_buttonAddAfter, permissions.CanAddStep, scheme);
+        ApplyButtonPermission(_buttonDel, permissions.CanDeleteStep, scheme);
+        ApplyButtonPermission(_buttonWrite, permissions.CanWriteRecipe, scheme);
+    
         if (_table != null)
         {
             var makeReadOnly = permissions.IsGridReadOnly;
@@ -208,6 +211,12 @@ public partial class TableControl
                 _table.ReadOnly = makeReadOnly;
             }
         }
+    }
+
+    private static void ApplyButtonPermission(Button button, bool enabled, ColorScheme scheme)
+    {
+        button.Enabled = enabled;
+        button.BackColor = enabled ? scheme.ButtonsColor : scheme.BlockedButtonsColor;
     }
 
     private ITablePresenter CreatePresenter(ITableView view)

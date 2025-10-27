@@ -3,8 +3,11 @@ using System.Collections.Generic;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
+using Microsoft.Extensions.Logging;
+
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
@@ -22,17 +25,20 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     private IReadOnlyDictionary<int, TimeSpan> _stepStartTimes;
     private TimeSpan _totalDuration;
     private bool _isValid;
+    private readonly ILogger<RecipeAttributesService> _logger;
 
     public event Action<bool>? ValidationStateChanged;
 
     public RecipeAttributesService(
         RecipeStructureValidator structureValidator,
         RecipeLoopValidator loopValidator,
-        RecipeTimeCalculator timeCalculator)
+        RecipeTimeCalculator timeCalculator,
+        ILogger<RecipeAttributesService> logger)
     {
         _structureValidator = structureValidator ?? throw new ArgumentNullException(nameof(structureValidator));
         _loopValidator = loopValidator ?? throw new ArgumentNullException(nameof(loopValidator));
         _timeCalculator = timeCalculator ?? throw new ArgumentNullException(nameof(timeCalculator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _loopNestingLevels = new Dictionary<int, int>();
         _stepStartTimes = new Dictionary<int, TimeSpan>();
@@ -72,10 +78,22 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
 
         _totalDuration = timeResult.Value.Item1;
         _stepStartTimes = timeResult.Value.Item2;
-        _isValid = true;
 
+        var reasons = new List<IReason>();
+        if (loopResult.Reasons.Count > 0)
+            reasons.AddRange(loopResult.Reasons);
+        if (timeResult.Reasons.Count > 0)
+            reasons.AddRange(timeResult.Reasons);
+
+        _isValid = !ContainsCoreForLoopError(reasons);
+        
         NotifyValidationStateChanged(previousValidState);
-        return Result.Ok();
+
+        var ok = Result.Ok();
+        if (reasons.Count > 0)
+            ok = ok.WithReasons(reasons);
+
+        return ok;
     }
 
     public Result<int> GetLoopNestingLevel(int stepIndex)
@@ -84,7 +102,7 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
             return Result.Ok(level);
 
         return Result.Fail(new Error($"No nesting level found for step index {stepIndex}")
-            .WithMetadata("code", Codes.CoreIndexOutOfRange)
+            .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
             .WithMetadata("stepIndex", stepIndex));
     }
 
@@ -94,7 +112,7 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
             return Result.Ok(time);
 
         return Result.Fail(new Error($"No start time found for step index {stepIndex}")
-            .WithMetadata("code", Codes.CoreIndexOutOfRange)
+            .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
             .WithMetadata("stepIndex", stepIndex));
     }
 
@@ -118,5 +136,16 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         {
             ValidationStateChanged?.Invoke(_isValid);
         }
+    }
+
+    private static bool ContainsCoreForLoopError(IEnumerable<IReason> reasons)
+    {
+        foreach (var reason in reasons)
+        {
+            if (reason.TryGetCode(out var code) && code == Codes.CoreForLoopError)
+                return true;
+        }
+
+        return false;
     }
 }

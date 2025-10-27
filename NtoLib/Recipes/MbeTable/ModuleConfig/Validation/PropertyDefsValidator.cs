@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
@@ -96,7 +96,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
         if (systemType == null)
         {
             return Result.Fail(new Error($"{context}: Unknown SystemType '{def.SystemType}'.")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("PropertyTypeId", def.PropertyTypeId)
                 .WithMetadata("SystemType", def.SystemType));
         }
@@ -106,7 +106,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
             var supported = string.Join(", ", SupportedSystemTypes);
             return Result.Fail(
                 new Error($"{context}: Unsupported SystemType '{def.SystemType}'. Supported: {supported}.")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("PropertyTypeId", def.PropertyTypeId)
                     .WithMetadata("SystemType", def.SystemType)
                     .WithMetadata("SupportedTypes", supported));
@@ -128,7 +128,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
             var supported = string.Join(", ", SupportedFormatKinds);
             return Result.Fail(
                 new Error($"{context}: Unsupported format_kind '{def.FormatKind}'. Supported: {supported}.")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("PropertyTypeId", def.PropertyTypeId)
                     .WithMetadata("FormatKind", def.FormatKind)
                     .WithMetadata("SupportedFormats", supported));
@@ -140,7 +140,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
             if (!string.Equals(def.PropertyTypeId, PropertyTypeIds.Time, StringComparison.OrdinalIgnoreCase))
             {
                 return Result.Fail(new Error($"{context}: format_kind='TimeHms' can only be used with PropertyTypeId='Time'.")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("PropertyTypeId", def.PropertyTypeId)
                     .WithMetadata("FormatKind", def.FormatKind));
             }
@@ -154,7 +154,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
                 systemType != typeof(int) && systemType != typeof(short))
             {
                 return Result.Fail(new Error($"{context}: format_kind='Scientific' can only be used with numeric types.")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("PropertyTypeId", def.PropertyTypeId)
                     .WithMetadata("SystemType", def.SystemType)
                     .WithMetadata("FormatKind", def.FormatKind));

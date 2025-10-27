@@ -4,8 +4,8 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 using OneOf;
 
@@ -48,7 +48,7 @@ public sealed record Property
         {
             return Result.Fail<Property>(
                 new Error($"Failed to convert '{newValue}' to type {PropertyDefinition.SystemType.Name}.")
-                    .WithMetadata("code", Codes.PropertyConversionFailed)
+                    .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed)
                     .CausedBy(parseResult.Errors));
         }
 
@@ -58,7 +58,7 @@ public sealed record Property
             return Result.Fail<Property>(
                 new Error(
                         $"Value '{parseResult.Value}' is invalid for type {PropertyDefinition.SystemType.Name} : {string.Join("; ", validationResult.Errors.Select(e => e.Message))}")
-                    .WithMetadata("code", Codes.PropertyValidationFailed)
+                    .WithMetadata(nameof(Codes), Codes.PropertyValidationFailed)
                     .CausedBy(validationResult.Errors));
         }
 
@@ -87,6 +87,6 @@ public sealed record Property
             float f => Result.Ok<OneOf<short, float, string>>(f),
             string s => Result.Ok<OneOf<short, float, string>>(s),
             _ => Result.Fail(new Error($"Unsupported type '{value.GetType().Name}' for property value.")
-                .WithMetadata("code", Codes.PropertyValueInvalid))
+                .WithMetadata(nameof(Codes), Codes.PropertyValueInvalid))
         };
 }

@@ -6,11 +6,13 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
+using Microsoft.Extensions.Logging;
+
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 
@@ -25,17 +27,20 @@ public sealed class CsvAssemblyStrategy
     private readonly PropertyDefinitionRegistry _propertyRegistry;
     private readonly IReadOnlyList<ColumnDefinition> _columns;
     private readonly ICsvHeaderBinder _headerBinder;
+    private readonly ILogger<CsvAssemblyStrategy> _logger;
 
     public CsvAssemblyStrategy(
         IActionRepository actionRepository,
         PropertyDefinitionRegistry propertyRegistry,
         IReadOnlyList<ColumnDefinition> columns,
-        ICsvHeaderBinder headerBinder)
+        ICsvHeaderBinder headerBinder,
+        ILogger<CsvAssemblyStrategy> logger)
     {
         _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
         _propertyRegistry = propertyRegistry ?? throw new ArgumentNullException(nameof(propertyRegistry));
         _columns = columns ?? throw new ArgumentNullException(nameof(columns));
         _headerBinder = headerBinder ?? throw new ArgumentNullException(nameof(headerBinder));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public Result<Recipe> AssembleFromRawData(CsvRawData rawData)
@@ -44,29 +49,35 @@ public sealed class CsvAssemblyStrategy
         {
             return Result.Ok(new Recipe(ImmutableList<Step>.Empty));
         }
-        
+    
         var bindingResult = _headerBinder.Bind(rawData.Headers.ToArray(), new TableColumns(_columns));
         if (bindingResult.IsFailed)
         {
+            _logger.LogError("Header binding failed: {Errors}", 
+                string.Join("; ", bindingResult.Errors.Select(e => e.Message)));
             return bindingResult.ToResult<Recipe>();
         }
-        
+    
         var binding = bindingResult.Value;
         var steps = new List<Step>();
-        
+    
         for (var rowIndex = 0; rowIndex < rawData.Records.Count; rowIndex++)
         {
             var record = rawData.Records[rowIndex];
             var stepResult = AssembleStep(record, binding, rowIndex + 2);
-            
+        
             if (stepResult.IsFailed)
             {
+                // ADD THIS
+                _logger.LogError("Step assembly failed at row {RowIndex}: {Errors}",
+                    rowIndex + 2,
+                    string.Join("; ", stepResult.Errors.Select(e => e.Message)));
                 return stepResult.ToResult<Recipe>();
             }
-            
+        
             steps.Add(stepResult.Value);
         }
-        
+    
         return Result.Ok(new Recipe(steps.ToImmutableList()));
     }
 

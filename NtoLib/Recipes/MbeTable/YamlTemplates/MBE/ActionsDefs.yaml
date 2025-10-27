@@ -32,9 +32,9 @@
   name: "For"
   deploy_duration: "Immediate"
   columns:
-    - key: "initial_value"
+    - key: "task"
       default_value: "1"
-      property_type_id: "time"
+      property_type_id: "int"
     - key: "comment"
       property_type_id: "string"
       

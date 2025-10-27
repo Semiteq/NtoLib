@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
@@ -29,6 +28,8 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
@@ -63,8 +64,9 @@ public static class MbeTableServiceConfigurator
         RegisterConfiguration(services, configurationState);
         RegisterSharedInstances(services, mbeTableFb, configurationState);
         RegisterRuntimeState(services, mbeTableFb);
-
-        RegisterJournalingServices(services);
+        RegisterLoggerServices(services);
+        RegisterStatusService(services);
+        RegisterResultExtension(services);
         RegisterCoreServices(services);
         RegisterCsvServices(services);
         RegisterInfrastructureServices(services);
@@ -131,10 +133,20 @@ public static class MbeTableServiceConfigurator
         });
     }
 
-    private static void RegisterJournalingServices(IServiceCollection services)
+    private static void RegisterLoggerServices(IServiceCollection services)
     {
         services.AddSingleton(_ => new StatusFormatter(100));
+    }
+
+    private static void RegisterStatusService(IServiceCollection services)
+    {
         services.AddSingleton<IStatusService, StatusService>();
+    }
+
+    private static void RegisterResultExtension(IServiceCollection services)
+    {
+        services.AddSingleton<ErrorDefinitionRegistry>();
+        
     }
 
     private static void RegisterCoreServices(IServiceCollection services)
@@ -155,7 +167,8 @@ public static class MbeTableServiceConfigurator
         {
             var mutator = sp.GetRequiredService<RecipeMutator>();
             var attributesService = sp.GetRequiredService<IRecipeAttributesService>();
-            return new RecipeService(mutator, attributesService);
+            var logger = sp.GetRequiredService<ILogger<RecipeService>>();
+            return new RecipeService(mutator, attributesService, logger);
         });
     }
 
@@ -214,7 +227,6 @@ public static class MbeTableServiceConfigurator
     private static void RegisterApplicationServices(IServiceCollection services)
     {
         services.AddSingleton<UiStateManager>();
-        services.AddSingleton<IErrorCatalog, ErrorCatalog>();
         services.AddSingleton<ResultResolver>();
         services.AddSingleton<ActionComboBox>();
         services.AddSingleton<TargetComboBox>();
@@ -224,8 +236,8 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IUiPermissionService>(sp =>
         {
             var manager = sp.GetRequiredService<UiStateManager>();
-            var logger = sp.GetRequiredService<ILogger<UiPermissionService>>();
-            return new UiPermissionService(manager, logger);
+            var recipeService = sp.GetRequiredService<IRecipeService>();
+            return new UiPermissionService(manager, recipeService);
         });
 
         services.AddSingleton<RecipeViewModel>(sp =>
@@ -243,7 +255,6 @@ public static class MbeTableServiceConfigurator
             var plcService = sp.GetRequiredService<IRecipePlcService>();
             var assemblyService = sp.GetRequiredService<IRecipeAssemblyService>();
             var comparator = sp.GetRequiredService<RecipeComparator>();
-            var logger = sp.GetRequiredService<ILogger<ModbusTcpService>>();
             return new ModbusTcpService(plcService, assemblyService, comparator);
         });
 
@@ -263,6 +274,7 @@ public static class MbeTableServiceConfigurator
             var csvOperations = sp.GetRequiredService<ICsvService>();
             var uiStateService = sp.GetRequiredService<IUiPermissionService>();
             var viewModel = sp.GetRequiredService<RecipeViewModel>();
+            var errorDefinitionRegistry = sp.GetRequiredService<ErrorDefinitionRegistry>();
             var logger = sp.GetRequiredService<ILogger<RecipeApplicationService>>();
             var resultResolver = sp.GetRequiredService<ResultResolver>();
 
@@ -272,6 +284,7 @@ public static class MbeTableServiceConfigurator
                 csvOperations,
                 uiStateService,
                 viewModel,
+                errorDefinitionRegistry,
                 logger,
                 resultResolver);
         });

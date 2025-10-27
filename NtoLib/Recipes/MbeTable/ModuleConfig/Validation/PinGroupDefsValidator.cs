@@ -4,9 +4,9 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.PinGroups;
+using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
@@ -75,7 +75,7 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
         if (group.PinGroupId > group.FirstPinId)
         {
             return Result.Fail(new Error($"{context}: FirstPinId ({group.FirstPinId}) must be >= PinGroupId ({group.PinGroupId}).")
-                .WithMetadata("code", Codes.ConfigInvalidSchema)
+                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                 .WithMetadata("GroupName", group.GroupName)
                 .WithMetadata("PinGroupId", group.PinGroupId.ToString())
                 .WithMetadata("FirstPinId", group.FirstPinId.ToString()));
@@ -104,7 +104,7 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
             if (curr.Start <= prev.End)
             {
                 return Result.Fail(new Error($"PinGroupDefs.yaml: Pin ranges overlap between '{prev.GroupName}' [{prev.Start}..{prev.End}] and '{curr.GroupName}' [{curr.Start}..{curr.End}].")
-                    .WithMetadata("code", Codes.ConfigInvalidSchema)
+                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
                     .WithMetadata("Group1", prev.GroupName)
                     .WithMetadata("Group2", curr.GroupName)
                     .WithMetadata("Range1", $"[{prev.Start}..{prev.End}]")
