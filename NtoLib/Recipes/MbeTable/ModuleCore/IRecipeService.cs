@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore;
@@ -48,6 +49,14 @@ public interface IRecipeService
     /// </summary>
     Result<int> GetLoopNestingLevel(int stepIndex);
 
+    /// <summary>
+    /// Retrieves a list of all loops that actively enclose the specified step.
+    /// The list is ordered from innermost to outermost loop.
+    /// </summary>
+    /// <param name="stepIndex">The index of the step.</param>
+    /// <returns>A read-only list of loop metadata. Empty if the step is not in any loop.</returns>
+    IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex);
+    
     /// <summary>
     /// Replaces current Recipe with provided one, validates and analyzes it.
     /// </summary>

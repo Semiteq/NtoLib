@@ -40,7 +40,7 @@ public class RecipeLoopValidator
                     var processResult = ProcessForLoopStart(currentDepth, i, nestingLevels);
                     if (processResult.GetStatus() == ResultStatus.Warning)
                         return processResult;
-                    
+
                     currentDepth++;
                     break;
                 }
@@ -48,7 +48,7 @@ public class RecipeLoopValidator
                 {
                     var processResult = ProcessForLoopEnd(currentDepth, i, nestingLevels);
                     if (processResult.GetStatus() == ResultStatus.Warning)
-                         return processResult;
+                        return processResult;
 
                     currentDepth--;
                     break;
@@ -117,6 +117,7 @@ public class RecipeLoopValidator
                 .WithMetadata(nameof(Codes), Codes.CoreActionNotFound);
             return Result.Fail(error);
         }
+
         return Result.Ok(actionProperty);
     }
 }

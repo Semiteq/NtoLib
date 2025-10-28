@@ -34,7 +34,7 @@
   columns:
     - key: "task"
       default_value: "1"
-      property_type_id: "int"
+      property_type_id: "float_as_int"
     - key: "comment"
       property_type_id: "string"
       

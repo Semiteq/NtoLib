@@ -10,6 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
@@ -24,6 +25,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     private readonly RecipeViewModel _viewModel;
     private readonly ILogger<RecipeApplicationService> _logger;
     private readonly ResultResolver _resolver;
+    private readonly ITimerControl _timerControl;
 
     public RecipeViewModel ViewModel => _viewModel;
 
@@ -37,7 +39,8 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         IStateProvider stateProvider,
         RecipeViewModel viewModel,
         ILogger<RecipeApplicationService> logger,
-        ResultResolver resolver)
+        ResultResolver resolver,
+        ITimerControl timerControl)
     {
         _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
         _modbusTcpService = modbusTcpService ?? throw new ArgumentNullException(nameof(modbusTcpService));
@@ -46,10 +49,10 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+        _timerControl = timerControl ?? throw new ArgumentNullException(nameof(timerControl));
 
         _recipeService.ValidationStateChanged += OnValidationStateChanged;
-        
-        // Initialize state provider with initial data
+
         OnValidationStateChanged(_recipeService.IsValid());
         _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
     }
@@ -74,19 +77,22 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             ? _recipeService.ReplaceStepAction(rowIndex, (short)value)
             : _recipeService.UpdateStepProperty(rowIndex, columnKey, value);
 
-        if (result.IsSuccess)
+        var status = result.GetStatus();
+        if (!result.IsFailed)
         {
             if (affectsTime)
             {
+                _timerControl.ResetForNewRecipe();
                 _viewModel.OnTimeRecalculated(rowIndex);
             }
             else
             {
+                _viewModel.OnStepDataChanged(rowIndex);
                 StepDataChanged?.Invoke(rowIndex);
             }
         }
 
-        if (result.GetStatus() != ResultStatus.Success)
+        if (status != ResultStatus.Success)
         {
             _resolver.Resolve(result, "обновление ячейки");
         }
@@ -103,6 +109,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
             _viewModel.OnRecipeStructureChanged();
             RecipeStructureChanged?.Invoke();
+            _timerControl.ResetForNewRecipe();
         }
 
         _resolver.Resolve(result, "добавление строки", $"Добавлена строка №{index + 1}");
@@ -119,6 +126,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
             _viewModel.OnRecipeStructureChanged();
             RecipeStructureChanged?.Invoke();
+            _timerControl.ResetForNewRecipe();
         }
 
         _resolver.Resolve(result, "удаление строки", $"Удалена строка №{index + 1}");
@@ -227,6 +235,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
         _viewModel.OnRecipeStructureChanged();
         RecipeStructureChanged?.Invoke();
+        _timerControl.ResetForNewRecipe();
 
         return setResult.WithReasons(loadResult.Reasons);
     }
@@ -242,7 +251,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         if (!_state.GetSnapshot().EnaSendOk)
         {
             _logger.LogWarning("Send operation blocked by PLC logic (EnaSendOk is false)");
-            return ResultBox.Fail(Codes.CoreInvalidOperation); 
+            return ResultBox.Fail(Codes.CoreInvalidOperation);
         }
 
         var currentRecipe = _recipeService.GetCurrentRecipe();
@@ -266,6 +275,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
             _viewModel.OnRecipeStructureChanged();
             RecipeStructureChanged?.Invoke();
+            _timerControl.ResetForNewRecipe();
         }
 
         return setResult.WithReasons(receiveResult.Reasons);

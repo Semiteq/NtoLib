@@ -65,6 +65,9 @@ public sealed class RecipeService : IRecipeService
 
     public Result<int> GetLoopNestingLevel(int stepIndex) =>
         _attributesService.GetLoopNestingLevel(stepIndex);
+    
+    public IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex) =>
+        _attributesService.GetEnclosingLoops(stepIndex);
 
     public Result SetRecipe(Recipe recipe)
     {
@@ -73,7 +76,6 @@ public sealed class RecipeService : IRecipeService
             return analysisResult;
 
         _currentRecipe = recipe;
-        // Propagate reasons (warnings/validation issues) to callers
         return analysisResult;
     }
 

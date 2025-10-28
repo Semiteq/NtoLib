@@ -73,7 +73,7 @@ public sealed class StateProvider : IStateProvider
         lock (_lock)
         {
             var decision = EvaluateUnsafe(operation);
-            var currentState = GetSnapshot(); // Получаем снимок для лога
+            var currentState = GetSnapshot();
 
             if (decision.Kind != DecisionKind.Allowed)
             {
@@ -192,8 +192,7 @@ public sealed class StateProvider : IStateProvider
 
         if (_recipeActive)
         {
-            // When a recipe is active, most operations are blocked.
-            // Exceptions, like 'Save', can be defined here if needed.
+            if (operation is OperationId.Receive or OperationId.Save) return OperationDecision.Allowed();
             return OperationDecision.BlockedError(Codes.CoreInvalidOperation);
         }
 

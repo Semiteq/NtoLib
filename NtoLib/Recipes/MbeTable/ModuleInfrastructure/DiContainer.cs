@@ -162,6 +162,7 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<PropertyDefinitionRegistry>();
         services.AddSingleton<PropertyStateProvider>();
         services.AddSingleton<TimerService>();
+        services.AddSingleton<ITimerControl>(sp => sp.GetRequiredService<TimerService>());
         services.AddSingleton<RecipeStructureValidator>();
         services.AddSingleton<RecipeLoopValidator>();
         services.AddSingleton<RecipeTimeCalculator>();

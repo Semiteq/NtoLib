@@ -230,6 +230,11 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\StatusKind.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\UiPermissions.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\UiStateSnapshot.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopAnalysisResult.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopFrame.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopMetadata.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Services\ITimerControl.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeServiceHost.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\BlockingScope.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\Codes.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\ErrorDefinition.cs" />
@@ -385,7 +390,6 @@
     <Compile Include="Recipes\MbeTable\MbeTableFB.Communication.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.Configuration.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.Pins.cs" />
-    <Compile Include="Recipes\MbeTable\MbeTableFB.Services.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.VisualProperties.cs" />
     <Compile Include="Recipes\MbeTable\ServiceModbusTCP\Domain\RecipeColumnLayout.cs" />
     <Compile Include="Recipes\MbeTable\ServiceModbusTCP\Domain\RecipeComparator.cs" />

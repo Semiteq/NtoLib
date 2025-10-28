@@ -24,8 +24,11 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     private readonly ErrorDefinitionRegistry _errorRegistry;
     private readonly ILogger<RecipeAttributesService> _logger;
 
+    private readonly IReadOnlyList<LoopMetadata> _emptyLoopList = Array.Empty<LoopMetadata>();
+
     private IReadOnlyDictionary<int, int> _loopNestingLevels;
     private IReadOnlyDictionary<int, TimeSpan> _stepStartTimes;
+    private IReadOnlyDictionary<int, IReadOnlyList<LoopMetadata>> _enclosingLoopsMap;
     private TimeSpan _totalDuration;
     private bool _isValid;
 
@@ -46,6 +49,7 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
 
         _loopNestingLevels = new Dictionary<int, int>();
         _stepStartTimes = new Dictionary<int, TimeSpan>();
+        _enclosingLoopsMap = new Dictionary<int, IReadOnlyList<LoopMetadata>>();
         _totalDuration = TimeSpan.Zero;
         _isValid = false;
     }
@@ -67,6 +71,7 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
             ResetToInvalidState(previousValidState);
             return loopResult.ToResult();
         }
+
         _loopNestingLevels = loopResult.Value;
 
         var timeResult = _timeCalculator.Calculate(recipe);
@@ -75,8 +80,12 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
             ResetToInvalidState(previousValidState);
             return timeResult.ToResult();
         }
-        (_totalDuration, _stepStartTimes) = timeResult.Value;
-        
+
+        var analysis = timeResult.Value;
+        _totalDuration = analysis.TotalDuration;
+        _stepStartTimes = analysis.StepStartTimes;
+        _enclosingLoopsMap = analysis.EnclosingLoopsMap;
+
         var allReasons = loopResult.Reasons.Concat(timeResult.Reasons).ToList();
 
         _isValid = !allReasons
@@ -114,6 +123,13 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
             .WithMetadata("stepIndex", stepIndex));
     }
 
+    public IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex)
+    {
+        return _enclosingLoopsMap.TryGetValue(stepIndex, out var loops)
+            ? loops
+            : _emptyLoopList;
+    }
+
     public IReadOnlyDictionary<int, TimeSpan> GetAllStepStartTimes() => _stepStartTimes;
 
     public TimeSpan GetTotalDuration() => _totalDuration;
@@ -125,9 +141,11 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         _isValid = false;
         _loopNestingLevels = new Dictionary<int, int>();
         _stepStartTimes = new Dictionary<int, TimeSpan>();
+        _enclosingLoopsMap = new Dictionary<int, IReadOnlyList<LoopMetadata>>();
         _totalDuration = TimeSpan.Zero;
         NotifyValidationStateChanged(previousState);
     }
+
 
     private void NotifyValidationStateChanged(bool previousState)
     {

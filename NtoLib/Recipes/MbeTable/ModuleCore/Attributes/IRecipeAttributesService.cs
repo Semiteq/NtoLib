@@ -9,7 +9,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
 /// <summary>
 /// Manages Recipe analysis results (loops, timing, structure validation).
-/// Provides query API for accessing computed attributes.
+/// Provides a query API for accessing computed attributes.
 /// </summary>
 public interface IRecipeAttributesService
 {
@@ -37,6 +37,11 @@ public interface IRecipeAttributesService
     /// Gets all step start times.
     /// </summary>
     IReadOnlyDictionary<int, TimeSpan> GetAllStepStartTimes();
+
+    /// <summary>
+    /// Gets all enclosing loops for a specific step.
+    /// </summary>
+    IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex);
 
     /// <summary>
     /// Gets total recipe duration.

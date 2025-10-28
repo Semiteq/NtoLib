@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 using FluentResults;
 
@@ -11,22 +12,23 @@ using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
 /// <summary>
-/// Calculates total execution time and per-step absolute start times.
-/// Supports nested For/EndFor loops, LongLasting/Immediate steps,
-/// loop iteration count from MandatoryColumns.Task (short),
-/// and step duration from MandatoryColumns.StepDuration (float, seconds).
+/// Calculates total execution time, per-step absolute start times, and detailed loop structure metadata.
+/// This is a stateless service that operates on immutable recipe data.
 /// </summary>
 public class RecipeTimeCalculator
 {
     private const int ForLoopActionId = (int)ServiceActions.ForLoop;
     private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;
 
-    public Result<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)> Calculate(Recipe recipe)
+    public Result<LoopAnalysisResult> Calculate(Recipe recipe)
     {
         var stepStartTimes = new Dictionary<int, TimeSpan>(recipe.Steps.Count);
         var accumulatedTime = TimeSpan.Zero;
         var loopStack = new Stack<LoopFrame>();
         var result = Result.Ok();
+
+        var loopMetadataByStart = new Dictionary<int, LoopMetadata>();
+        var enclosingMapBuilder = new Dictionary<int, List<LoopMetadata>>();
 
         for (var i = 0; i < recipe.Steps.Count; i++)
         {
@@ -35,7 +37,7 @@ public class RecipeTimeCalculator
             var step = recipe.Steps[i];
             var actionPropertyResult = GetActionPropertyIfExistsInStep(step, i);
             if (actionPropertyResult.IsFailed)
-                return actionPropertyResult.ToResult<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)>();
+                return actionPropertyResult.ToResult<LoopAnalysisResult>();
 
             var actionId = actionPropertyResult.Value;
             Result stepProcessingResult;
@@ -47,7 +49,7 @@ public class RecipeTimeCalculator
                     break;
                 
                 case EndForLoopActionId:
-                    stepProcessingResult = ProcessForLoopEnd(ref accumulatedTime, loopStack, i);
+                    stepProcessingResult = ProcessForLoopEnd(ref accumulatedTime, loopStack, i, loopMetadataByStart, enclosingMapBuilder);
                     break;
 
                 default:
@@ -56,7 +58,7 @@ public class RecipeTimeCalculator
             }
 
             if (stepProcessingResult.IsFailed)
-                return stepProcessingResult.ToResult<(TimeSpan, IReadOnlyDictionary<int, TimeSpan>)>();
+                return stepProcessingResult.ToResult<LoopAnalysisResult>();
             
             result.WithReasons(stepProcessingResult.Reasons);
         }
@@ -66,7 +68,19 @@ public class RecipeTimeCalculator
             result.WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", recipe.Steps.Count));
         }
 
-        return result.ToResult((accumulatedTime, (IReadOnlyDictionary<int, TimeSpan>)stepStartTimes.ToImmutableDictionary()));
+        var sortedEnclosingMap = enclosingMapBuilder.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (IReadOnlyList<LoopMetadata>)kvp.Value.OrderBy(m => m.NestingDepth).ToList().AsReadOnly()
+        );
+
+        var analysisResult = new LoopAnalysisResult(
+            accumulatedTime,
+            stepStartTimes.ToImmutableDictionary(),
+            loopMetadataByStart.ToImmutableDictionary(),
+            sortedEnclosingMap
+        );
+
+        return result.ToResult(analysisResult);
     }
 
     private static Result<int> GetActionPropertyIfExistsInStep(Step step, int stepIndex)
@@ -91,13 +105,13 @@ public class RecipeTimeCalculator
         if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
             return CreateMissingIterationCountWarning(stepIndex);
 
-        // We have to treat iterations as float dew to a column type and writing to PLC limitation
         var iterations = (int)taskProperty.GetValue<float>();
         if (iterations <= 0)
             return CreateInvalidIterationCountWarning(stepIndex, iterations);
 
         loopStack.Push(new LoopFrame
         {
+            StartIndex = stepIndex,
             Iterations = iterations,
             LoopStartTime = accumulatedTime,
             BodyStartTime = accumulatedTime
@@ -109,20 +123,38 @@ public class RecipeTimeCalculator
     private static Result ProcessForLoopEnd(
         ref TimeSpan accumulatedTime,
         Stack<LoopFrame> loopStack,
-        int stepIndex)
+        int currentStepIndex,
+        IDictionary<int, LoopMetadata> loopMetadata,
+        IDictionary<int, List<LoopMetadata>> enclosingMapBuilder)
     {
         if (loopStack.Count == 0)
-            return CreateUnmatchedEndForLoopWarning(stepIndex);
+            return CreateUnmatchedEndForLoopWarning(currentStepIndex);
 
         var frame = loopStack.Pop();
-
         var singleIterationDuration = accumulatedTime - frame.BodyStartTime;
         
-        // If duration is negative, it indicates an issue with loop structure that should have been caught earlier.
-        // To prevent catastrophic time calculation errors, we treat this iteration as having zero duration.
         if (singleIterationDuration.Ticks < 0)
             singleIterationDuration = TimeSpan.Zero;
             
+        var metadata = new LoopMetadata(
+            frame.StartIndex,
+            currentStepIndex,
+            loopStack.Count + 1,
+            singleIterationDuration,
+            frame.Iterations
+        );
+        loopMetadata[frame.StartIndex] = metadata;
+
+        for (int i = frame.StartIndex + 1; i < currentStepIndex; i++)
+        {
+            if (!enclosingMapBuilder.TryGetValue(i, out var list))
+            {
+                list = new List<LoopMetadata>();
+                enclosingMapBuilder[i] = list;
+            }
+            list.Add(metadata);
+        }
+        
         var totalLoopTime = TimeSpan.FromTicks(singleIterationDuration.Ticks * (frame.Iterations - 1));
         accumulatedTime += totalLoopTime;
 
@@ -192,12 +224,5 @@ public class RecipeTimeCalculator
             .WithMetadata("stepIndex", stepIndex)
             .WithMetadata("duration", seconds));
         return result;
-    }
-
-    private sealed class LoopFrame
-    {
-        public int Iterations { get; set; }
-        public TimeSpan LoopStartTime { get; set; }
-        public TimeSpan BodyStartTime { get; set; }
     }
 }

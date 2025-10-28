@@ -11,6 +11,7 @@
 - [Импорт и экспорт рецептов в CSV](./ServiceCsv/readme.md)
 - [Пины функционального блока (FB Pins)](./ModuleInfrastructure/readme.md)
 - [Диагностика](./ServiceLogger/readme.md)
+- [Тестирование поведения](../../../NtoLib.Test/readme.md)
 
 ## 1. Ключевые возможности
 
@@ -49,7 +50,8 @@
 
 ## Поведение для отдельных вендоров
 
-- Mitsubishi ожидает порядок бит lowhigh
-- Siemens ожидает порядок бит highlow
-- Для Mitsubishi можно ставить задержки при передаче по modbusTCP ниже, порядка 200-300мс. 
-- Для Siemens задержки при передаче по ModbusTcp лучше ставить порядка 1с.
+| Поведение          | Mitsubishi | Siemens |
+|--------------------|------------|---------|
+| Порядок бит        | lowhigh    | highlow |
+| Задержки ModbusTCP | 200-300мс  | 1с      |
+| UnitID             | 1          | 69      |

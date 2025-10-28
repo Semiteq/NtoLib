@@ -1,80 +1,134 @@
-﻿
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 using FB;
 using FB.VisualFB;
+
 using InSAT.Library.Interop;
+using InSAT.OPC;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig;
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
-namespace NtoLib.Recipes.MbeTable;
-
-/// <summary>
-/// MBE recipe table function block for MasterSCADA 3.12.
-/// Manages recipe execution and communication with PLC.
-/// </summary>
-[CatID(CatIDs.CATID_OTHER)]
-[Guid("DFB05172-07CD-492C-925E-A091B197D8A8")]
-[FBOptions(FBOptions.EnableChangeConfigInRT)]
-[VisualControls(typeof(TableControl))]
-[DisplayName("Таблица рецептов MBE")]
-[ComVisible(true)]
-[Serializable]
-public partial class MbeTableFB : VisualFBBase
+namespace NtoLib.Recipes.MbeTable
 {
-    private const string ConfigFolderName = "NtoLibTableConfig";
-    private const string PropertyDefsFileName = "PropertyDefs.yaml";
-    private const string ColumnDefsFileName = "ColumnDefs.yaml";
-    private const string PinGroupDefsFileName = "PinGroupDefs.yaml";
-    private const string ActionsDefsFileName = "ActionsDefs.yaml";
-
-    public IServiceProvider? ServiceProvider => _serviceProvider;
-
-    [NonSerialized] private Lazy<ConfigurationState>? _configurationStateLazy;
-    [NonSerialized] private readonly object _configurationLock = new();
-    [NonSerialized] private IServiceProvider? _serviceProvider;
-    [NonSerialized] private TimerService? _timerService;
-    [NonSerialized] private IRecipeRuntimeState? _runtimeState;
-    [NonSerialized] private IActionTargetProvider? _actionTargetProvider;
-    
-    protected override void ToDesign()
+    /// <summary>
+    /// MBE recipe table function block for MasterSCADA 3.12.
+    /// Manages recipe execution and communication with PLC.
+    /// </summary>
+    [CatID(CatIDs.CATID_OTHER)]
+    [Guid("DFB05172-07CD-492C-925E-A091B197D8A8")]
+    [FBOptions(FBOptions.EnableChangeConfigInRT)]
+    [VisualControls(typeof(TableControl))]
+    [DisplayName("Таблица рецептов MBE")]
+    [ComVisible(true)]
+    [Serializable]
+    public partial class MbeTableFB : VisualFBBase
     {
-        base.ToDesign();
-        CleanupServices();
-    }
-    
-    protected override void ToRuntime()
-    {
-        base.ToRuntime();
-        
-        var state = EnsureConfigurationLoaded();
-        InitializeServices(state);
-    }
-    
-    public override void Dispose()
-    {
-        CleanupServices();
-        base.Dispose();
-    }
+        private const string ConfigFolderName = "NtoLibTableConfig";
+        private const string PropertyDefsFileName = "PropertyDefs.yaml";
+        private const string ColumnDefsFileName = "ColumnDefs.yaml";
+        private const string PinGroupDefsFileName = "PinGroupDefs.yaml";
+        private const string ActionsDefsFileName = "ActionsDefs.yaml";
 
-    protected override void UpdateData()
-    {
-        base.UpdateData();
+        public IServiceProvider? ServiceProvider => _serviceProvider;
 
-        if (_runtimeState == null || _timerService == null)
+        [NonSerialized] private Lazy<ConfigurationState>? _configurationStateLazy;
+        [NonSerialized] private IServiceProvider? _serviceProvider;
+        [NonSerialized] private RuntimeServiceHost? _runtimeServiceHost;
+
+        protected override void ToDesign()
         {
-            return;
+            base.ToDesign();
+            CleanupRuntime();
         }
 
-        _runtimeState.Poll();
-        _timerService.UpdateFromSnapshot(_runtimeState.Current);
+        protected override void ToRuntime()
+        {
+            base.ToRuntime();
+            InitializeRuntime();
+        }
 
-        UpdateUiConnectionPins();
+        public override void Dispose()
+        {
+            CleanupRuntime();
+            base.Dispose();
+        }
+
+        private void InitializeRuntime()
+        {
+            if (_serviceProvider != null)
+            {
+                return;
+            }
+
+            try
+            {
+                var state = EnsureConfigurationLoaded();
+                _serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this, state);
+                _runtimeServiceHost = new RuntimeServiceHost(_serviceProvider);
+            }
+            catch (Exception ex)
+            {
+                var fullMessage =
+                    $"Service initialization failed:\n\n{ex.GetType().Name}: {ex.Message}\n\nStackTrace:\n{ex.StackTrace}";
+
+                if (ex.InnerException != null)
+                {
+                    fullMessage +=
+                        $"\n\nInner Exception:\n{ex.InnerException.GetType().Name}: {ex.InnerException.Message}\n{ex.InnerException.StackTrace}";
+                }
+
+                MessageBox.Show(fullMessage, "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
+            }
+        }
+
+        private void CleanupRuntime()
+        {
+            if (_serviceProvider == null)
+            {
+                return;
+            }
+
+            _runtimeServiceHost?.Dispose();
+            _runtimeServiceHost = null;
+
+            if (_serviceProvider is IDisposable disposableProvider)
+            {
+                disposableProvider.Dispose();
+            }
+
+            _serviceProvider = null;
+        }
+
+        protected override void UpdateData()
+        {
+            base.UpdateData();
+
+            _runtimeServiceHost?.Poll();
+
+            UpdateUiConnectionPins();
+        }
+
+        /// <summary>
+        /// Updates timer-related pins. Called by RuntimeServiceHost.
+        /// </summary>
+        internal void UpdateTimerPins(TimeSpan stepTimeLeft, TimeSpan totalTimeLeft)
+        {
+            if (GetPinQuality(IdLineTimeLeft) != OpcQuality.Good
+                || !AreFloatsEqual(GetPinValue<float>(IdLineTimeLeft), (float)stepTimeLeft.TotalSeconds))
+            {
+                SetPinValue(IdLineTimeLeft, (float)stepTimeLeft.TotalSeconds);
+            }
+
+            if (GetPinQuality(IdTotalTimeLeft) != OpcQuality.Good
+                || !AreFloatsEqual(GetPinValue<float>(IdTotalTimeLeft), (float)totalTimeLeft.TotalSeconds))
+            {
+                SetPinValue(IdTotalTimeLeft, (float)totalTimeLeft.TotalSeconds);
+            }
+        }
     }
 }
