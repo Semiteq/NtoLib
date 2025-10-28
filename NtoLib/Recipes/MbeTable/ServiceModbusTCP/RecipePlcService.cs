@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
@@ -52,6 +51,7 @@ public sealed class RecipePlcService : IRecipePlcService
 
     public async Task<Result> SendAsync(Recipe recipe, CancellationToken ct = default)
     {
+        _logger.LogDebug("Sending recipe to PLC");
         if (recipe is null)
             return Result.Fail(new Error("Recipe is null").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
 
@@ -62,9 +62,13 @@ public sealed class RecipePlcService : IRecipePlcService
 
             using var _ = MetricsStopwatch.Start("SendRecipe", _logger);
 
+            _logger.LogDebug("Checking PLC capacity for {StepCount} steps.", recipe.Steps.Count);
             var capacityCheck = _capacity.TryCheckCapacity(recipe);
             if (capacityCheck.IsFailed)
+            {
+                _logger.LogError("PLC capacity check failed: {Errors}", capacityCheck.Errors);
                 return capacityCheck;
+            }
 
             var (intArr, floatArr) = _serializer.ToRegisters(recipe.Steps);
 
@@ -73,21 +77,34 @@ public sealed class RecipePlcService : IRecipePlcService
                 .ConfigureAwait(false);
 
             if (writeResult.IsFailed)
+            {
+                _logger.LogError("Writing to PLC failed: {Errors}", writeResult.Errors);
                 return writeResult;
+            }
 
             if (verifyDelayMs > 0)
+            {
+                _logger.LogDebug("Waiting for {Delay} ms before verification.", verifyDelayMs);
                 await Task.Delay(verifyDelayMs, ct).ConfigureAwait(false);
+            }
 
             return Result.Ok().WithSuccess("Recipe successfully written to PLC");
         }
         catch (OperationCanceledException)
         {
+            _logger.LogWarning("Send operation was cancelled."); 
             return Result.Fail(new Error("Operation cancelled").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unexpected error occurred during recipe serialization or sending.");
+            return Result.Fail(new Error("An unexpected error occurred.").CausedBy(ex));
         }
         finally
         {
             if (_disconnectStrategy.ShouldDisconnect("Send"))
             {
+                _logger.LogDebug("Disconnecting after Send operation as per strategy.");
                 _transport.Disconnect();
             }
         }

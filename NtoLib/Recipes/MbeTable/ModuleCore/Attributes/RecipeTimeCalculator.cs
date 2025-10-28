@@ -91,7 +91,8 @@ public class RecipeTimeCalculator
         if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
             return CreateMissingIterationCountWarning(stepIndex);
 
-        var iterations = (int)taskProperty.GetValue<short>();
+        // We have to treat iterations as float dew to a column type and writing to PLC limitation
+        var iterations = (int)taskProperty.GetValue<float>();
         if (iterations <= 0)
             return CreateInvalidIterationCountWarning(stepIndex, iterations);
 

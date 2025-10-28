@@ -26,7 +26,8 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
     {
         "Numeric",
         "Scientific",
-        "TimeHms"
+        "TimeHms",
+        "Int"
     };
 
     private static readonly HashSet<string> SpecialTypes = new(StringComparer.OrdinalIgnoreCase)

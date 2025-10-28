@@ -54,6 +54,12 @@
   max: 100000
   format_kind: "Numeric"
 
+## Float с форматированием и округлением до целой части
+- property_type_id: "float_as_int"
+  system_type: "System.Single"
+  units: ""
+  format_kind: "Int"
+
 ## Процент
 - property_type_id: "percent"
   system_type: "System.Single"

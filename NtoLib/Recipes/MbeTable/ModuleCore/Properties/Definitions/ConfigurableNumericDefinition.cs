@@ -87,6 +87,7 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         {
             FormatKind.Scientific => numeric.ToString("0.###E0", CultureInfo.InvariantCulture),
             FormatKind.Numeric => numeric.ToString("0.###", CultureInfo.InvariantCulture),
+            FormatKind.Int => numeric.ToString("0", CultureInfo.InvariantCulture),
             _ => numeric.ToString(CultureInfo.InvariantCulture)
         };
     }
@@ -114,7 +115,15 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 
         if (float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var f))
         {
-            f = (float)Math.Round(f, Precision, MidpointRounding.AwayFromZero);
+            if (FormatKind == FormatKind.Int)
+            {
+                f = (float)Math.Truncate(f);
+            }
+            else
+            {
+                f = (float)Math.Round(f, Precision, MidpointRounding.AwayFromZero);
+            }
+    
             return Result.Ok<object>(f);
         }
 

@@ -650,9 +650,6 @@
     <Content Include="Recipes\MbeTable\YamlTemplates\MOCVD\PinGroupDefs.yaml" />
     <Content Include="Recipes\MbeTable\YamlTemplates\MOCVD\PropertyDefs.yaml" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Recipes\MbeTable\ServiceModbusTCP\Configuration\" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="PostBuild" AfterTargets="Build">
     <!-- Clean temporary files -->

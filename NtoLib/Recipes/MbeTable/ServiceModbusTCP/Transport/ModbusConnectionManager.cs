@@ -148,9 +148,11 @@ internal sealed class ModbusConnectionManager : IDisposable
             if (validateResult.IsSuccess)
             {
                 _stateTracker.MarkValidated();
+                _logger.LogDebug("Magic number validation successful on connect.");
                 return Result.Ok();
             }
 
+            _logger.LogError("Magic number validation failed on connect: {Errors}. Disconnecting.", validateResult.Errors);
             DisconnectInternal("validation_failed");
             return validateResult;
         }
@@ -159,14 +161,14 @@ internal sealed class ModbusConnectionManager : IDisposable
             DisconnectInternal("connect_error");
             _logger.LogError(ex, "Communication error during PLC connection: {ExceptionType}", ex.GetType().Name);
             return Result.Fail(
-                new Error(ex.Message).WithMetadata(nameof(ResultsExtension.ErrorDefinitions.Codes), ResultsExtension.ErrorDefinitions.Codes.PlcFailedToPing));
+                new Error(ex.Message).WithMetadata(nameof(ResultsExtension.ErrorDefinitions.Codes), ResultsExtension.ErrorDefinitions.Codes.PlcConnectionFailed));
         }
         catch (EasyModbus.Exceptions.ModbusException mex)
         {
             DisconnectInternal("connect_error");
             _logger.LogError(mex, "PLC connection failed");
             return Result.Fail(
-                new Error(mex.Message).WithMetadata(nameof(ResultsExtension.ErrorDefinitions.Codes), ResultsExtension.ErrorDefinitions.Codes.PlcFailedToPing));
+                new Error(mex.Message).WithMetadata(nameof(ResultsExtension.ErrorDefinitions.Codes), ResultsExtension.ErrorDefinitions.Codes.PlcConnectionFailed));
         }
     }
 

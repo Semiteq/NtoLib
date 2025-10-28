@@ -18,5 +18,10 @@ public enum FormatKind
     /// <summary>
     /// Time format in hours:minutes:seconds (e.g., "01:23:45").
     /// </summary>
-    TimeHms = 2
+    TimeHms = 2,
+    
+    /// <summary>
+    /// Displayed as integer value (e.g., "123").
+    /// </summary>
+    Int = 3
 }

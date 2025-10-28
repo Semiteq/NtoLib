@@ -24,35 +24,66 @@ public sealed class ModbusTcpService : IModbusTcpService
     private readonly IRecipePlcService _plcService;
     private readonly IRecipeAssemblyService _assemblyService;
     private readonly RecipeComparator _comparator;
+    private readonly ILogger<ModbusTcpService> _logger;
 
     public ModbusTcpService(
         IRecipePlcService plcService,
         IRecipeAssemblyService assemblyService,
-        RecipeComparator comparator)
+        RecipeComparator comparator,
+        ILogger<ModbusTcpService> logger)
     {
         _plcService = plcService ?? throw new ArgumentNullException(nameof(plcService));
         _assemblyService = assemblyService ?? throw new ArgumentNullException(nameof(assemblyService));
         _comparator = comparator ?? throw new ArgumentNullException(nameof(comparator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<Result> SendRecipeAsync(Recipe recipe)
     {
         if (recipe is null) return ResultBox.Fail(Codes.CoreInvalidOperation);
 
+        _logger.LogTrace("Starting Send-And-Verify operation for recipe with {StepCount} steps.", recipe.Steps.Count);
+        
         var sendResult = await _plcService.SendAsync(recipe, CancellationToken.None);
-        if (sendResult.IsFailed) return sendResult;
+        if (sendResult.IsFailed)
+        {
+            _logger.LogError("Sending to PLC failed: {Errors}", sendResult.Errors);
+            return sendResult;
+        }
 
+        // wait for PLC to process the data
+        await Task.Delay(TimeSpan.FromMilliseconds(100), CancellationToken.None);
+        
+        _logger.LogTrace("Starting read-back for verification.");
+        
         var receiveResult = await _plcService.ReceiveAsync(CancellationToken.None);
-        if (receiveResult.IsFailed) return receiveResult.ToResult();
+        if (receiveResult.IsFailed)
+        {
+            _logger.LogError("Read-back from PLC failed: {Errors}", receiveResult.Errors);
+            return receiveResult.ToResult();
+        }
 
         var (intData, floatData, rowCount) = receiveResult.Value;
-
-        if (rowCount == 0) return Result.Ok().WithReason(new ValidationIssue(Codes.PlcZeroRowsRead));
+        _logger.LogTrace("Read-back received {RowCount} rows from PLC.", rowCount);
+        
+        if (rowCount == 0)
+        {
+            _logger.LogWarning("Read-back returned zero rows. Recipe not verified.");
+            return Result.Ok().WithReason(new ValidationIssue(Codes.PlcZeroRowsRead));
+        }
+        
+        _logger.LogTrace("Assembling recipe from read-back data.");
         
         var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
-        if (assembleResult.IsFailed) return assembleResult.ToResult();
+        if (assembleResult.IsFailed)
+        {
+            _logger.LogError("Assembling recipe from read-back data failed: {Errors}", assembleResult.Errors);
+            return assembleResult.ToResult();
+        }
         
+        _logger.LogTrace("Comparing original recipe with data read back from PLC.");
         var compareResult = _comparator.Compare(recipe, assembleResult.Value);
+        _logger.LogTrace("Recipe comparison result: {Result}", compareResult.IsSuccess ? "OK" : "FAILED");
         return compareResult;
     }
 
