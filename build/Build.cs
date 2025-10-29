@@ -8,13 +8,17 @@ using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.MSBuild;
+using Serilog;
 
 class Build : NukeBuild
 {
-    public static int Main() => Execute<Build>(x => x.Deploy);
+    public static int Main() => Execute<Build>(x => x.BuildDebug);
 
     [Parameter("Configuration to build - Default is 'Release'")]
     readonly Configuration Configuration = Configuration.Release;
+
+    [Parameter("Destination directory for local development deployment")]
+    readonly AbsolutePath DestinationDirectory = @"C:\Program Files (x86)\MPSSoft\MasterSCADA";
 
     [Solution] 
     readonly Solution Solution;
@@ -22,132 +26,206 @@ class Build : NukeBuild
     Project NtoLibProject => Solution.GetProject("NtoLib");
 
     AbsolutePath SolutionDirectory => Solution.Directory;
-    AbsolutePath IlRepackExecutable => SolutionDirectory / "packages" / "ILRepack.2.0.40" / "tools" / "ilrepack.exe";
-    AbsolutePath DestinationDirectory => @"C:\Program Files (x86)\MPSSoft\MasterSCADA";
+    AbsolutePath IlRepackExecutable => SolutionDirectory / "packages" / "ILRepack.2.0.40" / "tools" / "ILRepack.exe";
     AbsolutePath NtoLibTableConfigSource => NtoLibProject.Directory / "NtoLibTableConfig";
     AbsolutePath ArtifactsDirectory => RootDirectory / "Releases";
     AbsolutePath NtoLibRegBat => NtoLibProject.Directory / "NtoLib_reg.bat";
 
-    /// <summary>
-    /// Maps Nuke's Verbosity to MSBuild's MSBuildVerbosity.
-    /// </summary>
-    private MSBuildVerbosity GetMSBuildVerbosity()
+    AbsolutePath GetTargetDirectory() => NtoLibProject.Directory / "bin" / Configuration;
+    AbsolutePath GetMergedDll() => GetTargetDirectory() / "NtoLib.dll";
+    AbsolutePath GetOriginalDll() => GetTargetDirectory() / $"{NtoLibProject.Name}.dll";
+
+    static readonly string[] FilesToDeploy = 
+    {
+        "NtoLib.dll",
+        "NtoLib.pdb",
+        "System.Resources.Extensions.dll"
+    };
+
+    static readonly string[] AssembliesToMerge = 
+    {
+        
+        "System.Collections.Immutable.dll",
+        "System.Diagnostics.DiagnosticSource.dll",
+        
+        "Microsoft.Bcl.HashCode.dll",
+        "Microsoft.Bcl.TimeProvider.dll",
+        "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "Microsoft.Extensions.DependencyInjection.dll",
+        "Microsoft.Extensions.Logging.Abstractions.dll",
+        "Microsoft.Extensions.Logging.dll",
+        "Microsoft.Extensions.Options.dll",
+        "Microsoft.Extensions.Primitives.dll",
+        
+        "Serilog.dll",
+        "Serilog.Sinks.Console.dll",
+        "Serilog.Sinks.Debug.dll",
+        "Serilog.Sinks.File.dll",
+        "Serilog.Extensions.Logging.dll",
+        
+        "Polly.dll",
+        "Polly.Core.dll",
+        
+        "OneOf.dll",
+        
+        "FluentResults.dll",
+        
+        "CsvHelper.dll",
+        
+        "YamlDotNet.dll",
+        
+        "EasyModbus.dll",
+        
+        "COMDeviceSDK.dll",
+
+        "AngouriMath.dll",
+        "Antlr4.Runtime.Standard.dll",
+        "GenericTensor.dll",
+        "HonkSharp.dll",
+        "Numbers.dll",
+    };
+
+    MSBuildVerbosity GetMSBuildVerbosity()
     {
         return Verbosity switch
         {
             Verbosity.Quiet => MSBuildVerbosity.Quiet,
             Verbosity.Minimal => MSBuildVerbosity.Minimal,
-            Verbosity.Normal => MSBuildVerbosity.Normal,
+            Verbosity.Normal => MSBuildVerbosity.Minimal,
             Verbosity.Verbose => MSBuildVerbosity.Detailed,
             _ => MSBuildVerbosity.Minimal
         };
     }
 
-    /// <summary>
-    /// Checks if the current verbosity level should output detailed logs.
-    /// </summary>
-    private bool IsVerboseLogging => Verbosity == Verbosity.Verbose;
-
-    /// <summary>
-    /// Writes a log message to console, optionally only in verbose mode.
-    /// </summary>
-    /// <param name="message">Message to log.</param>
-    /// <param name="onlyVerbose">If true, logs only when verbosity is Detailed or Diagnostic.</param>
-    private void Log(string message, bool onlyVerbose = false)
-    {
-        if (onlyVerbose && !IsVerboseLogging)
-        {
-            return;
-        }
-            
-        Console.WriteLine(message);
-    }
-
-    /// <summary>
-    /// Recursively copies a directory and its contents to a new location.
-    /// </summary>
-    /// <param name="source">The source directory path.</param>
-    /// <param name="destination">The destination directory path.</param>
-    private void CopyDirectoryRecursively(AbsolutePath source, AbsolutePath destination)
+    void CopyDirectoryRecursively(AbsolutePath source, AbsolutePath destination)
     {
         destination.CreateDirectory();
         
-        var files = Directory.GetFiles(source);
-        Log($"Found {files.Length} files in {source}", onlyVerbose: true);
-        
-        foreach (var file in files)
+        foreach (var file in Directory.GetFiles(source))
         {
             var fileName = Path.GetFileName(file);
-            var destinationFile = destination / fileName;
-            File.Copy(file, destinationFile, overwrite: true);
-            Log($"  ✓ Copied file: {fileName}", onlyVerbose: true);
+            File.Copy(file, destination / fileName, overwrite: true);
+            Log.Debug("Copied file: {FileName}", fileName);
         }
         
-        var directories = Directory.GetDirectories(source);
-        Log($"Found {directories.Length} subdirectories in {source}", onlyVerbose: true);
-        
-        foreach (var directory in directories)
+        foreach (var directory in Directory.GetDirectories(source))
         {
             var directoryName = Path.GetFileName(directory);
-            Log($"  → Processing directory: {directoryName}", onlyVerbose: true);
             CopyDirectoryRecursively(directory, destination / directoryName);
         }
     }
     
-    /// <summary>
-    /// Extracts assembly version from AssemblyInfo.cs file.
-    /// </summary>
-    /// <returns>Assembly version string or "1.0.0" if not found.</returns>
-    private string GetAssemblyVersion()
+    string GetAssemblyVersion()
     {
         var assemblyInfoPath = NtoLibProject.Directory / "Properties" / "AssemblyInfo.cs";
-        Log($"Reading version from: {assemblyInfoPath}", onlyVerbose: true);
-        
         var assemblyInfoContent = File.ReadAllText(assemblyInfoPath);
         var match = Regex.Match(assemblyInfoContent, @"\[assembly: AssemblyInformationalVersion\(""([^""]+)""\)\]");
         
         if (match.Success)
         {
             var version = match.Groups[1].Value;
-            Log($"Detected version: {version}", onlyVerbose: true);
+            Log.Debug("Detected version: {Version}", version);
             return version;
         }
         
-        Log("Version not found, using default: 1.0.0", onlyVerbose: true);
+        Log.Warning("Version not found in AssemblyInfo.cs, using default: 1.0.0");
         return "1.0.0";
     }
 
-    /// <summary>
-    /// Checks if source files have been modified since the last compilation.
-    /// </summary>
-    /// <param name="outputDllPath">Path to the compiled DLL.</param>
-    /// <returns>True if sources are newer than DLL, false otherwise.</returns>
-    private bool AreSourcesModified(AbsolutePath outputDllPath)
+    bool IsMergedDllUpToDate()
     {
-        if (!outputDllPath.FileExists())
+        var mergedDll = GetMergedDll();
+        var markerFile = mergedDll.Parent / (mergedDll.Name + ".merged-marker");
+
+        if (!mergedDll.FileExists() || !markerFile.FileExists())
         {
-            return true;
+            Log.Debug("Merged DLL or marker file does not exist, ILRepack required");
+            return false;
         }
 
-        var dllTimestamp = File.GetLastWriteTime(outputDllPath);
-        Log($"Current DLL timestamp: {dllTimestamp}", onlyVerbose: true);
+        if (File.GetLastWriteTime(mergedDll) > File.GetLastWriteTime(markerFile))
+        {
+            Log.Debug("Main assembly is newer than the last merge marker, ILRepack is required");
+            return false;
+        }
+
+        var mergedTimestamp = File.GetLastWriteTime(mergedDll);
+        var targetDirectory = GetTargetDirectory();
         
-        var sourceFiles = NtoLibProject.Directory.GlobFiles("**/*.cs").ToArray();
-        Log($"Found {sourceFiles.Length} source files to check", onlyVerbose: true);
-        
-        var modifiedFiles = sourceFiles.Where(file => File.GetLastWriteTime(file) > dllTimestamp).ToArray();
-        
-        if (modifiedFiles.Length == 0)
+        var inputAssemblies = new[] { GetOriginalDll() }
+            .Concat(AssembliesToMerge.Select(name => targetDirectory / name))
+            .Where(path => path.FileExists())
+            .ToArray();
+
+        foreach (var assembly in inputAssemblies)
+        {
+            if (File.GetLastWriteTime(assembly) > mergedTimestamp)
+            {
+                Log.Debug("Assembly {Name} is newer than merged DLL", Path.GetFileName(assembly));
+                return false;
+            }
+        }
+
+        Log.Information("Merged DLL is up to date, skipping ILRepack");
+        return true;
+    }
+
+    bool AreFilesUpToDate(AbsolutePath sourceDir, AbsolutePath destDir)
+    {
+        if (!destDir.DirectoryExists())
         {
             return false;
         }
 
-        Log($"Found {modifiedFiles.Length} modified files since last build:", onlyVerbose: true);
-        foreach (var file in modifiedFiles)
+        foreach (var fileName in FilesToDeploy)
         {
-            Log($"  - {file.Name} ({File.GetLastWriteTime(file)})", onlyVerbose: true);
+            var sourceFile = sourceDir / fileName;
+            var destFile = destDir / fileName;
+            
+            if (!sourceFile.FileExists())
+            {
+                continue;
+            }
+
+            if (!destFile.FileExists())
+            {
+                Log.Debug("File {FileName} missing in destination", fileName);
+                return false;
+            }
+
+            if (File.GetLastWriteTime(sourceFile) > File.GetLastWriteTime(destFile))
+            {
+                Log.Debug("File {FileName} is newer than destination", fileName);
+                return false;
+            }
         }
 
+        var configSource = NtoLibTableConfigSource;
+        var configDest = destDir / "NtoLibTableConfig";
+        
+        if (configSource.DirectoryExists() && configDest.DirectoryExists())
+        {
+            var sourceFiles = configSource.GlobFiles("**/*").ToArray();
+            
+            foreach (var sourceFile in sourceFiles)
+            {
+                var relativePath = Path.GetRelativePath(configSource, sourceFile);
+                var destFile = configDest / relativePath;
+                
+                if (!destFile.FileExists() || File.GetLastWriteTime(sourceFile) > File.GetLastWriteTime(destFile))
+                {
+                    Log.Debug("Config file {FileName} requires update", relativePath);
+                    return false;
+                }
+            }
+        }
+        else if (configSource.DirectoryExists())
+        {
+            Log.Debug("Config directory missing in destination");
+            return false;
+        }
+
+        Log.Information("All files are up to date in destination");
         return true;
     }
 
@@ -155,31 +233,43 @@ class Build : NukeBuild
         .Before(Restore)
         .Executes(() =>
         {
-            Log($"=== Cleaning with verbosity: {Verbosity} ===");
+            Log.Information("Cleaning solution (Configuration: {Configuration})", Configuration);
             
             var directoriesToClean = SolutionDirectory.GlobDirectories("**/bin", "**/obj")
                 .Where(directory => !directory.ToString().Contains("packages"))
+                .Where(directory => !directory.ToString().Contains("build"))
                 .ToArray();
             
-            Log($"Found {directoriesToClean.Length} directories to clean", onlyVerbose: true);
+            Log.Debug("Found {Count} directories to clean", directoriesToClean.Length);
                 
             foreach (var directory in directoriesToClean)
             {
                 if (directory.DirectoryExists())
                 {
-                    Log($"Deleting: {directory}", onlyVerbose: true);
-                    directory.DeleteDirectory();
+                    try
+                    {
+                        Log.Debug("Deleting: {Directory}", directory);
+                        directory.DeleteDirectory();
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        Log.Warning("Cannot delete {Directory}: {Message}", directory, ex.Message);
+                    }
+                    catch (IOException ex)
+                    {
+                        Log.Warning("Cannot delete {Directory}: {Message}", directory, ex.Message);
+                    }
                 }
             }
             
             ArtifactsDirectory.CreateOrCleanDirectory();
-            Log($"Cleaned artifacts directory: {ArtifactsDirectory}");
+            Log.Information("Cleaned artifacts directory: {Directory}", ArtifactsDirectory);
         });
 
     Target Restore => _ => _
         .Executes(() =>
         {
-            Log("=== Restoring NuGet packages ===");
+            Log.Information("Restoring NuGet packages");
             
             MSBuildTasks.MSBuild(settings => MSBuildSettingsExtensions
                 .SetTargetPath<MSBuildSettings>(settings, Solution)
@@ -188,26 +278,14 @@ class Build : NukeBuild
                 .SetNodeReuse(true)
                 .SetVerbosity(GetMSBuildVerbosity()));
                 
-            Log("✓ Restore completed");
+            Log.Information("Restore completed");
         });
 
     Target Compile => _ => _
         .DependsOn(Restore)
         .Executes(() =>
         {
-            Log($"=== Compiling (Configuration: {Configuration}) ===");
-            
-            var targetDirectory = NtoLibProject.Directory / "bin" / Configuration;
-            var outputDll = targetDirectory / $"{NtoLibProject.Name}.dll";
-            
-            if (AreSourcesModified(outputDll))
-            {
-                Log("Sources have been modified, compilation required");
-            }
-            else
-            {
-                Log("⚡ No source changes detected, MSBuild will use incremental compilation");
-            }
+            Log.Information("Compiling solution (Configuration: {Configuration})", Configuration);
 
             MSBuildTasks.MSBuild(settings => MSBuildSettingsExtensions
                 .SetTargetPath<MSBuildSettings>(settings, Solution)
@@ -226,143 +304,106 @@ class Build : NukeBuild
                     .SetProperty("Optimize", "false")
                     .SetProperty("DebugType", "full")
                     .SetProperty("DebugSymbols", "true")
-                    .SetProperty("DefineConstants", "DEBUG;TRACE")));
+                    .SetProperty("DefineConstants", "\"DEBUG;TRACE\"")));
                     
-            Log("✓ Compilation completed");
+            Log.Information("Compilation completed");
         });
 
-    Target IlRepack => _ => _
+    Target ILRepack => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
-            Log("=== Running ILRepack ===");
-            
-            var targetDirectory = NtoLibProject.Directory / "bin" / Configuration;
-            var targetPath = targetDirectory / $"{NtoLibProject.Name}.dll";
-            var outputPath = targetDirectory / "NtoLib.dll";
-
-            Log($"Target directory: {targetDirectory}");
-            Log($"Main assembly: {targetPath}", onlyVerbose: true);
-
-            var assemblyPaths = new[]
+            if (IsMergedDllUpToDate())
             {
-                targetPath,
-                targetDirectory / "System.Collections.Immutable.dll",
-                targetDirectory / "System.Diagnostics.DiagnosticSource.dll",
-                
-                targetDirectory / "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
-                targetDirectory / "Microsoft.Extensions.DependencyInjection.dll",
-                
-                targetDirectory / "Microsoft.Extensions.Logging.Abstractions.dll",
-                targetDirectory / "Microsoft.Extensions.Logging.dll",
-                
-                targetDirectory / "Microsoft.Extensions.Options.dll",
-                
-                targetDirectory / "Serilog.dll",
-                
-                targetDirectory / "Serilog.Sinks.Console.dll",
-                targetDirectory / "Serilog.Sinks.Debug.dll",
-                targetDirectory / "Serilog.Sinks.File.dll",
-                
-                targetDirectory / "Serilog.Extensions.Logging.dll",
-                
-                targetDirectory / "Polly.dll",
-                
-                targetDirectory / "OneOf.dll",
-                
-                targetDirectory / "FluentResults.dll",
-                
-                targetDirectory / "CsvHelper.dll",
-                
-                targetDirectory / "YamlDotNet.dll",
-                
-                targetDirectory / "EasyModbus.dll",
-                
-                targetDirectory / "COMDeviceSDK.dll",
-                
-            };
-
-            var existingAssemblies = assemblyPaths.Where(assembly => assembly.FileExists()).ToArray();
-            
-            Log($"Found {existingAssemblies.Length} assemblies to merge:");
-            
-            foreach (var assembly in existingAssemblies)
-            {
-                var fileInfo = new FileInfo(assembly);
-                Log($"  ✓ {assembly.Name} ({fileInfo.Length / 1024} KB)", onlyVerbose: true);
+                return;
             }
 
-            if (existingAssemblies.Length == 0)
+            Log.Information("Running ILRepack");
+            
+            var targetDirectory = GetTargetDirectory();
+            var targetPath = GetOriginalDll();
+            var outputPath = GetMergedDll();
+
+            var assemblyPaths = new[] { targetPath }
+                .Concat(AssembliesToMerge.Select(name => targetDirectory / name))
+                .Where(assembly => assembly.FileExists())
+                .ToArray();
+
+            if (assemblyPaths.Length <= 1)
             {
-                throw new InvalidOperationException("No assemblies found to merge.");
+                throw new InvalidOperationException($"No assemblies found to merge in {targetDirectory}");
+            }
+            
+            Log.Information("Merging {Count} assemblies into {OutputFile}", assemblyPaths.Length, outputPath.Name);
+            Log.Debug("Output: {OutputPath}", outputPath);
+            
+            foreach (var assembly in assemblyPaths)
+            {
+                var fileInfo = new FileInfo(assembly);
+                Log.Debug("  → {Name} ({Size} KB)", assembly.Name, fileInfo.Length / 1024);
             }
 
             var arguments = new[]
             {
                 "/target:library",
                 $"/out:\"{outputPath}\"",
-            }.Concat(existingAssemblies.Select(assembly => $"\"{assembly}\""));
-
-            if (IsVerboseLogging)
-            {
-                Log($"ILRepack command: {IlRepackExecutable} {string.Join(" ", arguments)}", onlyVerbose: true);
-            }
+            }.Concat(assemblyPaths.Select(assembly => $"\"{assembly}\""));
 
             var process = ProcessTasks.StartProcess(
                 IlRepackExecutable,
                 string.Join(" ", arguments),
                 workingDirectory: targetDirectory,
-                logOutput: IsVerboseLogging);
+                logOutput: Verbosity >= Verbosity.Verbose);
                 
             process.AssertZeroExitCode();
             
             var outputFileInfo = new FileInfo(outputPath);
-            Log($"✓ ILRepack completed: {outputPath.Name} ({outputFileInfo.Length / 1024} KB)");
+            Log.Information("ILRepack completed: {FileName} ({Size} KB)", outputPath.Name, outputFileInfo.Length / 1024);
+            
+            var markerFile = outputPath.Parent / (outputPath.Name + ".merged-marker");
+            File.WriteAllText(markerFile, DateTime.UtcNow.ToString("O"));
+            Log.Debug("Created/updated merge marker file.");
         });
 
-    Target CopyFiles => _ => _
-        .DependsOn(IlRepack) 
+    Target CopyToLocal => _ => _
+        .DependsOn(ILRepack)
+        .OnlyWhenDynamic(() => Configuration == Configuration.Debug)
         .Executes(() =>
         {
-            Log("=== Copying files to destination ===");
+            Log.Information("Copying files to local deployment directory");
+            Log.Information("Destination: {Destination}", DestinationDirectory);
             
-            var targetDirectory = NtoLibProject.Directory / "bin" / Configuration;
-            var targetFileName = $"{NtoLibProject.Name}.dll";
-            
-            Log($"Source: {targetDirectory}");
-            Log($"Destination: {DestinationDirectory}");
+            var targetDirectory = GetTargetDirectory();
+
+            if (AreFilesUpToDate(targetDirectory, DestinationDirectory))
+            {
+                return;
+            }
             
             DestinationDirectory.CreateDirectory();
 
-            var filesToCopy = new[]
-            {
-                ("System.Resources.Extensions.dll", targetDirectory / "System.Resources.Extensions.dll"),
-                (targetFileName, targetDirectory / targetFileName),
-                ("NtoLib.pdb", targetDirectory / "NtoLib.pdb")
-            };
-
             var copiedCount = 0;
-            var skippedCount = 0;
             
-            foreach (var (destinationFileName, sourcePath) in filesToCopy)
+            foreach (var fileName in FilesToDeploy)
             {
+                var sourcePath = targetDirectory / fileName;
+                
                 if (sourcePath.FileExists())
                 {
-                    var destinationPath = DestinationDirectory / destinationFileName;
+                    var destinationPath = DestinationDirectory / fileName;
                     File.Copy(sourcePath, destinationPath, overwrite: true);
                     
                     var fileInfo = new FileInfo(sourcePath);
-                    Log($"✓ Copied: {destinationFileName} ({fileInfo.Length / 1024} KB)", onlyVerbose: true);
+                    Log.Debug("Copied: {FileName} ({Size} KB)", fileName, fileInfo.Length / 1024);
                     copiedCount++;
                 }
                 else
                 {
-                    Log($"✗ Not found: {sourcePath}", onlyVerbose: true);
-                    skippedCount++;
+                    Log.Warning("File not found: {FileName}", fileName);
                 }
             }
             
-            Log($"Files copied: {copiedCount}, skipped: {skippedCount}");
+            Log.Information("Copied {Count} files", copiedCount);
 
             if (NtoLibTableConfigSource.DirectoryExists())
             {
@@ -370,45 +411,41 @@ class Build : NukeBuild
                 
                 if (configDestination.DirectoryExists())
                 {
-                    Log($"Removing old config: {configDestination}", onlyVerbose: true);
+                    Log.Debug("Removing old config directory");
                     configDestination.DeleteDirectory();
                 }
                     
-                Log($"Copying config directory...", onlyVerbose: true);
+                Log.Debug("Copying config directory");
                 CopyDirectoryRecursively(NtoLibTableConfigSource, configDestination);
-                Log("✓ NtoLibTableConfig folder copied");
+                Log.Information("Copied NtoLibTableConfig folder");
             }
             else
             {
-                Log($"✗ Config folder not found: {NtoLibTableConfigSource}");
+                Log.Warning("Config folder not found: {ConfigPath}", NtoLibTableConfigSource);
             }
             
-            Log("✓ Copy operation completed");
+            Log.Information("Local deployment completed");
         });
 
-    Target Archive => _ => _
-        .DependsOn(CopyFiles)
+    Target PackageArchive => _ => _
+        .DependsOn(ILRepack)
+        .OnlyWhenDynamic(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
-            Log("=== Creating archive ===");
+            Log.Information("Creating release archive");
             
             var version = GetAssemblyVersion();
             var archiveName = $"NtoLib_v{version}.zip";
             var archivePath = ArtifactsDirectory / archiveName;
             
-            Log($"Archive: {archiveName}");
+            Log.Information("Archive: {ArchiveName}", archiveName);
 
             var tempArchiveDir = TemporaryDirectory / "archive";
             tempArchiveDir.CreateOrCleanDirectory();
 
-            var sourceDir = NtoLibProject.Directory / "bin" / Configuration;
+            var sourceDir = GetTargetDirectory();
 
-            var filesToArchive = new[]
-            {
-                "NtoLib.dll",
-                "System.Resources.Extensions.dll"
-            };
-
+            var filesToArchive = new[] { "NtoLib.dll", "System.Resources.Extensions.dll" };
             var archivedCount = 0;
             
             foreach (var fileName in filesToArchive)
@@ -417,27 +454,35 @@ class Build : NukeBuild
                 if (sourcePath.FileExists())
                 {
                     File.Copy(sourcePath, tempArchiveDir / fileName, overwrite: true);
-                    Log($"  + {fileName}", onlyVerbose: true);
+                    Log.Debug("Added: {FileName}", fileName);
                     archivedCount++;
+                }
+                else
+                {
+                    Log.Warning("File not found for archive: {FileName}", fileName);
                 }
             }
             
-            Log($"Added {archivedCount} files to archive", onlyVerbose: true);
+            Log.Debug("Added {Count} files to archive", archivedCount);
             
             if (NtoLibTableConfigSource.DirectoryExists())
             {
-                Log("Adding NtoLibTableConfig...", onlyVerbose: true);
+                Log.Debug("Adding NtoLibTableConfig");
                 CopyDirectoryRecursively(NtoLibTableConfigSource, tempArchiveDir / "NtoLibTableConfig");
+            }
+            else
+            {
+                Log.Warning("Config folder not found: {ConfigPath}", NtoLibTableConfigSource);
             }
 
             if (NtoLibRegBat.FileExists())
             {
                 File.Copy(NtoLibRegBat, tempArchiveDir / "NtoLib_reg.bat", overwrite: true);
-                Log("  + NtoLib_reg.bat", onlyVerbose: true);
+                Log.Debug("Added: NtoLib_reg.bat");
             }
             else
             {
-                Log($"✗ Warning: NtoLib_reg.bat not found");
+                Log.Warning("NtoLib_reg.bat not found: {BatPath}", NtoLibRegBat);
             }
             
             if (archivePath.FileExists())
@@ -448,16 +493,39 @@ class Build : NukeBuild
             ZipFile.CreateFromDirectory(tempArchiveDir, archivePath);
             
             var archiveInfo = new FileInfo(archivePath);
-            Log($"✓ Archive created: {archivePath.Name} ({archiveInfo.Length / 1024} KB)");
+            Log.Information("Archive created: {ArchiveName} ({Size} KB)", archivePath.Name, archiveInfo.Length / 1024);
+            Log.Information("Location: {ArchivePath}", archivePath);
         });
-        
-    Target Deploy => _ => _
-        .DependsOn(Archive)
+
+    Target BuildDebug => _ => _
+        .Description("Build Debug configuration and copy to local deployment directory")
+        .DependsOn(Clean)
+        .DependsOn(CopyToLocal)
         .Executes(() =>
         {
-            Log("=== Build completed successfully! ===");
-            Log($"Configuration: {Configuration}");
-            Log($"Destination: {DestinationDirectory}");
-            Log($"Artifacts: {ArtifactsDirectory}");
+            Log.Information("Debug build completed successfully");
+            Log.Information("Deployed to: {Destination}", DestinationDirectory);
+        });
+
+    Target BuildRelease => _ => _
+        .Description("Build Release configuration without packaging")
+        .DependsOn(Clean)
+        .DependsOn(ILRepack)
+        .Executes(() =>
+        {
+            Log.Information("Release build completed successfully");
+            Log.Information("Output: {OutputPath}", GetMergedDll());
+        });
+
+    Target Package => _ => _
+        .Description("Build Release configuration and create deployment archive")
+        .DependsOn(Clean)
+        .DependsOn(PackageArchive)
+        .Executes(() =>
+        {
+            var version = GetAssemblyVersion();
+            Log.Information("Package build completed successfully");
+            Log.Information("Version: {Version}", version);
+            Log.Information("Artifacts: {ArtifactsDirectory}", ArtifactsDirectory);
         });
 }
