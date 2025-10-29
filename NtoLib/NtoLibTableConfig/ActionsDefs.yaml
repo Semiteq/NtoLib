@@ -18,7 +18,7 @@
 
 #### Wait по времени
 - id: 10
-  name: "Wait"
+  name: "Wait_time"
   deploy_duration: "LongLasting"
   columns:
     - key: "step_duration"
@@ -26,27 +26,38 @@
       property_type_id: "time"
     - key: "comment"
       property_type_id: "string"
-      
-#### Начало цикла FOR
-- id: 20
-  name: "For"
+
+### Wait по достижению температуры
+- id: 11
+  name: "Wait_Temp"
   deploy_duration: "Immediate"
   columns:
-    - key: "task"
-      default_value: "1"
-      property_type_id: "float_as_int"
-    - key: "comment"
-      property_type_id: "string"
-      
-#### Конец цикла FOR
-- id: 30
-  name: "End For"
-  deploy_duration: "Immediate"
-  columns:
+    - key: "channel"
+      group_name: "TempSensor"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "Temp"
     - key: "comment"
       property_type_id: "string"
 
+#### Wait по достижению давления
+- id: 12
+  name: "Wait_Pressure"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "PressureSensor"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "pressure_bar"
+    - key: "comment"
+      property_type_id: "string"
 
+## Конец группы WAIT
+
+## Пауза
 ### Пауза выполнения, ожидается пользовательское подтверждение для продолжения
 - id: 40
   name: "Pause"
@@ -57,176 +68,465 @@
 
 # --- Конец сервисных действий ---
 
-- id: 50
-  name: "Close"
-  deploy_duration: "Immediate"
-  columns:
-    - key: "target"
-      group_name: "ShutterNames"
-      property_type_id: "enum" 
-    - key: "comment"
-      property_type_id: "string"
-
-- id: 60
-  name: "Open"
-  deploy_duration: "Immediate"
-  columns:
-    - key: "target"
-      group_name: "ShutterNames"
-      property_type_id: "enum"
-    - key: "comment"
-      property_type_id: "string"
-
-- id: 70
-  name: "Open Time"
-  deploy_duration: "LongLasting"
-  columns:
-    - key: "target"
-      group_name: "ShutterNames"
-      property_type_id: "enum"
-    - key: "step_duration"
-      property_type_id: "time"
-    - key: "comment"
-      property_type_id: "string"
-
-- id: 80
-  name: "Close All"
-  deploy_duration: "Immediate"
-  columns:
-    - key: "comment"
-      property_type_id: "string"
-
-- id: 90
-  name: "Temperature"
-  deploy_duration: "Immediate"
-  columns:
-    - key: "target"
-      group_name: "HeaterNames"
-      property_type_id: "enum"
-    - key: "task"
-      property_type_id: "temp"
-      default_value: "500"
-    - key: "comment"
-      property_type_id: "string"
+# --- Начало действий MOC
 
 - id: 100
-  name: "Temperature Wait"
-  deploy_duration: "LongLasting"
+  name: "MOC"
+  deploy_duration: "Immediate"
   columns:
-    - key: "target"
-      group_name: "HeaterNames"
+    - key: "channel"
+      group_name: "MocCell"
       property_type_id: "enum"
-    - key: "task"
-      property_type_id: "temp"
-      default_value: "500"
+    - key: "mode"
+      group_name: "MocState"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "10"
+      property_type_id: "flow"
+    - key: "dilution"
+      default_value: "10"
+      property_type_id: "flow"
+    - key: "pressure"
+      default_value: "10"
+      property_type_id: "pressure_bar"
     - key: "step_duration"
+      default_value: "10"
       property_type_id: "time"
-      default_value: "60"
     - key: "comment"
       property_type_id: "string"
 
 - id: 110
-  name: "Temperature Smooth"
-  deploy_duration: "LongLasting"
+  name: "Wait_MOC"
+  deploy_duration: "Immediate"
   columns:
-    - key: "target"
-      group_name: "HeaterNames"
+    - key: "channel"
+      group_name: "MocCell"
       property_type_id: "enum"
-    - key: "initial_value"
-      property_type_id: "temp"
-      default_value: "500"
-    - key: "task"
-      property_type_id: "temp"
-      default_value: "600"
-    - key: "speed"
-      property_type_id: "temp_speed"
-      default_value: "10"
-    - key: "step_duration"
-      property_type_id: "time"
-      default_value: "600"
     - key: "comment"
       property_type_id: "string"
 
 - id: 120
-  name: "Power"
+  name: "Set_Default_MOC"
   deploy_duration: "Immediate"
   columns:
-    - key: "target"
-      group_name: "ShutterNames"
+    - key: "channel"
+      group_name: "MocCell"
       property_type_id: "enum"
-    - key: "task"
-      property_type_id: "percent"
-      default_value: "10"
-    - key: "comment"
-      property_type_id: "string"
-
-- id: 130
-  name: "Power Wait"
-  deploy_duration: "LongLasting"
-  columns:
-    - key: "target"
-      group_name: "HeaterNames"
-      property_type_id: "enum"
-    - key: "task"
-      property_type_id: "percent"
-      default_value: "10"
     - key: "step_duration"
+      default_value: "0"
       property_type_id: "time"
-      default_value: "60"
     - key: "comment"
       property_type_id: "string"
 
-- id: 140
-  name: "Power Smooth"
-  deploy_duration: "LongLasting"
+# --- Конец действий MOC ---
+
+# --- Начало действий Ligature ---
+
+- id: 200
+  name: "Ligature"
+  deploy_duration: "Immediate"
   columns:
-    - key: "target"
-      group_name: "HeaterNames"
+    - key: "channel"
+      group_name: "LigatureCell"
       property_type_id: "enum"
-    - key: "initial_value"
-      property_type_id: "percent"
-      default_value: "10"
-    - key: "task"
-      property_type_id: "percent"
-      default_value: "20"
-    - key: "speed"
-      property_type_id: "power_speed"
-      default_value: "1"
+    - key: "mode"
+      group_name: "LigatureState"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "dilution"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "pressure"
+      default_value: "0"
+      property_type_id: "pressure_bar"
+    - key: "mixing"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "transport"
+      default_value: "0"
+      property_type_id: "flow"
     - key: "step_duration"
+      default_value: "0"
       property_type_id: "time"
-      default_value: "600"
     - key: "comment"
       property_type_id: "string"
 
-- id: 150
-  name: "N Run"
+- id: 210
+  name: "Wait_Ligature"
   deploy_duration: "Immediate"
   columns:
-    - key: "target"
-      group_name: "NitrogenSourcesNames"
+    - key: "channel"
+      group_name: "LigatureCell"
       property_type_id: "enum"
-    - key: "task"
-      property_type_id: "flow"
-      default_value: "10"
     - key: "comment"
       property_type_id: "string"
 
-- id: 160
-  name: "N Close"
+- id: 220
+  name: "Set_Default_Ligature"
   deploy_duration: "Immediate"
   columns:
-    - key: "comment"
-      property_type_id: "string"
-
-- id: 170
-  name: "N Vent"
-  deploy_duration: "Immediate"
-  columns:
-    - key: "target"
-      group_name: "NitrogenSourcesNames"
+    - key: "channel"
+      group_name: "LigatureCell"
       property_type_id: "enum"
-    - key: "task"
-      property_type_id: "flow"
-      default_value: "10"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
     - key: "comment"
       property_type_id: "string"
+
+# --- Конец действий Ligature ---
+
+# --- Начало действий Hydride ---
+
+- id: 300
+  name: "Hydride"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "HydrideCell"
+      property_type_id: "enum"
+    - key: "mode"
+      group_name: "HydrideState"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "dilution"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 310
+  name: "Wait_Hydride"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "HydrideCell"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 320
+  name: "Set_Default_Hydride"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "HydrideCell"
+      property_type_id: "enum"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий Hydride ---
+
+# --- Начало действий Compensation ---
+
+- id: 400
+  name: "Compensation"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "CompensationLine"
+      property_type_id: "enum"
+    - key: "mode"
+      group_name: "TargetConsumer"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 410
+  name: "Wait_Compensation"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "CompensationLine"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 420
+  name: "Set_Default_Compensation"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "CompensationLine"
+      property_type_id: "enum"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий Compensation ---
+
+# --- Начало Gas Choice ---
+# Выбор рабочего газа
+
+- id: 500
+  name: "Gas_Choice"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "GasChoice"
+      property_type_id: "enum"
+    - key: "mode"
+      group_name: "Gas"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец Gas Choice ---
+
+# --- Начало действий с транспортом ---
+## Перегрузка манипулятором
+
+- id: 600
+  name: "Transport"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Transport"
+      property_type_id: "enum"
+    - key: "mode"
+      group_name: "Gas"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 610
+  name: "Wait_Transport"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Transport"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 620
+  name: "Set_Default_Transport"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Transport"
+      property_type_id: "enum"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий с транспортом ---
+
+# --- Начало действий с продувкой
+## Продувка газовой магистрали
+
+- id: 700
+  name: "Blowing"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Blowing"
+      property_type_id: "enum"
+    - key: "mode"
+      group_name: "Gas"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 710
+  name: "Wait_Blowing"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Blowing"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 720
+  name: "Set_Default_Blowing"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Blowing"
+      property_type_id: "enum"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий с продувкой ---
+
+# --- Начало действий Bypass ---
+
+- id: 800
+  name: "Bypass"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Bypass"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "flow"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 810
+  name: "Wait Bypass"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Bypass"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+      
+- id: 820
+  name: "Set_Default_Bypass"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Bypass"
+      property_type_id: "enum"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий Bypass ---
+
+# --- Начало действий с шибером ---
+# Управление шибером по давлению или положению
+
+- id: 900
+  name: "Butterfly P"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "pressure_bar"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 910
+  name: "Butterfly %"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "percent"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий с шибером ---
+
+# --- Начало действий с индукторами ---
+
+- id: 1000
+  name: "Inductor T"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "temp"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 1010
+  name: "Inductor P"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "percent"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий с индукторами ---
+
+# --- Начало действий с клапанами
+
+- id: 1100
+  name: "Open"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Valve"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 1110
+  name: "Close"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Valve"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий с клапанами ---
+
+# --- Начало действий с насосами, воздуходувками и нагревателем ---
+
+- id: 1200
+  name: "Start"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "Compressor"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 1210
+  name: "Stop"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "CompressorWithHeater"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец действий с насосами, воздуходувками и нагревателем ---
