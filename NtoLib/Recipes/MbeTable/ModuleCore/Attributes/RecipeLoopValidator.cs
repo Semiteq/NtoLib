@@ -31,7 +31,11 @@ public class RecipeLoopValidator
             if (actionPropertyResult.IsFailed)
                 return actionPropertyResult.ToResult();
 
-            var actionId = (int)actionPropertyResult.Value.GetValue<short>();
+
+            var propertyValueResult = actionPropertyResult.Value.GetValue<short>();
+            if (propertyValueResult.IsFailed) return propertyValueResult.ToResult();
+            
+            var actionId = (int)propertyValueResult.Value;
 
             switch (actionId)
             {
@@ -60,9 +64,8 @@ public class RecipeLoopValidator
         }
 
         if (currentDepth != 0)
-        {
             return CreateUnmatchedForLoopError(recipe.Steps.Count);
-        }
+        
 
         return Result.Ok<IReadOnlyDictionary<int, int>>(nestingLevels);
     }
@@ -111,13 +114,8 @@ public class RecipeLoopValidator
 
     private static Result<Property> GetActionPropertyIfExistsInStep(Step step)
     {
-        if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
-        {
-            var error = new Error("Step does not have an action property.")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound);
-            return Result.Fail(error);
-        }
-
-        return Result.Ok(actionProperty);
+        return step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null
+            ? actionProperty
+            : Errors.StepNoActionProperty();
     }
 }

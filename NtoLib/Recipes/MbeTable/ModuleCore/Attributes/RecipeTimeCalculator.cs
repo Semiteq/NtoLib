@@ -35,7 +35,7 @@ public class RecipeTimeCalculator
             stepStartTimes[i] = accumulatedTime;
 
             var step = recipe.Steps[i];
-            var actionPropertyResult = GetActionPropertyIfExistsInStep(step, i);
+            var actionPropertyResult = GetActionPropertyIfExistsInStep(step);
             if (actionPropertyResult.IsFailed)
                 return actionPropertyResult.ToResult<LoopAnalysisResult>();
 
@@ -83,17 +83,14 @@ public class RecipeTimeCalculator
         return result.ToResult(analysisResult);
     }
 
-    private static Result<int> GetActionPropertyIfExistsInStep(Step step, int stepIndex)
+    private static Result<int> GetActionPropertyIfExistsInStep(Step step)
     {
         if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
-        {
-            var error = new Error("Step does not have an action property.")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
-                .WithMetadata("stepIndex", stepIndex);
-            return Result.Fail(error);
-        }
+            return Errors.StepNoActionProperty();
 
-        return Result.Ok((int)actionProperty.GetValue<short>());
+        var getValueResult = actionProperty.GetValue<short>(); 
+        if (getValueResult.IsFailed) return getValueResult.ToResult();
+        return Result.Ok((int)getValueResult.Value);
     }
 
     private static Result ProcessForLoopStart(
@@ -105,7 +102,9 @@ public class RecipeTimeCalculator
         if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
             return CreateMissingIterationCountWarning(stepIndex);
 
-        var iterations = (int)taskProperty.GetValue<float>();
+        var getValueResult = taskProperty.GetValue<float>();
+        if (getValueResult.IsFailed) return getValueResult.ToResult();
+        var iterations = (int)getValueResult.Value;
         if (iterations <= 0)
             return CreateInvalidIterationCountWarning(stepIndex, iterations);
 
@@ -185,7 +184,9 @@ public class RecipeTimeCalculator
         if (!step.Properties.TryGetValue(MandatoryColumns.StepDuration, out var durationProperty) || durationProperty == null)
             return Result.Ok(TimeSpan.Zero);
 
-        var seconds = durationProperty.GetValue<float>();
+        var getValueResult = durationProperty.GetValue<float>();
+        if (getValueResult.IsFailed) return getValueResult.ToResult<TimeSpan>();
+        var seconds = getValueResult.Value;
         if (seconds < 0f)
             return CreateNegativeStepDurationWarning(stepIndex, seconds);
 

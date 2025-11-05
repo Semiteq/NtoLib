@@ -19,29 +19,29 @@ public sealed class PropertyStateProvider
         _columnsInConfig = columnsInConfig ?? throw new ArgumentNullException(nameof(columnsInConfig));
     }
 
-    /// <summary>
-    /// Gets the state of a specific cell.
-    /// </summary>
-    /// <param name="step">Current step.</param>
-    /// <param name="columnKey">Column identifier.</param>
-    /// <returns>Property state.</returns>
     public PropertyState GetPropertyState(Step step, ColumnIdentifier columnKey)
     {
-        // StepStartTime is always readonly
-        if (columnKey == MandatoryColumns.StepStartTime)
+        if (IsStepStartTimeColumn(columnKey))
             return PropertyState.Readonly;
-        
-        // Property doesn't exist for this action
-        if (!step.Properties.TryGetValue(columnKey, out var propertyValue) || propertyValue == null)
+
+        if (!PropertyExistsInStep(step, columnKey))
             return PropertyState.Disabled;
 
-        // Find column definition
-        var columnDef = _columnsInConfig.FirstOrDefault(c => c.Key == columnKey);
-        if (columnDef == null)
+        var columnDefinition = FindColumnDefinition(columnKey);
+        if (columnDefinition == null)
             return PropertyState.Disabled;
 
-        return columnDef.ReadOnly 
+        return columnDefinition.ReadOnly 
             ? PropertyState.Readonly 
             : PropertyState.Enabled;
     }
+
+    private static bool IsStepStartTimeColumn(ColumnIdentifier columnKey) =>
+        columnKey == MandatoryColumns.StepStartTime;
+
+    private static bool PropertyExistsInStep(Step step, ColumnIdentifier columnKey) =>
+        step.Properties.TryGetValue(columnKey, out var propertyValue) && propertyValue != null;
+
+    private ColumnDefinition? FindColumnDefinition(ColumnIdentifier columnKey) =>
+        _columnsInConfig.FirstOrDefault(c => c.Key == columnKey);
 }

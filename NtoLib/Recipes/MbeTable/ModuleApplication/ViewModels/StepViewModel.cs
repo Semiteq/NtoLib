@@ -1,137 +1,72 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 
 public sealed class StepViewModel
 {
     private Step _step;
-    private int _rowIndex;
     private TimeSpan _startTime;
     private readonly IComboboxDataProvider _comboboxDataProvider;
 
     public StepViewModel(
         Step step,
-        int rowIndex,
         TimeSpan startTime,
         IComboboxDataProvider comboboxDataProvider)
     {
         _step = step ?? throw new ArgumentNullException(nameof(step));
         _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
-        _rowIndex = rowIndex;
         _startTime = startTime;
     }
 
     public string StepStartTime => FormatTime(_startTime);
 
-    public Result<short> GetCurrentActionId()
-    {
-        if (!_step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty))
-        {
-            return Result.Fail(new Error("Step does not have Action property")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
-                .WithMetadata("rowIndex", _rowIndex));
-        }
-
-        if (actionProperty == null)
-        {
-            return Result.Fail(new Error("Step Action property is null")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
-                .WithMetadata("rowIndex", _rowIndex));
-        }
-
-        try
-        {
-            return Result.Ok(actionProperty.GetValue<short>());
-        }
-        catch (InvalidCastException ex)
-        {
-            return Result.Fail(new Error($"Failed to cast Action property to int: {ex.Message}")
-                .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed)
-                .WithMetadata("rowIndex", _rowIndex));
-        }
-    }
-
-    public Result<object?> GetPropertyValue(ColumnIdentifier identifier)
-    {
-        if (identifier == MandatoryColumns.StepStartTime)
-            return Result.Ok<object?>(StepStartTime);
-
-        if (!_step.Properties.TryGetValue(identifier, out var property))
-        {
-            var availableProps = string.Join(", ", _step.Properties.Keys.Select(k => k.Value));
-            
-            return Result.Fail(new Error($"Property '{identifier.Value}' not found in step")
-                .WithMetadata(nameof(Codes), Codes.CorePropertyNotFound)
-                .WithMetadata("rowIndex", _rowIndex)
-                .WithMetadata("propertyKey", identifier.Value)
-                .WithMetadata("availableProperties", availableProps));
-        }
-
-        if (property == null)
-            return Result.Ok<object?>(null);
-
-        try
-        {
-            var value = identifier == MandatoryColumns.Action
-                ? property.GetValueAsObject()
-                : property.GetDisplayValue();
-
-            return Result.Ok<object?>(value);
-        }
-        catch (Exception ex)
-        {
-            return Result.Fail(new Error($"Failed to get property value: {ex.Message}")
-                .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed)
-                .WithMetadata("rowIndex", _rowIndex)
-                .WithMetadata("propertyKey", identifier.Value));
-        }
-    }
-
-    public Result<Property?> GetProperty(ColumnIdentifier identifier)
-    {
-        if (!_step.Properties.ContainsKey(identifier))
-        {
-            return Result.Fail(new Error($"Property '{identifier.Value}' does not exist in step")
-                .WithMetadata(nameof(Codes), Codes.CorePropertyNotFound)
-                .WithMetadata("rowIndex", _rowIndex)
-                .WithMetadata("propertyKey", identifier.Value));
-        }
-
-        _step.Properties.TryGetValue(identifier, out var property);
-        return Result.Ok(property);
-    }
-
-    public bool HasProperty(ColumnIdentifier key)
-    {
-        if (key == MandatoryColumns.StepStartTime)
-            return true;
-
-        return _step.Properties.TryGetValue(key, out var property) && property != null;
-    }
-
     public Result<IReadOnlyDictionary<short, string>> GetComboItems(ColumnIdentifier key)
     {
         var actionIdResult = GetCurrentActionId();
-        if (actionIdResult.IsFailed)
-            return actionIdResult.ToResult();
+        if (actionIdResult.IsFailed) return actionIdResult.ToResult();
 
         return _comboboxDataProvider.GetResultEnumOptions(actionIdResult.Value, key.Value);
     }
+    
+    public Result<object?> GetPropertyValue(ColumnIdentifier identifier)
+    {
+        if (identifier == MandatoryColumns.StepStartTime) return Result.Ok<object?>(StepStartTime);
 
-    internal void UpdateInPlace(Step newStep, int newRowIndex, TimeSpan newStartTime)
+        var getPropertyResult = _step.GetProperty(identifier);
+        if (getPropertyResult.IsFailed) return getPropertyResult.ToResult();
+        
+        var property = getPropertyResult.Value;
+
+        var value = identifier == MandatoryColumns.Action
+            ? property.GetValueAsObject
+            : property.GetDisplayValue;
+
+        return Result.Ok<object?>(value);
+    }
+    
+    private Result<short> GetCurrentActionId()
+    {
+        var getPropertyResult = _step.GetProperty(MandatoryColumns.Action); 
+        if (getPropertyResult.IsFailed) return getPropertyResult.ToResult();
+
+        var actionProperty = getPropertyResult.Value;
+
+        var getValueResult = actionProperty.GetValue<short>();
+        if (getValueResult.IsFailed) return getValueResult.ToResult();
+        
+        return Result.Ok(getValueResult.Value);
+    }
+
+    internal void UpdateInPlace(Step newStep, TimeSpan newStartTime)
     {
         _step = newStep ?? throw new ArgumentNullException(nameof(newStep));
-        _rowIndex = newRowIndex;
         _startTime = newStartTime;
     }
 

@@ -15,9 +15,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 
 public sealed class RecipeViewModel
 {
-    public event Action<int>? RowCountChanged;
-    public event Action<int>? RowInvalidationRequested;
-
     public IReadOnlyList<StepViewModel> ViewModels => _viewModels;
 
     private readonly List<StepViewModel> _viewModels = new();
@@ -25,37 +22,30 @@ public sealed class RecipeViewModel
     private readonly IRecipeService _recipeService;
     private readonly IComboboxDataProvider _comboboxDataProvider;
     private readonly PropertyStateProvider _propertyStateProvider;
-    private readonly ILogger<RecipeViewModel> _logger;
 
     public RecipeViewModel(
         IRecipeService recipeService,
         IComboboxDataProvider comboboxDataProvider,
         PropertyStateProvider propertyStateProvider,
-        IReadOnlyList<ColumnDefinition> tableColumns,
-        ILogger<RecipeViewModel> logger)
+        IReadOnlyList<ColumnDefinition> tableColumns)
     {
         _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
         _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
         _propertyStateProvider = propertyStateProvider ?? throw new ArgumentNullException(nameof(propertyStateProvider));
         _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         RebuildViewModels();
     }
 
-    public void OnRecipeStructureChanged()
-    {
-        RebuildViewModels();
-        RowCountChanged?.Invoke(_viewModels.Count);
-    }
+    public int GetRowCount() => _viewModels.Count;
+    
+    public void OnRecipeStructureChanged() => RebuildViewModels();
+    
 
     public void OnStepDataChanged(int stepIndex)
     {
-        if (stepIndex >= 0 && stepIndex < _viewModels.Count)
-        {
+        if (stepIndex >= 0 && stepIndex < _viewModels.Count) 
             UpdateStepViewModel(stepIndex);
-            RowInvalidationRequested?.Invoke(stepIndex);
-        }
     }
 
     public void OnTimeRecalculated(int fromStepIndex)
@@ -70,65 +60,29 @@ public sealed class RecipeViewModel
             var startTimeResult = _recipeService.GetStepStartTime(i);
             var startTime = startTimeResult.IsSuccess ? startTimeResult.Value : TimeSpan.Zero;
 
-            _viewModels[i].UpdateInPlace(recipe.Steps[i], i, startTime);
-            RowInvalidationRequested?.Invoke(i);
+            _viewModels[i].UpdateInPlace(recipe.Steps[i], startTime);
         }
-    }
-
-    public PropertyState GetCellState(int rowIndex, int columnIndex)
-    {
-        var recipe = _recipeService.GetCurrentRecipe();
-        var step = recipe.Steps[rowIndex];
-        var columnKey = _tableColumns[columnIndex].Key;
-
-        return _propertyStateProvider.GetPropertyState(step, columnKey);
     }
 
     public Result<object?> GetCellValue(int rowIndex, int columnIndex)
     {
-        if (rowIndex < 0 || rowIndex >= _viewModels.Count)
-        {
-            return Result.Fail(new Error("Invalid row index in GetCellValue")
-                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
-                .WithMetadata("rowIndex", rowIndex)
-                .WithMetadata("viewModelsCount", _viewModels.Count));
-        }
+        if (rowIndex < 0 || rowIndex >= _viewModels.Count) return InvalidColumnIndexError(rowIndex);
+        if (columnIndex < 0 || columnIndex >= _tableColumns.Count) return InvalidColumnIndexError(columnIndex);
 
-        if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
-        {
-            return Result.Fail(new Error("Invalid column index in GetCellValue")
-                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
-                .WithMetadata("columnIndex", columnIndex)
-                .WithMetadata("columnsCount", _tableColumns.Count));
-        }
-
-        var vm = _viewModels[rowIndex];
-        var columnKey = _tableColumns[columnIndex].Key;
-        var columnDefinition = _tableColumns[columnIndex];
-
-        if (columnKey == MandatoryColumns.StepStartTime)
-            return Result.Ok<object?>(vm.StepStartTime);
-
-        var propertyValueResult = vm.GetPropertyValue(columnKey);
+        var state = GetCellState(rowIndex, columnIndex);
+        if (state is PropertyState.Disabled) return Result.Ok<object?>(null);
         
-        if (propertyValueResult.IsFailed)
-        {
-            var state = GetCellState(rowIndex, columnIndex);
-            if (state == PropertyState.Disabled)
-                return Result.Ok<object?>(null);
-
-            if (columnDefinition.ReadOnly)
-                return Result.Ok<object?>(null);
-
-            _logger.LogDebug("GetCellValue failed for row {RowIndex}, column '{ColumnKey}': property not found but cell is not disabled",
-                rowIndex, columnKey.Value);
-            return propertyValueResult;
-        }
-
-        return propertyValueResult;
+        var columnKey = _tableColumns[columnIndex].Key;
+        return _viewModels[rowIndex].GetPropertyValue(columnKey);
     }
+    
+    public PropertyState GetCellState(int rowIndex, int columnIndex)
+    {
+        var step = _recipeService.GetCurrentRecipe().Steps[rowIndex];
+        var columnKey = _tableColumns[columnIndex].Key;
 
-    public int GetRowCount() => _viewModels.Count;
+        return _propertyStateProvider.GetPropertyState(step, columnKey);
+    }
 
     private void RebuildViewModels()
     {
@@ -140,7 +94,7 @@ public sealed class RecipeViewModel
             var getStartTimeResult = _recipeService.GetStepStartTime(i);
             var startTime = getStartTimeResult.IsSuccess ? getStartTimeResult.Value : TimeSpan.Zero;
 
-            _viewModels.Add(new StepViewModel(recipe.Steps[i], i, startTime, _comboboxDataProvider));
+            _viewModels.Add(new StepViewModel(recipe.Steps[i], startTime, _comboboxDataProvider));
         }
     }
 
@@ -150,6 +104,13 @@ public sealed class RecipeViewModel
         var startTimeResult = _recipeService.GetStepStartTime(index);
         var startTime = startTimeResult.IsSuccess ? startTimeResult.Value : TimeSpan.Zero;
 
-        _viewModels[index].UpdateInPlace(recipe.Steps[index], index, startTime);
+        _viewModels[index].UpdateInPlace(recipe.Steps[index], startTime);
+    }
+    
+    private static Result InvalidColumnIndexError(int columnIndex)
+    {
+        return Result.Fail(new Error("Invalid column index")
+            .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
+            .WithMetadata("columnIndex", columnIndex));
     }
 }

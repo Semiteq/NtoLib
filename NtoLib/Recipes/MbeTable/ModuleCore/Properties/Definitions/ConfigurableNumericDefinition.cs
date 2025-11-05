@@ -6,7 +6,7 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
@@ -16,24 +16,50 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 /// </summary>
 public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 {
+    private const int Precision = 3;
+    
     private readonly float? _min;
     private readonly float? _max;
-    private const int Precision = 3;
+    
+    /// <inheritdoc/>
     public FormatKind FormatKind { get; }
+    
+    /// <inheritdoc/>
+    public object DefaultValue => 0f;
 
     /// <inheritdoc/>
     public Type SystemType { get; }
 
     /// <inheritdoc/>
     public string Units { get; }
+    
+    /// <inheritdoc/>
+    public bool NonNegative { get; }
 
-    /// <summary>
-    /// Initializes a new instance from a DTO.
-    /// </summary>
+    /// <inheritdoc/>
+    public Result<object> GetNonNegativeValue(object value)
+    {
+        var numeric = ToFloat(value);
+
+        if (!numeric.HasValue)
+            return Errors.PropertyNonNumeric();
+
+        if (numeric.Value < 0)
+        {
+            var absoluteValue = Math.Abs(numeric.Value);
+            return SystemType == typeof(short) 
+                ? Result.Ok<object>((short)absoluteValue)
+                : Result.Ok<object>(absoluteValue);
+        }
+
+        return Result.Ok(value);
+    }
+    
     public ConfigurableNumericDefinition(YamlPropertyDefinition dto)
     {
         SystemType = Type.GetType(dto.SystemType, throwOnError: true, ignoreCase: true)!;
-        Units = dto.Units ?? string.Empty;
+        Units = dto.Units;
+        NonNegative = dto.NonNegative;
         _min = dto.Min;
         _max = dto.Max;
         FormatKind = Enum.TryParse<FormatKind>(dto.FormatKind, ignoreCase: true, out var parsed)
@@ -44,28 +70,16 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
     /// <inheritdoc/>
     public virtual Result TryValidate(object value)
     {
-        float? numeric = value switch
-        {
-            short i => i,
-            float f => f,
-            double d => (float)d,
-            _ => null
-        };
+        var numeric = ToFloat(value);
 
         if (!numeric.HasValue)
-            return Result.Fail(
-                new Error($"Expected numeric value, got {value.GetType().Name}").WithMetadata(nameof(Codes),
-                    Codes.PropertyValidationFailed));
+            return Errors.PropertyValidationFailed($"expected numeric value, got {value.GetType().Name}");
 
         if (_min.HasValue && numeric.Value < _min.Value)
-            return Result.Fail(
-                new Error($"Value must be >= {_min.Value}").WithMetadata(nameof(Codes),
-                    Codes.PropertyValidationFailed));
+            return Errors.NumericValueOutOfRange(numeric.Value, _min, _max);
 
         if (_max.HasValue && numeric.Value > _max.Value)
-            return Result.Fail(
-                new Error($"Value must be <= {_max.Value}").WithMetadata(nameof(Codes),
-                    Codes.PropertyValidationFailed));
+            return Errors.NumericValueOutOfRange(numeric.Value, _min, _max);
 
         return Result.Ok();
     }
@@ -73,61 +87,67 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
     /// <inheritdoc/>
     public virtual string FormatValue(object value)
     {
-        float numeric = value switch
-        {
-            short i => i,
-            float f => f,
-            _ => float.NaN
-        };
+        var numeric = ToFloat(value);
 
-        if (float.IsNaN(numeric))
+        if (!numeric.HasValue)
             return value.ToString() ?? string.Empty;
 
         return FormatKind switch
         {
-            FormatKind.Scientific => numeric.ToString("0.###E0", CultureInfo.InvariantCulture),
-            FormatKind.Numeric => numeric.ToString("0.###", CultureInfo.InvariantCulture),
-            FormatKind.Int => numeric.ToString("0", CultureInfo.InvariantCulture),
-            _ => numeric.ToString(CultureInfo.InvariantCulture)
+            FormatKind.Scientific => numeric.Value.ToString("0.###E0", CultureInfo.InvariantCulture),
+            FormatKind.Numeric => numeric.Value.ToString("0.###", CultureInfo.InvariantCulture),
+            FormatKind.Int => numeric.Value.ToString("0", CultureInfo.InvariantCulture),
+            _ => numeric.Value.ToString(CultureInfo.InvariantCulture)
         };
     }
 
     /// <inheritdoc/>
     public virtual Result<object> TryParse(string input)
     {
-        var sanitized = new string(input.Trim()
-                .Where(c => char.IsDigit(c) || c == '.' || c == ',' || c == 'E' || c == 'e' || c == '+' || c == '-' ||
-                            c == ':')
-                .ToArray())
-            .Replace(',', '.');
+        var sanitized = SanitizeNumericInput(input);
 
         if (SystemType == typeof(short))
-        {
-            if (short.TryParse(sanitized, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
-                return Result.Ok<object>(i);
+            return ParseAsShort(sanitized, input);
 
-            if (float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var fi))
-                return Result.Ok<object>((short)fi);
+        return ParseAsFloat(sanitized, input);
+    }
 
-            return Result.Fail<object>(
-                new Error("Unable to parse as Int16").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
-        }
+    protected static float? ToFloat(object value) => value switch
+    {
+        short shortValue => shortValue,
+        float floatValue => floatValue,
+        _ => null
+    };
 
-        if (float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var f))
-        {
-            if (FormatKind == FormatKind.Int)
-            {
-                f = (float)Math.Truncate(f);
-            }
-            else
-            {
-                f = (float)Math.Round(f, Precision, MidpointRounding.AwayFromZero);
-            }
-    
-            return Result.Ok<object>(f);
-        }
+    private static string SanitizeNumericInput(string input)
+    {
+        return new string(input.Trim()
+                .Where(c => char.IsDigit(c) || c == '.' || c == ',' || c == 'E' || c == 'e' || c == '+' || c == '-' || c == ':')
+                .ToArray())
+            .Replace(',', '.');
+    }
 
-        return Result.Fail<object>(
-            new Error("Unable to parse as float").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
+    private static Result<object> ParseAsShort(string sanitized, string originalInput)
+    {
+        if (short.TryParse(sanitized, NumberStyles.Integer, CultureInfo.InvariantCulture, out var shortValue))
+            return Result.Ok<object>(shortValue);
+
+        if (float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
+            return Result.Ok<object>((short)floatValue);
+
+        return Errors.PropertyConversionFailed(originalInput, "Int16");
+    }
+
+    private Result<object> ParseAsFloat(string sanitized, string originalInput)
+    {
+        if (!float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
+            return Errors.PropertyConversionFailed(originalInput, "Single");
+
+        if (FormatKind == FormatKind.Int)
+            floatValue = (float)Math.Truncate(floatValue);
+        else
+            floatValue = (float)Math.Round(floatValue, Precision, MidpointRounding.AwayFromZero);
+
+        return Result.Ok<object>(floatValue);
     }
 }

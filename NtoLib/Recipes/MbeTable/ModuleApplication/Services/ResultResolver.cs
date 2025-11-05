@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
+
 using FluentResults;
+
 using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Services;
@@ -9,18 +11,17 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 public sealed class ResultResolver
 {
     private readonly IStatusService _status;
-    private readonly ErrorDefinitionRegistry _registry;
 
-    public ResultResolver(IStatusService statusService, ErrorDefinitionRegistry registry)
+    public ResultResolver(IStatusService statusService)
     {
         _status = statusService ?? throw new ArgumentNullException(nameof(statusService));
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
     }
 
     public void Resolve(Result result, string operation, string successMessage = null)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
-        if (string.IsNullOrWhiteSpace(operation)) throw new ArgumentException("Operation cannot be empty", nameof(operation));
+        if (string.IsNullOrWhiteSpace(operation))
+            throw new ArgumentException("Operation cannot be empty", nameof(operation));
 
         var status = result.GetStatus();
         switch (status)
@@ -47,16 +48,14 @@ public sealed class ResultResolver
 
     private void HandleFailure(Result result, string operation)
     {
-        var code = result.TryGetCode(out var c) ? c : Codes.UnknownError;
-        var message = $"Не удалось {operation}: [{(int)code}] {_registry.GetMessage(code)}";
-        _status.ShowError(message);
+        var message = ExtractRussianMessage(result);
+        _status.ShowError($"Не удалось {operation}: {message}");
     }
 
     private void HandleWarning(Result result, string operation)
     {
-        if (!result.TryGetCode(out var code)) code = Codes.UnknownError;
-        var message = $"{ToSentence(operation)} завершена с предупреждением: [{(int)code}] {_registry.GetMessage(code)}";
-        _status.ShowWarning(message);
+        var message = ExtractRussianMessage(result);
+        _status.ShowWarning($"{ToSentence(operation)} завершена с предупреждением: {message}");
     }
 
     private void HandleSuccess(string successMessage)
@@ -69,6 +68,25 @@ public sealed class ResultResolver
         }
     }
 
+    private static string ExtractRussianMessage(Result result)
+    {
+        var bilingualErrors = result.Errors
+            .OfType<BilingualError>()
+            .Select(e => e.MessageRu)
+            .ToList();
+
+        if (bilingualErrors.Any())
+            return string.Join("; ", bilingualErrors);
+
+        var fallbackMessages = result.Errors
+            .Select(e => e.Message)
+            .Where(m => !string.IsNullOrWhiteSpace(m))
+            .ToList();
+
+        return fallbackMessages.Any()
+            ? string.Join("; ", fallbackMessages)
+            : "Неизвестная ошибка";
+    }
 
     private static string ToSentence(string text)
     {

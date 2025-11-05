@@ -4,7 +4,7 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
@@ -13,22 +13,30 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 /// </summary>
 public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
 {
+    private const int DefaultMaxLength = 255;
     private readonly int _maxLength;
 
     /// <inheritdoc/>
     public string Units => string.Empty;
 
     /// <inheritdoc/>
+    public bool NonNegative => false;
+    
+    /// <inheritdoc/>
+    public Result<object> GetNonNegativeValue(object value) => value;
+    
+    /// <inheritdoc/>
     public Type SystemType => typeof(string);
-
+    
+    /// <inheritdoc/>
     public FormatKind FormatKind => FormatKind.Numeric;
-
-    /// <summary>
-    /// Initializes a new instance from a DTO.
-    /// </summary>
+    
+    /// <inheritdoc/>
+    public object DefaultValue => string.Empty;
+    
     public ConfigurableStringDefinition(YamlPropertyDefinition dto)
     {
-        _maxLength = Math.Max(0, dto.MaxLength ?? 255);
+        _maxLength = Math.Max(0, dto.MaxLength ?? DefaultMaxLength);
     }
 
     /// <inheritdoc/>
@@ -36,9 +44,7 @@ public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
     {
         var s = value?.ToString() ?? string.Empty;
         return s.Length > _maxLength
-            ? Result.Fail(
-                new Error($"String length must be <= {_maxLength}").WithMetadata(nameof(Codes),
-                    Codes.PropertyValidationFailed))
+            ? Errors.StringLengthExceeded(s.Length, _maxLength)
             : Result.Ok();
     }
 

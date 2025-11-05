@@ -62,20 +62,24 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     public async Task<Result> SetCellValueAsync(int rowIndex, ColumnIdentifier columnKey, object? value)
     {
         if (value == null)
-            return ResultBox.Ok();
+            return Result.Ok();
 
         var recipe = _recipeService.GetCurrentRecipe();
         if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
-            return ResultBox.Fail(Codes.CoreIndexOutOfRange);
+        {
+            var error = Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count);
+            _resolver.Resolve(Result.Fail(error), "обновление ячейки");
+            return Result.Fail(error);
+        }
 
         var isActionChange = columnKey == MandatoryColumns.Action && value is short;
         var affectsTime = isActionChange ||
                           columnKey == MandatoryColumns.Task ||
                           columnKey == MandatoryColumns.StepDuration;
 
-        var result = isActionChange
-            ? _recipeService.ReplaceStepAction(rowIndex, (short)value)
-            : _recipeService.UpdateStepProperty(rowIndex, columnKey, value);
+        var result = _recipeService.UpdateStepProperty(rowIndex, columnKey, value);
+        if (isActionChange)
+            result = _recipeService.ReplaceStepAction(rowIndex, (short)value);
 
         var status = result.GetStatus();
         if (!result.IsFailed)
@@ -97,6 +101,9 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
             _resolver.Resolve(result, "обновление ячейки");
         }
 
+        _logger.LogTrace("SetCellValueAsync completed for row {RowIndex}, column {ColumnKey} with status {Status}", 
+            rowIndex, columnKey, status);
+    
         return result;
     }
 
@@ -229,7 +236,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         var loadResult = await _csvOperations.ReadCsvAsync(filePath);
         if (loadResult.IsFailed) return loadResult.ToResult();
 
-        var setResult = _recipeService.SetRecipe(loadResult.Value);
+        var setResult = _recipeService.SetRecipeAndUpdateAttributes(loadResult.Value);
         if (setResult.GetStatus() is not ResultStatus.Success) return setResult;
 
         _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
@@ -251,7 +258,10 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         if (!_state.GetSnapshot().EnaSendOk)
         {
             _logger.LogWarning("Send operation blocked by PLC logic (EnaSendOk is false)");
-            return ResultBox.Fail(Codes.CoreInvalidOperation);
+            var error = new BilingualError(
+                "Send operation blocked by PLC logic",
+                "Операция отправки заблокирована логикой ПЛК");
+            return Result.Fail(error);
         }
 
         var currentRecipe = _recipeService.GetCurrentRecipe();
@@ -269,7 +279,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         if (receiveResult.GetStatus() != ResultStatus.Success)
             return receiveResult.ToResult();
 
-        var setResult = _recipeService.SetRecipe(receiveResult.Value);
+        var setResult = _recipeService.SetRecipeAndUpdateAttributes(receiveResult.Value);
         if (setResult.IsSuccess)
         {
             _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);

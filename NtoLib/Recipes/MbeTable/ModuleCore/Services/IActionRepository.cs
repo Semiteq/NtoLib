@@ -8,7 +8,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
 public interface IActionRepository
 {
-    Result<ActionDefinition> GetResultActionDefinitionById(short id);
+    Result<ActionDefinition> GetActionDefinitionById(short id);
     
     Result<ActionDefinition> GetResultActionDefinitionByName(string name);
 

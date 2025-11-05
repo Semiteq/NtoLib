@@ -6,6 +6,7 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
@@ -27,7 +28,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
     /// <inheritdoc />
     public Result<IReadOnlyDictionary<short, string>> GetResultEnumOptions(short actionId, string columnKey)
     {
-        var actionResult = _actions.GetResultActionDefinitionById(actionId);
+        var actionResult = _actions.GetActionDefinitionById(actionId);
         if (actionResult.IsFailed)
             return actionResult.ToResult();
 
@@ -52,26 +53,21 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
             string.Equals(c.Key, columnKey, StringComparison.OrdinalIgnoreCase));
 
         return col == null
-            ? Result.Fail<PropertyConfig>(new Error(
-                    $"Action '{action.Name}' (ID: {action.Id}) does not contain column '{columnKey}'")
-                .WithMetadata(nameof(Codes), Codes.CoreColumnNotFound))
+            ? Errors.ColumnNotFoundInAction(action.Name, action.Id, columnKey)
             : Result.Ok(col);
     }
 
     private static Result<PropertyConfig> ValidateColumn(PropertyConfig column)
     {
-        if (string.IsNullOrWhiteSpace(column.GroupName))
-            return Result.Fail<PropertyConfig>(new Error("Column GroupName is empty")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema));
-
-        return Result.Ok(column);
+        return string.IsNullOrWhiteSpace(column.GroupName) 
+            ? Errors.ColumnGroupNameEmpty() 
+            : Result.Ok(column);
     }
 
     private Result<IReadOnlyDictionary<short, string>> GetFilteredTargets(string groupName)
     {
         if (!_targets.TryGetTargets(groupName, out var targets))
-            return Result.Fail<IReadOnlyDictionary<short, string>>(new Error("No targets defined")
-                .WithMetadata(nameof(Codes), Codes.CoreTargetNotFound));
+            return Errors.TargetsNotDefined();
 
         return Result.Ok<IReadOnlyDictionary<short, string>>(targets
             .Where(kv => !string.IsNullOrEmpty(kv.Value))

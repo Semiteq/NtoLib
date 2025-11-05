@@ -105,22 +105,16 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
 
     public Result<int> GetLoopNestingLevel(int stepIndex)
     {
-        if (_loopNestingLevels.TryGetValue(stepIndex, out var level))
-            return Result.Ok(level);
-
-        return Result.Fail(new Error($"No nesting level found for step index {stepIndex}")
-            .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
-            .WithMetadata("stepIndex", stepIndex));
+        return _loopNestingLevels.TryGetValue(stepIndex, out var level) 
+            ? Result.Ok(level) 
+            : Errors.IndexOutOfRange(stepIndex, _loopNestingLevels.Count);
     }
 
     public Result<TimeSpan> GetStepStartTime(int stepIndex)
     {
-        if (_stepStartTimes.TryGetValue(stepIndex, out var time))
-            return Result.Ok(time);
-
-        return Result.Fail(new Error($"No start time found for step index {stepIndex}")
-            .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
-            .WithMetadata("stepIndex", stepIndex));
+        return _stepStartTimes.TryGetValue(stepIndex, out var time) 
+            ? Result.Ok(time) 
+            : Errors.IndexOutOfRange(stepIndex, _stepStartTimes.Count);
     }
 
     public IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex)

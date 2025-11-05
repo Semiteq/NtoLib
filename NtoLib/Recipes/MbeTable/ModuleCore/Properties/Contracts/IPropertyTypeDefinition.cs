@@ -10,7 +10,17 @@ public interface IPropertyTypeDefinition
     /// Gets the unit of measurement or description associated with the property.
     /// </summary>
     string Units { get; }
-
+    
+    /// <summary>
+    /// If true, the property value applies ABS automatically.
+    /// </summary>
+    bool NonNegative { get; }
+    
+    /// <summary>
+    /// Gets the non-negative value for the given value.
+    /// </summary>
+    Result<object> GetNonNegativeValue(object value);
+    
     /// <summary>
     /// Gets the system type associated with the property.
     /// </summary>
@@ -35,4 +45,9 @@ public interface IPropertyTypeDefinition
     /// Attempts to parse the input string into an object.
     /// </summary>
     Result<object> TryParse(string input);
+    
+    /// <summary>
+    /// Default non-null value for this property type.
+    /// </summary>
+    object DefaultValue { get; }
 }

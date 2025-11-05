@@ -60,7 +60,7 @@ public interface IRecipeService
     /// <summary>
     /// Replaces current Recipe with provided one, validates and analyzes it.
     /// </summary>
-    Result SetRecipe(Recipe recipe);
+    Result SetRecipeAndUpdateAttributes(Recipe recipe);
 
     /// <summary>
     /// Adds a default step at the specified row index.
@@ -75,7 +75,7 @@ public interface IRecipeService
     /// <summary>
     /// Updates a property of a specific step.
     /// </summary>
-    Result UpdateStepProperty(int rowIndex, ColumnIdentifier key, object value);
+    Result UpdateStepProperty(int rowIndex, ColumnIdentifier columnIdentifier, object value);
 
     /// <summary>
     /// Replaces step action at the specified row index.

@@ -10,6 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
@@ -55,44 +56,24 @@ public sealed class RecipeMutator
 
     public Result<Recipe> RemoveStep(Recipe recipe, int rowIndex)
     {
-        if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
-        {
-            return Result.Fail(new Error("Row index is out of range")
-                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
-                .WithMetadata("rowIndex", rowIndex)
-                .WithMetadata("stepCount", recipe.Steps.Count));
-        }
-
-        return Result.Ok(new Recipe(recipe.Steps.RemoveAt(rowIndex)));
+        return rowIndex < 0 || rowIndex >= recipe.Steps.Count
+            ? Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count)
+            : Result.Ok(new Recipe(recipe.Steps.RemoveAt(rowIndex)));
     }
 
-    public Result<Recipe> UpdateStepProperty(
-        Recipe recipe,
-        int rowIndex,
-        ColumnIdentifier key,
-        object value)
+    public Result<Recipe> UpdateStepProperty(Recipe recipe, int rowIndex, ColumnIdentifier key, object value)
     {
         if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
-        {
-            return Result.Fail(new Error("Row index is out of range")
-                .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
-                .WithMetadata("rowIndex", rowIndex)
-                .WithMetadata("stepCount", recipe.Steps.Count));
-        }
+            return Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count);
 
         var step = recipe.Steps[rowIndex];
 
         if (!step.Properties.TryGetValue(key, out var property) || property == null)
-        {
-            return Result.Fail(new Error($"Property '{key.Value}' not found in step")
-                .WithMetadata(nameof(Codes), Codes.CorePropertyNotFound)
-                .WithMetadata("rowIndex", rowIndex)
-                .WithMetadata("propertyKey", key.Value));
-        }
+            return Errors.StepPropertyNotFound(key.Value, rowIndex);
 
         var newPropertyResult = property.WithValue(value);
         if (newPropertyResult.IsFailed)
-            return newPropertyResult.ToResult();
+            return newPropertyResult.ToResult().WithError(Errors.StepPropertyUpdateFailed(rowIndex, key.Value));;
 
         var updatedProperties = step.Properties.SetItem(key, newPropertyResult.Value);
         var updatedStep = step with { Properties = updatedProperties };
@@ -101,12 +82,18 @@ public sealed class RecipeMutator
 
     public Result<Recipe> ReplaceStepAction(Recipe recipe, int rowIndex, short newActionId)
     {
-        if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
-            return IndexOutOfRange(rowIndex, recipe.Steps.Count);
+        if (rowIndex < 0 || rowIndex >= recipe.Steps.Count) 
+            return Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count);
 
         var stepResult = CreateDefaultStep(newActionId);
         if (stepResult.IsFailed)
+        {
+            _logger.LogError(
+                "Failed to create default step for action ID {ActionId} when replacing step at index {RowIndex}",
+                newActionId,
+                rowIndex);
             return stepResult.ToResult();
+        }
 
         return Result.Ok(new Recipe(recipe.Steps.SetItem(rowIndex, stepResult.Value)));
     }
@@ -114,12 +101,14 @@ public sealed class RecipeMutator
 
     private Result<Step> CreateDefaultStep(short actionId)
     {
-        var actionResult = _actionRepository.GetResultActionDefinitionById(actionId);
+        var actionResult = _actionRepository.GetActionDefinitionById(actionId);
         if (actionResult.IsFailed)
             return actionResult.ToResult();
 
-        var builder = new StepBuilder(actionResult.Value, _propertyRegistry, _tableColumns);
-
+        var builderResult = StepBuilder.Create(actionResult.Value, _propertyRegistry, _tableColumns);
+        if (builderResult.IsFailed) return builderResult.ToResult();
+        var builder = builderResult.Value;
+        
         foreach (var col in actionResult.Value.Columns.Where(c =>
             c.PropertyTypeId.Equals("Enum", StringComparison.OrdinalIgnoreCase) &&
             !string.IsNullOrWhiteSpace(c.GroupName)))
@@ -133,24 +122,18 @@ public sealed class RecipeMutator
                 var setResult = builder.WithOptionalDynamic(key, targetId);
                 if (setResult.IsFailed)
                 {
-                    _logger.LogCritical(
-                        new InvalidOperationException(setResult.Errors.First().Message),
+                    _logger.LogError(new InvalidOperationException(setResult.Errors.First().Message), 
                         "Failed to set default target for column '{ColumnKey}'",
                         col.Key);
+                    //todo: new error needed
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex, "Failed to get default target for column '{ColumnKey}'", col.Key);
+                _logger.LogError(ex, "Failed to get default target for column '{ColumnKey}'", col.Key);
             }
         }
 
         return Result.Ok(builder.Build());
     }
-    
-    private static Result<Recipe> IndexOutOfRange(int rowIndex, int count) =>
-        Result.Fail<Recipe>(new Error("Row index is out of range")
-            .WithMetadata(nameof(Codes), Codes.CoreIndexOutOfRange)
-            .WithMetadata("rowIndex", rowIndex)
-            .WithMetadata("stepCount", count));
 }

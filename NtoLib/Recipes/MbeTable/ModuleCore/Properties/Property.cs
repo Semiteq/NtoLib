@@ -1,10 +1,9 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 using OneOf;
@@ -15,72 +14,114 @@ public sealed record Property
 {
     private OneOf<short, float, string> InternalUnionValue { get; init; }
     private IPropertyTypeDefinition PropertyDefinition { get; init; }
-    public object GetValueAsObject() => InternalUnionValue.Value;
-    public string GetDisplayValue() => $"{PropertyDefinition.FormatValue(InternalUnionValue.Value)} {PropertyDefinition.Units}".Trim();
+    
+    public object GetValueAsObject => InternalUnionValue.Match<object>(
+        shortValue => shortValue,
+        floatValue => floatValue,
+        stringValue => stringValue
+    );
+    
+    public TResult Match<TResult>(
+        Func<short, TResult> onShort, 
+        Func<float, TResult> onFloat, 
+        Func<string, TResult> onString) 
+        => InternalUnionValue.Match(onShort, onFloat, onString);
+    
+    public string GetDisplayValue =>
+        $"{PropertyDefinition.FormatValue(InternalUnionValue.Value)} {PropertyDefinition.Units}".Trim();
 
-    /// <exception cref="TypeAccessException">If value type does not match expected</exception>
-    /// <exception cref="ValidationException">If value not passing validation</exception>
-    /// <exception cref="FormatException">If value not passing conversion</exception>
-    public Property(object value, IPropertyTypeDefinition propertyDefinition)
+    private Property(OneOf<short, float, string> value, IPropertyTypeDefinition propertyDefinition)
     {
+        InternalUnionValue = value;
         PropertyDefinition = propertyDefinition;
-        if (value.GetType() != PropertyDefinition.SystemType)
-            throw new TypeAccessException(
-                $"Initial value type '{value.GetType().Name}' does not match expected '{PropertyDefinition.SystemType.Name}");
+    }
 
-        var validationResult = PropertyDefinition.TryValidate(value);
-        if (validationResult.IsFailed)
-            throw new ValidationException(
-                $"Can't create property with initial value '{value}'. Validation failed: {string.Join("; ", validationResult.Errors.Select(e => e.Message))}");
+    public static Result<Property> Create(object value, IPropertyTypeDefinition propertyDefinition)
+    {
+        if (value.GetType() != propertyDefinition.SystemType) 
+            return Errors.PropertyTypeMismatch(value.GetType().ToString(), propertyDefinition.SystemType.Name);
 
-        var conversionResult = ConvertObjectToUnion(value);
-        if (conversionResult.IsFailed)
-            throw new FormatException(
-                $"Can't create property with initial value '{value}'. Conversion failed: {string.Join("; ", conversionResult.Errors.Select(e => e.Message))}");
+        var validationResult = propertyDefinition.TryValidate(value);
+        if (validationResult.IsFailed) 
+            return validationResult;
+        
+        var actualValue = ApplyNonNegativeIfNeeded(value, propertyDefinition);
+        if (actualValue.IsFailed) 
+            return actualValue.ToResult();
 
-        InternalUnionValue = conversionResult.Value;
+        var conversionResult = ConvertObjectToUnion(actualValue.Value);
+        if (conversionResult.IsFailed) 
+            return conversionResult.ToResult();
+        
+        return new Property(conversionResult.Value, propertyDefinition);
     }
 
     public Result<Property> WithValue(object newValue)
     {
         var parseResult = PropertyDefinition.TryParse(newValue.ToString());
-        if (parseResult.IsFailed)
-        {
-            return Result.Fail<Property>(
-                new Error($"Failed to convert '{newValue}' to type {PropertyDefinition.SystemType.Name}.")
-                    .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed)
-                    .CausedBy(parseResult.Errors));
-        }
+        if (parseResult.IsFailed) 
+            return parseResult.ToResult();
 
         var validationResult = PropertyDefinition.TryValidate(parseResult.Value);
-        if (validationResult.IsFailed)
-        {
-            return Result.Fail<Property>(
-                new Error(
-                        $"Value '{parseResult.Value}' is invalid for type {PropertyDefinition.SystemType.Name} : {string.Join("; ", validationResult.Errors.Select(e => e.Message))}")
-                    .WithMetadata(nameof(Codes), Codes.PropertyValidationFailed)
-                    .CausedBy(validationResult.Errors));
-        }
+        if (validationResult.IsFailed) 
+            return validationResult;
 
-        var conversionResult = ConvertObjectToUnion(parseResult.Value);
-        if (conversionResult.IsFailed)
-            return Result.Fail<Property>(conversionResult.Errors);
+        var actualValue = ApplyNonNegativeIfNeeded(parseResult.Value, PropertyDefinition);
+        if (actualValue.IsFailed) 
+            return actualValue.ToResult();
 
-        return Result.Ok(new Property(conversionResult.Value.Value, PropertyDefinition));
+        var conversionResult = ConvertObjectToUnion(actualValue.Value);
+        if (conversionResult.IsFailed) 
+            return conversionResult.ToResult();
+
+        return Result.Ok(new Property(conversionResult.Value, PropertyDefinition));
     }
-    
-    /// <exception cref="InvalidCastException">If a requested type is not matching stored value type</exception>
-    public T GetValue<T>() where T : notnull
+
+    public Result<T> GetValue<T>() where T : notnull
     {
-        return InternalUnionValue.Match(
-            shortValue => shortValue is T typed ? typed : throw new InvalidCastException($"Value '{shortValue}' of type 'Int16' cannot be cast to type '{typeof(T).Name}'."),
-            floatValue => floatValue is T typed ? typed : throw new InvalidCastException($"Value '{floatValue}' of type 'Single' cannot be cast to type '{typeof(T).Name}'."),
-            stringValue => stringValue is T typed ? typed : throw new InvalidCastException($"Value '{stringValue}' of type 'String' cannot be cast to type '{typeof(T).Name}'.")
+        return InternalUnionValue.Match<Result<T>>(
+            shortValue =>
+            {
+                if (shortValue is T typedValue)
+                    return Result.Ok(typedValue);
+
+                return Errors.PropertyTypeMismatch(typeof(T).ToString(), "short");
+            },
+            floatValue =>
+            {
+                if (floatValue is T typedValue)
+                    return Result.Ok(typedValue);
+
+                return Errors.PropertyTypeMismatch(typeof(T).ToString(), "float" );
+            },
+            stringValue =>
+            {
+                if (stringValue is T typedValue)
+                    return Result.Ok(typedValue);
+
+                return Errors.PropertyTypeMismatch(typeof(T).ToString(), "string");
+            }
         );
     }
 
-    
-    private Result<OneOf<short, float, string>> ConvertObjectToUnion(object value) =>
+    public Result<double> GetNumeric()
+    {
+        return InternalUnionValue.Match<Result<double>>(
+            shortValue => Result.Ok((double)shortValue),
+            floatValue => Result.Ok((double)floatValue),
+            stringValue => Result.Fail(Errors.PropertyNonNumeric())
+        );
+    }
+
+    private static Result<object> ApplyNonNegativeIfNeeded(object value, IPropertyTypeDefinition propertyDefinition)
+    {
+        if (!propertyDefinition.NonNegative)
+            return Result.Ok(value);
+        
+        return propertyDefinition.GetNonNegativeValue(value);
+    }
+
+    private static Result<OneOf<short, float, string>> ConvertObjectToUnion(object value) =>
         value switch
         {
             short i => Result.Ok<OneOf<short, float, string>>(i),

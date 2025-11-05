@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using FluentResults;
@@ -19,26 +20,37 @@ public static class ResultBox
         return Result.Ok(value);
     }
 
-    public static Result Fail(Codes code)
+    public static Result Fail(Codes code, string? optionalMessage = null, Dictionary<string, object>? optionalMetadata = null)
     {
-        return Result.Fail(new Error(string.Empty).WithMetadata(nameof(Codes), code));
+        var m = optionalMessage ?? string.Empty;
+        return optionalMetadata == null
+            ? Result.Fail(new Error(m).WithMetadata(nameof(Codes), code))
+            : Result.Fail(new Error(m).WithMetadata(optionalMetadata).WithMetadata(nameof(Codes), code));
     }
 
-    public static Result<T> Fail<T>(Codes code)
+    public static Result<T> Fail<T>(Codes code, string? optionalMessage = null, Dictionary<string, object>? optionalMetadata = null)
     {
-        return Result.Fail<T>(new Error(string.Empty).WithMetadata(nameof(Codes), code));
+        var m = optionalMessage ?? string.Empty;
+        return optionalMetadata == null
+            ? Result.Fail<T>(new Error(m).WithMetadata(nameof(Codes), code))
+            : Result.Fail<T>(new Error(m).WithMetadata(optionalMetadata).WithMetadata(nameof(Codes), code));
     }
 
-    public static Result Warn(Codes code)
+    public static Result Warn(Codes code, Dictionary<string, object>? optionalMetadata = null)
     {
-        return Result.Ok().WithReason(new ValidationIssue(code));
+        return optionalMetadata == null
+            ? Result.Ok().WithReason(new ValidationIssue(code))
+            : Result.Ok().WithReason(new ValidationIssue(code).WithMetadata(optionalMetadata));
     }
 
-    public static Result<T> Warn<T>(T value, Codes code)
+    
+    public static Result<T> Warn<T>(T value, Codes code, Dictionary<string, object>? optionalMetadata = null)
     {
-        return Result.Ok(value).WithReason(new ValidationIssue(code));
+        return optionalMetadata == null
+            ? Result.Ok(value).WithReason(new ValidationIssue(code))
+            : Result.Ok(value).WithReason(new ValidationIssue(code).WithMetadata(optionalMetadata));
     }
-
+    
     public static bool TryGetCode(this IReason reason, out Codes code)
     {
         if (reason is ValidationIssue issue)
