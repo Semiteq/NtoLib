@@ -1,0 +1,23 @@
+- property_type_id: "float"
+  system_type: "System.Single"
+  units: ""
+  format_kind: "Numeric"
+  extra_prop: "ignored"
+
+- property_type_id: "string"
+  system_type: "System.String"
+  units: ""
+  max_length: 255
+  format_kind: "Numeric"
+
+- property_type_id: "enum"
+  system_type: "System.Int16"
+  units: ""
+  format_kind: "Numeric"
+
+- property_type_id: "time"
+  system_type: "System.Single"
+  units: "s"
+  min: 0
+  max: 86400
+  format_kind: "TimeHms"

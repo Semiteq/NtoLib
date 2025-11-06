@@ -1,0 +1,7 @@
+- key: "not_action"
+  ui: { code: "not_action", ui_name: "NotAction", column_type: "action_combo_box", width: 150, alignment: "MiddleLeft" }
+  business_logic: { property_type_id: "Enum", read_only: false }
+
+- key: "comment"
+  ui: { code: "comment", ui_name: "Comment", column_type: "text_field", width: -1, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "String", read_only: false }

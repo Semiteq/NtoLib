@@ -6,154 +6,147 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Actions;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
-/// <summary>
-/// Validates action definitions from ActionsDefs.yaml.
-/// Checks structure, uniqueness, deploy_duration rules, default_value constraints,
-/// and LongLasting action requirements.
-/// </summary>
 public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition>
 {
     public Result Validate(IReadOnlyList<YamlActionDefinition> items)
     {
-        var checkEmpty = ValidationCheck.NotEmpty(items, "ActionsDefs.yaml");
-        if (checkEmpty.IsFailed)
-            return checkEmpty;
+        var emptyCheck = ValidationCheck.NotEmpty(items, "ActionsDefs.yaml");
+        if (emptyCheck.IsFailed) return emptyCheck;
 
-        return ValidateEachAction(items);
-    }
-
-    private static Result ValidateEachAction(IReadOnlyList<YamlActionDefinition> items)
-    {
+        var errors = new List<ConfigError>();
         var uniqueIds = new HashSet<int>();
 
         foreach (var action in items)
         {
             var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
 
-            var structureResult = ValidateActionStructure(action, context);
-            if (structureResult.IsFailed)
-                return structureResult;
+            AddIfFailed(ValidationCheck.Positive(action.Id, context, "id"), errors);
+            AddIfFailed(ValidationCheck.NotEmpty(action.Name, context, "name"), errors);
+            AddIfFailed(ValidationCheck.NotNull(action.Columns, context, "columns"), errors);
 
-            var uniqueResult = ValidationCheck.Unique(action.Id, uniqueIds, "ActionsDefs.yaml", "id");
-            if (uniqueResult.IsFailed)
-                return uniqueResult;
+            AddIfFailed(ValidationCheck.Unique(action.Id, uniqueIds, context, "id"), errors);
 
-            var deployDurationResult = ValidateDeployDuration(action, context);
-            if (deployDurationResult.IsFailed)
-                return deployDurationResult;
+            AddIfFailed(ValidateDeployDuration(action, context), errors);
 
-            var columnsResult = ValidateActionColumns(action, context);
-            if (columnsResult.IsFailed)
-                return columnsResult;
+            if (action.Columns != null)
+                errors.AddRange(ValidateActionColumns(action, context));
 
-            var longLastingResult = ValidateLongLastingRequirements(action, context);
-            if (longLastingResult.IsFailed)
-                return longLastingResult;
+            AddIfFailed(ValidateLongLastingRequirements(action, context), errors);
         }
 
-        return Result.Ok();
-    }
-
-    private static Result ValidateActionStructure(YamlActionDefinition action, string context)
-    {
-        var idCheck = ValidationCheck.Positive(action.Id, context, "id");
-        if (idCheck.IsFailed)
-            return idCheck;
-
-        var nameCheck = ValidationCheck.NotEmpty(action.Name, context, "name");
-        if (nameCheck.IsFailed)
-            return nameCheck;
-
-        var columnsCheck = ValidationCheck.NotNull(action.Columns, context, "columns");
-        if (columnsCheck.IsFailed)
-            return columnsCheck;
-
-        return Result.Ok();
+        return errors.Count > 0 ? Result.Fail(errors) : Result.Ok();
     }
 
     private static Result ValidateDeployDuration(YamlActionDefinition action, string context)
     {
         var durationCheck = ValidationCheck.NotEmpty(action.DeployDuration, context, "deploy_duration");
-        if (durationCheck.IsFailed)
-            return durationCheck;
+        if (durationCheck.IsFailed) return durationCheck;
 
         if (!Enum.TryParse<DeployDuration>(action.DeployDuration, ignoreCase: true, out _))
-        {
-            return Result.Fail(new Error($"{context}: Unknown deploy_duration '{action.DeployDuration}'. Allowed: Immediate, LongLasting.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("deployDuration", action.DeployDuration));
-        }
+            return Result.Fail(ActionErrors.UnknownDeployDuration(action.DeployDuration, context));
 
         return Result.Ok();
     }
 
-    private static Result ValidateActionColumns(YamlActionDefinition action, string context)
+    private static List<ConfigError> ValidateActionColumns(YamlActionDefinition action, string context)
     {
+        var errors = new List<ConfigError>();
         var uniqueKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var column in action.Columns)
         {
-            var columnContext = $"{context}, ColumnKey='{column.Key}'";
-
-            var keyCheck = ValidationCheck.NotEmpty(column.Key, columnContext, "key");
-            if (keyCheck.IsFailed)
-                return keyCheck;
-
-            var propertyTypeCheck = ValidationCheck.NotEmpty(column.PropertyTypeId, columnContext, "property_type_id");
-            if (propertyTypeCheck.IsFailed)
-                return propertyTypeCheck;
-
-            var uniqueCheck = ValidationCheck.Unique(column.Key, uniqueKeys, context, $"column key '{column.Key}'");
-            if (uniqueCheck.IsFailed)
-                return uniqueCheck;
-
-            var enumCheck = ValidateEnumColumnHasGroupName(column, columnContext);
-            if (enumCheck.IsFailed)
-                return enumCheck;
+            var columnContext = BuildColumnContext(context, column.Key);
+            ValidateSingleColumn(column, columnContext, uniqueKeys, errors);
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateEnumColumnHasGroupName(YamlActionColumn column, string context)
+    private static string BuildColumnContext(string actionContext, string columnKey)
     {
-        if (!string.Equals(column.PropertyTypeId, PropertyTypeIds.Enum, StringComparison.OrdinalIgnoreCase))
-            return Result.Ok();
-
-        if (string.IsNullOrWhiteSpace(column.GroupName))
-        {
-            return Result.Fail(new Error($"{context}: Column with property_type_id='Enum' must have a 'group_name'.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("columnKey", column.Key)
-                .WithMetadata("propertyTypeId", column.PropertyTypeId));
-        }
-
-        return Result.Ok();
+        return $"{actionContext}, ColumnKey='{columnKey}'";
     }
+
+    private static void ValidateSingleColumn(
+        YamlActionColumn column,
+        string columnContext,
+        HashSet<string> uniqueKeys,
+        List<ConfigError> errors)
+    {
+        ValidateColumnBasicFields(column, columnContext, errors);
+        ValidateColumnKeyUniqueness(column.Key, columnContext, uniqueKeys, errors);
+        ValidateEnumColumnRequirements(column, columnContext, errors);
+    }
+
+    private static void ValidateColumnBasicFields(
+        YamlActionColumn column,
+        string columnContext,
+        List<ConfigError> errors)
+    {
+        AddIfFailed(ValidationCheck.NotEmpty(column.Key, columnContext, "key"), errors);
+        AddIfFailed(ValidationCheck.NotEmpty(column.PropertyTypeId, columnContext, "property_type_id"), errors);
+    }
+
+    private static void ValidateColumnKeyUniqueness(
+        string columnKey,
+        string columnContext,
+        HashSet<string> uniqueKeys,
+        List<ConfigError> errors)
+    {
+        if (!string.IsNullOrWhiteSpace(columnKey))
+        {
+            AddIfFailed(ValidationCheck.Unique(columnKey, uniqueKeys, columnContext, $"column key '{columnKey}'"), errors);
+        }
+    }
+
+    private static void ValidateEnumColumnRequirements(
+        YamlActionColumn column,
+        string columnContext,
+        List<ConfigError> errors)
+    {
+        var isEnumType = string.Equals(column.PropertyTypeId, PropertyTypeIds.Enum, StringComparison.OrdinalIgnoreCase);
+        var hasNoGroupName = string.IsNullOrWhiteSpace(column.GroupName);
+
+        if (isEnumType && hasNoGroupName)
+        {
+            errors.Add(ActionErrors.EnumGroupMissing(column.Key, column.PropertyTypeId, columnContext));
+        }
+    }
+
 
     private static Result ValidateLongLastingRequirements(YamlActionDefinition action, string context)
     {
-        if (!string.Equals(action.DeployDuration, "LongLasting", StringComparison.OrdinalIgnoreCase))
+        if (!IsLongLastingAction(action))
             return Result.Ok();
 
-        var hasStepDuration = action.Columns.Any(c =>
-            string.Equals(c.Key, "step_duration", StringComparison.OrdinalIgnoreCase));
-
-        if (!hasStepDuration)
-        {
-            return Result.Fail(new Error($"{context}: Action with deploy_duration='LongLasting' must include column 'step_duration'.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("deployDuration", action.DeployDuration));
-        }
+        if (!HasStepDurationColumn(action))
+            return Result.Fail(ActionErrors.LongLastingStepDurationMissing(context));
 
         return Result.Ok();
+    }
+
+    private static bool IsLongLastingAction(YamlActionDefinition action)
+    {
+        return string.Equals(action.DeployDuration, "LongLasting", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasStepDurationColumn(YamlActionDefinition action)
+    {
+        return action.Columns?.Any(c => 
+            string.Equals(c.Key, "step_duration", StringComparison.OrdinalIgnoreCase)) == true;
+    }
+
+    private static void AddIfFailed(Result result, List<ConfigError> errors)
+    {
+        if (result.IsFailed)
+        {
+            foreach (var e in result.Errors)
+                errors.Add(e as ConfigError ?? new ConfigError(e.Message, "ActionsDefs.yaml", "validation"));
+        }
     }
 }

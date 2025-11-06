@@ -1,0 +1,7 @@
+- key: "initial_value"
+  ui: { code: "initial_value", ui_name: "Init", column_type: "property_field", width: 120, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "Float", read_only: false }
+
+- key: "initial_value"
+  ui: { code: "initial_value2", ui_name: "Init2", column_type: "property_field", width: 120, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "Float", read_only: false }

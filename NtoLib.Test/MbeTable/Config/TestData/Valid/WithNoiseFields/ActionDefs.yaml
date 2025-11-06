@@ -1,0 +1,10 @@
+- id: 10
+  name: "Wait_time"
+  deploy_duration: "LongLasting"
+  columns:
+    - key: "step_duration"
+      default_value: "10"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+  unknown_blob: "ignored"

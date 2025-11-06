@@ -1,0 +1,13 @@
+- id: 3001
+  name: "WithFormulaDup"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "initial_value"
+      property_type_id: "float"
+    - key: "task"
+      property_type_id: "float"
+  formula:
+    expression: "initial_value + task"
+    recalc_order:
+      - "initial_value"
+      - "initial_value"

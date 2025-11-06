@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 
-using FB;
-
 using InSAT.OPC;
 using MasterSCADA.Hlp;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 
 namespace NtoLib.Recipes.MbeTable;
 
@@ -40,9 +38,9 @@ public partial class MbeTableFB
     /// Creates pins based on pin group definitions from configuration.
     /// </summary>
     /// <param name="state">Configuration state containing pin group definitions.</param>
-    private void CreatePinsFromConfiguration(ConfigurationState state)
+    private void CreatePinsFromConfiguration(AppConfiguration state)
     {
-        foreach (var pinGroup in state.AppConfiguration.PinGroupData)
+        foreach (var pinGroup in state.PinGroupData)
         {
             var groupNode = Root.AddGroup(pinGroup.PinGroupId, pinGroup.GroupName);
 

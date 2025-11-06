@@ -1,0 +1,4 @@
+- property_type_id: "float"
+  system_type: "System.Single"
+  units: ""
+  format_kind: "BadFormat"

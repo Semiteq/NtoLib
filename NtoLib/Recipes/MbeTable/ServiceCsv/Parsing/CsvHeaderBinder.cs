@@ -44,7 +44,7 @@ public sealed class CsvHeaderBinder : ICsvHeaderBinder
         }
 
         var expected = columns.GetColumns()
-            .Where(c => !c.ReadOnly)
+            .Where(c => c.SaveToCsv)
             .Select(c => c.Code)
             .ToArray();
 

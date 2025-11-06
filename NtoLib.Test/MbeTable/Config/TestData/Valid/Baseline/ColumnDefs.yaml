@@ -1,0 +1,113 @@
+﻿- key: "action"
+  ui:
+    code: "action"
+    ui_name: "Имя команды"
+    column_type: "action_combo_box"
+    width: 180
+    alignment: "MiddleLeft"
+  business_logic:
+    property_type_id: "Enum"
+    read_only: false
+    save_to_csv: true
+    plc_mapping:
+      area: "Int"
+      index: 0
+
+- key: "target"
+  ui:
+    code: "target"
+    ui_name: "Объект"
+    column_type: "action_target_combo_box"
+    width: 100
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "Enum"
+    read_only: false
+    save_to_csv: true
+    plc_mapping:
+      area: "Int"
+      index: 1
+
+- key: "initial_value"
+  ui:
+    code: "initial_value"
+    ui_name: "Начальное значение"
+    column_type: "property_field"
+    width: 230
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "Float"
+    read_only: false
+    save_to_csv: true
+    plc_mapping:
+      area: "Float"
+      index: 0
+
+- key: "task"
+  ui:
+    code: "task"
+    ui_name: "Задание"
+    column_type: "property_field"
+    width: 160
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "Float"
+    read_only: false
+    save_to_csv: true
+    plc_mapping:
+      area: "Float"
+      index: 1
+
+- key: "speed"
+  ui:
+    code: "speed"
+    ui_name: "Скорость"
+    column_type: "property_field"
+    width: 110
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "pressure_bar"
+    read_only: false
+    save_to_csv: true
+    plc_mapping:
+      area: "Float"
+      index: 2
+
+- key: "step_duration"
+  ui:
+    code: "step_duration"
+    ui_name: "Время"
+    column_type: "property_field"
+    width: 120
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "Time"
+    read_only: false
+    save_to_csv: true
+    plc_mapping:
+      area: "Float"
+      index: 3
+
+- key: "step_start_time"
+  ui:
+    code: "step_start_time"
+    ui_name: "Время абс."
+    column_type: "step_start_time_field"
+    width: 130
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "String"
+    read_only: true
+    save_to_csv: false
+
+- key: "comment"
+  ui:
+    code: "comment"
+    ui_name: "Комментарий"
+    column_type: "text_field"
+    width: -1
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "String"
+    read_only: false
+    save_to_csv: true

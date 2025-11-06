@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
 using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 
@@ -16,7 +17,9 @@ public sealed class ActionComboBox : FactoryColumnComboBoxBase
 
     public ActionComboBox(
         IComboboxDataProvider comboProvider,
-        IServiceProvider serviceProvider) : base(serviceProvider)
+        IServiceProvider serviceProvider, 
+        IColumnAlignmentResolver alignmentResolver) 
+        : base(serviceProvider, alignmentResolver)
     {
         _comboProvider = comboProvider;
     }

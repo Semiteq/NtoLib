@@ -1,6 +1,7 @@
-﻿using System.Windows.Forms;
-
+﻿using System;
+using System.Windows.Forms;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
@@ -9,6 +10,13 @@ public abstract class FactoryColumnBase : IFactoryColumn
 {
     private const int DefaultMinWidth = 50;
     private const int CriticalMinWidth = 2;
+
+    private readonly IColumnAlignmentResolver _alignmentResolver;
+
+    protected FactoryColumnBase(IColumnAlignmentResolver alignmentResolver)
+    {
+        _alignmentResolver = alignmentResolver ?? throw new ArgumentNullException(nameof(alignmentResolver));
+    }
 
     public DataGridViewColumn CreateColumn(ColumnDefinition definition, ColorScheme scheme)
     {
@@ -19,7 +27,7 @@ public abstract class FactoryColumnBase : IFactoryColumn
         column.HeaderText = definition.UiName;
         column.SortMode = DataGridViewColumnSortMode.NotSortable;
         column.ReadOnly = definition.ReadOnly;
-        column.DefaultCellStyle.Alignment = definition.Alignment;
+        column.DefaultCellStyle.Alignment = _alignmentResolver.Resolve(definition);
         column.DefaultCellStyle.Font = scheme.LineFont;
         column.DefaultCellStyle.BackColor = scheme.LineBgColor;
         column.DefaultCellStyle.ForeColor = scheme.LineTextColor;
@@ -37,8 +45,7 @@ public abstract class FactoryColumnBase : IFactoryColumn
 
     protected abstract DataGridViewColumn CreateColumnInstance(ColumnDefinition definition);
 
-    protected virtual void ConfigureColumn(
-        DataGridViewColumn column)
+    protected virtual void ConfigureColumn(DataGridViewColumn column)
     {
     }
 }

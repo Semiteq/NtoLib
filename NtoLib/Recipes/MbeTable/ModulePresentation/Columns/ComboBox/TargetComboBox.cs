@@ -5,13 +5,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 using NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
 using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 
 public sealed class TargetComboBox : FactoryColumnComboBoxBase
 {
-    public TargetComboBox(IServiceProvider serviceProvider)
-        : base(serviceProvider)
+    public TargetComboBox(IServiceProvider serviceProvider, IColumnAlignmentResolver alignmentResolver)
+        : base(serviceProvider, alignmentResolver)
     {
     }
 

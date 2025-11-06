@@ -35,8 +35,8 @@ public sealed class CsvDataFormatter : ICsvDataFormatter
         using var stringWriter = new StringWriter(stringBuilder);
         using var csvWriter = _csvHelperFactory.CreateWriter(stringWriter);
         
-        var writableColumns = _columns //todo: writing readonly is dangerous default
-            .Where(column => !column.ReadOnly)
+        var writableColumns = _columns
+            .Where(column => column.SaveToCsv)
             .ToArray();
         
         WriteHeader(csvWriter, writableColumns);
@@ -86,7 +86,7 @@ public sealed class CsvDataFormatter : ICsvDataFormatter
             return string.Empty;
         }
         
-        var value = property.GetValueAsObject();
+        var value = property.GetValueAsObject;
         
         return value switch
         {

@@ -1,0 +1,11 @@
+- key: "initial_value"
+  ui: { code: "initial_value", ui_name: "Init", column_type: "bad_type", width: 120, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "Float", read_only: false }
+
+- key: "action"
+  ui: { code: "action", ui_name: "Action", column_type: "action_combo_box", width: 150, alignment: "MiddleLeft" }
+  business_logic: { property_type_id: "Enum", read_only: false }
+
+- key: "comment"
+  ui: { code: "comment", ui_name: "Comment", column_type: "text_field", width: -1, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "String", read_only: false }

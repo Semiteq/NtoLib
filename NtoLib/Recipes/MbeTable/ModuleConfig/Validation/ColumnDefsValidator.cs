@@ -7,21 +7,17 @@ using FluentResults;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Columns;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
-/// <summary>
-/// Validates column definitions from ColumnDefs.yaml.
-/// Checks mandatory columns, supported column types, width/min_width constraints,
-/// and action_combo_box requirements.
-/// </summary>
 public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition>
 {
     private static readonly List<ColumnIdentifier> ConfigMandatoryColumns = new()
     {
         MandatoryColumns.Action,
+        MandatoryColumns.Task,
         MandatoryColumns.StepDuration,
         MandatoryColumns.StepStartTime,
         MandatoryColumns.Comment
@@ -38,19 +34,21 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 
     public Result Validate(IReadOnlyList<YamlColumnDefinition> items)
     {
-        var checkEmpty = ValidationCheck.NotEmpty(items, "ColumnDefs.yaml");
-        if (checkEmpty.IsFailed)
-            return checkEmpty;
+        var emptyCheck = ValidationCheck.NotEmpty(items, "ColumnDefs.yaml");
+        if (emptyCheck.IsFailed) return emptyCheck;
+
+        var allErrors = new List<ConfigError>();
 
         var mandatoryResult = ValidateMandatoryColumns(items);
-        if (mandatoryResult.IsFailed)
-            return mandatoryResult;
+        AddIfFailed(mandatoryResult, allErrors);
 
         var columnTypesResult = ValidateSupportedColumnTypes(items);
-        if (columnTypesResult.IsFailed)
-            return columnTypesResult;
+        AddIfFailed(columnTypesResult, allErrors);
 
-        return ValidateEachDefinition(items);
+        var perItemErrors = ValidateEachDefinition(items);
+        allErrors.AddRange(perItemErrors);
+
+        return allErrors.Count > 0 ? Result.Fail(allErrors) : Result.Ok();
     }
 
     private static Result ValidateMandatoryColumns(IReadOnlyList<YamlColumnDefinition> items)
@@ -64,9 +62,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         if (missingKeys.Any())
         {
             var missing = string.Join(", ", missingKeys);
-            return Result.Fail(new Error($"ColumnDefs.yaml: Missing mandatory columns: {missing}.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("MissingColumns", missing));
+            return Result.Fail(ColumnErrors.MissingMandatory(missing));
         }
 
         return Result.Ok();
@@ -83,110 +79,125 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         if (unsupported.Any())
         {
             var info = string.Join(", ", unsupported.Select(c => $"'{c.Key}' ({c.ColumnType})"));
-            return Result.Fail(new Error($"ColumnDefs.yaml: Unsupported column types: {info}.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("UnsupportedColumns", info));
+            return Result.Fail(ColumnErrors.UnsupportedTypes(info));
         }
 
         return Result.Ok();
     }
 
-    private static Result ValidateEachDefinition(IReadOnlyList<YamlColumnDefinition> items)
+    private static List<ConfigError> ValidateEachDefinition(IReadOnlyList<YamlColumnDefinition> items)
     {
+        var errors = new List<ConfigError>();
         var uniqueKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var col in items)
         {
             var context = $"ColumnDefs.yaml, Key='{col.Key}'";
 
-            var structureResult = ValidateStructure(col, context);
-            if (structureResult.IsFailed)
-                return structureResult;
-
-            var uniqueResult = ValidationCheck.Unique(col.Key, uniqueKeys, "ColumnDefs.yaml", "key");
-            if (uniqueResult.IsFailed)
-                return uniqueResult;
-
-            var widthResult = ValidateWidthConstraints(col, context);
-            if (widthResult.IsFailed)
-                return widthResult;
-
-            var dropdownResult = ValidateMaxDropdownItems(col, context);
-            if (dropdownResult.IsFailed)
-                return dropdownResult;
-
-            var actionComboResult = ValidateActionComboBox(col, context);
-            if (actionComboResult.IsFailed)
-                return actionComboResult;
+            ValidateColumnStructure(col, context, errors);
+            ValidateColumnKeyUniqueness(col.Key, context, uniqueKeys, errors);
+            ValidateColumnBusinessLogic(col, context, errors);
+            ValidateColumnUi(col, context, errors);
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateStructure(YamlColumnDefinition col, string context)
+    private static void ValidateColumnStructure(YamlColumnDefinition column, string context, List<ConfigError> errors)
     {
-        var keyCheck = ValidationCheck.NotEmpty(col.Key, context, "key");
-        if (keyCheck.IsFailed)
-            return keyCheck;
-
-        var uiCheck = ValidationCheck.NotNull(col.Ui, context, "ui");
-        if (uiCheck.IsFailed)
-            return uiCheck;
-
-        var businessLogicCheck = ValidationCheck.NotNull(col.BusinessLogic, context, "business_logic");
-        if (businessLogicCheck.IsFailed)
-            return businessLogicCheck;
-
-        var propertyTypeIdCheck = ValidationCheck.NotEmpty(col.BusinessLogic.PropertyTypeId, context, "property_type_id");
-        if (propertyTypeIdCheck.IsFailed)
-            return propertyTypeIdCheck;
-
-        return Result.Ok();
+        AddIfFailed(ValidationCheck.NotEmpty(column.Key, context, "key"), errors);
+        AddIfFailed(ValidationCheck.NotNull(column.Ui, context, "ui"), errors);
+        AddIfFailed(ValidationCheck.NotNull(column.BusinessLogic, context, "business_logic"), errors);
     }
 
-    private static Result ValidateWidthConstraints(YamlColumnDefinition col, string context)
+    private static void ValidateColumnKeyUniqueness(string key, string context, HashSet<string> uniqueKeys, List<ConfigError> errors)
     {
-        var allowFullWidth = string.Equals(col.Key, "comment", StringComparison.OrdinalIgnoreCase);
-        var widthCheck = ValidationCheck.ValidateWidth(col.Ui.Width, context, col.Key, allowFullWidth);
-        if (widthCheck.IsFailed)
-            return widthCheck;
-
-        var minWidthCheck = ValidationCheck.ValidateMinWidth(col.Ui.MinWidth, context, col.Key);
-        if (minWidthCheck.IsFailed)
-            return minWidthCheck;
-
-        return Result.Ok();
-    }
-
-    private static Result ValidateMaxDropdownItems(YamlColumnDefinition col, string context)
-    {
-        if (col.Ui.MaxDropdownItems <= 0)
+        if (!string.IsNullOrWhiteSpace(key))
         {
-            return Result.Fail(new Error($"{context}: max_dropdown_items must be > 0. Actual: {col.Ui.MaxDropdownItems}.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("columnKey", col.Key)
-                .WithMetadata("maxDropdownItems", col.Ui.MaxDropdownItems.ToString()));
+            AddIfFailed(ValidationCheck.Unique(key, uniqueKeys, context, "key"), errors);
         }
-
-        return Result.Ok();
     }
 
-    private static Result ValidateActionComboBox(YamlColumnDefinition col, string context)
+    private static void ValidateColumnBusinessLogic(YamlColumnDefinition column, string context, List<ConfigError> errors)
     {
-        if (!string.Equals(col.Ui.ColumnType, ColumnTypeIds.ActionComboBox, StringComparison.OrdinalIgnoreCase))
-            return Result.Ok();
+        if (column.BusinessLogic == null)
+            return;
 
-        // If column_type is action_combo_box, key must be "action"
-        if (!string.Equals(col.Key, "action", StringComparison.OrdinalIgnoreCase))
+        AddIfFailed(ValidationCheck.NotEmpty(column.BusinessLogic.PropertyTypeId, context, "property_type_id"), errors);
+
+        if (column.BusinessLogic.PlcMapping != null)
         {
-            return Result.Fail(new Error($"{context}: column_type 'action_combo_box' can only be used with key='action'.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("columnKey", col.Key)
-                .WithMetadata("columnType", col.Ui.ColumnType));
+            ValidatePlcMapping(column.BusinessLogic.PlcMapping, context, errors);
         }
+    }
 
-        return Result.Ok();
+    private static void ValidatePlcMapping(YamlPlcMapping plcMapping, string context, List<ConfigError> errors)
+    {
+        AddIfFailed(ValidationCheck.NotEmpty(plcMapping.Area, context, "plc_mapping.area"), errors);
+        AddIfFailed(ValidationCheck.NonNegative(plcMapping.Index, context, "plc_mapping.index"), errors);
+    }
+
+    private static void ValidateColumnUi(YamlColumnDefinition column, string context, List<ConfigError> errors)
+    {
+        if (column.Ui == null)
+            return;
+
+        var allowFullWidth = IsCommentColumn(column.Key);
+
+        ValidateUiBasicFields(column.Ui, context, errors);
+        ValidateUiWidthFields(column.Ui, context, column.Key, allowFullWidth, errors);
+        ValidateMaxDropdownItems(column, context, errors);
+        ValidateActionComboBoxBinding(column, context, errors);
+    }
+
+    private static bool IsCommentColumn(string columnKey)
+    {
+        return string.Equals(columnKey, "comment", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void ValidateUiBasicFields(YamlColumnUi ui, string context, List<ConfigError> errors)
+    {
+        AddIfFailed(ValidationCheck.NotEmpty(ui.Code, context, "code"), errors);
+        AddIfFailed(ValidationCheck.NotEmpty(ui.UiName, context, "ui_name"), errors);
+    }
+
+    private static void ValidateUiWidthFields(YamlColumnUi ui, string context, string columnKey, bool allowFullWidth, List<ConfigError> errors)
+    {
+        AddIfFailed(ValidationCheck.ValidateWidth(ui.Width, context, columnKey, allowFullWidth), errors);
+        AddIfFailed(ValidationCheck.ValidateMinWidth(ui.MinWidth, context, columnKey), errors);
+    }
+
+    private static void ValidateMaxDropdownItems(YamlColumnDefinition column, string context, List<ConfigError> errors)
+    {
+        if (column.Ui == null)
+            return;
+
+        if (column.Ui.MaxDropdownItems <= 0)
+        {
+            errors.Add(ColumnErrors.InvalidMaxDropdownItems(column.Key, column.Ui.MaxDropdownItems, context));
+        }
+    }
+
+    private static void ValidateActionComboBoxBinding(YamlColumnDefinition column, string context, List<ConfigError> errors)
+    {
+        if (column.Ui == null)
+            return;
+
+        var isActionComboBox = string.Equals(column.Ui.ColumnType, ColumnTypeIds.ActionComboBox, StringComparison.OrdinalIgnoreCase);
+        var isNotActionColumn = !string.Equals(column.Key, "action", StringComparison.OrdinalIgnoreCase);
+
+        if (isActionComboBox && isNotActionColumn)
+        {
+            errors.Add(ColumnErrors.InvalidActionComboBinding(column.Key, column.Ui.ColumnType, context));
+        }
+    }
+
+    private static void AddIfFailed(Result result, List<ConfigError> errors)
+    {
+        if (result.IsFailed)
+        {
+            foreach (var e in result.Errors)
+                errors.Add(e as ConfigError ?? new ConfigError(e.Message, "ColumnDefs.yaml", "validation"));
+        }
     }
 }

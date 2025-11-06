@@ -1,0 +1,6 @@
+- id: 10
+  name: "Wait_time"
+  deploy_duration: "LongLasting"
+  columns:
+    - key: "comment"
+      property_type_id: "string"

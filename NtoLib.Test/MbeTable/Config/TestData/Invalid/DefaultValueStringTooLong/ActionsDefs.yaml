@@ -1,0 +1,7 @@
+- id: 1
+  name: "A"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "string"
+      default_value: "THIS IS LONGER THAN TEN"

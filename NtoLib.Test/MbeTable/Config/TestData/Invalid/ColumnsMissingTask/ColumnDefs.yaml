@@ -1,0 +1,27 @@
+- key: "action"
+  ui: { code: "action", ui_name: "Action", column_type: "action_combo_box", width: 150, alignment: "MiddleLeft" }
+  business_logic: { property_type_id: "Enum", read_only: false }
+
+- key: "target"
+  ui: { code: "target", ui_name: "Target", column_type: "action_target_combo_box", width: 100, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "Enum", read_only: false }
+
+- key: "initial_value"
+  ui: { code: "initial_value", ui_name: "Init", column_type: "property_field", width: 120, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "Float", read_only: false }
+
+- key: "speed"
+  ui: { code: "speed", ui_name: "Speed", column_type: "property_field", width: 110, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "pressure_bar", read_only: false }
+
+- key: "step_duration"
+  ui: { code: "step_duration", ui_name: "Time", column_type: "property_field", width: 120, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "Time", read_only: false }
+
+- key: "step_start_time"
+  ui: { code: "step_start_time", ui_name: "AbsTime", column_type: "step_start_time_field", width: 130, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "String", read_only: true }
+
+- key: "comment"
+  ui: { code: "comment", ui_name: "Comment", column_type: "text_field", width: -1, alignment: "MiddleCenter" }
+  business_logic: { property_type_id: "String", read_only: false }

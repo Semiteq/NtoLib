@@ -1,0 +1,4 @@
+- property_type_id: "x"
+  system_type: "System.Int32"
+  units: ""
+  format_kind: "Numeric"

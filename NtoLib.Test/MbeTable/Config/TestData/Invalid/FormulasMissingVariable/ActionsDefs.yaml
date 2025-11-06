@@ -1,0 +1,13 @@
+- id: 3002
+  name: "WithFormulaMissingVar"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "initial_value"
+      property_type_id: "float"
+    - key: "task"
+      property_type_id: "float"
+  formula:
+    expression: "initial_value + missing"
+    recalc_order:
+      - "initial_value"
+      - "missing"

@@ -1,0 +1,13 @@
+- id: 1100
+  name: "A"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 1100
+  name: "B"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "string"

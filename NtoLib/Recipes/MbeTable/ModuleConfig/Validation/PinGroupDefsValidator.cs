@@ -6,31 +6,23 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.PinGroups;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
 /// <summary>
 /// Validates pin group definitions from PinGroupDefs.yaml.
-/// Checks structure, uniqueness, and non-overlapping pin ranges.
+/// Aggregates structure, uniqueness, and non-overlapping pin ranges.
 /// </summary>
 public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefinition>
 {
     public Result Validate(IReadOnlyList<YamlPinGroupDefinition> items)
     {
-        var checkEmpty = ValidationCheck.NotEmpty(items, "PinGroupDefs.yaml");
-        if (checkEmpty.IsFailed)
-            return checkEmpty;
+        var emptyCheck = ValidationCheck.NotEmpty(items, "PinGroupDefs.yaml");
+        if (emptyCheck.IsFailed)
+            return emptyCheck;
 
-        var structureResult = ValidateEachStructure(items);
-        if (structureResult.IsFailed)
-            return structureResult;
+        var errors = new List<ConfigError>();
 
-        return ValidateNonOverlappingRanges(items);
-    }
-
-    private static Result ValidateEachStructure(IReadOnlyList<YamlPinGroupDefinition> items)
-    {
         var uniqueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var uniqueIds = new HashSet<int>();
 
@@ -38,54 +30,40 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
         {
             var context = $"PinGroupDefs.yaml, GroupName='{group.GroupName}'";
 
-            var nameCheck = ValidationCheck.NotEmpty(group.GroupName, context, "group_name");
-            if (nameCheck.IsFailed)
-                return nameCheck;
+            AddIfFailed(ValidationCheck.NotEmpty(group.GroupName, context, "group_name"), errors);
+            AddIfFailed(ValidationCheck.Positive(group.PinGroupId, context, "pin_group_id"), errors);
+            AddIfFailed(ValidationCheck.Positive(group.FirstPinId, context, "first_pin_id"), errors);
+            AddIfFailed(ValidationCheck.Positive(group.PinQuantity, context, "pin_quantity"), errors);
 
-            var groupIdCheck = ValidationCheck.Positive(group.PinGroupId, context, "pin_group_id");
-            if (groupIdCheck.IsFailed)
-                return groupIdCheck;
+            if (!string.IsNullOrWhiteSpace(group.GroupName))
+                AddIfFailed(ValidationCheck.Unique(group.GroupName, uniqueNames, "PinGroupDefs.yaml", "group_name"),
+                    errors);
 
-            var firstPinCheck = ValidationCheck.Positive(group.FirstPinId, context, "first_pin_id");
-            if (firstPinCheck.IsFailed)
-                return firstPinCheck;
+            AddIfFailed(ValidationCheck.Unique(group.PinGroupId, uniqueIds, context, "pin_group_id"), errors);
 
-            var quantityCheck = ValidationCheck.Positive(group.PinQuantity, context, "pin_quantity");
-            if (quantityCheck.IsFailed)
-                return quantityCheck;
-
-            var nameUniqueCheck = ValidationCheck.Unique(group.GroupName, uniqueNames, "PinGroupDefs.yaml", "group_name");
-            if (nameUniqueCheck.IsFailed)
-                return nameUniqueCheck;
-
-            var idUniqueCheck = ValidationCheck.Unique(group.PinGroupId, uniqueIds, context, "pin_group_id");
-            if (idUniqueCheck.IsFailed)
-                return idUniqueCheck;
-
-            var orderCheck = ValidatePinIdOrder(group, context);
-            if (orderCheck.IsFailed)
-                return orderCheck;
+            // Order rule
+            if (group.PinGroupId > group.FirstPinId)
+            {
+                errors.Add(new ConfigError(
+                        $"FirstPinId ({group.FirstPinId}) must be >= PinGroupId ({group.PinGroupId}).",
+                        section: "PinGroupDefs.yaml",
+                        context: context)
+                    .WithDetail("GroupName", group.GroupName)
+                    .WithDetail("PinGroupId", group.PinGroupId)
+                    .WithDetail("FirstPinId", group.FirstPinId));
+            }
         }
 
-        return Result.Ok();
+        // Non-overlapping ranges check (only if basic structure is ok)
+        errors.AddRange(ValidateNonOverlappingRanges(items));
+
+        return errors.Count > 0 ? Result.Fail(errors) : Result.Ok();
     }
 
-    private static Result ValidatePinIdOrder(YamlPinGroupDefinition group, string context)
+    private static List<ConfigError> ValidateNonOverlappingRanges(IReadOnlyList<YamlPinGroupDefinition> items)
     {
-        if (group.PinGroupId > group.FirstPinId)
-        {
-            return Result.Fail(new Error($"{context}: FirstPinId ({group.FirstPinId}) must be >= PinGroupId ({group.PinGroupId}).")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("GroupName", group.GroupName)
-                .WithMetadata("PinGroupId", group.PinGroupId.ToString())
-                .WithMetadata("FirstPinId", group.FirstPinId.ToString()));
-        }
+        var errors = new List<ConfigError>();
 
-        return Result.Ok();
-    }
-
-    private static Result ValidateNonOverlappingRanges(IReadOnlyList<YamlPinGroupDefinition> items)
-    {
         var ranges = items
             .Select(g => new
             {
@@ -103,15 +81,29 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
 
             if (curr.Start <= prev.End)
             {
-                return Result.Fail(new Error($"PinGroupDefs.yaml: Pin ranges overlap between '{prev.GroupName}' [{prev.Start}..{prev.End}] and '{curr.GroupName}' [{curr.Start}..{curr.End}].")
-                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                    .WithMetadata("Group1", prev.GroupName)
-                    .WithMetadata("Group2", curr.GroupName)
-                    .WithMetadata("Range1", $"[{prev.Start}..{prev.End}]")
-                    .WithMetadata("Range2", $"[{curr.Start}..{curr.End}]"));
+                errors.Add(new ConfigError(
+                        $"Pin ranges overlap between '{prev.GroupName}' [{prev.Start}..{prev.End}] and '{curr.GroupName}' [{curr.Start}..{curr.End}].",
+                        section: "PinGroupDefs.yaml",
+                        context: "ranges-overlap")
+                    .WithDetail("Group1", prev.GroupName)
+                    .WithDetail("Group2", curr.GroupName)
+                    .WithDetail("Range1", $"[{prev.Start}..{prev.End}]")
+                    .WithDetail("Range2", $"[{curr.Start}..{curr.End}]"));
             }
         }
 
-        return Result.Ok();
+        return errors;
+    }
+
+    private static void AddIfFailed(Result result, List<ConfigError> errors)
+    {
+        if (result.IsFailed)
+        {
+            foreach (var e in result.Errors)
+            {
+                if (e is ConfigError ce) errors.Add(ce);
+                else errors.Add(new ConfigError(e.Message, "PinGroupDefs.yaml", "validation"));
+            }
+        }
     }
 }

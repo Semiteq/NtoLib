@@ -1,0 +1,4 @@
+- group_name: "Bad"
+  pin_group_id: 200
+  first_pin_id: 100
+  pin_quantity: 1

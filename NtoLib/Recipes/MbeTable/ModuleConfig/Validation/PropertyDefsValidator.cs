@@ -5,14 +5,10 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
-/// <summary>
-/// Validates property definitions from PropertyDefs.yaml.
-/// Checks structure, uniqueness, supported types, and format_kind values.
-/// </summary>
 public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefinition>
 {
     private static readonly HashSet<string> SupportedSystemTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -38,79 +34,44 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
 
     public Result Validate(IReadOnlyList<YamlPropertyDefinition> items)
     {
-        var checkEmpty = ValidationCheck.NotEmpty(items, "PropertyDefs.yaml");
-        if (checkEmpty.IsFailed)
-            return checkEmpty;
+        var emptyCheck = ValidationCheck.NotEmpty(items, "PropertyDefs.yaml");
+        if (emptyCheck.IsFailed) return emptyCheck;
 
-        return ValidateEachDefinition(items);
-    }
-
-    private static Result ValidateEachDefinition(IReadOnlyList<YamlPropertyDefinition> items)
-    {
+        var errors = new List<ConfigError>();
         var uniqueIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var def in items)
         {
             var context = $"PropertyDefs.yaml, PropertyTypeId='{def.PropertyTypeId}'";
 
-            var structureResult = ValidateStructure(def, context);
-            if (structureResult.IsFailed)
-                return structureResult;
+            AddIfFailed(ValidationCheck.NotEmpty(def.PropertyTypeId, context, "property_type_id"), errors);
+            AddIfFailed(ValidationCheck.NotEmpty(def.SystemType, context, "system_type"), errors);
 
-            var uniqueResult =
-                ValidationCheck.Unique(def.PropertyTypeId, uniqueIds, "PropertyDefs.yaml", "property_type_id");
-            if (uniqueResult.IsFailed)
-                return uniqueResult;
+            if (!string.IsNullOrWhiteSpace(def.PropertyTypeId))
+                AddIfFailed(
+                    ValidationCheck.Unique(def.PropertyTypeId, uniqueIds, "PropertyDefs.yaml", "property_type_id"),
+                    errors);
 
-            var typeResult = ValidateTypeSupport(def, context);
-            if (typeResult.IsFailed)
-                return typeResult;
-
-            var formatResult = ValidateFormatKind(def, context);
-            if (formatResult.IsFailed)
-                return formatResult;
+            AddIfFailed(ValidateTypeSupport(def, context), errors);
+            AddIfFailed(ValidateFormatKind(def, context), errors);
         }
 
-        return Result.Ok();
-    }
-
-    private static Result ValidateStructure(YamlPropertyDefinition def, string context)
-    {
-        var propertyTypeIdCheck = ValidationCheck.NotEmpty(def.PropertyTypeId, context, "property_type_id");
-        if (propertyTypeIdCheck.IsFailed)
-            return propertyTypeIdCheck;
-
-        var systemTypeCheck = ValidationCheck.NotEmpty(def.SystemType, context, "system_type");
-        if (systemTypeCheck.IsFailed)
-            return systemTypeCheck;
-
-        return Result.Ok();
+        return errors.Count > 0 ? Result.Fail(errors) : Result.Ok();
     }
 
     private static Result ValidateTypeSupport(YamlPropertyDefinition def, string context)
     {
-        // Special types (Time, Enum) don't need SystemType validation
-        if (SpecialTypes.Contains(def.PropertyTypeId))
-            return Result.Ok();
+        if (SpecialTypes.Contains(def.PropertyTypeId)) return Result.Ok();
 
         var systemType = Type.GetType(def.SystemType, throwOnError: false, ignoreCase: true);
         if (systemType == null)
-        {
-            return Result.Fail(new Error($"{context}: Unknown SystemType '{def.SystemType}'.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("PropertyTypeId", def.PropertyTypeId)
-                .WithMetadata("SystemType", def.SystemType));
-        }
+            return Result.Fail(PropertyErrors.UnknownSystemType(def.PropertyTypeId, def.SystemType, context));
 
         if (!SupportedSystemTypes.Contains(systemType.FullName ?? string.Empty))
         {
             var supported = string.Join(", ", SupportedSystemTypes);
             return Result.Fail(
-                new Error($"{context}: Unsupported SystemType '{def.SystemType}'. Supported: {supported}.")
-                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                    .WithMetadata("PropertyTypeId", def.PropertyTypeId)
-                    .WithMetadata("SystemType", def.SystemType)
-                    .WithMetadata("SupportedTypes", supported));
+                PropertyErrors.UnsupportedSystemType(def.PropertyTypeId, def.SystemType, supported, context));
         }
 
         return Result.Ok();
@@ -119,50 +80,114 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
     private static Result ValidateFormatKind(YamlPropertyDefinition def, string context)
     {
         if (string.IsNullOrWhiteSpace(def.FormatKind))
-        {
-            // FormatKind is optional, Numeric is assumed if not specified.
             return Result.Ok();
-        }
 
-        if (!SupportedFormatKinds.Contains(def.FormatKind))
-        {
-            var supported = string.Join(", ", SupportedFormatKinds);
-            return Result.Fail(
-                new Error($"{context}: Unsupported format_kind '{def.FormatKind}'. Supported: {supported}.")
-                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                    .WithMetadata("PropertyTypeId", def.PropertyTypeId)
-                    .WithMetadata("FormatKind", def.FormatKind)
-                    .WithMetadata("SupportedFormats", supported));
-        }
-        
-        // TimeHms can only be used with PropertyTypeId='Time'
-        if (string.Equals(def.FormatKind, "TimeHms", StringComparison.OrdinalIgnoreCase))
-        {
-            if (!string.Equals(def.PropertyTypeId, PropertyTypeIds.Time, StringComparison.OrdinalIgnoreCase))
-            {
-                return Result.Fail(new Error($"{context}: format_kind='TimeHms' can only be used with PropertyTypeId='Time'.")
-                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                    .WithMetadata("PropertyTypeId", def.PropertyTypeId)
-                    .WithMetadata("FormatKind", def.FormatKind));
-            }
-        }
+        if (!IsSupportedFormatKind(def.FormatKind))
+            return CreateUnsupportedFormatKindError(def, context);
 
-        // Scientific can only be used with numeric types.
-        if (string.Equals(def.FormatKind, "Scientific", StringComparison.OrdinalIgnoreCase))
-        {
-            var systemType = Type.GetType(def.SystemType, throwOnError: false, ignoreCase: true);
-            if (systemType != typeof(float) && systemType != typeof(double) && 
-                systemType != typeof(int) && systemType != typeof(short))
-            {
-                return Result.Fail(new Error($"{context}: format_kind='Scientific' can only be used with numeric types.")
-                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                    .WithMetadata("PropertyTypeId", def.PropertyTypeId)
-                    .WithMetadata("SystemType", def.SystemType)
-                    .WithMetadata("FormatKind", def.FormatKind));
-            }
-        }
+        var timeHmsCheck = ValidateTimeHmsFormat(def, context);
+        if (timeHmsCheck.IsFailed)
+            return timeHmsCheck;
 
-        
+        var scientificCheck = ValidateScientificFormat(def, context);
+        if (scientificCheck.IsFailed)
+            return scientificCheck;
+
+        var intFormatCheck = ValidateIntFormat(def, context);
+        if (intFormatCheck.IsFailed)
+            return intFormatCheck;
+
         return Result.Ok();
+    }
+
+    private static bool IsSupportedFormatKind(string formatKind)
+    {
+        return SupportedFormatKinds.Contains(formatKind);
+    }
+
+    private static Result CreateUnsupportedFormatKindError(YamlPropertyDefinition def, string context)
+    {
+        var supported = string.Join(", ", SupportedFormatKinds);
+        return Result.Fail(
+            PropertyErrors.UnsupportedFormatKind(def.PropertyTypeId, def.FormatKind, supported, context));
+    }
+
+    private static Result ValidateTimeHmsFormat(YamlPropertyDefinition def, string context)
+    {
+        if (!IsTimeHmsFormat(def.FormatKind))
+            return Result.Ok();
+
+        if (!IsTimePropertyType(def.PropertyTypeId))
+            return Result.Fail(PropertyErrors.TimeHmsRequiresTime(def.PropertyTypeId, context));
+
+        return Result.Ok();
+    }
+
+    private static bool IsTimeHmsFormat(string formatKind)
+    {
+        return string.Equals(formatKind, "TimeHms", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTimePropertyType(string propertyTypeId)
+    {
+        return string.Equals(propertyTypeId, PropertyTypeIds.Time, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Result ValidateScientificFormat(YamlPropertyDefinition def, string context)
+    {
+        if (!IsScientificFormat(def.FormatKind))
+            return Result.Ok();
+
+        var systemType = Type.GetType(def.SystemType, throwOnError: false, ignoreCase: true);
+        if (!IsNumericType(systemType))
+            return Result.Fail(
+                PropertyErrors.ScientificRequiresNumeric(def.PropertyTypeId, def.SystemType, context));
+
+        return Result.Ok();
+    }
+
+    private static bool IsScientificFormat(string formatKind)
+    {
+        return string.Equals(formatKind, "Scientific", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsNumericType(Type? systemType)
+    {
+        return systemType == typeof(float) || systemType == typeof(short);
+    }
+
+    private static Result ValidateIntFormat(YamlPropertyDefinition def, string context)
+    {
+        if (!IsIntFormat(def.FormatKind))
+            return Result.Ok();
+
+        var systemType = Type.GetType(def.SystemType, throwOnError: false, ignoreCase: true);
+        if (!IsFloatType(systemType))
+        {
+            var supported = "System.Single";
+            return Result.Fail(
+                PropertyErrors.UnsupportedFormatKind(def.PropertyTypeId, def.FormatKind, supported, context));
+        }
+
+        return Result.Ok();
+    }
+
+    private static bool IsIntFormat(string formatKind)
+    {
+        return string.Equals(formatKind, "Int", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsFloatType(Type? systemType)
+    {
+        return systemType == typeof(float);
+    }
+
+    private static void AddIfFailed(Result result, List<ConfigError> errors)
+    {
+        if (result.IsFailed)
+        {
+            foreach (var e in result.Errors)
+                errors.Add(e as ConfigError ?? new ConfigError(e.Message, "PropertyDefs.yaml", "validation"));
+        }
     }
 }

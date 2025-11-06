@@ -1,5 +1,4 @@
-﻿
-
+﻿using System;
 using System.IO;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig;
@@ -14,16 +13,16 @@ public sealed record ConfigurationFiles
     public string PinGroupDefsPath { get; }
     public string ActionDefsPath { get; }
 
-    public ConfigurationFiles(
-        string baseDirectory,
-        string propertyDefsFileName,
-        string columnDefsFileName,
-        string pinGroupDefsFileName,
-        string actionsDefsFileName)
+    public ConfigurationFiles(string baseDirectory, params string[] fileNames)
     {
-        PropertyDefsPath = Path.Combine(baseDirectory, propertyDefsFileName);
-        ColumnDefsPath = Path.Combine(baseDirectory, columnDefsFileName);
-        PinGroupDefsPath = Path.Combine(baseDirectory, pinGroupDefsFileName);
-        ActionDefsPath = Path.Combine(baseDirectory, actionsDefsFileName);
+        if (fileNames == null || fileNames.Length < 4)
+            throw new ArgumentException(
+                "At least 4 configuration file names are required in the order: PropertyDefs.yaml, ColumnDefs.yaml, PinGroupDefs.yaml, ActionsDefs.yaml.",
+                nameof(fileNames));
+
+        PropertyDefsPath = Path.Combine(baseDirectory, fileNames[0]);
+        ColumnDefsPath = Path.Combine(baseDirectory, fileNames[1]);
+        PinGroupDefsPath = Path.Combine(baseDirectory, fileNames[2]);
+        ActionDefsPath = Path.Combine(baseDirectory, fileNames[3]);
     }
 }

@@ -5,53 +5,42 @@ using System.Linq;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Actions;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
-using NtoLib.Recipes.MbeTable.ModuleConfig.Sections;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
+using NtoLib.Recipes.MbeTable.ModuleConfig.YamlConfig;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
-/// <summary>
-/// Validates cross-references between configuration sections.
-/// Ensures that all references (PropertyTypeId, ColumnKey, GroupName) exist
-/// and that default values are compatible with their property definitions.
-/// </summary>
 public sealed class CrossReferenceValidator
 {
-    public Result Validate(ConfigurationSections sections)
+    private readonly INumberParser _parser;
+
+    public CrossReferenceValidator(INumberParser parser)
     {
-        var columnToPropertyResult = ValidateColumnToPropertyReferences(sections);
-        if (columnToPropertyResult.IsFailed)
-            return columnToPropertyResult;
-
-        var actionToColumnResult = ValidateActionToColumnReferences(sections);
-        if (actionToColumnResult.IsFailed)
-            return actionToColumnResult;
-
-        var actionToPropertyResult = ValidateActionToPropertyReferences(sections);
-        if (actionToPropertyResult.IsFailed)
-            return actionToPropertyResult;
-
-        var actionToPinGroupResult = ValidateActionToPinGroupReferences(sections);
-        if (actionToPinGroupResult.IsFailed)
-            return actionToPinGroupResult;
-
-        var defaultValueResult = ValidateActionDefaultValues(sections);
-        if (defaultValueResult.IsFailed)
-            return defaultValueResult;
-
-        var readOnlyDefaultResult = ValidateReadOnlyDefaultValueConflicts(sections);
-        if (readOnlyDefaultResult.IsFailed)
-            return readOnlyDefaultResult;
-
-        return Result.Ok();
+        _parser = parser ?? throw new ArgumentNullException(nameof(parser));
     }
 
-    private static Result ValidateColumnToPropertyReferences(ConfigurationSections sections)
+    public Result Validate(CombinedYamlConfig files)
     {
-        var existingPropertyTypeIds = BuildPropertyTypeIdSet(sections.PropertyDefs);
+        var errors = new List<ConfigError>();
 
-        foreach (var column in sections.ColumnDefs.Items)
+        errors.AddRange(ValidateColumnToPropertyReferences(files));
+        errors.AddRange(ValidateActionToColumnReferences(files));
+        errors.AddRange(ValidateActionToPropertyReferences(files));
+        errors.AddRange(ValidateActionToPinGroupReferences(files));
+        errors.AddRange(ValidateActionDefaultValues(files));
+        errors.AddRange(ValidateReadOnlyDefaultValueConflicts(files));
+
+        return errors.Count > 0 ? Result.Fail(errors) : Result.Ok();
+    }
+
+    private static List<ConfigError> ValidateColumnToPropertyReferences(CombinedYamlConfig files)
+    {
+        var errors = new List<ConfigError>();
+        var existingPropertyTypeIds = BuildPropertyTypeIdSet(files.PropertyDefs);
+
+        foreach (var column in files.ColumnDefs.Items)
         {
             var context = $"ColumnDefs.yaml, Key='{column.Key}'";
             var propertyTypeId = column.BusinessLogic.PropertyTypeId;
@@ -62,18 +51,18 @@ public sealed class CrossReferenceValidator
                 context,
                 "property_type_id");
 
-            if (validationResult.IsFailed)
-                return validationResult;
+            Append(validationResult, errors, "ColumnDefs.yaml");
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateActionToColumnReferences(ConfigurationSections sections)
+    private static List<ConfigError> ValidateActionToColumnReferences(CombinedYamlConfig files)
     {
-        var existingColumnKeys = BuildColumnKeySet(sections.ColumnDefs);
+        var errors = new List<ConfigError>();
+        var existingColumnKeys = BuildColumnKeySet(files.ColumnDefs);
 
-        foreach (var action in sections.ActionDefs.Items)
+        foreach (var action in files.ActionDefs.Items)
         {
             var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
 
@@ -85,19 +74,19 @@ public sealed class CrossReferenceValidator
                     context,
                     $"column key '{column.Key}'");
 
-                if (validationResult.IsFailed)
-                    return validationResult;
+                Append(validationResult, errors, "ActionsDefs.yaml");
             }
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateActionToPropertyReferences(ConfigurationSections sections)
+    private static List<ConfigError> ValidateActionToPropertyReferences(CombinedYamlConfig files)
     {
-        var existingPropertyTypeIds = BuildPropertyTypeIdSet(sections.PropertyDefs);
+        var errors = new List<ConfigError>();
+        var existingPropertyTypeIds = BuildPropertyTypeIdSet(files.PropertyDefs);
 
-        foreach (var action in sections.ActionDefs.Items)
+        foreach (var action in files.ActionDefs.Items)
         {
             var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
 
@@ -111,19 +100,19 @@ public sealed class CrossReferenceValidator
                     columnContext,
                     "property_type_id");
 
-                if (validationResult.IsFailed)
-                    return validationResult;
+                Append(validationResult, errors, "ActionsDefs.yaml");
             }
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateActionToPinGroupReferences(ConfigurationSections sections)
+    private static List<ConfigError> ValidateActionToPinGroupReferences(CombinedYamlConfig files)
     {
-        var existingPinGroupNames = BuildPinGroupNameSet(sections.PinGroupDefs);
+        var errors = new List<ConfigError>();
+        var existingPinGroupNames = BuildPinGroupNameSet(files.PinGroupDefs);
 
-        foreach (var action in sections.ActionDefs.Items)
+        foreach (var action in files.ActionDefs.Items)
         {
             var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
 
@@ -140,53 +129,71 @@ public sealed class CrossReferenceValidator
                     columnContext,
                     "group_name");
 
-                if (validationResult.IsFailed)
-                    return validationResult;
+                Append(validationResult, errors, "ActionsDefs.yaml");
             }
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateActionDefaultValues(ConfigurationSections sections)
+    private List<ConfigError> ValidateActionDefaultValues(CombinedYamlConfig files)
     {
-        var propertyDefinitionsByTypeId = BuildPropertyDefinitionDictionary(sections.PropertyDefs);
+        var errors = new List<ConfigError>();
+        var propertyDefinitionsByTypeId = BuildPropertyDefinitionDictionary(files.PropertyDefs);
 
-        foreach (var action in sections.ActionDefs.Items)
+        foreach (var action in files.ActionDefs.Items)
         {
-            var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
-
-            foreach (var column in action.Columns)
-            {
-                if (string.IsNullOrWhiteSpace(column.DefaultValue))
-                    continue;
-
-                if (!propertyDefinitionsByTypeId.TryGetValue(column.PropertyTypeId, out var propertyDef))
-                    continue;
-
-                var columnContext = $"{context}, ColumnKey='{column.Key}'";
-
-                var validationResult = ValidateDefaultValueAgainstPropertyDefinition(
-                    column.DefaultValue,
-                    propertyDef,
-                    columnContext);
-
-                if (validationResult.IsFailed)
-                    return validationResult;
-            }
+            ValidateActionColumnsDefaultValues(action, propertyDefinitionsByTypeId, errors);
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateReadOnlyDefaultValueConflicts(ConfigurationSections sections)
+    private void ValidateActionColumnsDefaultValues(
+        YamlActionDefinition action,
+        Dictionary<string, YamlPropertyDefinition> propertyDefinitionsByTypeId,
+        List<ConfigError> errors)
     {
-        var readOnlyColumns = sections.ColumnDefs.Items
+        var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
+
+        foreach (var column in action.Columns)
+        {
+            ValidateColumnDefaultValue(column, propertyDefinitionsByTypeId, context, errors);
+        }
+    }
+
+    private void ValidateColumnDefaultValue(
+        YamlActionColumn column,
+        Dictionary<string, YamlPropertyDefinition> propertyDefinitionsByTypeId,
+        string actionContext,
+        List<ConfigError> errors)
+    {
+        if (string.IsNullOrWhiteSpace(column.DefaultValue))
+            return;
+
+        if (!propertyDefinitionsByTypeId.TryGetValue(column.PropertyTypeId, out var propertyDef))
+            return;
+
+        var columnContext = $"{actionContext}, ColumnKey='{column.Key}'";
+
+        var validationResult = ValidateDefaultValueAgainstPropertyDefinition(
+            column.DefaultValue,
+            propertyDef,
+            columnContext);
+
+        Append(validationResult, errors, "ActionsDefs.yaml");
+    }
+
+    private static List<ConfigError> ValidateReadOnlyDefaultValueConflicts(CombinedYamlConfig files)
+    {
+        var errors = new List<ConfigError>();
+
+        var readOnlyColumns = files.ColumnDefs.Items
             .Where(c => c.BusinessLogic.ReadOnly)
             .Select(c => c.Key)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var action in sections.ActionDefs.Items)
+        foreach (var action in files.ActionDefs.Items)
         {
             var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
 
@@ -196,36 +203,45 @@ public sealed class CrossReferenceValidator
                     continue;
 
                 if (readOnlyColumns.Contains(column.Key))
-                {
-                    return Result.Fail(new Error($"{context}, ColumnKey='{column.Key}': Cannot set default_value for read_only column.")
-                        .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                        .WithMetadata("context", context)
-                        .WithMetadata("columnKey", column.Key));
-                }
+                    errors.Add(CrossRefErrors.ReadOnlyDefaultConflict($"{context}, ColumnKey='{column.Key}'",
+                        column.Key));
             }
         }
 
-        return Result.Ok();
+        return errors;
     }
 
-    private static Result ValidateDefaultValueAgainstPropertyDefinition(
+    private Result ValidateDefaultValueAgainstPropertyDefinition(
         string defaultValue,
         YamlPropertyDefinition propertyDefinition,
         string context)
     {
-        // Skip validation for special types (Enum, Time)
         if (IsSpecialPropertyType(propertyDefinition.PropertyTypeId))
             return Result.Ok();
 
-        var systemType = Type.GetType(propertyDefinition.SystemType, throwOnError: false, ignoreCase: true);
+        var systemType = GetSystemType(propertyDefinition.SystemType);
         if (systemType == null)
             return Result.Ok();
 
+        return ValidateDefaultValueBySystemType(defaultValue, systemType, propertyDefinition, context);
+    }
+
+    private static Type? GetSystemType(string systemTypeName)
+    {
+        return Type.GetType(systemTypeName, throwOnError: false, ignoreCase: true);
+    }
+
+    private Result ValidateDefaultValueBySystemType(
+        string defaultValue,
+        Type systemType,
+        YamlPropertyDefinition propertyDefinition,
+        string context)
+    {
         if (systemType == typeof(string))
             return ValidateStringDefaultValue(defaultValue, propertyDefinition, context);
 
-        if (systemType == typeof(short) || systemType == typeof(int))
-            return ValidateIntegerDefaultValue(defaultValue, propertyDefinition, context, systemType);
+        if (systemType == typeof(short))
+            return ValidateInt16DefaultValue(defaultValue, propertyDefinition, context);
 
         if (systemType == typeof(float))
             return ValidateFloatDefaultValue(defaultValue, propertyDefinition, context);
@@ -245,114 +261,87 @@ public sealed class CrossReferenceValidator
         string context)
     {
         if (propertyDefinition.MaxLength.HasValue && defaultValue.Length > propertyDefinition.MaxLength.Value)
-        {
-            return Result.Fail(new Error($"{context}: default_value exceeds max_length. Value length: {defaultValue.Length}, MaxLength: {propertyDefinition.MaxLength.Value}.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("defaultValue", defaultValue)
-                .WithMetadata("maxLength", propertyDefinition.MaxLength.Value.ToString()));
-        }
+            return Result.Fail(CrossRefErrors.DefaultValueExceedsMaxLength(context, defaultValue.Length,
+                propertyDefinition.MaxLength.Value, defaultValue));
 
         return Result.Ok();
     }
 
-    private static Result ValidateIntegerDefaultValue(
-        string defaultValue,
-        YamlPropertyDefinition propertyDefinition,
-        string context,
-        Type systemType)
-    {
-        float parsedValue;
-
-        if (systemType == typeof(short))
-        {
-            if (!short.TryParse(defaultValue, out var shortValue))
-            {
-                return Result.Fail(new Error($"{context}: default_value '{defaultValue}' is not a valid Int16.")
-                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                    .WithMetadata("context", context)
-                    .WithMetadata("defaultValue", defaultValue));
-            }
-            parsedValue = shortValue;
-        }
-        else // int
-        {
-            if (!int.TryParse(defaultValue, out var intValue))
-            {
-                return Result.Fail(new Error($"{context}: default_value '{defaultValue}' is not a valid Int32.")
-                    .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                    .WithMetadata("context", context)
-                    .WithMetadata("defaultValue", defaultValue));
-            }
-            parsedValue = intValue;
-        }
-
-        return ValidateNumericRange(parsedValue, propertyDefinition, context);
-    }
-
-    private static Result ValidateFloatDefaultValue(
+    private Result ValidateInt16DefaultValue(
         string defaultValue,
         YamlPropertyDefinition propertyDefinition,
         string context)
     {
-        if (!float.TryParse(defaultValue, out var parsedValue))
-        {
-            return Result.Fail(new Error($"{context}: default_value '{defaultValue}' is not a valid Float.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("defaultValue", defaultValue));
-        }
+        if (!TryParseInt16Value(defaultValue, out var shortValue))
+            return Result.Fail(CrossRefErrors.DefaultValueNotInt16(context, defaultValue));
+
+        return ValidateNumericRange(shortValue, propertyDefinition, context);
+    }
+
+    private bool TryParseInt16Value(string value, out short result)
+    {
+        return _parser.TryParseInt16(value, out result);
+    }
+
+    private Result ValidateFloatDefaultValue(
+        string defaultValue,
+        YamlPropertyDefinition propertyDefinition,
+        string context)
+    {
+        if (!TryParseFloatValue(defaultValue, out var parsedValue))
+            return Result.Fail(CrossRefErrors.DefaultValueNotFloat(context, defaultValue));
 
         return ValidateNumericRange(parsedValue, propertyDefinition, context);
     }
 
-    private static Result ValidateNumericRange(float parsedValue, YamlPropertyDefinition propertyDefinition, string context)
+    private bool TryParseFloatValue(string value, out float result)
     {
-        if (propertyDefinition.Min.HasValue && parsedValue < propertyDefinition.Min.Value)
-        {
-            return Result.Fail(new Error($"{context}: default_value {parsedValue} is less than min {propertyDefinition.Min.Value}.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("defaultValue", parsedValue.ToString())
-                .WithMetadata("min", propertyDefinition.Min.Value.ToString()));
-        }
+        return _parser.TryParseSingle(value, out result);
+    }
 
-        if (propertyDefinition.Max.HasValue && parsedValue > propertyDefinition.Max.Value)
-        {
-            return Result.Fail(new Error($"{context}: default_value {parsedValue} exceeds max {propertyDefinition.Max.Value}.")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema)
-                .WithMetadata("context", context)
-                .WithMetadata("defaultValue", parsedValue.ToString())
-                .WithMetadata("max", propertyDefinition.Max.Value.ToString()));
-        }
+    private static Result ValidateNumericRange(float parsedValue, YamlPropertyDefinition propertyDefinition,
+        string context)
+    {
+        if (IsValueBelowMinimum(parsedValue, propertyDefinition))
+            return Result.Fail(
+                CrossRefErrors.DefaultValueLessThanMin(context, parsedValue, propertyDefinition.Min!.Value));
+
+        if (IsValueAboveMaximum(parsedValue, propertyDefinition))
+            return Result.Fail(
+                CrossRefErrors.DefaultValueExceedsMax(context, parsedValue, propertyDefinition.Max!.Value));
 
         return Result.Ok();
     }
 
-    private static HashSet<string> BuildPropertyTypeIdSet(PropertyDefsSection section)
+    private static bool IsValueBelowMinimum(float value, YamlPropertyDefinition propertyDefinition)
     {
-        return section.Items
-            .Select(p => p.PropertyTypeId)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return propertyDefinition.Min.HasValue && value < propertyDefinition.Min.Value;
     }
 
-    private static HashSet<string> BuildColumnKeySet(ColumnDefsSection section)
+    private static bool IsValueAboveMaximum(float value, YamlPropertyDefinition propertyDefinition)
     {
-        return section.Items
-            .Select(c => c.Key)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return propertyDefinition.Max.HasValue && value > propertyDefinition.Max.Value;
     }
 
-    private static HashSet<string> BuildPinGroupNameSet(PinGroupDefsSection section)
-    {
-        return section.Items
-            .Select(g => g.GroupName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-    }
+    private static HashSet<string> BuildPropertyTypeIdSet(PropertyDefsYamlConfig yamlConfig) =>
+        yamlConfig.Items.Select(p => p.PropertyTypeId).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-    private static Dictionary<string, YamlPropertyDefinition> BuildPropertyDefinitionDictionary(PropertyDefsSection section)
+    private static HashSet<string> BuildColumnKeySet(ColumnDefsYamlConfig yamlConfig) =>
+        yamlConfig.Items.Select(c => c.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static HashSet<string> BuildPinGroupNameSet(PinGroupDefsYamlConfig yamlConfig) =>
+        yamlConfig.Items.Select(g => g.GroupName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static Dictionary<string, YamlPropertyDefinition> BuildPropertyDefinitionDictionary(
+        PropertyDefsYamlConfig yamlConfig) =>
+        yamlConfig.Items.ToDictionary(p => p.PropertyTypeId, StringComparer.OrdinalIgnoreCase);
+
+    private static void Append(Result result, List<ConfigError> errors, string defaultSection)
     {
-        return section.Items
-            .ToDictionary(p => p.PropertyTypeId, StringComparer.OrdinalIgnoreCase);
+        if (result.IsFailed)
+        {
+            foreach (var e in result.Errors)
+                errors.Add(e as ConfigError ?? new ConfigError(e.Message, defaultSection, "validation"));
+        }
     }
 }

@@ -1,0 +1,6 @@
+- id: 1
+  name: "BadType"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "unknown_type"

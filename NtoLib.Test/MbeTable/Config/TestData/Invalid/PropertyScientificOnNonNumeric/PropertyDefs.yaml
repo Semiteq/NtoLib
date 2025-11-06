@@ -1,0 +1,4 @@
+- property_type_id: "string"
+  system_type: "System.String"
+  units: ""
+  format_kind: "Scientific"

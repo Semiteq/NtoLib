@@ -1,0 +1,3 @@
+- key: "action"
+  ui: { code: "action", ui_name: "Action", column_type: "action_combo_box", max_dropdown_items: 0, width: 150, alignment: "MiddleLeft" }
+  business_logic: { property_type_id: "Enum", read_only: false }

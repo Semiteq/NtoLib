@@ -3,71 +3,126 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
 
 namespace NtoLib.Recipes.MbeTable;
 
 public partial class MbeTableFB
 {
-    /// <summary>
-    /// Returns all defined pin group names from configuration.
-    /// </summary>
-    /// <returns>Collection of group names.</returns>
     public IReadOnlyCollection<string> GetDefinedGroupNames()
     {
         var state = EnsureConfigurationLoaded();
-        return state.AppConfiguration.PinGroupData
+        return state.PinGroupData
             .Select(g => g.GroupName)
             .ToArray();
     }
 
-    /// <summary>
-    /// Reads target values from specified pin group.
-    /// </summary>
-    /// <param name="groupName">Name of the pin group to read.</param>
-    /// <returns>Dictionary mapping pin indices to their string values.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when groupName is null or empty.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when group is not found in configuration.</exception>
     public Dictionary<int, string> ReadTargets(string groupName)
     {
         if (string.IsNullOrWhiteSpace(groupName))
             throw new ArgumentNullException(nameof(groupName));
-        
+
         var state = EnsureConfigurationLoaded();
-        var pinGroup = state.AppConfiguration.PinGroupData
+        var pinGroup = state.PinGroupData
             .FirstOrDefault(g => string.Equals(g.GroupName, groupName, StringComparison.OrdinalIgnoreCase));
 
-        return pinGroup == null 
-            ? throw new InvalidOperationException($"Group '{groupName}' is not defined in PinGroupDefs.yaml.") 
+        return pinGroup == null
+            ? throw new InvalidOperationException($"Group '{groupName}' is not defined in PinGroupDefs.yaml.")
             : ReadPinGroup(pinGroup.FirstPinId, pinGroup.PinQuantity);
     }
 
-    /// <summary>
-    /// Ensures configuration is loaded, using lazy initialization pattern.
-    /// </summary>
-    /// <returns>Loaded configuration state.</returns>
-    private ConfigurationState EnsureConfigurationLoaded()
+    private AppConfiguration EnsureConfigurationLoaded()
     {
-        _configurationStateLazy ??= new Lazy<ConfigurationState>(LoadConfigurationInternal, LazyThreadSafetyMode.ExecutionAndPublication);
-        return _configurationStateLazy.Value;
+        _appConfigurationLazy ??=
+            new Lazy<AppConfiguration>(LoadConfigurationInternal, LazyThreadSafetyMode.ExecutionAndPublication);
+        return _appConfigurationLazy.Value;
     }
 
-    /// <summary>
-    /// Internal method to load configuration from YAML files.
-    /// </summary>
-    /// <returns>Loaded and validated configuration state.</returns>
-    private ConfigurationState LoadConfigurationInternal()
+    private AppConfiguration LoadConfigurationInternal()
     {
-        var configurationDirectory = Path.Combine(AppContext.BaseDirectory, ConfigFolderName);
-        var facade = new ConfigurationBootstrapperFacade();
+        var configurationDirectory = Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
+        IConfigurationLoader loader = new ConfigurationLoader();
 
-        return facade.LoadConfiguration(
-            configurationDirectory,
-            PropertyDefsFileName,
-            ColumnDefsFileName,
-            PinGroupDefsFileName,
-            ActionsDefsFileName);
+        try
+        {
+            var config = loader.LoadConfiguration(
+                configurationDirectory,
+                DefaultPropertyDefsFileName,
+                DefaultColumnDefsFileName,
+                DefaultPinGroupDefsFileName,
+                DefaultActionsDefsFileName);
+
+            var precompiler = new FormulaPrecompiler(NullLogger<FormulaPrecompiler>.Instance);
+            var precompileResult = precompiler.Precompile(config.Actions);
+
+            if (precompileResult.IsFailed)
+            {
+                var errors = new List<ConfigError>();
+
+                foreach (var e in precompileResult.Errors)
+                {
+                    if (e is FormulaCompilationError fce)
+                    {
+                        var context = $"ActionsDefs.yaml, ActionId={fce.ActionId}, ActionName='{fce.ActionName}'";
+                        errors.Add(new ConfigError(
+                                fce.Message,
+                                section: "ActionsDefs.yaml",
+                                context: context)
+                            .WithDetail("actionId", fce.ActionId)
+                            .WithDetail("actionName", fce.ActionName)
+                            .WithDetail("expression", fce.Expression));
+                    }
+                    else
+                    {
+                        errors.Add(new ConfigError(
+                            e.Message,
+                            section: "ActionsDefs.yaml",
+                            context: "formula-precompile"));
+                    }
+                }
+
+                throw new ConfigException(errors);
+            }
+
+            _compiledFormulas = precompileResult.Value;
+            return config;
+        }
+        catch (ConfigException ex)
+        {
+            var fullMessage = BuildConfigExceptionMessage(ex);
+            MessageBox.Show(fullMessage, "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            var fullMessage = $"Unexpected configuration error: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}";
+            MessageBox.Show(fullMessage, "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            throw;
+        }
+    }
+
+    private static string BuildConfigExceptionMessage(ConfigException ex)
+    {
+        var lines = new List<string> { "Configuration loading failed with the following errors:", "" };
+
+        foreach (var e in ex.Errors)
+        {
+            lines.Add(
+                $"- {e.Message} [{(string.IsNullOrWhiteSpace(e.Section) ? "" : $"section={e.Section}")}{(string.IsNullOrWhiteSpace(e.Section) || !string.IsNullOrWhiteSpace(e.Context) ? "" : ", ")}{(string.IsNullOrWhiteSpace(e.Context) ? "" : $"context={e.Context}")}]");
+            if (e.Metadata?.Any() == true)
+            {
+                lines.Add("  metadata: " + string.Join(", ", e.Metadata.Select(kv => $"{kv.Key}={kv.Value}")));
+            }
+        }
+
+        return string.Join(Environment.NewLine, lines);
     }
 }
-

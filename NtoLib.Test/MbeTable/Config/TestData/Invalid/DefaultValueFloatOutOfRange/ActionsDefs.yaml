@@ -1,0 +1,7 @@
+- id: 1
+  name: "SetSpeed"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "speed"
+      property_type_id: "pressure_bar"
+      default_value: "5000"

@@ -15,11 +15,9 @@ public sealed class ActionDefinitionMapper : IEntityMapper<YamlActionDefinition,
 {
     public ActionDefinition Map(YamlActionDefinition source)
     {
-        if (!Enum.TryParse<DeployDuration>(source.DeployDuration, ignoreCase: true, out var deployDuration))
-        {
-            throw new NotSupportedException(
-                $"Unsupported DeployDuration '{source.DeployDuration}' for action Id={source.Id}.");
-        }
+        var deployDuration = Enum.TryParse<DeployDuration>(source.DeployDuration, ignoreCase: true, out var parsed)
+            ? parsed
+            : DeployDuration.Immediate;
 
         var columns = source.Columns
             .Select(c => new PropertyConfig
@@ -31,13 +29,23 @@ public sealed class ActionDefinitionMapper : IEntityMapper<YamlActionDefinition,
             })
             .ToList();
 
-        return new ActionDefinition
+        FormulaDefinition? formula = null;
+        if (source.Formula != null)
         {
-            Id = source.Id,
-            Name = source.Name,
-            DeployDuration = deployDuration,
-            Columns = columns
-        };
+            formula = new FormulaDefinition
+            {
+                Expression = source.Formula.Expression,
+                RecalcOrder = source.Formula.RecalcOrder.AsReadOnly()
+            };
+        }
+
+        return new ActionDefinition(
+            Id: source.Id,
+            Name: source.Name,
+            Columns: columns,
+            DeployDuration: deployDuration,
+            Formula: formula
+        );
     }
 
     public IReadOnlyList<ActionDefinition> MapMany(IEnumerable<YamlActionDefinition> sources)

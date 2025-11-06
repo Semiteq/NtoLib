@@ -1,0 +1,4 @@
+- property_type_id: "int"
+  system_type: "System.Int16"
+  units: ""
+  format_kind: "Int"

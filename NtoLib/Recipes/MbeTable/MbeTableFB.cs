@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -9,7 +10,8 @@ using FB.VisualFB;
 using InSAT.Library.Interop;
 using InSAT.OPC;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig;
+using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
+using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
 namespace NtoLib.Recipes.MbeTable
@@ -27,17 +29,18 @@ namespace NtoLib.Recipes.MbeTable
     [Serializable]
     public partial class MbeTableFB : VisualFBBase
     {
-        private const string ConfigFolderName = "NtoLibTableConfig";
-        private const string PropertyDefsFileName = "PropertyDefs.yaml";
-        private const string ColumnDefsFileName = "ColumnDefs.yaml";
-        private const string PinGroupDefsFileName = "PinGroupDefs.yaml";
-        private const string ActionsDefsFileName = "ActionsDefs.yaml";
+        private const string DefaultConfigFolderName = "NtoLibTableConfig";
+        private const string DefaultPropertyDefsFileName = "PropertyDefs.yaml";
+        private const string DefaultColumnDefsFileName = "ColumnDefs.yaml";
+        private const string DefaultPinGroupDefsFileName = "PinGroupDefs.yaml";
+        private const string DefaultActionsDefsFileName = "ActionsDefs.yaml";
 
         public IServiceProvider? ServiceProvider => _serviceProvider;
 
-        [NonSerialized] private Lazy<ConfigurationState>? _configurationStateLazy;
+        [NonSerialized] private Lazy<AppConfiguration>? _appConfigurationLazy;
         [NonSerialized] private IServiceProvider? _serviceProvider;
         [NonSerialized] private RuntimeServiceHost? _runtimeServiceHost;
+        [NonSerialized] private IReadOnlyDictionary<short, CompiledFormula>? _compiledFormulas;
 
         protected override void ToDesign()
         {
@@ -67,7 +70,11 @@ namespace NtoLib.Recipes.MbeTable
             try
             {
                 var state = EnsureConfigurationLoaded();
-                _serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this, state);
+
+                if (_compiledFormulas == null)
+                    throw new InvalidOperationException("Compiled formulas cache was not initialized.");
+
+                _serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this, state, _compiledFormulas);
                 _runtimeServiceHost = new RuntimeServiceHost(_serviceProvider);
             }
             catch (Exception ex)

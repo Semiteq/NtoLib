@@ -1,0 +1,7 @@
+- id: 2003
+  name: "SetRO"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "step_start_time"
+      property_type_id: "string"
+      default_value: "any"

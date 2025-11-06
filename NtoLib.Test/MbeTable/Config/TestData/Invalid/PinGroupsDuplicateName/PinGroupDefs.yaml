@@ -1,0 +1,9 @@
+- group_name: "Valve"
+  pin_group_id: 450
+  first_pin_id: 451
+  pin_quantity: 8
+
+- group_name: "Valve"
+  pin_group_id: 451
+  first_pin_id: 452
+  pin_quantity: 8

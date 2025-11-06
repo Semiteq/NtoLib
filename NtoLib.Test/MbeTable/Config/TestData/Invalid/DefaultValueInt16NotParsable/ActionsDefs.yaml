@@ -1,0 +1,7 @@
+- id: 1
+  name: "SetInt"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "int_value"
+      property_type_id: "int"
+      default_value: "not-a-number"

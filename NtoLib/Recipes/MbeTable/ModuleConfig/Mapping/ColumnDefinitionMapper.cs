@@ -23,12 +23,19 @@ public sealed class ColumnDefinitionMapper : IEntityMapper<YamlColumnDefinition,
             Width: source.Ui.Width,
             MinimalWidth: source.Ui.MinWidth,
             Alignment: source.Ui.Alignment,
-            PlcMapping: source.BusinessLogic.PlcMapping,
-            ReadOnly: source.BusinessLogic.ReadOnly);
+            PlcMapping: MapPlc(source.BusinessLogic.PlcMapping),
+            ReadOnly: source.BusinessLogic.ReadOnly,
+            SaveToCsv: source.BusinessLogic.SaveToCsv);
     }
 
     public IReadOnlyList<ColumnDefinition> MapMany(IEnumerable<YamlColumnDefinition> sources)
     {
         return sources.Select(Map).ToList();
+    }
+
+    private static PlcMapping? MapPlc(YamlPlcMapping? src)
+    {
+        if (src == null) return null;
+        return new PlcMapping(src.Area, src.Index);
     }
 }

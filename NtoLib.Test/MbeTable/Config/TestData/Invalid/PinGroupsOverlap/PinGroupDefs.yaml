@@ -1,0 +1,9 @@
+- group_name: "A"
+  pin_group_id: 100
+  first_pin_id: 101
+  pin_quantity: 10
+
+- group_name: "B"
+  pin_group_id: 200
+  first_pin_id: 105
+  pin_quantity: 10

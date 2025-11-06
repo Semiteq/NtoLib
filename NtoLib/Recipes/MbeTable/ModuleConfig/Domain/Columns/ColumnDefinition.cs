@@ -1,12 +1,7 @@
-﻿
-
-using System.Windows.Forms;
+﻿using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Columns;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 
-/// <summary>
-/// Domain column definition with calculation support.
-/// </summary>
 public sealed record ColumnDefinition(
     ColumnIdentifier Key,
     string Code,
@@ -16,6 +11,7 @@ public sealed record ColumnDefinition(
     int MaxDropdownItems,
     int Width,
     int MinimalWidth,
-    DataGridViewContentAlignment Alignment,
+    UiAlignment Alignment,
     PlcMapping? PlcMapping,
-    bool ReadOnly);
+    bool ReadOnly,
+    bool SaveToCsv);
