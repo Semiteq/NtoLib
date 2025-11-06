@@ -9,25 +9,29 @@ namespace NtoLib.Recipes.MbeTable.ServiceLogger;
 
 public sealed class LoggingBootstrapper : IDisposable
 {
-    private readonly Logger? _serilogLogger;
+    private Logger? _serilogLogger;
+    private readonly LoggingOptions _loggingOptions;
 
     public LoggingBootstrapper(LoggingOptions options)
     {
-        if (options == null) throw new ArgumentNullException(nameof(options));
+        _loggingOptions = options ?? throw new ArgumentNullException(nameof(options));
+    }
 
-        if (!options.Enabled)
+    public void Initialize()
+    {
+        if (!_loggingOptions.Enabled)
         {
-            _serilogLogger = null;
             return;
         }
 
-        _serilogLogger = BuildSerilogLogger(options);
+        _serilogLogger = BuildSerilogLogger(_loggingOptions);
         Log.Logger = _serilogLogger;
     }
 
     public void Dispose()
     {
         _serilogLogger?.Dispose();
+        Log.CloseAndFlush();
     }
 
     private static Logger BuildSerilogLogger(LoggingOptions options)
@@ -65,8 +69,13 @@ public sealed class LoggingBootstrapper : IDisposable
         {
             var directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+            {
                 Directory.CreateDirectory(directory);
+            }
         }
-        catch { /* ignoring */ }
+        catch
+        {
+            // Ignoring
+        }
     }
 }

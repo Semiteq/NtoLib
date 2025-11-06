@@ -5,11 +5,17 @@ public enum Codes
     UnknownError = 1000,
 
     // === Configs (2xxx) ===
-    ConfigFileNotFound = 2001,
-    ConfigParseError = 2002,
-    ConfigInvalidSchema = 2003,
-    ConfigMissingReference = 2004,
-    ConfigDuplicateValue = 2005,
+    ConfigDirectoryNotFound = 2001,
+    ConfigFileNotFound = 2002,
+    ConfigParseError = 2003,
+    ConfigInvalidSchema = 2004,
+    ConfigMissingReference = 2005,
+    ConfigDuplicateValue = 2006,
+    FormulaValidationFailed = 2100,
+    FormulaNonLinear = 2101,
+    FormulaInvalidExpression = 2102,
+    FormulaIncompleteRecalcOrder = 2103,
+    FormulaVariableMismatch = 2104,
 
     // === PLC / Modbus (3xxx) ===
     PlcConnectionFailed = 3001,
@@ -21,6 +27,7 @@ public enum Codes
     PlcVerificationFailed = 3007,
     PlcZeroRowsRead = 3008,
     PlcFailedToPing = 3009,
+    PlcRecipeSerializationPropertyNotFound = 3010,
 
     // === CSV (4xxx) ===
     CsvInvalidData = 4001,
@@ -44,7 +51,18 @@ public enum Codes
     CoreInvalidStepDuration = 6009,
     CoreExeedForLoopDepth = 6010,
     CoreEmptyRecipe = 6011,
-
+    CorePropertyTypeMismatch = 6012,
+    
+    FormulaRecalcOrderMissingVars = 6095,
+    FormulaRecalcOrderMissingVariables = 6096,
+    FormulaEmptyRecalcOrder = 6098,
+    FormulaEmptyExpression = 6099,
+    FormulaComputationFailed = 6100,
+    FormulaConstraintViolation = 6101,
+    FormulaDivisionByZero = 6102,
+    FormulaNotFound = 6103,
+    FormulaInvalidVariableType = 6104,
+    
     // === Properties (7xxx) ===
     PropertyConversionFailed = 7001,
     PropertyValidationFailed = 7002,

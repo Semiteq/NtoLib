@@ -66,8 +66,8 @@ public sealed class RecipeComparator
             a.Properties.TryGetValue(key, out var pa);
             b.Properties.TryGetValue(key, out var pb);
 
-            var va = pa?.GetValueAsObject();
-            var vb = pb?.GetValueAsObject();
+            var va = pa?.GetValueAsObject;
+            var vb = pb?.GetValueAsObject;
 
             if (!ValueEquals(va, vb, epsilon))
                 return Result.Fail(

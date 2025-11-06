@@ -9,9 +9,6 @@ using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
-/// <summary>
-/// Integer-based enum identifier (ActionId, TargetId, etc.), stored strictly as <see cref="short"/>.
-/// </summary>
 public sealed class ConfigurableEnumDefinition : IPropertyTypeDefinition
 {
     /// <inheritdoc/>

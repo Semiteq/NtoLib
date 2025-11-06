@@ -70,7 +70,9 @@ public sealed class RecipePlcService : IRecipePlcService
                 return capacityCheck;
             }
 
-            var (intArr, floatArr) = _serializer.ToRegisters(recipe.Steps);
+            var serializeResult = _serializer.ToRegisters(recipe.Steps);
+            if (serializeResult.IsFailed) return serializeResult.ToResult();
+            var (intArr, floatArr) = serializeResult.Value;
 
             var writeResult = await _writer
                 .WriteAllAreasAsync(intArr, floatArr, recipe.Steps.Count, ct)

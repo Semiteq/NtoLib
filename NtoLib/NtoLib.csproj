@@ -41,6 +41,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AngouriMath, Version=0.1.3.0, Culture=neutral, PublicKeyToken=bccdab90849ccf86, processorArchitecture=MSIL">
+      <HintPath>..\packages\AngouriMath.1.3.0\lib\net472\AngouriMath.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr4.Runtime.Standard, Version=4.9.2.0, Culture=neutral, PublicKeyToken=e78b2c5abd1fcb3f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antlr4.Runtime.Standard.4.9.2\lib\netstandard2.0\Antlr4.Runtime.Standard.dll</HintPath>
+    </Reference>
     <Reference Include="COMDeviceSDK">
       <HintPath>..\resources\COMDeviceSDK.dll</HintPath>
     </Reference>
@@ -55,6 +61,15 @@
     </Reference>
     <Reference Include="FluentResults, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentResults.4.0.0\lib\netstandard2.0\FluentResults.dll</HintPath>
+    </Reference>
+    <Reference Include="GenericTensor, Version=1.0.4.0, Culture=neutral, PublicKeyToken=419753575b7a4746, processorArchitecture=MSIL">
+      <HintPath>..\packages\GenericTensor.1.0.4\lib\net472\GenericTensor.dll</HintPath>
+    </Reference>
+    <Reference Include="HonkSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=384cc7619dfb9a7d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HonkSharp.1.0.1\lib\net472\HonkSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="IndexRange, Version=1.0.0.0, Culture=neutral, PublicKeyToken=35e6a3c4212514c6, processorArchitecture=MSIL">
+      <HintPath>..\packages\IndexRange.1.0.0\lib\net471\IndexRange.dll</HintPath>
     </Reference>
     <Reference Include="InSAT.Library">
       <HintPath>..\resources\MasterScadaDep-3.12\InSAT.Library.dll</HintPath>
@@ -96,6 +111,9 @@
       <HintPath>..\packages\Microsoft.Extensions.Primitives.9.0.0\lib\net462\Microsoft.Extensions.Primitives.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
+    <Reference Include="Numbers, Version=1.8.0.0, Culture=neutral, PublicKeyToken=9cd62db60ea5554c, processorArchitecture=MSIL">
+      <HintPath>..\packages\PeterO.Numbers.1.8.0\lib\net40\Numbers.dll</HintPath>
+    </Reference>
     <Reference Include="OneOf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\OneOf.3.0.271\lib\net45\OneOf.dll</HintPath>
     </Reference>
@@ -230,16 +248,46 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\StatusKind.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\UiPermissions.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\UiStateSnapshot.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ConfigError.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ConfigException.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\IConfigurationLoader.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\INumberParser.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\NumberParser.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\Actions\FormulaDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Actions\YamlFormulaDefinition.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Columns\UiAlignment.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Columns\YamlPlcMapping.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Errors\ActionErrors.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Errors\ColumnErrors.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Errors\CrossRefErrors.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Errors\FormulaCompilationError.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Errors\PropertyErrors.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Formulas\FormulaPrecompiler.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Formulas\IFormulaPrecompiler.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\FormulaDefsValidator.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\FormulaValidator.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopAnalysisResult.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopFrame.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopMetadata.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\CompiledFormula.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\FormulaApplicationCoordinator.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\FormulaEngine.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\IFormulaEngine.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\IStepVariableAdapter.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\StepVariableAdapter.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\ITimerControl.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeServiceHost.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\AlignmentMapper.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\ColumnAlignmentResolver.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\IAlingmentMapper.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\IColumnAlignmentResolver.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\BilingualError.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\BlockingScope.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\Codes.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\ErrorDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\ErrorDefinitionRegistry.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ErrorDefinitions\ErrorSevirity.cs" />
+    <Compile Include="Recipes\MbeTable\ResultsExtension\Errors.cs" />
     <Compile Include="Recipes\MbeTable\ResultsExtension\ResultBox.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\IRecipeApplicationService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\CsvService.cs" />
@@ -247,47 +295,43 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\IModbusTcpService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\ModbusTcpService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\RecipeApplicationService.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\ResolveOptions.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Services\ResultResolver.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ViewModels\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ColumnTypeIds.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ISectionLoader.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\IFileLoader.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\IYamlDeserializer.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\PropertyTypeIds.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ResultExtensions.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\SectionLoader.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Common\FileLoader.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ValidationCheck.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\YamlDeserializer.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\ConfigurationBootstrapperFacade.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\ConfigurationLoader.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\ConfigurationFiles.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\ConfigurationState.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Mapping\ActionDefinitionMapper.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Mapping\ColumnDefinitionMapper.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Mapping\IEntityMapper.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Mapping\PinGroupDataMapper.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Mapping\PropertyDefinitionMapper.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Actions\YamlActionColumn.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Actions\YamlActionDefenition.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Actions\YamlActionDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Columns\YamlColumnBusinessLogic.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Columns\YamlColumnCalculation.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Columns\YamlColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Columns\YamlColumnUi.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\PinGroups\YamlPinGroupDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Dto\Properties\YamlPropertyDefinition.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\ConfigurationBootstrapper.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\Actions\ActionDefenition.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\Actions\ActionDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\Actions\PropertyConfig.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\AppConfiguration.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\Columns\ColumnDefinition.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\Columns\ColumnIdentifier.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\Columns\PlcMapping.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Domain\PinGroups\PinGroupData.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Sections\ActionDefsSection.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Sections\ColumnDefsSection.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Sections\ConfigurationSections.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Sections\PinGroupDefsSection.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleConfig\Sections\PropertyDefsSection.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\YamlConfig\ActionDefsYamlConfig.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\YamlConfig\ColumnDefsYamlConfig.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\YamlConfig\CombinedYamlConfig.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\YamlConfig\PinGroupDefsYamlConfig.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleConfig\YamlConfig\PropertyDefsYamlConfig.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\ActionDefsValidator.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\ColumnDefsValidator.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Validation\CrossReferenceValidator.cs" />

@@ -92,7 +92,7 @@ public sealed class CsvAssemblyStrategy
         }
         
         var actionId = actionIdResult.Value;
-        var actionResult = _actionRepository.GetResultActionDefinitionById(actionId);
+        var actionResult = _actionRepository.GetActionDefinitionById(actionId);
         if (actionResult.IsFailed)
         {
             return Result.Fail<Step>(new Error($"Line {lineNumber}: Unknown action ID {actionId}")
@@ -101,7 +101,9 @@ public sealed class CsvAssemblyStrategy
         }
         
         var actionDefinition = actionResult.Value;
-        var builder = new StepBuilder(actionDefinition, _propertyRegistry, _columns);
+        var createBuilderResult = StepBuilder.Create(actionDefinition, _propertyRegistry, _columns);
+        if (createBuilderResult.IsFailed) return createBuilderResult.ToResult<Step>();
+        var builder = createBuilderResult.Value;
         
         foreach (var kvp in binding.FileIndexToColumn)
         {
@@ -168,7 +170,7 @@ public sealed class CsvAssemblyStrategy
                 .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
         }
         
-        return Result.Ok((short)actionId);
+        return Result.Ok(actionId);
     }
 
     private static short FindColumnIndex(CsvHeaderBinder.Binding binding, ColumnIdentifier key)

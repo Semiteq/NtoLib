@@ -1,6 +1,4 @@
-﻿
-
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
+﻿using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 

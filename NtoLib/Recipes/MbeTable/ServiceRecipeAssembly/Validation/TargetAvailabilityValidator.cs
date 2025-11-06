@@ -27,10 +27,13 @@ public sealed class TargetAvailabilityValidator
         for (var i = 0; i < recipe.Steps.Count; i++)
         {
             var step = recipe.Steps[i];
-            var actionId = step.Properties[MandatoryColumns.Action]?.GetValue<short>() ?? 0;
+            var getValueResult = step.Properties[MandatoryColumns.Action]?.GetValue<short>() ?? 0;
+            if (getValueResult.IsFailed) return getValueResult.ToResult();
+
+            var actionId = getValueResult.Value;
             if (actionId == 0) continue;
 
-            var actionResult = actionRepository.GetResultActionDefinitionById((short)actionId);
+            var actionResult = actionRepository.GetActionDefinitionById(actionId);
             if (actionResult.IsFailed) continue;
 
             var action = actionResult.Value;
@@ -47,8 +50,11 @@ public sealed class TargetAvailabilityValidator
                         $"row {i + 1}: actionId={actionId} ('{action.Name}') column '{col.Key}' requires a target from group '{col.GroupName}', but value is empty.");
                     continue;
                 }
-
-                var targetId = prop.GetValue<short>();
+                
+                getValueResult = prop.GetValue<short>();
+                if (getValueResult.IsFailed) return getValueResult.ToResult();
+                var targetId = getValueResult.Value;
+                
                 if (!snapshot.TryGetValue(col.GroupName!, out var dict))
                 {
                     errors.Add(

@@ -336,4 +336,14 @@ public sealed class CompiledFormula
                 [targetVariable] = targetValue
             });
     }
+
+    /// <summary>
+    /// Returns a string representation of the compiled formula showing its variables and recalculation order.
+    /// </summary>
+    public override string ToString()
+    {
+        var variablesStr = string.Join(", ", _variables);
+        var orderStr = string.Join(" -> ", _recalcOrder);
+        return $"Variables: [{variablesStr}], Order: [{orderStr}]";
+    }
 }

@@ -100,8 +100,10 @@ public sealed class ModbusAssemblyStrategy
                 .WithMetadata(nameof(Codes), Codes.CoreActionNotFound));
         }
 
-        var builder = new StepBuilder(actionDef, _propertyRegistry, _configuration.Columns);
-
+        var createBuilderResult = StepBuilder.Create(actionDef, _propertyRegistry, _configuration.Columns);
+        if (createBuilderResult.IsFailed) return createBuilderResult.ToResult();
+        var builder = createBuilderResult.Value;
+        
         var settings = _runtimeOptionsProvider.GetCurrent();
         var registerOrder = settings.WordOrder == WordOrder.HighLow
             ? ModbusClient.RegisterOrder.HighLow

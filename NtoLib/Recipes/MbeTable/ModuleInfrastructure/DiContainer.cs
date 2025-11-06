@@ -10,39 +10,51 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
-using NtoLib.Recipes.MbeTable.ModuleConfig;
+
+using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
+
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
+using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
+
 using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
 using NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Metadata;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
+
 using NtoLib.Recipes.MbeTable.ServiceLogger;
+
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
+
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Strategies;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
+
 using NtoLib.Recipes.MbeTable.ServiceStatus;
 
 using Serilog;
@@ -51,7 +63,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
 public static class MbeTableServiceConfigurator
 {
-    public static IServiceProvider ConfigureServices(MbeTableFB mbeTableFb, ConfigurationState configurationState)
+    public static IServiceProvider ConfigureServices(MbeTableFB mbeTableFb, 
+        AppConfiguration configurationState, 
+        IReadOnlyDictionary<short, CompiledFormula> compiledFormulas)
     {
         var services = new ServiceCollection();
 
@@ -67,6 +81,7 @@ public static class MbeTableServiceConfigurator
         RegisterStatusService(services);
         RegisterResultExtension(services);
         AddMbeTableStateProvider(services);
+        RegisterCompiledFormulas(services, compiledFormulas);
         RegisterCoreServices(services);
         RegisterCsvServices(services);
         RegisterInfrastructureServices(services);
@@ -74,20 +89,21 @@ public static class MbeTableServiceConfigurator
         RegisterRecipeAssemblyServices(services);
         RegisterApplicationServices(services);
         RegisterPresentationServices(services);
-
-        return services.BuildServiceProvider();
+        
+        var serviceProvider = services.BuildServiceProvider();
+        var loggingBootstrapper = serviceProvider.GetRequiredService<LoggingBootstrapper>();
+        loggingBootstrapper.Initialize();
+        
+        return serviceProvider;
     }
 
     private static void RegisterLogging(IServiceCollection services)
     {
         services.AddSingleton<LoggingOptions>();
         services.AddSingleton<LoggingBootstrapper>();
-        services.AddLogging(builder =>
-        {
-            var provider = builder.Services.BuildServiceProvider();
-            provider.GetRequiredService<LoggingBootstrapper>();
-            builder.AddSerilog(dispose: false);
-        });
+        
+        services.AddLogging(builder => builder.AddSerilog(dispose: false));
+        
         services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(sp =>
         {
             var factory = sp.GetRequiredService<ILoggerFactory>();
@@ -95,22 +111,28 @@ public static class MbeTableServiceConfigurator
         });
     }
 
-    private static void RegisterConfiguration(IServiceCollection services, ConfigurationState configurationState)
+    private static void RegisterConfiguration(IServiceCollection services, AppConfiguration configurationState)
     {
-        services.AddSingleton(configurationState.AppConfiguration.Actions);
-        services.AddSingleton(configurationState.AppConfiguration.Columns);
-        services.AddSingleton(configurationState.AppConfiguration.PinGroupData);
-        services.AddSingleton(configurationState.AppConfiguration.PropertyDefinitions);
+        services.AddSingleton(configurationState.Actions);
+        services.AddSingleton(configurationState.Columns);
+        services.AddSingleton(configurationState.PinGroupData);
+        services.AddSingleton(configurationState.PropertyDefinitions);
+    }
+    
+    private static void RegisterCompiledFormulas(
+        IServiceCollection services,
+        IReadOnlyDictionary<short, CompiledFormula> compiledFormulas)
+    {
+        services.AddSingleton(compiledFormulas);
     }
 
     private static void RegisterSharedInstances(
         IServiceCollection services,
         MbeTableFB mbeTableFb,
-        ConfigurationState configurationState)
+        AppConfiguration configurationState)
     {
         services.AddSingleton(mbeTableFb);
         services.AddSingleton(configurationState);
-        services.AddSingleton(configurationState.AppConfiguration);
         services.AddSingleton<IPinAccessor>(_ => new FbPinAccessor(mbeTableFb));
     }
 
@@ -135,7 +157,7 @@ public static class MbeTableServiceConfigurator
 
     private static void RegisterLoggerServices(IServiceCollection services)
     {
-        services.AddSingleton(_ => new StatusFormatter(100));
+        services.AddSingleton(_ => new StatusFormatter(150));
     }
 
     private static void RegisterStatusService(IServiceCollection services)
@@ -148,13 +170,11 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<ErrorDefinitionRegistry>();
     }
 
-    public static IServiceCollection AddMbeTableStateProvider(this IServiceCollection services)
+    private static void AddMbeTableStateProvider(this IServiceCollection services)
     {
-        services.AddSingleton<ErrorDefinitionRegistry>();
         services.AddSingleton<IStateProvider, StateProvider>();
-        return services;
     }
-    
+
     private static void RegisterCoreServices(IServiceCollection services)
     {
         services.AddSingleton<IActionRepository, ActionRepository>();
@@ -168,6 +188,9 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<RecipeTimeCalculator>();
         services.AddSingleton<IRecipeAttributesService, RecipeAttributesService>();
         services.AddSingleton<RecipeMutator>();
+        services.AddSingleton<IFormulaEngine, FormulaEngine>();
+        services.AddSingleton<IStepVariableAdapter, StepVariableAdapter>();
+        services.AddSingleton<FormulaApplicationCoordinator>();
         services.AddSingleton<IRecipeService, RecipeService>();
     }
 
@@ -183,7 +206,6 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IRecipeReader, RecipeReader>();
         services.AddSingleton<IRecipeWriter, RecipeWriter>();
         services.AddSingleton<CsvAssemblyStrategy>();
-        services.AddSingleton<AssemblyValidator>();
         services.AddSingleton<IRecipeFileService, RecipeFileService>();
     }
 
@@ -199,7 +221,7 @@ public static class MbeTableServiceConfigurator
             var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
             return new RecipeColumnLayout(columns);
         });
-    
+
         services.AddSingleton<IModbusChunkHandler, ModbusChunkHandler>();
         services.AddSingleton<PlcCapacityCalculator>();
         services.AddSingleton<RecipeComparator>();
@@ -216,7 +238,6 @@ public static class MbeTableServiceConfigurator
     private static void RegisterRecipeAssemblyServices(IServiceCollection services)
     {
         services.AddSingleton<ModbusAssemblyStrategy>();
-
         services.AddSingleton<AssemblyValidator>();
         services.AddSingleton<TargetAvailabilityValidator>();
         services.AddSingleton<IRecipeAssemblyService, RecipeAssemblyService>();
@@ -229,10 +250,9 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<TargetComboBox>();
         services.AddSingleton<TextBoxExtension>();
         services.AddSingleton<StepStartTime>();
-        services.AddSingleton<IStateProvider, StateProvider>();
         services.AddSingleton<RecipeViewModel>();
         services.AddSingleton<IModbusTcpService, ModbusTcpService>();
-        services.AddSingleton<ICsvService,CsvService>();
+        services.AddSingleton<ICsvService, CsvService>();
         services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
     }
 
@@ -241,6 +261,9 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IBusyStateManager, BusyStateManager>();
         services.AddSingleton<ICellStateResolver, CellStateResolver>();
         services.AddSingleton<IRowExecutionStateProvider, ThreadSafeRowExecutionStateProvider>();
+
+        services.AddSingleton<IColumnAlignmentResolver, ColumnAlignmentResolver>();
+        services.AddSingleton<IAlignmentMapper, AlignmentMapper>();
 
         services.AddSingleton<IColorSchemeProvider, DesignTimeColorSchemeProvider>();
         services.AddSingleton<ColorScheme>();
@@ -252,9 +275,6 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<ICellRenderer, ComboBoxCellRenderer>();
 
         services.AddScoped<ITableRenderCoordinator, TableRenderCoordinator>();
-
-        services.AddTransient<TargetComboBox>();
-        services.AddTransient<StepStartTime>();
 
         services.AddSingleton<FactoryColumnRegistry>();
 
