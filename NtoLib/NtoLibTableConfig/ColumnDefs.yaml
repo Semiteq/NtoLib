@@ -18,129 +18,84 @@
 #    max_dropdown_items: 10        # Максимальное количество видимых элементов в выпадающем списке (если column_type = action_combo_box или action_target_combo_box). Default = 30.
 #    width: 160                    # Ширина столбца в пикселях. Должна быть >2. Можно задать -1, чтобы занять все оставшееся место (fill). Default = 130.
 #    min_width: 60                 # Минимальная ширина столбца в пикселях. (должна быть >2). Default = 50.
-#    alignment: 16                 # Выравнивание в ячейке (16=Left, 32=Center, 64=Right). Default = 16. (см https://learn.microsoft.com/en-us/dotnet/api/System.Windows.Forms.DataGridViewContentAlignment?view=netframework-4.8)
+#    alignment: MiddleCenter       # Выравнивание в ячейке ("MiddleLeft", "MiddleCenter", "MiddleRight" и аналогичные из https://learn.microsoft.com/en-us/dotnet/api/System.Windows.Forms.DataGridViewContentAlignment?view=netframework-4.8.
 # (Детальное описание см. в документации)
 # --- End Of Example ---
 
-# Имя команды
 - key: "action"
   ui:
     code: "action"
     ui_name: "Имя команды"
     column_type: "action_combo_box"
-    width: 150
-    alignment: 16
+    width: 180
+    alignment: "MiddleLeft"
   business_logic:
     property_type_id: "Enum"
     read_only: false
+    save_to_csv: true
     plc_mapping:
       area: "Int"
       index: 0
 
-# Канал
-- key: "channel"
+- key: "target"
   ui:
-    code: "channel"
-    ui_name: "Канал"
+    code: "target"
+    ui_name: "Объект"
     column_type: "action_target_combo_box"
     width: 100
-    alignment: 32
+    alignment: "MiddleCenter"
   business_logic:
     property_type_id: "Enum"
     read_only: false
+    save_to_csv: true
     plc_mapping:
       area: "Int"
       index: 1
 
-# Режим
-- key: "mode"
+- key: "initial_value"
   ui:
-    code: "mode"
-    ui_name: "Режим"
-    column_type: "action_target_combo_box"
-    width: 100
-    alignment: 32
-  business_logic:
-    property_type_id: "Enum"
-    read_only: false
-    plc_mapping:
-      area: "Int"
-      index: 2
-
-# Значение
-- key: "target_value"
-  ui:
-    code: "target_value"
-    ui_name: "Значение"
-    column_type: "property_field"
-    width: 160
-    alignment: 32
-  business_logic:
-    property_type_id: "Float"
-    read_only: false
-    plc_mapping:
-      area: "Float"
-      index: 0
-
-# Разбавление
-- key: "dilution"
-  ui:
-    code: "dilution"
-    ui_name: "Разбавление"
+    code: "initial_value"
+    ui_name: "Начальное значение"
     column_type: "property_field"
     width: 230
-    alignment: 32
+    alignment: "MiddleCenter"
   business_logic:
     property_type_id: "Float"
     read_only: false
+    save_to_csv: true
+    plc_mapping:
+      area: "Float"
+      index: 0
+
+- key: "task"
+  ui:
+    code: "task"
+    ui_name: "Задание"
+    column_type: "property_field"
+    width: 160
+    alignment: "MiddleCenter"
+  business_logic:
+    property_type_id: "Float"
+    read_only: false
+    save_to_csv: true
     plc_mapping:
       area: "Float"
       index: 1
 
-# Давление
-- key: "pressure"
+- key: "speed"
   ui:
-    code: "pressure"
-    ui_name: "Давление"
+    code: "speed"
+    ui_name: "Скорость"
     column_type: "property_field"
     width: 110
-    alignment: 32
+    alignment: "MiddleCenter"
   business_logic:
     property_type_id: "pressure_bar"
     read_only: false
+    save_to_csv: true
     plc_mapping:
       area: "Float"
       index: 2
-
-# Смешивание
-- key: "mixing"
-  ui:
-    code: "mixing"
-    ui_name: "Смешивание"
-    column_type: "property_field"
-    width: 140
-    alignment: 32
-  business_logic:
-    property_type_id: "Flow"
-    read_only: false
-    plc_mapping:
-      area: "Float"
-      index: 3
-
-# Транспорт
-- key: "transport"
-  ui:
-    code: "transport"
-    ui_name: "Транспорт"
-    column_type: "property_field"
-    width: 120
-    alignment: 32
-  business_logic:
-    property_type_id: "Flow"
-    read_only: false
-    plc_mapping:
-      area: "Float"
-      index: 4
 
 # Время
 - key: "step_duration"
@@ -149,13 +104,14 @@
     ui_name: "Время"
     column_type: "property_field"
     width: 120
-    alignment: 32
+    alignment: "MiddleCenter"
   business_logic:
     property_type_id: "Time"
     read_only: false
+    save_to_csv: true
     plc_mapping:
       area: "Float"
-      index: 5
+      index: 3
 
 # Время абсолютное
 - key: "step_start_time"
@@ -164,10 +120,11 @@
     ui_name: "Время абс."
     column_type: "step_start_time_field"
     width: 130
-    alignment: 32
+    alignment: "MiddleCenter"
   business_logic:
     property_type_id: "String"
     read_only: true
+    save_to_csv: false
 
 # Комментарий
 - key: "comment"
@@ -176,7 +133,8 @@
     ui_name: "Комментарий"
     column_type: "text_field"
     width: -1
-    alignment: 32
+    alignment: "MiddleCenter"
   business_logic:
     property_type_id: "String"
     read_only: false
+    save_to_csv: true

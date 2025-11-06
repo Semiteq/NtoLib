@@ -16,6 +16,7 @@
 - property_type_id: "int"
   system_type: "System.Int16"
   units: ""
+  non_negative: false
   format_kind: "Numeric"
 
 ## Число с плавающей точкой
@@ -24,12 +25,14 @@
 - property_type_id: "float"
   system_type: "System.Single"
   units: ""
+  non_negative: false
   format_kind: "Numeric"
 
 ## Строка
 - property_type_id: "string"
   system_type: "System.String"
   units: ""
+  non_negative: false
   max_length: 255
   format_kind: "Numeric"
 
@@ -41,6 +44,7 @@
 ## Использует Int16
 - property_type_id: "enum"
   system_type: "System.Int16"
+  non_negative: false
   units: ""
   format_kind: "Numeric"
 
@@ -50,14 +54,23 @@
 - property_type_id: "flow"
   system_type: "System.Single"
   units: "см³/мин"
+  non_negative: false
   min: 0
   max: 100000
   format_kind: "Numeric"
+
+## Float с форматированием и округлением до целой части
+- property_type_id: "float_as_int"
+  system_type: "System.Single"
+  units: ""
+  non_negative: false
+  format_kind: "Int"
 
 ## Процент
 - property_type_id: "percent"
   system_type: "System.Single"
   units: "%"
+  non_negative: false
   min: 0
   max: 100
   format_kind: "Numeric"
@@ -66,6 +79,7 @@
 - property_type_id: "power_speed"
   system_type: "System.Single"
   units: "%/мин"
+  non_negative: true
   min: -100
   max: 100
   format_kind: "Numeric"
@@ -78,6 +92,7 @@
 - property_type_id: "pressure_pa"
   system_type: "System.Single"
   units: "Па"
+  non_negative: false
   min: -200000
   max: 200000
   format_kind: "Numeric"
@@ -86,6 +101,7 @@
 - property_type_id: "pressure_bar"
   system_type: "System.Single"
   units: "мБар"
+  non_negative: false
   min: -2000
   max: 2000
   format_kind: "Numeric"
@@ -94,6 +110,7 @@
 - property_type_id: "temp"
   system_type: "System.Single"
   units: "°C"
+  non_negative: false
   min: 0
   max: 2000
   format_kind: "Numeric"
@@ -102,6 +119,7 @@
 - property_type_id: "temp_speed"
   system_type: "System.Single"
   units: "°C/мин"
+  non_negative: true
   min: -1000
   max: 1000
   format_kind: "Numeric"
@@ -110,7 +128,8 @@
 - property_type_id: "time"
   system_type: "System.Single"
   units: "с"
-  min: 0
+  non_negative: true
+  min: -86400
   max: 86400
   format_kind: "TimeHms"
 
