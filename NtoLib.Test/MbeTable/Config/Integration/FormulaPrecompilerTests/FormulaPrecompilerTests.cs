@@ -9,6 +9,9 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.FormulaPrecompilerTests;
 
+[Trait("Category", "Integration")]
+[Trait("Component", "FormulaPrecompiler")]
+[Trait("Area", "Formulas")]
 public sealed class FormulaPrecompilerTests
 {
     [Fact]

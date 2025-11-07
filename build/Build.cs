@@ -1,13 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
+
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.MSBuild;
+using Nuke.Common.Utilities;
+
 using Serilog;
 
 class Build : NukeBuild
@@ -20,9 +25,14 @@ class Build : NukeBuild
     [Parameter("Destination directory for local development deployment")]
     readonly AbsolutePath DestinationDirectory = @"C:\Program Files (x86)\MPSSoft\MasterSCADA";
 
-    [Solution] 
-    readonly Solution Solution;
+    [Parameter("Test category filter: All (default), Integration, Unit")]
+    readonly string TestCategory = "All";
+
+    [Parameter("Test component filter: All (default), ConfigLoader, FormulaPrecompiler")]
+    readonly string TestComponent = "All";
     
+    [Solution] readonly Solution Solution;
+
     Project NtoLibProject => Solution.GetProject("NtoLib");
 
     AbsolutePath SolutionDirectory => Solution.Directory;
@@ -35,19 +45,18 @@ class Build : NukeBuild
     AbsolutePath GetMergedDll() => GetTargetDirectory() / "NtoLib.dll";
     AbsolutePath GetOriginalDll() => GetTargetDirectory() / $"{NtoLibProject.Name}.dll";
 
-    static readonly string[] FilesToDeploy = 
+    static readonly string[] FilesToDeploy =
     {
         "NtoLib.dll",
         "NtoLib.pdb",
         "System.Resources.Extensions.dll"
     };
 
-    static readonly string[] AssembliesToMerge = 
+    static readonly string[] AssembliesToMerge =
     {
-        
         "System.Collections.Immutable.dll",
         "System.Diagnostics.DiagnosticSource.dll",
-        
+
         "Microsoft.Bcl.HashCode.dll",
         "Microsoft.Bcl.TimeProvider.dll",
         "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
@@ -56,26 +65,26 @@ class Build : NukeBuild
         "Microsoft.Extensions.Logging.dll",
         "Microsoft.Extensions.Options.dll",
         "Microsoft.Extensions.Primitives.dll",
-        
+
         "Serilog.dll",
         "Serilog.Sinks.Console.dll",
         "Serilog.Sinks.Debug.dll",
         "Serilog.Sinks.File.dll",
         "Serilog.Extensions.Logging.dll",
-        
+
         "Polly.dll",
         "Polly.Core.dll",
-        
+
         "OneOf.dll",
-        
+
         "FluentResults.dll",
-        
+
         "CsvHelper.dll",
-        
+
         "YamlDotNet.dll",
-        
+
         "EasyModbus.dll",
-        
+
         "COMDeviceSDK.dll",
 
         "AngouriMath.dll",
@@ -100,34 +109,34 @@ class Build : NukeBuild
     void CopyDirectoryRecursively(AbsolutePath source, AbsolutePath destination)
     {
         destination.CreateDirectory();
-        
+
         foreach (var file in Directory.GetFiles(source))
         {
             var fileName = Path.GetFileName(file);
             File.Copy(file, destination / fileName, overwrite: true);
             Log.Debug("Copied file: {FileName}", fileName);
         }
-        
+
         foreach (var directory in Directory.GetDirectories(source))
         {
             var directoryName = Path.GetFileName(directory);
             CopyDirectoryRecursively(directory, destination / directoryName);
         }
     }
-    
+
     string GetAssemblyVersion()
     {
         var assemblyInfoPath = NtoLibProject.Directory / "Properties" / "AssemblyInfo.cs";
         var assemblyInfoContent = File.ReadAllText(assemblyInfoPath);
         var match = Regex.Match(assemblyInfoContent, @"\[assembly: AssemblyInformationalVersion\(""([^""]+)""\)\]");
-        
+
         if (match.Success)
         {
             var version = match.Groups[1].Value;
             Log.Debug("Detected version: {Version}", version);
             return version;
         }
-        
+
         Log.Warning("Version not found in AssemblyInfo.cs, using default: 1.0.0");
         return "1.0.0";
     }
@@ -151,7 +160,7 @@ class Build : NukeBuild
 
         var mergedTimestamp = File.GetLastWriteTime(mergedDll);
         var targetDirectory = GetTargetDirectory();
-        
+
         var inputAssemblies = new[] { GetOriginalDll() }
             .Concat(AssembliesToMerge.Select(name => targetDirectory / name))
             .Where(path => path.FileExists())
@@ -181,7 +190,7 @@ class Build : NukeBuild
         {
             var sourceFile = sourceDir / fileName;
             var destFile = destDir / fileName;
-            
+
             if (!sourceFile.FileExists())
             {
                 continue;
@@ -202,16 +211,16 @@ class Build : NukeBuild
 
         var configSource = NtoLibTableConfigSource;
         var configDest = destDir / "NtoLibTableConfig";
-        
+
         if (configSource.DirectoryExists() && configDest.DirectoryExists())
         {
             var sourceFiles = configSource.GlobFiles("**/*").ToArray();
-            
+
             foreach (var sourceFile in sourceFiles)
             {
                 var relativePath = Path.GetRelativePath(configSource, sourceFile);
                 var destFile = configDest / relativePath;
-                
+
                 if (!destFile.FileExists() || File.GetLastWriteTime(sourceFile) > File.GetLastWriteTime(destFile))
                 {
                     Log.Debug("Config file {FileName} requires update", relativePath);
@@ -234,14 +243,14 @@ class Build : NukeBuild
         .Executes(() =>
         {
             Log.Information("Cleaning solution (Configuration: {Configuration})", Configuration);
-            
+
             var directoriesToClean = SolutionDirectory.GlobDirectories("**/bin", "**/obj")
                 .Where(directory => !directory.ToString().Contains("packages"))
                 .Where(directory => !directory.ToString().Contains("build"))
                 .ToArray();
-            
+
             Log.Debug("Found {Count} directories to clean", directoriesToClean.Length);
-                
+
             foreach (var directory in directoriesToClean)
             {
                 if (directory.DirectoryExists())
@@ -261,7 +270,7 @@ class Build : NukeBuild
                     }
                 }
             }
-            
+
             ArtifactsDirectory.CreateOrCleanDirectory();
             Log.Information("Cleaned artifacts directory: {Directory}", ArtifactsDirectory);
         });
@@ -270,14 +279,14 @@ class Build : NukeBuild
         .Executes(() =>
         {
             Log.Information("Restoring NuGet packages");
-            
+
             MSBuildTasks.MSBuild(settings => MSBuildSettingsExtensions
                 .SetTargetPath<MSBuildSettings>(settings, Solution)
                 .SetTargets("Restore")
                 .SetMaxCpuCount(Environment.ProcessorCount)
                 .SetNodeReuse(true)
                 .SetVerbosity(GetMSBuildVerbosity()));
-                
+
             Log.Information("Restore completed");
         });
 
@@ -305,7 +314,7 @@ class Build : NukeBuild
                     .SetProperty("DebugType", "full")
                     .SetProperty("DebugSymbols", "true")
                     .SetProperty("DefineConstants", "\"DEBUG;TRACE\"")));
-                    
+
             Log.Information("Compilation completed");
         });
 
@@ -319,7 +328,7 @@ class Build : NukeBuild
             }
 
             Log.Information("Running ILRepack");
-            
+
             var targetDirectory = GetTargetDirectory();
             var targetPath = GetOriginalDll();
             var outputPath = GetMergedDll();
@@ -333,10 +342,10 @@ class Build : NukeBuild
             {
                 throw new InvalidOperationException($"No assemblies found to merge in {targetDirectory}");
             }
-            
+
             Log.Information("Merging {Count} assemblies into {OutputFile}", assemblyPaths.Length, outputPath.Name);
             Log.Debug("Output: {OutputPath}", outputPath);
-            
+
             foreach (var assembly in assemblyPaths)
             {
                 var fileInfo = new FileInfo(assembly);
@@ -354,12 +363,13 @@ class Build : NukeBuild
                 string.Join(" ", arguments),
                 workingDirectory: targetDirectory,
                 logOutput: Verbosity >= Verbosity.Verbose);
-                
+
             process.AssertZeroExitCode();
-            
+
             var outputFileInfo = new FileInfo(outputPath);
-            Log.Information("ILRepack completed: {FileName} ({Size} KB)", outputPath.Name, outputFileInfo.Length / 1024);
-            
+            Log.Information("ILRepack completed: {FileName} ({Size} KB)", outputPath.Name,
+                outputFileInfo.Length / 1024);
+
             var markerFile = outputPath.Parent / (outputPath.Name + ".merged-marker");
             File.WriteAllText(markerFile, DateTime.UtcNow.ToString("O"));
             Log.Debug("Created/updated merge marker file.");
@@ -372,27 +382,27 @@ class Build : NukeBuild
         {
             Log.Information("Copying files to local deployment directory");
             Log.Information("Destination: {Destination}", DestinationDirectory);
-            
+
             var targetDirectory = GetTargetDirectory();
 
             if (AreFilesUpToDate(targetDirectory, DestinationDirectory))
             {
                 return;
             }
-            
+
             DestinationDirectory.CreateDirectory();
 
             var copiedCount = 0;
-            
+
             foreach (var fileName in FilesToDeploy)
             {
                 var sourcePath = targetDirectory / fileName;
-                
+
                 if (sourcePath.FileExists())
                 {
                     var destinationPath = DestinationDirectory / fileName;
                     File.Copy(sourcePath, destinationPath, overwrite: true);
-                    
+
                     var fileInfo = new FileInfo(sourcePath);
                     Log.Debug("Copied: {FileName} ({Size} KB)", fileName, fileInfo.Length / 1024);
                     copiedCount++;
@@ -402,19 +412,19 @@ class Build : NukeBuild
                     Log.Warning("File not found: {FileName}", fileName);
                 }
             }
-            
+
             Log.Information("Copied {Count} files", copiedCount);
 
             if (NtoLibTableConfigSource.DirectoryExists())
             {
                 var configDestination = DestinationDirectory / "NtoLibTableConfig";
-                
+
                 if (configDestination.DirectoryExists())
                 {
                     Log.Debug("Removing old config directory");
                     configDestination.DeleteDirectory();
                 }
-                    
+
                 Log.Debug("Copying config directory");
                 CopyDirectoryRecursively(NtoLibTableConfigSource, configDestination);
                 Log.Information("Copied NtoLibTableConfig folder");
@@ -423,7 +433,7 @@ class Build : NukeBuild
             {
                 Log.Warning("Config folder not found: {ConfigPath}", NtoLibTableConfigSource);
             }
-            
+
             Log.Information("Local deployment completed");
         });
 
@@ -433,11 +443,11 @@ class Build : NukeBuild
         .Executes(() =>
         {
             Log.Information("Creating release archive");
-            
+
             var version = GetAssemblyVersion();
             var archiveName = $"NtoLib_v{version}.zip";
             var archivePath = ArtifactsDirectory / archiveName;
-            
+
             Log.Information("Archive: {ArchiveName}", archiveName);
 
             var tempArchiveDir = TemporaryDirectory / "archive";
@@ -447,7 +457,7 @@ class Build : NukeBuild
 
             var filesToArchive = new[] { "NtoLib.dll", "System.Resources.Extensions.dll" };
             var archivedCount = 0;
-            
+
             foreach (var fileName in filesToArchive)
             {
                 var sourcePath = sourceDir / fileName;
@@ -462,9 +472,9 @@ class Build : NukeBuild
                     Log.Warning("File not found for archive: {FileName}", fileName);
                 }
             }
-            
+
             Log.Debug("Added {Count} files to archive", archivedCount);
-            
+
             if (NtoLibTableConfigSource.DirectoryExists())
             {
                 Log.Debug("Adding NtoLibTableConfig");
@@ -484,19 +494,102 @@ class Build : NukeBuild
             {
                 Log.Warning("NtoLib_reg.bat not found: {BatPath}", NtoLibRegBat);
             }
-            
+
             if (archivePath.FileExists())
             {
                 archivePath.DeleteFile();
             }
 
             ZipFile.CreateFromDirectory(tempArchiveDir, archivePath);
-            
+
             var archiveInfo = new FileInfo(archivePath);
             Log.Information("Archive created: {ArchiveName} ({Size} KB)", archivePath.Name, archiveInfo.Length / 1024);
             Log.Information("Location: {ArchivePath}", archivePath);
         });
 
+    Target Test => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            Log.Information("Running tests (Category: {Category}, Component: {Component})", 
+                TestCategory, TestComponent);
+
+            var filters = new List<string>();
+        
+            if (!string.Equals(TestCategory, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                filters.Add($"Category={TestCategory}");
+            }
+        
+            if (!string.Equals(TestComponent, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                filters.Add($"Component={TestComponent}");
+            }
+
+            var filterExpression = filters.Count > 0 
+                ? string.Join("&", filters) 
+                : null;
+
+            DotNetTasks.DotNetTest(settings => settings
+                .SetProjectFile(Solution.GetProject("NtoLib.Test"))
+                .SetConfiguration(Configuration)
+                .SetNoBuild(true)
+                .SetNoRestore(true)
+                .When(!string.IsNullOrWhiteSpace(filterExpression), s => s.SetFilter(filterExpression))
+                .When(Verbosity == Verbosity.Verbose, s => s.SetVerbosity(DotNetVerbosity.detailed)));
+        
+            Log.Information("Tests completed");
+        });
+    
+    Target TestWithCoverage => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            var coverageDir = TemporaryDirectory / "coverage";
+            coverageDir.CreateOrCleanDirectory();
+
+            Log.Information("Running tests with coverage collection");
+
+            DotNetTasks.DotNetTest(s => s
+                .SetProjectFile(Solution.GetProject("NtoLib.Test"))
+                .SetConfiguration(Configuration)
+                .SetNoBuild(true)
+                .SetNoRestore(true)
+                .SetDataCollector("XPlat Code Coverage")
+                .SetResultsDirectory(coverageDir));
+
+            var coverageFile = coverageDir.GlobFiles("**/coverage.cobertura.xml").FirstOrDefault();
+        
+            if (coverageFile == null)
+            {
+                Log.Warning("No coverage file found");
+                return;
+            }
+
+            var htmlDir = coverageDir / "html";
+        
+            Log.Information("Generating coverage report");
+
+            DotNetTasks.DotNet($"tool run reportgenerator " +
+                               $"-reports:{coverageFile} " +
+                               $"-targetdir:{htmlDir} " +
+                               $"-reporttypes:Html;TextSummary");
+
+            var summaryFile = htmlDir / "Summary.txt";
+            if (summaryFile.FileExists())
+            {
+                Log.Information("Coverage Summary:");
+                var summary = File.ReadAllLines(summaryFile);
+                foreach (var line in summary.Where(l => !string.IsNullOrWhiteSpace(l)))
+                {
+                    Log.Information("  {Line}", line);
+                }
+            }
+
+            var indexHtml = htmlDir / "index.html";
+            Log.Information("Full report: {Report}", indexHtml);
+        });
+    
     Target BuildDebug => _ => _
         .Description("Build Debug configuration and copy to local deployment directory")
         .DependsOn(Clean)
@@ -510,6 +603,7 @@ class Build : NukeBuild
     Target BuildRelease => _ => _
         .Description("Build Release configuration without packaging")
         .DependsOn(Clean)
+        .DependsOn(Test)
         .DependsOn(ILRepack)
         .Executes(() =>
         {
@@ -520,6 +614,7 @@ class Build : NukeBuild
     Target Package => _ => _
         .Description("Build Release configuration and create deployment archive")
         .DependsOn(Clean)
+        .DependsOn(TestWithCoverage)
         .DependsOn(PackageArchive)
         .Executes(() =>
         {

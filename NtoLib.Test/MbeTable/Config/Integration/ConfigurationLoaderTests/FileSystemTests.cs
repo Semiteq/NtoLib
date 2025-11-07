@@ -8,6 +8,9 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
+[Trait("Category", "Integration")]
+[Trait("Component", "ConfigLoader")]
+[Trait("Area", "FileSystem")]
 public sealed class FileSystemTests
 {
     [Fact]

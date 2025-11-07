@@ -6,6 +6,8 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
+[Trait("Category", "Integration")]
+[Trait("Component", "ConfigLoader")]
 public sealed class HappyPathTests
 {
     [Fact]
