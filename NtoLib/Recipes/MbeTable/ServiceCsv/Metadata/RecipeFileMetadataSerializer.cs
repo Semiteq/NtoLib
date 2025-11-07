@@ -11,11 +11,11 @@ public class RecipeFileMetadataSerializer
 {
     public void Write(TextWriter writer, RecipeFileMetadata meta)
     {
-        writer.WriteLine($"# SEP={meta.Separator}");
-        writer.WriteLine($"# ROWS={meta.Rows}");
-        writer.WriteLine($"# BODY_SHA256={meta.BodyHashBase64}");
+        writer.WriteLine($"# SEP=\"{meta.Separator}\"");
+        writer.WriteLine($"# ROWS=\"{meta.Rows}\"");
+        writer.WriteLine($"# BODY_SHA256=\"{meta.BodyHashBase64}\"");
         foreach (var kv in meta.Extras)
-            writer.WriteLine($"# X_{kv.Key}={kv.Value}");
+            writer.WriteLine($"# X_{kv.Key}=\"{kv.Value}\"");
     }
 
     public (RecipeFileMetadata Meta, int MetaLines) ReadAllMeta(string fullText)
@@ -37,19 +37,20 @@ public class RecipeFileMetadataSerializer
             if (eq <= 0) continue;
 
             var key = payload.Substring(0, eq).Trim();
-            var value = payload.Substring(eq + 1);
+            var rawValue = payload.Substring(eq + 1);
+            var value = UnquoteValue(rawValue);
 
             switch (key.ToUpperInvariant())
             {
-                case "SEP": 
-                    meta = meta with { Separator = value.Length > 0 ? value[0] : ';' }; 
+                case "SEP":
+                    meta = meta with { Separator = value.Length > 0 ? value[0] : ';' };
                     break;
-                case "ROWS": 
-                    if (int.TryParse(value, out var rows)) 
-                        meta = meta with { Rows = rows }; 
+                case "ROWS":
+                    if (int.TryParse(value, out var rows))
+                        meta = meta with { Rows = rows };
                     break;
-                case "BODY_SHA256": 
-                    meta = meta with { BodyHashBase64 = value }; 
+                case "BODY_SHA256":
+                    meta = meta with { BodyHashBase64 = value };
                     break;
                 default:
                     if (key.StartsWith("X_", StringComparison.OrdinalIgnoreCase))
@@ -63,4 +64,19 @@ public class RecipeFileMetadataSerializer
 
         return (meta, lines);
     }
+
+    private static string UnquoteValue(string value)
+    {
+        var trimmed = value.Trim();
+    
+        if (trimmed.Length >= 2 && 
+            trimmed[0] == '"' && 
+            trimmed[^1] == '"')
+        {
+            return trimmed.Substring(1, trimmed.Length - 2);
+        }
+    
+        return trimmed;
+    }
+
 }
