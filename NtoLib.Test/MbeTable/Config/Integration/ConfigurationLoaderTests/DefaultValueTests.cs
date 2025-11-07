@@ -6,7 +6,7 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
-public sealed class ConfigurationLoaderDefaultValueTests
+public sealed class DefaultValueTests
 {
     [Fact]
     public void StringDefaultValue_ExceedsMaxLength_Fails()
@@ -41,7 +41,7 @@ public sealed class ConfigurationLoaderDefaultValueTests
         TestHelper.LoadInvalidCaseExpectingError(
             "DefaultValueReadOnlyConflict",
             "ActionsDefs.yaml",
-            "ColumnKey='ro_field'");
+            "ColumnKey='step_start_time'");
     }
 
     [Fact]

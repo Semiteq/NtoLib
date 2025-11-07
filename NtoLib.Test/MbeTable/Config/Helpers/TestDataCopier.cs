@@ -58,7 +58,8 @@ public static class TestDataCopier
             dir = Directory.GetParent(dir)?.FullName ?? string.Empty;
         }
 
-        throw new DirectoryNotFoundException("TestData root not found. Expected 'MbeTable/Config/TestData' or 'Config/TestData' up the tree.");
+        throw new DirectoryNotFoundException(
+            "TestData root not found. Expected 'MbeTable/Config/TestData' or 'Config/TestData' up the tree.");
     }
 
     private static void CopyDirectory(string sourceDir, string destDir)

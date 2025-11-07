@@ -8,7 +8,7 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
-public sealed class ConfigurationLoaderFileSystemTests
+public sealed class FileSystemTests
 {
     [Fact]
     public void LoadConfiguration_DirectoryMissing_ThrowsConfigException()

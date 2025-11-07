@@ -4,7 +4,7 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
-public sealed class ConfigurationLoaderActionsRulesTests
+public sealed class ActionsRulesTests
 {
     [Fact]
     public void LongLastingWithoutStepDuration_Fails()

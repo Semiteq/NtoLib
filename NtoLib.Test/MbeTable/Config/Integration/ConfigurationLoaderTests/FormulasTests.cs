@@ -1,12 +1,10 @@
-﻿using FluentAssertions;
-
-using NtoLib.Test.MbeTable.Config.Helpers;
+﻿using NtoLib.Test.MbeTable.Config.Helpers;
 
 using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
-public sealed class ConfigurationLoaderFormulasTests
+public sealed class FormulasTests
 {
     [Fact]
     public void EmptyExpression_FailsAtFormulaValidator()
@@ -29,11 +27,9 @@ public sealed class ConfigurationLoaderFormulasTests
     [Fact]
     public void RecalcOrderReferencesMissingColumn_Fails()
     {
-        var ex = TestHelper.LoadInvalidCaseExpectingAnyError("FormulasMissingVariable");
-
-        ex.Errors.Should().ContainSingle(e =>
-            e.Section == "ActionsDefs.yaml" &&
-            e.Message.Contains("Formula references missing columns") &&
-            e.Context.Contains("ActionId=3002"));
+        TestHelper.LoadInvalidCaseExpectingError(
+            "FormulasMissingVariable",
+            "ActionsDefs.yaml",
+            "ActionId=3002");
     }
 }

@@ -65,13 +65,15 @@ public sealed class CrossReferenceValidator
         foreach (var action in files.ActionDefs.Items)
         {
             var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
-
+            
             foreach (var column in action.Columns)
             {
+                var columnContext = $"{context}, ColumnKey='{column.Key}'";
+                
                 var validationResult = ValidationCheck.ReferenceExists(
                     column.Key,
                     existingColumnKeys,
-                    context,
+                    columnContext,
                     $"column key '{column.Key}'");
 
                 Append(validationResult, errors, "ActionsDefs.yaml");

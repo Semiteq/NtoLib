@@ -1,0 +1,49 @@
+- id: 10
+  name: "Wait_time"
+  deploy_duration: "LongLasting"
+  columns:
+    - key: "step_duration"
+      default_value: "10"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 4000
+  name: "FirstFormula"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "initial_value"
+      property_type_id: "float"
+    - key: "task"
+      property_type_id: "float"
+    - key: "speed"
+      property_type_id: "pressure_bar"
+  formula:
+    expression: "initial_value + task = 0"
+    recalc_order:
+      - "initial_value"
+      - "task"
+
+- id: 4001
+  name: "SecondFormula"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "task"
+      property_type_id: "float"
+    - key: "speed"
+      property_type_id: "pressure_bar"
+  formula:
+    expression: "task - speed = 0"
+    recalc_order:
+      - "task"
+      - "speed"
+
+- id: 1100
+  name: "Open"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "Valve"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"

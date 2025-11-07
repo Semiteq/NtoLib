@@ -256,7 +256,8 @@ public sealed class ConfigurationLoader : IConfigurationLoader
     {
         foreach (var action in appConfig.Actions.Values.Where(a => a.Formula != null))
         {
-            var validator = new FormulaValidator(action.Formula, action.Columns);
+            var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
+            var validator = new FormulaValidator(action.Formula, action.Columns, context);
             var validationResult = validator.Validate();
             if (validationResult.IsFailed) return validationResult;
         }

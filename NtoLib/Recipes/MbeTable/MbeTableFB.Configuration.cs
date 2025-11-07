@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NtoLib.Recipes.MbeTable.ModuleConfig;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
-using NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
 
 namespace NtoLib.Recipes.MbeTable;
@@ -65,31 +64,12 @@ public partial class MbeTableFB
 
             if (precompileResult.IsFailed)
             {
-                var errors = new List<ConfigError>();
+                var configErrors = precompileResult.Errors
+                    .Select(e =>
+                        e as ConfigError ?? new ConfigError(e.Message, "ActionsDefs.yaml", "formula-precompile"))
+                    .ToList();
 
-                foreach (var e in precompileResult.Errors)
-                {
-                    if (e is FormulaCompilationError fce)
-                    {
-                        var context = $"ActionsDefs.yaml, ActionId={fce.ActionId}, ActionName='{fce.ActionName}'";
-                        errors.Add(new ConfigError(
-                                fce.Message,
-                                section: "ActionsDefs.yaml",
-                                context: context)
-                            .WithDetail("actionId", fce.ActionId)
-                            .WithDetail("actionName", fce.ActionName)
-                            .WithDetail("expression", fce.Expression));
-                    }
-                    else
-                    {
-                        errors.Add(new ConfigError(
-                            e.Message,
-                            section: "ActionsDefs.yaml",
-                            context: "formula-precompile"));
-                    }
-                }
-
-                throw new ConfigException(errors);
+                throw new ConfigException(configErrors);
             }
 
             _compiledFormulas = precompileResult.Value;

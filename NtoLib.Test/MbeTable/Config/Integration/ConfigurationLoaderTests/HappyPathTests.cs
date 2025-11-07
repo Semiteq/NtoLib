@@ -6,7 +6,7 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
-public sealed class ConfigurationLoaderHappyPathTests
+public sealed class HappyPathTests
 {
     [Fact]
     public void LoadValidBaseline_Succeeds()

@@ -8,6 +8,20 @@
     - key: "comment"
       property_type_id: "string"
 
+- id: 5001
+  name: "SyntaxError"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "initial_value"
+      property_type_id: "float"
+    - key: "task"
+      property_type_id: "float"
+  formula:
+    expression: "initial_value task"
+    recalc_order:
+      - "initial_value"
+      - "task"
+
 - id: 1100
   name: "Open"
   deploy_duration: "Immediate"
@@ -17,4 +31,3 @@
       property_type_id: "enum"
     - key: "comment"
       property_type_id: "string"
-    

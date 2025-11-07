@@ -1,17 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-
 using FluentResults;
-
 using Microsoft.Extensions.Logging;
-
+using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
-using NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 
 namespace NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
 
-// Default implementation of formula precompilation.
 public sealed class FormulaPrecompiler : IFormulaPrecompiler
 {
     private readonly ILogger<FormulaPrecompiler> _logger;
@@ -35,20 +31,37 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
             var result = CompiledFormula.Create(expr, order, _logger);
             if (result.IsFailed)
             {
-                var reason = string.Join("; ", result.Errors.Select(e => e.Message));
-                errors.Add(new FormulaCompilationError(
-                    message: $"Failed to compile formula: {reason}.",
-                    actionId: action.Id,
-                    actionName: action.Name,
-                    expression: expr));
+                var configError = ConvertToConfigError(action, result.Errors);
+                errors.Add(configError);
                 continue;
             }
-            
+
             compiled[action.Id] = result.Value;
         }
 
         return errors.Count > 0
             ? Result.Fail<IReadOnlyDictionary<short, CompiledFormula>>(errors)
             : compiled;
+    }
+
+    private static ConfigError ConvertToConfigError(ActionDefinition action, IEnumerable<IError> innerErrors)
+    {
+        var innerErrorMessages = string.Join("; ", innerErrors.Select(e => e.Message));
+        var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
+
+        var configError = new ConfigError(
+                $"Failed to compile formula: {innerErrorMessages}",
+                section: "ActionsDefs.yaml",
+                context: context)
+            .WithDetail("actionId", action.Id)
+            .WithDetail("actionName", action.Name)
+            .WithDetail("expression", action.Formula!.Expression ?? string.Empty);
+
+        foreach (var innerError in innerErrors)
+        {
+            configError.CausedBy(innerError);
+        }
+
+        return configError;
     }
 }

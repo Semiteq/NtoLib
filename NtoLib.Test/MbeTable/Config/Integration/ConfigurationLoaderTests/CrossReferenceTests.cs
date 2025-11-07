@@ -1,12 +1,10 @@
-﻿using FluentAssertions;
-
-using NtoLib.Test.MbeTable.Config.Helpers;
+﻿using NtoLib.Test.MbeTable.Config.Helpers;
 
 using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
-public sealed class ConfigurationLoaderCrossReferenceTests
+public sealed class CrossReferenceTests
 {
     [Fact]
     public void ActionReferencesMissingColumn_Fails()

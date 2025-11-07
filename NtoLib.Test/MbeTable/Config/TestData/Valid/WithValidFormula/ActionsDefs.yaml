@@ -8,6 +8,23 @@
     - key: "comment"
       property_type_id: "string"
 
+- id: 4000
+  name: "WithFormula"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "initial_value"
+      property_type_id: "float"
+    - key: "task"
+      property_type_id: "float"
+    - key: "speed"
+      property_type_id: "pressure_bar"
+  formula:
+    expression: "(initial_value + task) / 2 + 10 * speed = 0"
+    recalc_order:
+      - "initial_value"
+      - "task"
+      - "speed"
+
 - id: 1100
   name: "Open"
   deploy_duration: "Immediate"

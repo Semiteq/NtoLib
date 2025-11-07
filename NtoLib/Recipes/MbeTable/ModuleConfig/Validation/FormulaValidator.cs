@@ -13,11 +13,13 @@ public sealed class FormulaValidator
 {
     private readonly FormulaDefinition? _formula;
     private readonly IReadOnlyList<PropertyConfig> _columns;
+    private readonly string _context;
 
-    public FormulaValidator(FormulaDefinition? formula, IReadOnlyList<PropertyConfig> columns)
+    public FormulaValidator(FormulaDefinition? formula, IReadOnlyList<PropertyConfig> columns, string context)
     {
         _formula = formula;
         _columns = columns ?? throw new ArgumentNullException(nameof(columns));
+        _context = context;
     }
 
     public Result Validate()
@@ -30,64 +32,97 @@ public sealed class FormulaValidator
             .Bind(() => ValidateColumnsExist(_formula.RecalcOrder, _columns));
     }
 
-    private static Result ValidateExpression(string? expression)
+    private Result ValidateExpression(string? expression)
     {
         if (string.IsNullOrWhiteSpace(expression))
             return Result.Fail(new ConfigError(
                 "Formula expression is empty.",
                 section: "ActionsDefs.yaml",
-                context: "formula-validation"));
+                context: _context));
 
         return Result.Ok();
     }
 
-    private static Result ValidateRecalcOrder(IReadOnlyList<string>? recalcOrder)
+    private Result ValidateRecalcOrder(IReadOnlyList<string>? recalcOrder)
+    {
+        return ValidateRecalcOrderIsNotEmpty(recalcOrder)
+            .Bind(() => ValidateRecalcOrderHasMinimumVariables(recalcOrder!))
+            .Bind(() => ValidateRecalcOrderHasNoDuplicates(recalcOrder!));
+    }
+
+    private Result ValidateRecalcOrderIsNotEmpty(IReadOnlyList<string>? recalcOrder)
     {
         if (recalcOrder == null || recalcOrder.Count == 0)
             return Result.Fail(new ConfigError(
                 "Recalc order is empty.",
                 section: "ActionsDefs.yaml",
-                context: "formula-validation"));
+                context: _context));
 
+        return Result.Ok();
+    }
+
+    private Result ValidateRecalcOrderHasMinimumVariables(IReadOnlyList<string> recalcOrder)
+    {
         if (recalcOrder.Count < 2)
             return Result.Fail(new ConfigError(
                 "Recalc order must contain at least 2 variables.",
                 section: "ActionsDefs.yaml",
-                context: "formula-validation"));
+                context: _context));
 
-        var duplicates = recalcOrder
-            .GroupBy(v => v, StringComparer.OrdinalIgnoreCase)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToList();
+        return Result.Ok();
+    }
+
+    private Result ValidateRecalcOrderHasNoDuplicates(IReadOnlyList<string> recalcOrder)
+    {
+        var duplicates = FindDuplicateVariables(recalcOrder);
 
         if (duplicates.Any())
             return Result.Fail(new ConfigError(
                 $"Recalc order contains duplicates: {string.Join(", ", duplicates)}",
                 section: "ActionsDefs.yaml",
-                context: "formula-validation"));
+                context: _context));
 
         return Result.Ok();
     }
 
-    private static Result ValidateColumnsExist(
+    private IReadOnlyList<string> FindDuplicateVariables(IReadOnlyList<string> recalcOrder)
+    {
+        return recalcOrder
+            .GroupBy(v => v, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+    }
+
+    private Result ValidateColumnsExist(
         IReadOnlyList<string> recalcOrder,
         IReadOnlyList<PropertyConfig> columns)
     {
-        var columnKeys = columns
-            .Select(c => c.Key)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var missingColumns = recalcOrder
-            .Where(varName => !columnKeys.Contains(varName))
-            .ToList();
+        var columnKeys = ExtractColumnKeys(columns);
+        var missingColumns = FindMissingColumns(recalcOrder, columnKeys);
 
         if (missingColumns.Any())
             return Result.Fail(new ConfigError(
                 $"Formula references missing columns: {string.Join(", ", missingColumns)}",
                 section: "ActionsDefs.yaml",
-                context: "formula-validation"));
+                context: _context));
 
         return Result.Ok();
+    }
+
+    private HashSet<string> ExtractColumnKeys(IReadOnlyList<PropertyConfig> columns)
+    {
+        return columns
+            .Select(c => c.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private IReadOnlyList<string> FindMissingColumns(
+        IReadOnlyList<string> recalcOrder,
+        HashSet<string> columnKeys)
+    {
+        return recalcOrder
+            .Where(variableName => !columnKeys.Contains(variableName))
+            .ToList();
     }
 }

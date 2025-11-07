@@ -13,6 +13,9 @@ public sealed class ConfigurationLoaderYamlParsingTests
     {
         var ex = TestHelper.LoadInvalidCaseExpectingAnyError("YamlSyntaxErrorActions");
 
-        ex.Errors.Should().Contain(e => e.Section == "YAML" && e.Message.Contains("Failed to deserialize YAML"));
+        ex.Errors.Should().Contain(e =>
+            e.Section == "YAML" &&
+            e.Context.Contains("deserialization") &&
+            e.Message.Contains("Failed to deserialize YAML"));
     }
 }

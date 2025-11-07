@@ -6,14 +6,15 @@ using Xunit;
 
 namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 
-public sealed class ConfigurationLoaderColumnsRulesTests
+public sealed class ColumnsRulesTests
 {
     [Fact]
     public void MissingTask_Fails()
     {
         var ex = TestHelper.LoadInvalidCaseExpectingAnyError("ColumnsMissingTask");
 
-        ex.Errors.Should().Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("Missing mandatory columns"));
+        ex.Errors.Should()
+            .Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("Missing mandatory columns"));
     }
 
     [Fact]
@@ -21,7 +22,8 @@ public sealed class ConfigurationLoaderColumnsRulesTests
     {
         var ex = TestHelper.LoadInvalidCaseExpectingAnyError("ColumnsWidthMinusOneOnNonComment");
 
-        ex.Errors.Should().Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("Width=-1 is only allowed"));
+        ex.Errors.Should()
+            .Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("Width=-1 is only allowed"));
     }
 
     [Fact]
@@ -29,7 +31,8 @@ public sealed class ConfigurationLoaderColumnsRulesTests
     {
         var ex = TestHelper.LoadInvalidCaseExpectingAnyError("ColumnsUnsupportedType");
 
-        ex.Errors.Should().Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("Unsupported column types"));
+        ex.Errors.Should()
+            .Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("Unsupported column types"));
     }
 
     [Fact]
@@ -37,7 +40,8 @@ public sealed class ConfigurationLoaderColumnsRulesTests
     {
         var ex = TestHelper.LoadInvalidCaseExpectingAnyError("ColumnsInvalidActionComboBinding");
 
-        ex.Errors.Should().Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("can only be used with key='action'"));
+        ex.Errors.Should().Contain(e =>
+            e.Section == "ColumnDefs.yaml" && e.Message.Contains("can only be used with key='action'"));
     }
 
     [Fact]
@@ -45,7 +49,8 @@ public sealed class ConfigurationLoaderColumnsRulesTests
     {
         var ex = TestHelper.LoadInvalidCaseExpectingAnyError("ColumnsInvalidMaxDropdown");
 
-        ex.Errors.Should().Contain(e => e.Section == "ColumnDefs.yaml" && e.Message.Contains("max_dropdown_items must be > 0"));
+        ex.Errors.Should().Contain(e =>
+            e.Section == "ColumnDefs.yaml" && e.Message.Contains("max_dropdown_items must be > 0"));
     }
 
     [Fact]
