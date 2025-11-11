@@ -148,24 +148,6 @@ public sealed class TableBehaviorManager : IDisposable
 
         if (e.Control is ComboBox comboBox)
         {
-            // Ensure dropdown list mode
-            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            
-            var desired = comboBox.MaxDropDownItems;
-            if (desired <= 0) desired = 1;
-
-            var actual = comboBox.Items.Count;
-            var visible = Math.Max(1, Math.Min(desired, actual));
-
-            comboBox.MaxDropDownItems = visible;
-            comboBox.IntegralHeight = false;
-
-            if (comboBox.ItemHeight > 0)
-            {
-                const int extra = 2;
-                comboBox.DropDownHeight = comboBox.ItemHeight * visible + extra;
-            }
-            
             // Add handler to auto-commit on selection change
             comboBox.SelectionChangeCommitted -= OnComboBoxSelectionChangeCommitted;
             comboBox.SelectionChangeCommitted += OnComboBoxSelectionChangeCommitted;
