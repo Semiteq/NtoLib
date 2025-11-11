@@ -14,16 +14,11 @@ public sealed class ActionTargetProvider : IActionTargetProvider
         _fb = fb ?? throw new ArgumentNullException(nameof(fb));
     }
 
-    public void RefreshTargets()
-    {
-        // No-op by design. Data is fetched on demand from MbeTableFB.
-    }
-
-    public bool TryGetTargets(string groupName, out IReadOnlyDictionary<int, string> targets)
+    public bool TryGetTargets(string groupName, out IReadOnlyDictionary<int, string>? targets)
     {
         if (groupName == null) throw new ArgumentNullException(nameof(groupName));
-        targets = default!;
-
+        targets = null;
+        
         var groups = _fb.GetDefinedGroupNames();
         var exists = groups.Any(g => string.Equals(g, groupName, StringComparison.OrdinalIgnoreCase));
         if (!exists)
@@ -44,10 +39,12 @@ public sealed class ActionTargetProvider : IActionTargetProvider
         if (targets.Count == 0)
             throw new InvalidOperationException($"Target group '{groupName}' has no targets configured.");
 
-        return targets.Keys.Min();
+        var validTargets = targets.Where(kvp => !string.IsNullOrEmpty(kvp.Value)).ToList();
+        if (validTargets.Count == 0)
+            throw new InvalidOperationException($"Target group '{groupName}' has no valid (non-empty) targets.");
+        
+        return validTargets.Min(kvp => kvp.Key);
     }
-
-    public IReadOnlyCollection<string> GetDefinedGroups() => _fb.GetDefinedGroupNames();
 
     public IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> GetAllTargetsSnapshot()
     {
