@@ -63,6 +63,8 @@
 - property_type_id: "float_as_int"
   system_type: "System.Single"
   units: ""
+  min: 1
+  max: 10000
   non_negative: false
   format_kind: "Int"
 
