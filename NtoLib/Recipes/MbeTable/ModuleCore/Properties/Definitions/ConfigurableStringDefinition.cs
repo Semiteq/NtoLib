@@ -3,8 +3,8 @@
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
@@ -44,7 +44,7 @@ public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
     {
         var s = value?.ToString() ?? string.Empty;
         return s.Length > _maxLength
-            ? Errors.StringLengthExceeded(s.Length, _maxLength)
+            ? new CoreStringLengthExceededError(s.Length, _maxLength)
             : Result.Ok();
     }
 

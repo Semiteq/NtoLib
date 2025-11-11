@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using FluentResults;
@@ -17,26 +18,28 @@ public sealed class ResultResolver
         _status = statusService ?? throw new ArgumentNullException(nameof(statusService));
     }
 
+    public void Clear()
+    {
+        _status.Clear();
+    }
+
     public void Resolve(Result result, string operation, string successMessage = null)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
         if (string.IsNullOrWhiteSpace(operation))
             throw new ArgumentException("Operation cannot be empty", nameof(operation));
 
-        var status = result.GetStatus();
-        switch (status)
+        if (result.IsFailed)
         {
-            case ResultStatus.Failure:
-                HandleFailure(result, operation);
-                break;
-            case ResultStatus.Warning:
-                HandleWarning(result, operation);
-                break;
-            case ResultStatus.Success:
-                HandleSuccess(successMessage);
-                break;
-            default:
-                throw new InvalidOperationException("Unknown result status");
+            HandleFailure(result, operation);
+        }
+        else if (result.Reasons.OfType<BilingualWarning>().Any())
+        {
+            HandleWarning(result, operation);
+        }
+        else
+        {
+            HandleSuccess(successMessage);
         }
     }
 
@@ -48,13 +51,15 @@ public sealed class ResultResolver
 
     private void HandleFailure(Result result, string operation)
     {
-        var message = ExtractRussianMessage(result);
+        var allErrors = CollectAllErrors(result).ToList();
+        var message = ExtractRussianMessage(allErrors);
         _status.ShowError($"Не удалось {operation}: {message}");
     }
 
     private void HandleWarning(Result result, string operation)
     {
-        var message = ExtractRussianMessage(result);
+        var warnings = result.Reasons.OfType<BilingualWarning>().ToList();
+        var message = string.Join("; ", warnings.Select(w => w.MessageRu));
         _status.ShowWarning($"{ToSentence(operation)} завершена с предупреждением: {message}");
     }
 
@@ -68,23 +73,46 @@ public sealed class ResultResolver
         }
     }
 
-    private static string ExtractRussianMessage(Result result)
+    private static IEnumerable<IError> CollectAllErrors(Result result)
     {
-        var bilingualErrors = result.Errors
+        var visited = new HashSet<IError>(ReferenceEqualityComparer.Instance);
+        var queue = new Queue<IError>(result.Errors);
+
+        while (queue.Count > 0)
+        {
+            var error = queue.Dequeue();
+            if (!visited.Add(error))
+                continue;
+
+            yield return error;
+
+            foreach (var reason in error.Reasons.OfType<IError>())
+            {
+                queue.Enqueue(reason);
+            }
+        }
+    }
+
+    private static string ExtractRussianMessage(IEnumerable<IError> errors)
+    {
+        var bilingualMessages = errors
             .OfType<BilingualError>()
             .Select(e => e.MessageRu)
+            .Where(m => !string.IsNullOrWhiteSpace(m))
+            .Reverse()
             .ToList();
 
-        if (bilingualErrors.Any())
-            return string.Join("; ", bilingualErrors);
+        if (bilingualMessages.Any())
+            return string.Join(" → ", bilingualMessages);
 
-        var fallbackMessages = result.Errors
+        var fallbackMessages = errors
             .Select(e => e.Message)
             .Where(m => !string.IsNullOrWhiteSpace(m))
+            .Reverse()
             .ToList();
 
         return fallbackMessages.Any()
-            ? string.Join("; ", fallbackMessages)
+            ? string.Join(" → ", fallbackMessages)
             : "Неизвестная ошибка";
     }
 
@@ -92,5 +120,13 @@ public sealed class ResultResolver
     {
         if (string.IsNullOrWhiteSpace(text)) return "Операция";
         return char.ToUpperInvariant(text[0]) + text.Substring(1);
+    }
+
+    private sealed class ReferenceEqualityComparer : IEqualityComparer<IError>
+    {
+        public static readonly ReferenceEqualityComparer Instance = new();
+
+        public bool Equals(IError x, IError y) => ReferenceEquals(x, y);
+        public int GetHashCode(IError obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
     }
 }

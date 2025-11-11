@@ -8,8 +8,8 @@ using FluentResults;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -38,10 +38,10 @@ public sealed class StepBuilder
         IReadOnlyList<ColumnDefinition> tableColumns)
     {
         var propertiesResult = InitializeProperties(actionDefinition, propertyRegistry, tableColumns);
-        if (propertiesResult.IsFailed) return propertiesResult.ToResult();
-
-        var builder = new StepBuilder(actionDefinition, propertiesResult.Value);
-        return Result.Ok(builder);
+        if (propertiesResult.IsFailed) 
+            return propertiesResult.ToResult();
+        
+        return new StepBuilder(actionDefinition, propertiesResult.Value);
     }
 
     /// <summary>
@@ -64,17 +64,17 @@ public sealed class StepBuilder
     public Result<StepBuilder> WithOptionalDynamic(ColumnIdentifier key, object value)
     {
         if (!Supports(key))
-            return Result.Ok(this);
+            return this;
 
         if (!_properties.TryGetValue(key, out var existingProperty) || existingProperty == null)
-            return Result.Ok(this);
+            return this;
 
         var propertyResult = existingProperty.WithValue(value);
-        if (propertyResult.IsFailed) 
-            return propertyResult.ToResult().WithError(Errors.PropertyDefaultValueFailed(key.Value));
+        if (propertyResult.IsFailed)
+            return propertyResult.WithError(new CorePropertyDefaultValueFailedError(key.Value)).ToResult();
 
         _properties = _properties.SetItem(key, propertyResult.Value);
-        return Result.Ok(this);
+        return this;
     }
 
     private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> InitializeProperties(
@@ -85,12 +85,14 @@ public sealed class StepBuilder
         var properties = CreateEmptyProperties(tableColumns);
 
         var actionResult = AddActionProperty(properties, actionDefinition, propertyRegistry);
-        if (actionResult.IsFailed) return actionResult;
+        if (actionResult.IsFailed) 
+            return actionResult;
 
         var columnsResult = AddColumnProperties(actionResult.Value, actionDefinition, propertyRegistry);
-        if (columnsResult.IsFailed) return columnsResult;
+        if (columnsResult.IsFailed) 
+            return columnsResult;
 
-        return Result.Ok(columnsResult.Value);
+        return columnsResult.Value;
     }
 
     private static ImmutableDictionary<ColumnIdentifier, Property?> CreateEmptyProperties(
@@ -110,8 +112,8 @@ public sealed class StepBuilder
         var propertyDefinition = propertyRegistry.GetPropertyDefinition("Enum");
         var propertyResult = Property.Create(actionDefinition.Id, propertyDefinition);
         return propertyResult.IsFailed 
-            ? propertyResult.ToResult().WithError(Errors.ActionPropertyCreationFailed(actionDefinition.Id)) 
-            : Result.Ok(properties.SetItem(MandatoryColumns.Action, propertyResult.Value));
+            ? propertyResult.WithError(new CoreActionPropertyCreationFailedError(actionDefinition.Id)).ToResult() 
+            : properties.SetItem(MandatoryColumns.Action, propertyResult.Value);
     }
 
     private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddColumnProperties(
@@ -128,7 +130,7 @@ public sealed class StepBuilder
             current = result.Value;
         }
 
-        return Result.Ok(current);
+        return current;
     }
 
     private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddColumnProperty(
@@ -143,17 +145,17 @@ public sealed class StepBuilder
         {
             var parseResult = propertyDefinition.TryParse(column.DefaultValue);
             if (parseResult.IsFailed)
-                return Errors.PropertyParsingFailed(column.DefaultValue, column.Key);
+                return parseResult.WithError(new CorePropertyParsingFailedError(column.DefaultValue, column.Key)).ToResult();
 
             defaultValue = parseResult.Value;
         }
 
         var propertyResult = Property.Create(defaultValue, propertyDefinition);
-        if (propertyResult.IsFailed) 
-            return propertyResult.ToResult().WithError(Errors.PropertyCreationFailed(column.Key));
+        if (propertyResult.IsFailed)
+            return propertyResult.WithError(new CorePropertyCreationFailedError(column.Key)).ToResult();
 
 
         var key = new ColumnIdentifier(column.Key);
-        return Result.Ok(properties.SetItem(key, propertyResult.Value));
+        return properties.SetItem(key, propertyResult.Value);
     }
 }

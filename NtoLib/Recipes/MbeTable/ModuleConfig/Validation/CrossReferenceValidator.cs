@@ -205,7 +205,7 @@ public sealed class CrossReferenceValidator
                     continue;
 
                 if (readOnlyColumns.Contains(column.Key))
-                    errors.Add(CrossRefErrors.ReadOnlyDefaultConflict($"{context}, ColumnKey='{column.Key}'",
+                    errors.Add(ConfigCrossRefErrors.ReadOnlyDefaultConflict($"{context}, ColumnKey='{column.Key}'",
                         column.Key));
             }
         }
@@ -263,7 +263,7 @@ public sealed class CrossReferenceValidator
         string context)
     {
         if (propertyDefinition.MaxLength.HasValue && defaultValue.Length > propertyDefinition.MaxLength.Value)
-            return Result.Fail(CrossRefErrors.DefaultValueExceedsMaxLength(context, defaultValue.Length,
+            return Result.Fail(ConfigCrossRefErrors.DefaultValueExceedsMaxLength(context, defaultValue.Length,
                 propertyDefinition.MaxLength.Value, defaultValue));
 
         return Result.Ok();
@@ -275,7 +275,7 @@ public sealed class CrossReferenceValidator
         string context)
     {
         if (!TryParseInt16Value(defaultValue, out var shortValue))
-            return Result.Fail(CrossRefErrors.DefaultValueNotInt16(context, defaultValue));
+            return Result.Fail(ConfigCrossRefErrors.DefaultValueNotInt16(context, defaultValue));
 
         return ValidateNumericRange(shortValue, propertyDefinition, context);
     }
@@ -291,7 +291,7 @@ public sealed class CrossReferenceValidator
         string context)
     {
         if (!TryParseFloatValue(defaultValue, out var parsedValue))
-            return Result.Fail(CrossRefErrors.DefaultValueNotFloat(context, defaultValue));
+            return Result.Fail(ConfigCrossRefErrors.DefaultValueNotFloat(context, defaultValue));
 
         return ValidateNumericRange(parsedValue, propertyDefinition, context);
     }
@@ -306,11 +306,11 @@ public sealed class CrossReferenceValidator
     {
         if (IsValueBelowMinimum(parsedValue, propertyDefinition))
             return Result.Fail(
-                CrossRefErrors.DefaultValueLessThanMin(context, parsedValue, propertyDefinition.Min!.Value));
+                ConfigCrossRefErrors.DefaultValueLessThanMin(context, parsedValue, propertyDefinition.Min!.Value));
 
         if (IsValueAboveMaximum(parsedValue, propertyDefinition))
             return Result.Fail(
-                CrossRefErrors.DefaultValueExceedsMax(context, parsedValue, propertyDefinition.Max!.Value));
+                ConfigCrossRefErrors.DefaultValueExceedsMax(context, parsedValue, propertyDefinition.Max!.Value));
 
         return Result.Ok();
     }

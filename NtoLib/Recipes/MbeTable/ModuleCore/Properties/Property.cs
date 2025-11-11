@@ -2,9 +2,8 @@
 
 using FluentResults;
 
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 using OneOf;
 
@@ -39,7 +38,7 @@ public sealed record Property
     public static Result<Property> Create(object value, IPropertyTypeDefinition propertyDefinition)
     {
         if (value.GetType() != propertyDefinition.SystemType) 
-            return Errors.PropertyTypeMismatch(value.GetType().ToString(), propertyDefinition.SystemType.Name);
+            return new CorePropertyTypeMismatchError(value.GetType().ToString(), propertyDefinition.SystemType.Name);
 
         var validationResult = propertyDefinition.TryValidate(value);
         if (validationResult.IsFailed) 
@@ -85,21 +84,21 @@ public sealed record Property
                 if (shortValue is T typedValue)
                     return Result.Ok(typedValue);
 
-                return Errors.PropertyTypeMismatch(typeof(T).ToString(), "short");
+                return new CorePropertyTypeMismatchError(typeof(T).ToString(), "short");
             },
             floatValue =>
             {
                 if (floatValue is T typedValue)
                     return Result.Ok(typedValue);
 
-                return Errors.PropertyTypeMismatch(typeof(T).ToString(), "float" );
+                return new CorePropertyTypeMismatchError(typeof(T).ToString(), "float");
             },
             stringValue =>
             {
                 if (stringValue is T typedValue)
                     return Result.Ok(typedValue);
 
-                return Errors.PropertyTypeMismatch(typeof(T).ToString(), "string");
+                return new CorePropertyTypeMismatchError(typeof(T).ToString(), "string");
             }
         );
     }
@@ -107,9 +106,9 @@ public sealed record Property
     public Result<double> GetNumeric()
     {
         return InternalUnionValue.Match<Result<double>>(
-            shortValue => Result.Ok((double)shortValue),
-            floatValue => Result.Ok((double)floatValue),
-            stringValue => Result.Fail(Errors.PropertyNonNumeric())
+            shortValue => (double)shortValue,
+            floatValue => (double)floatValue,
+            stringValue => new CorePropertyNonNumericError()
         );
     }
 
@@ -127,7 +126,6 @@ public sealed record Property
             short i => Result.Ok<OneOf<short, float, string>>(i),
             float f => Result.Ok<OneOf<short, float, string>>(f),
             string s => Result.Ok<OneOf<short, float, string>>(s),
-            _ => Result.Fail(new Error($"Unsupported type '{value.GetType().Name}' for property value.")
-                .WithMetadata(nameof(Codes), Codes.PropertyValueInvalid))
+            _ => new CorePropertyConversionFailedError(value.ToString(), "Union")
         };
 }

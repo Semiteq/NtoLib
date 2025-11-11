@@ -9,76 +9,38 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore;
 
-/// <summary>
-/// Core domain service managing Recipe state and coordinating mutations and analysis.
-/// </summary>
+// Core domain service for recipe state, mutations, and analysis.
 public interface IRecipeService
 {
-    /// <summary>
-    /// Raised when validation state changes.
-    /// </summary>
+    // Fires when the validation state changes; arg = new state.
     event Action<bool>? ValidationStateChanged;
 
-    /// <summary>
-    /// Gets the current Recipe.
-    /// </summary>
-    Recipe GetCurrentRecipe();
+    Recipe CurrentRecipe { get; }
 
-    /// <summary>
-    /// Gets the start time for a specific step.
-    /// </summary>
+    int StepCount { get; }
+
     Result<TimeSpan> GetStepStartTime(int stepIndex);
 
-    /// <summary>
-    /// Gets the total duration of the current Recipe.
-    /// </summary>
     TimeSpan GetTotalDuration();
 
-    /// <summary>
-    /// Gets all step start times.
-    /// </summary>
+    // Key = step index.
     IReadOnlyDictionary<int, TimeSpan> GetAllStepStartTimes();
 
-    /// <summary>
-    /// Checks if the current Recipe is valid.
-    /// </summary>
     bool IsValid();
 
-    /// <summary>
-    /// Gets loop nesting level for a specific step.
-    /// </summary>
     Result<int> GetLoopNestingLevel(int stepIndex);
 
-    /// <summary>
-    /// Retrieves a list of all loops that actively enclose the specified step.
-    /// The list is ordered from innermost to outermost loop.
-    /// </summary>
-    /// <param name="stepIndex">The index of the step.</param>
-    /// <returns>A read-only list of loop metadata. Empty if the step is not in any loop.</returns>
+    // Innermost → outermost for the given step.
     IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex);
-    
-    /// <summary>
-    /// Replaces current Recipe with provided one, validates and analyzes it.
-    /// </summary>
+
+    // Replaces current recipe and re-analyzes.
     Result SetRecipeAndUpdateAttributes(Recipe recipe);
 
-    /// <summary>
-    /// Adds a default step at the specified row index.
-    /// </summary>
     Result AddStep(int rowIndex);
 
-    /// <summary>
-    /// Removes step at the specified row index.
-    /// </summary>
     Result RemoveStep(int rowIndex);
 
-    /// <summary>
-    /// Updates a property of a specific step.
-    /// </summary>
     Result UpdateStepProperty(int rowIndex, ColumnIdentifier columnIdentifier, object value);
 
-    /// <summary>
-    /// Replaces step action at the specified row index.
-    /// </summary>
     Result ReplaceStepAction(int rowIndex, short newActionId);
 }

@@ -3,16 +3,12 @@
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ModuleCore.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
-/// <summary>
-/// Provides validation and analysis of loop structures within a recipe.
-/// This is a stateless service that operates on immutable recipe data.
-/// </summary>
 public class RecipeLoopValidator
 {
     private const int ForLoopActionId = (int)ServiceActions.ForLoop;
@@ -23,6 +19,9 @@ public class RecipeLoopValidator
     {
         var nestingLevels = new Dictionary<int, int>();
         var currentDepth = 0;
+        var result = Result.Ok<IReadOnlyDictionary<int, int>>(nestingLevels);
+
+        var forStartStack = new Stack<int>();
 
         for (var i = 0; i < recipe.Steps.Count; i++)
         {
@@ -31,30 +30,60 @@ public class RecipeLoopValidator
             if (actionPropertyResult.IsFailed)
                 return actionPropertyResult.ToResult();
 
-
             var propertyValueResult = actionPropertyResult.Value.GetValue<short>();
-            if (propertyValueResult.IsFailed) return propertyValueResult.ToResult();
-            
+            if (propertyValueResult.IsFailed)
+                return propertyValueResult.ToResult();
+
             var actionId = (int)propertyValueResult.Value;
 
             switch (actionId)
             {
                 case ForLoopActionId:
                 {
-                    var processResult = ProcessForLoopStart(currentDepth, i, nestingLevels);
-                    if (processResult.GetStatus() == ResultStatus.Warning)
-                        return processResult;
+                    forStartStack.Push(i);
 
-                    currentDepth++;
+                    if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
+                        result.WithReason(new CoreForLoopMissingIterationCountWarning(i));
+
+                    if (currentDepth >= MaxLoopDepth)
+                    {
+                        result.WithReason(new CoreForLoopMaxDepthExceededWarning(i, MaxLoopDepth));
+                    }
+                    else
+                    {
+                        nestingLevels[i] = currentDepth;
+                        currentDepth++;
+                    }
                     break;
                 }
                 case EndForLoopActionId:
                 {
-                    var processResult = ProcessForLoopEnd(currentDepth, i, nestingLevels);
-                    if (processResult.GetStatus() == ResultStatus.Warning)
-                        return processResult;
+                    if (forStartStack.Count == 0)
+                    {
+                        result.WithReason(new CoreForLoopUnmatchedWarning(
+                            i,
+                            startIndex: null,
+                            endIndex: i,
+                            details: "Unmatched EndFor"));
+                    }
+                    else
+                    {
+                        forStartStack.Pop();
 
-                    currentDepth--;
+                        if (currentDepth - 1 < 0)
+                        {
+                            result.WithReason(new CoreForLoopUnmatchedWarning(
+                                i,
+                                startIndex: null,
+                                endIndex: i,
+                                details: "Unmatched EndFor"));
+                        }
+                        else
+                        {
+                            nestingLevels[i] = currentDepth - 1;
+                            currentDepth--;
+                        }
+                    }
                     break;
                 }
                 default:
@@ -63,59 +92,23 @@ public class RecipeLoopValidator
             }
         }
 
-        if (currentDepth != 0)
-            return CreateUnmatchedForLoopError(recipe.Steps.Count);
-        
+        while (forStartStack.Count > 0)
+        {
+            var startIndex = forStartStack.Pop();
+            result.WithReason(new CoreForLoopUnmatchedWarning(
+                startIndex,
+                startIndex: startIndex,
+                endIndex: null,
+                details: "Unclosed ForLoop"));
+        }
 
-        return Result.Ok<IReadOnlyDictionary<int, int>>(nestingLevels);
-    }
-
-    private static Result<IReadOnlyDictionary<int, int>> ProcessForLoopStart(
-        int currentDepth,
-        int stepIndex,
-        IDictionary<int, int> nestingLevels)
-    {
-        if (currentDepth >= MaxLoopDepth)
-            return CreateMaxDepthExceededError(stepIndex);
-
-        nestingLevels[stepIndex] = currentDepth;
-        return Result.Ok();
-    }
-
-    private static Result<IReadOnlyDictionary<int, int>> ProcessForLoopEnd(
-        int currentDepth,
-        int stepIndex,
-        IDictionary<int, int> nestingLevels)
-    {
-        if (currentDepth - 1 < 0)
-            return CreateUnmatchedEndForLoopError(stepIndex);
-
-        nestingLevels[stepIndex] = currentDepth - 1;
-        return Result.Ok();
-    }
-
-    private static Result<IReadOnlyDictionary<int, int>> CreateMaxDepthExceededError(int stepIndex)
-    {
-        return Result.Ok<IReadOnlyDictionary<int, int>>(new Dictionary<int, int>())
-            .WithReason(new ValidationIssue(Codes.CoreExeedForLoopDepth).WithMetadata("stepIndex", stepIndex));
-    }
-
-    private static Result<IReadOnlyDictionary<int, int>> CreateUnmatchedEndForLoopError(int stepIndex)
-    {
-        return Result.Ok<IReadOnlyDictionary<int, int>>(new Dictionary<int, int>())
-            .WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", stepIndex));
-    }
-
-    private static Result<IReadOnlyDictionary<int, int>> CreateUnmatchedForLoopError(int stepIndex)
-    {
-        return Result.Ok<IReadOnlyDictionary<int, int>>(new Dictionary<int, int>())
-            .WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", stepIndex));
+        return result;
     }
 
     private static Result<Property> GetActionPropertyIfExistsInStep(Step step)
     {
-        return step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null
-            ? actionProperty
-            : Errors.StepNoActionProperty();
+        return step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) && actionProperty != null
+            ? Result.Ok(actionProperty)
+            : Result.Fail(new CoreStepNoActionPropertyError());
     }
 }

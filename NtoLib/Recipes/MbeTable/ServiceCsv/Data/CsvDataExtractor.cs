@@ -7,7 +7,7 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.Data;
@@ -36,19 +36,14 @@ public sealed class CsvDataExtractor : ICsvDataExtractor
         using var csvReader = _csvHelperFactory.CreateReader(reader);
         
         if (!csvReader.Read())
-        {
-            return Result.Fail<CsvRawData>(new Error("Missing CSV header")
-                .WithMetadata(nameof(Codes), Codes.CsvInvalidData));
-        }
+            return new CsvInvalidDataError("Missing header");
+        
         
         csvReader.ReadHeader();
         var headers = csvReader.HeaderRecord ?? Array.Empty<string>();
-        
+
         if (headers.Length == 0)
-        {
-            return Result.Fail<CsvRawData>(new Error("Empty CSV header")
-                .WithMetadata(nameof(Codes), Codes.CsvInvalidData));
-        }
+            return new CsvEmptyHeaderError();
         
         var bindingResult = _headerBinder.Bind(headers, new TableColumns(_columns));
         if (bindingResult.IsFailed)

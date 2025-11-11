@@ -5,8 +5,8 @@ using System.Linq;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
@@ -42,7 +42,7 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         var numeric = ToFloat(value);
 
         if (!numeric.HasValue)
-            return Errors.PropertyNonNumeric();
+            return new CorePropertyNonNumericError();
 
         if (numeric.Value < 0)
         {
@@ -73,13 +73,13 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         var numeric = ToFloat(value);
 
         if (!numeric.HasValue)
-            return Errors.PropertyValidationFailed($"expected numeric value, got {value.GetType().Name}");
+            return new CorePropertyValidationFailedError($"expected numeric value, got {value.GetType().Name}");
 
         if (_min.HasValue && numeric.Value < _min.Value)
-            return Errors.NumericValueOutOfRange(numeric.Value, _min, _max);
+            return new CoreNumericValueOutOfRangeError(numeric.Value, _min, _max);
 
         if (_max.HasValue && numeric.Value > _max.Value)
-            return Errors.NumericValueOutOfRange(numeric.Value, _min, _max);
+            return new CoreNumericValueOutOfRangeError(numeric.Value, _min, _max);
 
         return Result.Ok();
     }
@@ -106,10 +106,9 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
     {
         var sanitized = SanitizeNumericInput(input);
 
-        if (SystemType == typeof(short))
-            return ParseAsShort(sanitized, input);
-
-        return ParseAsFloat(sanitized, input);
+        return SystemType == typeof(short) 
+            ? ParseAsShort(sanitized, input) 
+            : ParseAsFloat(sanitized, input);
     }
 
     protected static float? ToFloat(object value) => value switch
@@ -135,13 +134,13 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
         if (float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
             return Result.Ok<object>((short)floatValue);
 
-        return Errors.PropertyConversionFailed(originalInput, "Int16");
+        return new CorePropertyConversionFailedError(originalInput, "Int16");
     }
 
     private Result<object> ParseAsFloat(string sanitized, string originalInput)
     {
         if (!float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
-            return Errors.PropertyConversionFailed(originalInput, "Single");
+            return new CorePropertyConversionFailedError(originalInput, "Single");
 
         if (FormatKind == FormatKind.Int)
             floatValue = (float)Math.Truncate(floatValue);

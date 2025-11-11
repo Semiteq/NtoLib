@@ -30,37 +30,39 @@ public sealed class StepViewModel
     public Result<IReadOnlyDictionary<short, string>> GetComboItems(ColumnIdentifier key)
     {
         var actionIdResult = GetCurrentActionId();
-        if (actionIdResult.IsFailed) return actionIdResult.ToResult();
-
-        return _comboboxDataProvider.GetResultEnumOptions(actionIdResult.Value, key.Value);
+        return actionIdResult.IsFailed 
+            ? actionIdResult.ToResult() : 
+            _comboboxDataProvider.GetResultEnumOptions(actionIdResult.Value, key.Value);
     }
-    
+
     public Result<object?> GetPropertyValue(ColumnIdentifier identifier)
     {
-        if (identifier == MandatoryColumns.StepStartTime) return Result.Ok<object?>(StepStartTime);
+        if (identifier == MandatoryColumns.StepStartTime) 
+            return StepStartTime;
 
         var getPropertyResult = _step.GetProperty(identifier);
         if (getPropertyResult.IsFailed) return getPropertyResult.ToResult();
-        
+
         var property = getPropertyResult.Value;
 
         var value = identifier == MandatoryColumns.Action
             ? property.GetValueAsObject
             : property.GetDisplayValue;
 
-        return Result.Ok<object?>(value);
+        return value;
     }
-    
+
     private Result<short> GetCurrentActionId()
     {
-        var getPropertyResult = _step.GetProperty(MandatoryColumns.Action); 
+        var getPropertyResult = _step.GetProperty(MandatoryColumns.Action);
         if (getPropertyResult.IsFailed) return getPropertyResult.ToResult();
 
         var actionProperty = getPropertyResult.Value;
 
         var getValueResult = actionProperty.GetValue<short>();
-        if (getValueResult.IsFailed) return getValueResult.ToResult();
-        
+        if (getValueResult.IsFailed) 
+            return getValueResult.ToResult();
+
         return Result.Ok(getValueResult.Value);
     }
 
@@ -70,6 +72,5 @@ public sealed class StepViewModel
         _startTime = newStartTime;
     }
 
-    private static string FormatTime(TimeSpan time) =>
-        $"{time.Hours:00}:{time.Minutes:00}:{time.Seconds:00}";
+    private static string FormatTime(TimeSpan time) => time.ToString(@"hh\:mm\:ss");
 }

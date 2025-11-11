@@ -8,12 +8,12 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
+using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
 using NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Metadata;
+using NtoLib.Recipes.MbeTable.ServiceCsv.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv;
 
@@ -43,10 +43,8 @@ public sealed class RecipeFileService : IRecipeFileService
     public async Task<Result<CsvRawData>> ReadRawDataAndCheckIntegrityAsync(string filePath, Encoding? encoding = null)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-        {
-            return Result.Fail<CsvRawData>(new Error("File path cannot be empty")
-                .WithMetadata(nameof(Codes), Codes.IoReadError));
-        }
+            return new CsvFilePathEmptyError();
+        
 
         return await Task.Run(() =>
         {
@@ -59,16 +57,9 @@ public sealed class RecipeFileService : IRecipeFileService
 
     public async Task<Result> WriteRecipeAsync(Recipe recipe, string filePath, Encoding? encoding = null)
     {
-        if (recipe == null)
-        {
-            return Result.Fail(new Error("Recipe cannot be null")
-                .WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
-        }
-
         if (string.IsNullOrWhiteSpace(filePath))
         {
-            return Result.Fail(new Error("File path cannot be empty")
-                .WithMetadata(nameof(Codes), Codes.IoFileNotFound));
+            return new CsvFilePathEmptyError();
         }
 
         return await Task.Run(() =>
@@ -84,8 +75,7 @@ public sealed class RecipeFileService : IRecipeFileService
     {
         if (!File.Exists(filePath))
         {
-            var error = new Error($"File not found: {filePath}")
-                .WithMetadata(nameof(Codes), Codes.IoReadError);
+            var error = new CsvFileNotFoundError(filePath);
             _logger.LogError("Read failed - file not found: {FilePath}", filePath);
             return Result.Fail(error);
         }
@@ -116,9 +106,7 @@ public sealed class RecipeFileService : IRecipeFileService
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Failed to read file: {FilePath}", filePath);
-            return Result.Fail<CsvRawData>(new Error($"Failed to read file: {ex.Message}")
-                .WithMetadata(nameof(Codes), Codes.IoReadError)
-                .CausedBy(ex));
+            return new CsvReadFailedError(ex.Message).CausedBy(ex);
         }
     }
 
@@ -157,9 +145,7 @@ public sealed class RecipeFileService : IRecipeFileService
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Failed to write file: {FilePath}", filePath);
-            return Result.Fail(new Error($"Failed to write file: {ex.Message}")
-                .WithMetadata(nameof(Codes), Codes.IoWriteError)
-                .CausedBy(ex));
+            return new CsvWriteFailedError(ex.Message).CausedBy(ex);
         }
         finally
         {
@@ -185,16 +171,8 @@ public sealed class RecipeFileService : IRecipeFileService
 
         if (metadata.Rows > 0 && metadata.Rows != rawData.Rows.Count)
         {
-            _logger.LogWarning(
-                "Row count mismatch. Expected={Expected}, Actual={Actual}", 
-                metadata.Rows, 
-                rawData.Rows.Count);
-
-            var issue = new ValidationIssue(Codes.CsvInvalidData)
-                .WithMetadata("Expected", metadata.Rows)
-                .WithMetadata("Actual", rawData.Rows.Count);
-
-            result = result.WithReason(issue);
+            _logger.LogWarning("Row count mismatch. Expected={Expected}, Actual={Actual}", metadata.Rows, rawData.Rows.Count);
+            result = result.WithReason(new CsvRowCountMismatchWarning(metadata.Rows, rawData.Rows.Count));
         }
 
         if (!string.IsNullOrWhiteSpace(metadata.BodyHashBase64))
@@ -204,16 +182,8 @@ public sealed class RecipeFileService : IRecipeFileService
 
             if (!integrityCheck.IsValid)
             {
-                _logger.LogWarning(
-                    "Hash mismatch. Expected={Expected}, Actual={Actual}",
-                    integrityCheck.ExpectedHash,
-                    integrityCheck.ActualHash);
-
-                var issue = new ValidationIssue(Codes.CsvHashMismatch)
-                    .WithMetadata("ExpectedHash", integrityCheck.ExpectedHash)
-                    .WithMetadata("ActualHash", integrityCheck.ActualHash);
-
-                result = result.WithReason(issue);
+                _logger.LogWarning("Hash mismatch. Expected={Expected}, Actual={Actual}", integrityCheck.ExpectedHash, integrityCheck.ActualHash);
+                result = result.WithReason(new CsvHashMismatchWarning(integrityCheck.ExpectedHash, integrityCheck.ActualHash));
             }
         }
 

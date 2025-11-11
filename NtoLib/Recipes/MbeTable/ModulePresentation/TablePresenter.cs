@@ -108,6 +108,9 @@ public sealed class TablePresenter : ITablePresenter
 
     private async void OnCellValuePushed(object? sender, CellValueEventArgs e)
     {
+        if (e.Value == null)
+            return;
+        
         var key = _view.GetColumnKey(e.ColumnIndex);
         if (key != null)
         {

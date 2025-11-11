@@ -7,8 +7,8 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Errors;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 
@@ -37,7 +37,8 @@ public sealed class LoadRecipeCommand : CommandBase
         if (_dialog.ShowDialog() != DialogResult.OK) return Result.Ok();
 
         var path = _dialog.FileName;
-        if (!File.Exists(path)) return Result.Fail(new Error("File not found").WithMetadata(nameof(Codes), Codes.IoFileNotFound));
+        if (!File.Exists(path)) 
+            return Result.Fail(new PresentationFileNotFoundError());;
 
         return await _app.LoadRecipeAsync(path).ConfigureAwait(false);
     }

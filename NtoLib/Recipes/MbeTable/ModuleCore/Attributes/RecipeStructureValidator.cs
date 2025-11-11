@@ -1,7 +1,7 @@
 ﻿using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
@@ -9,25 +9,22 @@ public sealed class RecipeStructureValidator
 {
     public Result Validate(Recipe recipe)
     {
-        if (recipe == null)
-            return Errors.RecipeNull();
-
-        if (recipe.Steps == null)
-            return Errors.RecipeStepsNull();
+        if (recipe.Steps.Count == 0)
+            return new CoreRecipeStepsNullError();
 
         for (int i = 0; i < recipe.Steps.Count; i++)
         {
             var step = recipe.Steps[i];
 
             if (step == null)
-                return Errors.StepNull(i);
+                return new CoreStepNullError(i);
 
             if (!step.Properties.ContainsKey(MandatoryColumns.Action))
-                return Errors.StepMissingAction(i);
+                return new CoreStepMissingActionError(i);
 
             var actionProperty = step.Properties[MandatoryColumns.Action];
             if (actionProperty == null)
-                return Errors.StepActionNull(i);
+                return new CoreStepActionNullError(i);
         }
 
         return Result.Ok();

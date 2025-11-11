@@ -5,16 +5,17 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
+using NtoLib.Recipes.MbeTable.ModuleApplication.ErrorPolicy;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Errors;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Warnings;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
 
-// Thread-safe implementation of IStateProvider with policy and operation gate.
 public sealed class StateProvider : IStateProvider
 {
     private readonly object _lock = new();
-    private readonly ErrorDefinitionRegistry _registry;
+    private readonly ErrorPolicyRegistry _policyRegistry;
     private readonly ILogger<StateProvider> _logger;
     
     private bool _isValid;
@@ -25,9 +26,9 @@ public sealed class StateProvider : IStateProvider
 
     public event Action<UiPermissions>? PermissionsChanged;
 
-    public StateProvider(ErrorDefinitionRegistry registry, ILogger<StateProvider> logger)
+    public StateProvider(ErrorPolicyRegistry policyRegistry, ILogger<StateProvider> logger)
     {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        _policyRegistry = policyRegistry ?? throw new ArgumentNullException(nameof(policyRegistry));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -78,25 +79,32 @@ public sealed class StateProvider : IStateProvider
             if (decision.Kind != DecisionKind.Allowed)
             {
                 _logger.LogInformation(
-                    "Operation evaluation: [{Operation}] -> BLOCKED. Reason: {ReasonCode}. State at decision time: {State}",
-                    operation, decision.PrimaryCode, currentState);
+                    "Operation evaluation: [{Operation}] -> BLOCKED. Reason: {Reason}. State: {State}",
+                    operation, decision.PrimaryReason?.GetType().Name, currentState);
 
-                var definition = _registry.GetDefinition(decision.PrimaryCode);
-                if (definition.Severity == ErrorSeverity.Warning)
-                    return ResultBox.Warn<IDisposable>(default!, decision.PrimaryCode);
+                if (decision.PrimaryReason != null)
+                {
+                    var severity = _policyRegistry.GetSeverity(decision.PrimaryReason);
+                    
+                    if (severity == ErrorSeverity.Warning && decision.PrimaryReason is BilingualWarning warning)
+                        return Result.Ok().WithReason(warning);
 
-                return ResultBox.Fail<IDisposable>(decision.PrimaryCode);
+                    if (decision.PrimaryReason is BilingualError error)
+                        return error;
+                }
+
+                return new ApplicationInvalidOperationError("Operation not allowed");
             }
 
             if (_activeOperation != null)
             {
                 _logger.LogWarning(
-                    "Operation evaluation: [{Operation}] -> BLOCKED. Reason: Another operation is already active ({ActiveOperation}). State at decision time: {State}",
+                    "Operation evaluation: [{Operation}] -> BLOCKED. Active: {ActiveOperation}. State: {State}",
                     operation, _activeOperation, currentState);
-                return ResultBox.Fail<IDisposable>(Codes.CoreInvalidOperation);
+                return new ApplicationAnotherOperationActiveError();
             }
 
-            _logger.LogInformation("Operation evaluation: [{Operation}] -> ALLOWED. State at decision time: {State}",
+            _logger.LogInformation("Operation evaluation: [{Operation}] -> ALLOWED. State: {State}",
                 operation, currentState);
 
             _activeOperation = kind;
@@ -135,7 +143,7 @@ public sealed class StateProvider : IStateProvider
 
         if (changed)
         {
-            _logger.LogTrace("State changed: Validation. Old: {OldValue}, New: {NewValue}. Current state: {State}",
+            _logger.LogTrace("State changed: Validation. Old: {OldValue}, New: {NewValue}. State: {State}",
                 oldValue, isValid, GetSnapshot());
             RaisePermissionsChanged();
         }
@@ -156,7 +164,7 @@ public sealed class StateProvider : IStateProvider
 
         if (changed)
         {
-            _logger.LogTrace("State changed: StepCount. Old: {OldValue}, New: {NewValue}. Current state: {State}",
+            _logger.LogTrace("State changed: StepCount. Old: {OldValue}, New: {NewValue}. State: {State}",
                 oldValue, stepCount, GetSnapshot());
             RaisePermissionsChanged();
         }
@@ -179,7 +187,7 @@ public sealed class StateProvider : IStateProvider
         if (changed)
         {
             _logger.LogTrace(
-                "State changed: PLC Flags. Old (EnaSend/Active): {OldValue}, New (EnaSend/Active): {NewValue}. Current state: {State}",
+                "State changed: PLC Flags. Old: {OldValue}, New: {NewValue}. State: {State}",
                 oldValue, (enaSendOk, recipeActive), GetSnapshot());
             RaisePermissionsChanged();
         }
@@ -188,41 +196,42 @@ public sealed class StateProvider : IStateProvider
     private OperationDecision EvaluateUnsafe(OperationId operation)
     {
         if (_activeOperation != null)
-            return OperationDecision.BlockedError(Codes.CoreInvalidOperation);
+        {
+            return OperationDecision.BlockedError(new ApplicationAnotherOperationActiveError());
+        }
 
         if (_recipeActive)
         {
-            if (operation is OperationId.Receive or OperationId.Save) return OperationDecision.Allowed();
-            return OperationDecision.BlockedError(Codes.CoreInvalidOperation);
+            if (operation is OperationId.Receive or OperationId.Save) 
+                return OperationDecision.Allowed();
+            
+            return OperationDecision.BlockedError(new ApplicationRecipeActiveError());
         }
 
-        var errorCode = GetBlockingErrorCode(operation);
-        if (errorCode != null)
+        var blockingReason = GetBlockingReason(operation);
+        if (blockingReason != null)
         {
-             var definition = _registry.GetDefinition(errorCode.Value);
-             return definition.Severity == ErrorSeverity.Warning
-                ? OperationDecision.BlockedWarning(errorCode.Value)
-                : OperationDecision.BlockedError(errorCode.Value);
+            var severity = _policyRegistry.GetSeverity(blockingReason);
+            return severity == ErrorSeverity.Warning
+                ? OperationDecision.BlockedWarning(blockingReason)
+                : OperationDecision.BlockedError(blockingReason);
         }
 
         return OperationDecision.Allowed();
     }
     
-    private Codes? GetBlockingErrorCode(OperationId operation)
+    private IReason? GetBlockingReason(OperationId operation)
     {
         switch (operation)
         {
             case OperationId.Save:
-                if (!_isValid) return Codes.CoreForLoopError;
-                if (_stepCount == 0) return Codes.CoreEmptyRecipe;
+            case OperationId.Send:
+                if (!_isValid)
+                    return new ApplicationValidationFailedError("Recipe contains validation errors");
+                if (_stepCount == 0)
+                    return new ApplicationEmptyRecipeWarning();
                 break;
 
-            case OperationId.Send:
-                if (!_isValid) return Codes.CoreForLoopError;
-                if (_stepCount == 0) return Codes.CoreEmptyRecipe;
-                break;
-                
-            // Operations allowed without validation checks
             case OperationId.Load:
             case OperationId.Receive:
             case OperationId.AddStep:
@@ -231,8 +240,7 @@ public sealed class StateProvider : IStateProvider
                 break;
 
             default:
-                // Block unknown operations by default
-                return Codes.CoreInvalidOperation;
+                return new ApplicationInvalidOperationError("Unknown operation");
         }
 
         return null;
@@ -246,7 +254,6 @@ public sealed class StateProvider : IStateProvider
         }
         catch
         {
-            // Swallow exceptions from subscribers
         }
     }
 

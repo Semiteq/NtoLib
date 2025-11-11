@@ -5,8 +5,8 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 
@@ -21,11 +21,11 @@ public sealed class StepVariableAdapter : IStepVariableAdapter
             var columnKey = new ColumnIdentifier(variableName);
             var propertyResult = step.GetProperty(columnKey);
             if (propertyResult.IsFailed)
-                return Errors.FormulaVariableNotFound(variableName);
+                return new CoreFormulaVariableNotFoundError(variableName);
 
             var doubleValueResult = propertyResult.Value.GetNumeric();
             if (doubleValueResult.IsFailed)
-                return Errors.FormulaVariableNonNumeric(variableName);
+                return new CoreFormulaVariableNonNumericError(variableName);
 
             values[variableName] = doubleValueResult.Value;
         }
@@ -64,7 +64,7 @@ public sealed class StepVariableAdapter : IStepVariableAdapter
         {
             short => (short)Math.Round(value),
             float => (float)value,
-            _ => Errors.PropertyNonNumeric(),
+            _ => new CorePropertyNonNumericError()
         };
     }
 }

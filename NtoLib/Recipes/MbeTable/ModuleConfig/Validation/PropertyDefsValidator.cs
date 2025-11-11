@@ -65,13 +65,13 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
 
         var systemType = Type.GetType(def.SystemType, throwOnError: false, ignoreCase: true);
         if (systemType == null)
-            return Result.Fail(PropertyErrors.UnknownSystemType(def.PropertyTypeId, def.SystemType, context));
+            return Result.Fail(ConfigPropertyErrors.UnknownSystemType(def.PropertyTypeId, def.SystemType, context));
 
         if (!SupportedSystemTypes.Contains(systemType.FullName ?? string.Empty))
         {
             var supported = string.Join(", ", SupportedSystemTypes);
             return Result.Fail(
-                PropertyErrors.UnsupportedSystemType(def.PropertyTypeId, def.SystemType, supported, context));
+                ConfigPropertyErrors.UnsupportedSystemType(def.PropertyTypeId, def.SystemType, supported, context));
         }
 
         return Result.Ok();
@@ -109,7 +109,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
     {
         var supported = string.Join(", ", SupportedFormatKinds);
         return Result.Fail(
-            PropertyErrors.UnsupportedFormatKind(def.PropertyTypeId, def.FormatKind, supported, context));
+            ConfigPropertyErrors.UnsupportedFormatKind(def.PropertyTypeId, def.FormatKind, supported, context));
     }
 
     private static Result ValidateTimeHmsFormat(YamlPropertyDefinition def, string context)
@@ -118,7 +118,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
             return Result.Ok();
 
         if (!IsTimePropertyType(def.PropertyTypeId))
-            return Result.Fail(PropertyErrors.TimeHmsRequiresTime(def.PropertyTypeId, context));
+            return Result.Fail(ConfigPropertyErrors.TimeHmsRequiresTime(def.PropertyTypeId, context));
 
         return Result.Ok();
     }
@@ -141,7 +141,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
         var systemType = Type.GetType(def.SystemType, throwOnError: false, ignoreCase: true);
         if (!IsNumericType(systemType))
             return Result.Fail(
-                PropertyErrors.ScientificRequiresNumeric(def.PropertyTypeId, def.SystemType, context));
+                ConfigPropertyErrors.ScientificRequiresNumeric(def.PropertyTypeId, def.SystemType, context));
 
         return Result.Ok();
     }
@@ -166,7 +166,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
         {
             var supported = "System.Single";
             return Result.Fail(
-                PropertyErrors.UnsupportedFormatKind(def.PropertyTypeId, def.FormatKind, supported, context));
+                ConfigPropertyErrors.UnsupportedFormatKind(def.PropertyTypeId, def.FormatKind, supported, context));
         }
 
         return Result.Ok();

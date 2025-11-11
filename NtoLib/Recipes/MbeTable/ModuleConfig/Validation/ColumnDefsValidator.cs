@@ -62,7 +62,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         if (missingKeys.Any())
         {
             var missing = string.Join(", ", missingKeys);
-            return Result.Fail(ColumnErrors.MissingMandatory(missing));
+            return Result.Fail(ConfigColumnErrors.MissingMandatory(missing));
         }
 
         return Result.Ok();
@@ -79,7 +79,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
         if (unsupported.Any())
         {
             var info = string.Join(", ", unsupported.Select(c => $"'{c.Key}' ({c.ColumnType})"));
-            return Result.Fail(ColumnErrors.UnsupportedTypes(info));
+            return Result.Fail(ConfigColumnErrors.UnsupportedTypes(info));
         }
 
         return Result.Ok();
@@ -174,7 +174,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 
         if (column.Ui.MaxDropdownItems <= 0)
         {
-            errors.Add(ColumnErrors.InvalidMaxDropdownItems(column.Key, column.Ui.MaxDropdownItems, context));
+            errors.Add(ConfigColumnErrors.InvalidMaxDropdownItems(column.Key, column.Ui.MaxDropdownItems, context));
         }
     }
 
@@ -188,7 +188,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 
         if (isActionComboBox && isNotActionColumn)
         {
-            errors.Add(ColumnErrors.InvalidActionComboBinding(column.Key, column.Ui.ColumnType, context));
+            errors.Add(ConfigColumnErrors.InvalidActionComboBinding(column.Key, column.Ui.ColumnType, context));
         }
     }
 

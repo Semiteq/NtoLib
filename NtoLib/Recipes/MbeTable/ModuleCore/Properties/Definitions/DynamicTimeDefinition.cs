@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
@@ -63,7 +63,7 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
     {
         var match = TimeRegex.Match(sanitized);
         if (!match.Success)
-            return Errors.PropertyConversionFailed(originalInput, "time format (expected hh:mm:ss.ms)");
+            return new CorePropertyConversionFailedError(originalInput, "time format (expected hh:mm:ss.ms)");
 
         var hoursResult = ParseTimeComponent(match.Groups["h"].Value, "hours");
         if (hoursResult.IsFailed)
@@ -77,10 +77,10 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
         var minutes = minutesResult.Value;
 
         if (hours >= HoursPerDay)
-            return Errors.TimeComponentOutOfRange("hours", hours, HoursPerDay - 1);
+            return new CoreTimeComponentOutOfRangeError("hours", hours, HoursPerDay - 1);
 
         if (minutes >= MinutesPerHour)
-            return Errors.TimeComponentOutOfRange("minutes", minutes, MinutesPerHour - 1);
+            return new CoreTimeComponentOutOfRangeError("minutes", minutes, MinutesPerHour - 1);
 
         var seconds = 0;
         if (match.Groups["s"].Success)
@@ -92,25 +92,25 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
             seconds = secondsResult.Value;
 
             if (seconds >= SecondsPerMinute)
-                return Errors.TimeComponentOutOfRange("seconds", seconds, SecondsPerMinute - 1);
+                return new CoreTimeComponentOutOfRangeError("seconds", seconds, SecondsPerMinute - 1);
         }
 
         var milliseconds = 0f;
         if (match.Groups["ms"].Success)
         {
             if (!float.TryParse($"0.{match.Groups["ms"].Value}", NumberStyles.Float, CultureInfo.InvariantCulture, out milliseconds))
-                return Errors.PropertyConversionFailed(match.Groups["ms"].Value, "milliseconds");
+                return new CorePropertyConversionFailedError(match.Groups["ms"].Value, "milliseconds");
         }
 
         var totalSeconds = hours * SecondsPerHour + minutes * SecondsPerMinute + seconds + milliseconds;
-        return Result.Ok<object>(totalSeconds);
+        return totalSeconds;
     }
 
     private static Result<int> ParseTimeComponent(string value, string componentName)
     {
         if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
-            return Result.Fail(Errors.PropertyConversionFailed(value, componentName));
+            return new CorePropertyConversionFailedError(value, componentName);
 
-        return Result.Ok(result);
+        return result;
     }
 }

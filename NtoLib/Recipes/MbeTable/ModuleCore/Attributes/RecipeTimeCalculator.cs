@@ -6,15 +6,11 @@ using System.Linq;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
+using NtoLib.Recipes.MbeTable.ModuleCore.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
-/// <summary>
-/// Calculates total execution time, per-step absolute start times, and detailed loop structure metadata.
-/// This is a stateless service that operates on immutable recipe data.
-/// </summary>
 public class RecipeTimeCalculator
 {
     private const int ForLoopActionId = (int)ServiceActions.ForLoop;
@@ -35,11 +31,11 @@ public class RecipeTimeCalculator
             stepStartTimes[i] = accumulatedTime;
 
             var step = recipe.Steps[i];
-            var actionPropertyResult = GetActionPropertyIfExistsInStep(step);
-            if (actionPropertyResult.IsFailed)
-                return actionPropertyResult.ToResult<LoopAnalysisResult>();
+            var actionIdResult = GetActionId(step);
+            if (actionIdResult.IsFailed)
+                return actionIdResult.ToResult<LoopAnalysisResult>();
 
-            var actionId = actionPropertyResult.Value;
+            var actionId = actionIdResult.Value;
             Result stepProcessingResult;
 
             switch (actionId)
@@ -47,9 +43,14 @@ public class RecipeTimeCalculator
                 case ForLoopActionId:
                     stepProcessingResult = ProcessForLoopStart(step, accumulatedTime, loopStack, i);
                     break;
-                
+
                 case EndForLoopActionId:
-                    stepProcessingResult = ProcessForLoopEnd(ref accumulatedTime, loopStack, i, loopMetadataByStart, enclosingMapBuilder);
+                    stepProcessingResult = ProcessForLoopEnd(
+                        ref accumulatedTime,
+                        loopStack,
+                        i,
+                        loopMetadataByStart,
+                        enclosingMapBuilder);
                     break;
 
                 default:
@@ -59,37 +60,33 @@ public class RecipeTimeCalculator
 
             if (stepProcessingResult.IsFailed)
                 return stepProcessingResult.ToResult<LoopAnalysisResult>();
-            
+
             result.WithReasons(stepProcessingResult.Reasons);
         }
 
-        if (loopStack.Count > 0)
-        {
-            result.WithReason(new ValidationIssue(Codes.CoreForLoopError).WithMetadata("stepIndex", recipe.Steps.Count));
-        }
+        // Do not emit unmatched loop warnings here; Validator is responsible for warnings.
+        // Any remaining frames are ignored for timing adjustments (only completed loops add extra iterations).
 
-        var sortedEnclosingMap = enclosingMapBuilder.ToDictionary(
-            kvp => kvp.Key,
-            kvp => (IReadOnlyList<LoopMetadata>)kvp.Value.OrderBy(m => m.NestingDepth).ToList().AsReadOnly()
-        );
+        var sortedEnclosingMap = BuildEnclosingMap(enclosingMapBuilder);
 
-        var analysisResult = new LoopAnalysisResult(
+        var analysis = new LoopAnalysisResult(
             accumulatedTime,
             stepStartTimes.ToImmutableDictionary(),
             loopMetadataByStart.ToImmutableDictionary(),
-            sortedEnclosingMap
-        );
+            sortedEnclosingMap);
 
-        return result.ToResult(analysisResult);
+        return result.ToResult(analysis);
     }
 
-    private static Result<int> GetActionPropertyIfExistsInStep(Step step)
+    private static Result<int> GetActionId(Step step)
     {
         if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
-            return Errors.StepNoActionProperty();
+            return Result.Fail(new CoreStepNoActionPropertyError());
 
-        var getValueResult = actionProperty.GetValue<short>(); 
-        if (getValueResult.IsFailed) return getValueResult.ToResult();
+        var getValueResult = actionProperty.GetValue<short>();
+        if (getValueResult.IsFailed)
+            return getValueResult.ToResult();
+
         return Result.Ok((int)getValueResult.Value);
     }
 
@@ -99,14 +96,17 @@ public class RecipeTimeCalculator
         Stack<LoopFrame> loopStack,
         int stepIndex)
     {
-        if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
-            return CreateMissingIterationCountWarning(stepIndex);
+        int iterations = 1;
 
-        var getValueResult = taskProperty.GetValue<float>();
-        if (getValueResult.IsFailed) return getValueResult.ToResult();
-        var iterations = (int)getValueResult.Value;
-        if (iterations <= 0)
-            return CreateInvalidIterationCountWarning(stepIndex, iterations);
+        if (step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) && taskProperty != null)
+        {
+            var getValueResult = taskProperty.GetValue<float>();
+            if (getValueResult.IsSuccess)
+            {
+                var raw = (int)getValueResult.Value;
+                iterations = raw > 0 ? raw : 1;
+            }
+        }
 
         loopStack.Push(new LoopFrame
         {
@@ -127,37 +127,49 @@ public class RecipeTimeCalculator
         IDictionary<int, List<LoopMetadata>> enclosingMapBuilder)
     {
         if (loopStack.Count == 0)
-            return CreateUnmatchedEndForLoopWarning(currentStepIndex);
+        {
+            return Result.Ok();
+        }
 
         var frame = loopStack.Pop();
         var singleIterationDuration = accumulatedTime - frame.BodyStartTime;
-        
+
         if (singleIterationDuration.Ticks < 0)
             singleIterationDuration = TimeSpan.Zero;
-            
+
         var metadata = new LoopMetadata(
             frame.StartIndex,
             currentStepIndex,
             loopStack.Count + 1,
             singleIterationDuration,
-            frame.Iterations
-        );
+            frame.Iterations);
+
         loopMetadata[frame.StartIndex] = metadata;
 
-        for (int i = frame.StartIndex + 1; i < currentStepIndex; i++)
+        AddToEnclosingMap(frame.StartIndex, currentStepIndex, metadata, enclosingMapBuilder);
+
+        var totalLoopTime = TimeSpan.FromTicks(singleIterationDuration.Ticks * (frame.Iterations - 1));
+        accumulatedTime += totalLoopTime;
+
+        return Result.Ok();
+    }
+
+    private static void AddToEnclosingMap(
+        int startIndex,
+        int endIndex,
+        LoopMetadata metadata,
+        IDictionary<int, List<LoopMetadata>> enclosingMapBuilder)
+    {
+        for (int i = startIndex + 1; i < endIndex; i++)
         {
             if (!enclosingMapBuilder.TryGetValue(i, out var list))
             {
                 list = new List<LoopMetadata>();
                 enclosingMapBuilder[i] = list;
             }
+
             list.Add(metadata);
         }
-        
-        var totalLoopTime = TimeSpan.FromTicks(singleIterationDuration.Ticks * (frame.Iterations - 1));
-        accumulatedTime += totalLoopTime;
-
-        return Result.Ok();
     }
 
     private static Result ProcessRegularStep(Step step, ref TimeSpan accumulatedTime, int stepIndex)
@@ -181,49 +193,33 @@ public class RecipeTimeCalculator
         if (step.DeployDuration != DeployDuration.LongLasting)
             return Result.Ok(TimeSpan.Zero);
 
-        if (!step.Properties.TryGetValue(MandatoryColumns.StepDuration, out var durationProperty) || durationProperty == null)
+        if (!step.Properties.TryGetValue(MandatoryColumns.StepDuration, out var durationProperty) ||
+            durationProperty == null)
             return Result.Ok(TimeSpan.Zero);
 
         var getValueResult = durationProperty.GetValue<float>();
-        if (getValueResult.IsFailed) return getValueResult.ToResult<TimeSpan>();
+        if (getValueResult.IsFailed)
+            return getValueResult.ToResult<TimeSpan>();
+
         var seconds = getValueResult.Value;
         if (seconds < 0f)
-            return CreateNegativeStepDurationWarning(stepIndex, seconds);
+        {
+            var result = Result.Ok(TimeSpan.Zero);
+            result.WithReason(new CoreStepDurationNegativeWarning(stepIndex, seconds));
+            return result;
+        }
 
         return Result.Ok(seconds > 0f ? TimeSpan.FromSeconds(seconds) : TimeSpan.Zero);
     }
 
-    private static Result CreateMissingIterationCountWarning(int stepIndex)
+    private static IReadOnlyDictionary<int, IReadOnlyList<LoopMetadata>> BuildEnclosingMap(
+        Dictionary<int, List<LoopMetadata>> enclosingMapBuilder)
     {
-        return Result.Ok()
-            .WithReason(new ValidationIssue(Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex)
-            .WithMetadata("details", "Missing iteration count property."));
-    }
-
-    private static Result CreateInvalidIterationCountWarning(int stepIndex, int iterations)
-    {
-        return Result.Ok()
-            .WithReason(new ValidationIssue(Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex)
-            .WithMetadata("iterations", iterations)
-            .WithMetadata("details", $"Invalid iteration count: {iterations}."));
-    }
-
-    private static Result CreateUnmatchedEndForLoopWarning(int stepIndex)
-    {
-        return Result.Ok()
-            .WithReason(new ValidationIssue(Codes.CoreForLoopError)
-            .WithMetadata("stepIndex", stepIndex)
-            .WithMetadata("details", "Unmatched EndFor loop."));
-    }
-
-    private static Result<TimeSpan> CreateNegativeStepDurationWarning(int stepIndex, float seconds)
-    {
-        var result = Result.Ok(TimeSpan.Zero);
-        result.WithReason(new ValidationIssue(Codes.CoreInvalidStepDuration)
-            .WithMetadata("stepIndex", stepIndex)
-            .WithMetadata("duration", seconds));
-        return result;
+        return enclosingMapBuilder.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (IReadOnlyList<LoopMetadata>)kvp.Value
+                .OrderByDescending(m => m.NestingDepth)
+                .ToList()
+                .AsReadOnly());
     }
 }

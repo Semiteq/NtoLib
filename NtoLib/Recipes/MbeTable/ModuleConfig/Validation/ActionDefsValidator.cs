@@ -48,7 +48,7 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
         if (durationCheck.IsFailed) return durationCheck;
 
         if (!Enum.TryParse<DeployDuration>(action.DeployDuration, ignoreCase: true, out _))
-            return Result.Fail(ActionErrors.UnknownDeployDuration(action.DeployDuration, context));
+            return Result.Fail(ConfigActionErrors.UnknownDeployDuration(action.DeployDuration, context));
 
         return Result.Ok();
     }
@@ -114,7 +114,7 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
 
         if (isEnumType && hasNoGroupName)
         {
-            errors.Add(ActionErrors.EnumGroupMissing(column.Key, column.PropertyTypeId, columnContext));
+            errors.Add(ConfigActionErrors.EnumGroupMissing(column.Key, column.PropertyTypeId, columnContext));
         }
     }
 
@@ -125,7 +125,7 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
             return Result.Ok();
 
         if (!HasStepDurationColumn(action))
-            return Result.Fail(ActionErrors.LongLastingStepDurationMissing(context));
+            return Result.Fail(ConfigActionErrors.LongLastingStepDurationMissing(context));
 
         return Result.Ok();
     }

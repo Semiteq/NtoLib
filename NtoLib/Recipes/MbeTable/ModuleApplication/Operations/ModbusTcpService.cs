@@ -7,18 +7,12 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 
-/// <summary>
-/// Implements async recipe operations (file IO and PLC exchange) without any direct UI
-/// or logging dependencies. Uses FluentResults for error propagation.
-/// </summary>
 public sealed class ModbusTcpService : IModbusTcpService
 {
     private readonly IRecipePlcService _plcService;
@@ -40,8 +34,6 @@ public sealed class ModbusTcpService : IModbusTcpService
 
     public async Task<Result> SendRecipeAsync(Recipe recipe)
     {
-        if (recipe is null) return ResultBox.Fail(Codes.CoreInvalidOperation);
-
         _logger.LogTrace("Starting Send-And-Verify operation for recipe with {StepCount} steps.", recipe.Steps.Count);
         
         var sendResult = await _plcService.SendAsync(recipe, CancellationToken.None);
@@ -51,7 +43,6 @@ public sealed class ModbusTcpService : IModbusTcpService
             return sendResult;
         }
 
-        // wait for PLC to process the data
         await Task.Delay(TimeSpan.FromMilliseconds(100), CancellationToken.None);
         
         _logger.LogTrace("Starting read-back for verification.");
@@ -69,7 +60,7 @@ public sealed class ModbusTcpService : IModbusTcpService
         if (rowCount == 0)
         {
             _logger.LogWarning("Read-back returned zero rows. Recipe not verified.");
-            return Result.Ok().WithReason(new ValidationIssue(Codes.PlcZeroRowsRead));
+            return receiveResult.ToResult();
         }
         
         _logger.LogTrace("Assembling recipe from read-back data.");
@@ -94,7 +85,13 @@ public sealed class ModbusTcpService : IModbusTcpService
 
         var (intData, floatData, rowCount) = readResult.Value;
         
-        if (rowCount == 0) return Result.Ok(Recipe.Empty).WithReason(new ValidationIssue(Codes.PlcZeroRowsRead));
+        if (rowCount == 0)
+        {
+            var result = Result.Ok(Recipe.Empty);
+            if (readResult.Reasons.Count > 0)
+                result = result.WithReasons(readResult.Reasons);
+            return result;
+        }
         
         var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
         return assembleResult;

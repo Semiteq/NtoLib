@@ -1,8 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+
 using FluentResults;
+
 using Microsoft.Extensions.Logging;
+
+using NtoLib.Recipes.MbeTable.ModuleApplication.ErrorPolicy;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
@@ -11,23 +16,26 @@ using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication;
 
 public sealed class RecipeApplicationService : IRecipeApplicationService
 {
+    private const string OpCellUpdate = "обновление ячейки";
+    private const string OpLoad = "загрузка рецепта";
+    private const string OpSave = "сохранение рецепта";
+    private const string OpSend = "отправка рецепта";
+    private const string OpReceive = "чтение рецепта";
+
     private readonly IRecipeService _recipeService;
     private readonly IModbusTcpService _modbusTcpService;
     private readonly ICsvService _csvOperations;
     private readonly IStateProvider _state;
-    private readonly RecipeViewModel _viewModel;
     private readonly ILogger<RecipeApplicationService> _logger;
     private readonly ResultResolver _resolver;
     private readonly ITimerControl _timerControl;
 
-    public RecipeViewModel ViewModel => _viewModel;
+    public RecipeViewModel ViewModel { get; }
 
     public event Action? RecipeStructureChanged;
     public event Action<int>? StepDataChanged;
@@ -46,64 +54,48 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         _modbusTcpService = modbusTcpService ?? throw new ArgumentNullException(nameof(modbusTcpService));
         _csvOperations = csvOperations ?? throw new ArgumentNullException(nameof(csvOperations));
         _state = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
-        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         _timerControl = timerControl ?? throw new ArgumentNullException(nameof(timerControl));
 
+        ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+
         _recipeService.ValidationStateChanged += OnValidationStateChanged;
 
         OnValidationStateChanged(_recipeService.IsValid());
-        _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
+        _state.SetStepCount(_recipeService.StepCount);
     }
 
-    public Recipe GetCurrentRecipe() => _recipeService.GetCurrentRecipe();
+    public Recipe GetCurrentRecipe() => _recipeService.CurrentRecipe;
 
-    public async Task<Result> SetCellValueAsync(int rowIndex, ColumnIdentifier columnKey, object? value)
-    {
-        if (value == null)
-            return Result.Ok();
-
-        var recipe = _recipeService.GetCurrentRecipe();
-        if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
-        {
-            var error = Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count);
-            _resolver.Resolve(Result.Fail(error), "обновление ячейки");
-            return Result.Fail(error);
-        }
-
-        var isActionChange = columnKey == MandatoryColumns.Action && value is short;
-        var affectsTime = isActionChange ||
-                          columnKey == MandatoryColumns.Task ||
-                          columnKey == MandatoryColumns.StepDuration;
-
-        var result = _recipeService.UpdateStepProperty(rowIndex, columnKey, value);
-        if (isActionChange)
-            result = _recipeService.ReplaceStepAction(rowIndex, (short)value);
-
-        var status = result.GetStatus();
-        if (!result.IsFailed)
-        {
-            if (affectsTime)
-            {
-                _timerControl.ResetForNewRecipe();
-                _viewModel.OnTimeRecalculated(rowIndex);
-            }
-            else
-            {
-                _viewModel.OnStepDataChanged(rowIndex);
-                StepDataChanged?.Invoke(rowIndex);
-            }
-        }
-
-        if (status != ResultStatus.Success)
-        {
-            _resolver.Resolve(result, "обновление ячейки");
-        }
-
-        _logger.LogTrace("SetCellValueAsync completed for row {RowIndex}, column {ColumnKey} with status {Status}", 
-            rowIndex, columnKey, status);
+    public int GetRowCount() => _recipeService.StepCount;
     
+    public async Task<Result> SetCellValueAsync(int rowIndex, ColumnIdentifier columnKey, object value)
+    {
+        _resolver.Clear();
+
+        var validation = ValidateRowIndex(rowIndex, _recipeService.StepCount);
+        if (validation.IsFailed)
+        {
+            _resolver.Resolve(validation, OpCellUpdate);
+            return validation;
+        }
+
+        var result = ApplyPropertyUpdate(rowIndex, columnKey, value);
+        if (result.IsSuccess)
+        {
+            UpdateAfterCellChange(rowIndex);
+        }
+
+        _resolver.Resolve(result, OpCellUpdate);
+
+        _logger.LogTrace(
+            "SetCellValueAsync completed for row {RowIndex}, column {ColumnKey} with value {Value}. Status: {Status}.",
+            rowIndex,
+            columnKey,
+            value,
+            result.IsSuccess ? "OK" : "FAILED");
+
         return result;
     }
 
@@ -113,14 +105,10 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
 
         if (result.IsSuccess)
         {
-            _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
-            _viewModel.OnRecipeStructureChanged();
-            RecipeStructureChanged?.Invoke();
-            _timerControl.ResetForNewRecipe();
+            UpdateAfterStructureChange();
         }
 
         _resolver.Resolve(result, "добавление строки", $"Добавлена строка №{index + 1}");
-
         return result;
     }
 
@@ -130,23 +118,19 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
 
         if (result.IsSuccess)
         {
-            _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
-            _viewModel.OnRecipeStructureChanged();
-            RecipeStructureChanged?.Invoke();
-            _timerControl.ResetForNewRecipe();
+            UpdateAfterStructureChange();
         }
 
         _resolver.Resolve(result, "удаление строки", $"Удалена строка №{index + 1}");
-
         return result;
     }
 
     public async Task<Result> LoadRecipeAsync(string filePath)
     {
         var gate = _state.BeginOperation(OperationKind.Loading, OperationId.Load);
-        if (gate.GetStatus() != ResultStatus.Success)
+        if (gate.IsFailed)
         {
-            _resolver.Resolve(gate, "загрузка рецепта");
+            _resolver.Resolve(gate, OpLoad);
             return gate.ToResult();
         }
 
@@ -154,16 +138,17 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         {
             try
             {
-                var result = await LoadRecipeInternalAsync(filePath);
-                _resolver.Resolve(result, "загрузка рецепта", $"Загружен рецепт из {Path.GetFileName(filePath)}");
+                _resolver.Clear();
+                var result = await LoadRecipeInternalAsync(filePath).ConfigureAwait(false);
+                _resolver.Resolve(result, OpLoad, $"Загружен рецепт из {Path.GetFileName(filePath)}");
                 return result;
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex, "Unexpected error during load operation");
-                var errorResult = ResultBox.Fail(Codes.IoReadError);
-                _resolver.Resolve(errorResult, "загрузка рецепта");
-                return errorResult;
+                var error = new ApplicationUnexpectedIoReadError();
+                _resolver.Resolve(error, OpLoad);
+                return error;
             }
         }
     }
@@ -171,9 +156,9 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     public async Task<Result> SaveRecipeAsync(string filePath)
     {
         var gate = _state.BeginOperation(OperationKind.Saving, OperationId.Save);
-        if (gate.GetStatus() != ResultStatus.Success)
+        if (gate.IsFailed)
         {
-            _resolver.Resolve(gate, "сохранение рецепта");
+            _resolver.Resolve(gate, OpSave);
             return gate.ToResult();
         }
 
@@ -181,16 +166,17 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         {
             try
             {
-                var result = await SaveRecipeInternalAsync(filePath);
-                _resolver.Resolve(result, "сохранение рецепта", $"Рецепт сохранен в {Path.GetFileName(filePath)}");
+                _resolver.Clear();
+                var result = await SaveRecipeInternalAsync(filePath).ConfigureAwait(false);
+                _resolver.Resolve(result, OpSave, $"Рецепт сохранен в {Path.GetFileName(filePath)}");
                 return result;
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex, "Unexpected error during save operation");
-                var errorResult = ResultBox.Fail(Codes.IoWriteError);
-                _resolver.Resolve(errorResult, "сохранение рецепта");
-                return errorResult;
+                var error = new ApplicationUnexpectedIoWriteError();
+                _resolver.Resolve(error, OpSave);
+                return error;
             }
         }
     }
@@ -198,59 +184,93 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     public async Task<Result> SendRecipeAsync()
     {
         var gate = _state.BeginOperation(OperationKind.Transferring, OperationId.Send);
-        if (gate.GetStatus() != ResultStatus.Success)
+        if (gate.IsFailed)
         {
-            _resolver.Resolve(gate, "отправка рецепта");
+            _resolver.Resolve(gate, OpSend);
             return gate.ToResult();
         }
 
         using (gate.Value)
         {
-            var result = await SendRecipeInternalAsync();
-            _resolver.Resolve(result, "отправка рецепта", "Рецепт успешно отправлен в контроллер");
-            return result;
+            try
+            {
+                _resolver.Clear();
+                var result = await SendRecipeInternalAsync().ConfigureAwait(false);
+                _resolver.Resolve(result, OpSend, "Рецепт успешно отправлен в контроллер");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unexpected error during send operation");
+                var error = new ApplicationUnexpectedIoWriteError();
+                _resolver.Resolve(error, OpSend);
+                return error;
+            }
         }
     }
 
     public async Task<Result> ReceiveRecipeAsync()
     {
         var gate = _state.BeginOperation(OperationKind.Transferring, OperationId.Receive);
-        if (gate.GetStatus() != ResultStatus.Success)
+        if (gate.IsFailed)
         {
-            _resolver.Resolve(gate, "чтение рецепта");
+            _resolver.Resolve(gate, OpReceive);
             return gate.ToResult();
         }
 
         using (gate.Value)
         {
-            var result = await ReceiveRecipeInternalAsync();
-            _resolver.Resolve(result, "чтение рецепта", "Рецепт успешно прочитан из контроллера");
-            return result;
+            try
+            {
+                _resolver.Clear();
+                var result = await ReceiveRecipeInternalAsync().ConfigureAwait(false);
+                _resolver.Resolve(result, OpReceive, "Рецепт успешно прочитан из контроллера");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Unexpected error during receive operation");
+                var error = new ApplicationUnexpectedIoReadError();
+                _resolver.Resolve(error, OpReceive);
+                return error;
+            }
         }
     }
+    
+    private static Result ValidateRowIndex(int rowIndex, int rowCount)
+    {
+        return rowIndex < 0 || rowIndex >= rowCount
+            ? new ApplicationIndexOutOfRangeError(rowIndex, rowCount)
+            : Result.Ok();
+    }
 
-    public int GetRowCount() => _recipeService.GetCurrentRecipe().Steps.Count;
+    private Result ApplyPropertyUpdate(int rowIndex, ColumnIdentifier columnKey, object value)
+    {
+        if (columnKey == MandatoryColumns.Action && value is short actionId)
+            return _recipeService.ReplaceStepAction(rowIndex, actionId);
+
+        return _recipeService.UpdateStepProperty(rowIndex, columnKey, value);
+    }
 
     private async Task<Result> LoadRecipeInternalAsync(string filePath)
     {
-        var loadResult = await _csvOperations.ReadCsvAsync(filePath);
-        if (loadResult.IsFailed) return loadResult.ToResult();
+        var loadResult = await _csvOperations.ReadCsvAsync(filePath).ConfigureAwait(false);
+        if (loadResult.IsFailed)
+            return loadResult.ToResult();
 
         var setResult = _recipeService.SetRecipeAndUpdateAttributes(loadResult.Value);
-        if (setResult.GetStatus() is not ResultStatus.Success) return setResult;
+        if (setResult.IsFailed)
+            return setResult;
 
-        _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
-        _viewModel.OnRecipeStructureChanged();
-        RecipeStructureChanged?.Invoke();
-        _timerControl.ResetForNewRecipe();
+        UpdateAfterStructureChange();
 
         return setResult.WithReasons(loadResult.Reasons);
     }
 
-    private async Task<Result> SaveRecipeInternalAsync(string filePath)
+    private Task<Result> SaveRecipeInternalAsync(string filePath)
     {
-        var currentRecipe = _recipeService.GetCurrentRecipe();
-        return await _csvOperations.WriteCsvAsync(currentRecipe, filePath);
+        var currentRecipe = _recipeService.CurrentRecipe;
+        return _csvOperations.WriteCsvAsync(currentRecipe, filePath);
     }
 
     private async Task<Result> SendRecipeInternalAsync()
@@ -258,46 +278,51 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         if (!_state.GetSnapshot().EnaSendOk)
         {
             _logger.LogWarning("Send operation blocked by PLC logic (EnaSendOk is false)");
-            var error = new BilingualError(
-                "Send operation blocked by PLC logic",
-                "Операция отправки заблокирована логикой ПЛК");
-            return Result.Fail(error);
+            return Result.Fail(new ApplicationSendBlockedByPlcError());
         }
 
-        var currentRecipe = _recipeService.GetCurrentRecipe();
-        return await _modbusTcpService.SendRecipeAsync(currentRecipe);
+        var currentRecipe = _recipeService.CurrentRecipe;
+        return await _modbusTcpService.SendRecipeAsync(currentRecipe).ConfigureAwait(false);
     }
 
     private async Task<Result> ReceiveRecipeInternalAsync()
     {
-        var receiveResult = await _modbusTcpService.ReceiveRecipeAsync();
-        _logger.LogTrace("Received recipe with {StepCount} steps from PLC", receiveResult.IsSuccess && receiveResult.Value != null ? receiveResult.Value.Steps.Count : 0);
+        var receiveResult = await _modbusTcpService.ReceiveRecipeAsync().ConfigureAwait(false);
+        _logger.LogTrace("Received recipe with {StepCount} steps from PLC",
+            receiveResult.IsSuccess && receiveResult.Value != null ? receiveResult.Value.Steps.Count : 0);
 
-        if (receiveResult.IsFailed)
-            return receiveResult.ToResult();
-
-        if (receiveResult.GetStatus() != ResultStatus.Success)
+        if (receiveResult.IsFailed || receiveResult.Value == null)
             return receiveResult.ToResult();
 
         var setResult = _recipeService.SetRecipeAndUpdateAttributes(receiveResult.Value);
         if (setResult.IsSuccess)
-        {
-            _state.SetStepCount(_recipeService.GetCurrentRecipe().Steps.Count);
-            _viewModel.OnRecipeStructureChanged();
-            RecipeStructureChanged?.Invoke();
-            _timerControl.ResetForNewRecipe();
-        }
+            UpdateAfterStructureChange();
 
         return setResult.WithReasons(receiveResult.Reasons);
+    }
+
+    private void UpdateAfterCellChange(int rowIndex)
+    {
+        _timerControl.ResetForNewRecipe();
+        ViewModel.OnTimeRecalculated(rowIndex);
+        StepDataChanged?.Invoke(rowIndex);
+    }
+
+    private void UpdateAfterStructureChange()
+    {
+        _state.SetStepCount(_recipeService.StepCount);
+        ViewModel.OnRecipeStructureChanged();
+        RecipeStructureChanged?.Invoke();
+        _timerControl.ResetForNewRecipe();
     }
 
     private void OnValidationStateChanged(bool isValid)
     {
         _state.SetValidation(isValid);
 
-        if (isValid && _recipeService.GetCurrentRecipe().Steps.Count > 0)
+        if (isValid && _recipeService.StepCount > 0)
         {
-            _resolver.Resolve(ResultBox.Ok(), "validation");
+            _resolver.Resolve(Result.Ok(), "validation");
         }
     }
 }

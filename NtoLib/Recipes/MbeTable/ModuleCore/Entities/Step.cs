@@ -3,9 +3,8 @@
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 
@@ -38,6 +37,6 @@ public sealed record Step
         if (Properties.TryGetValue(columnId, out var property) && property != null)
             return property;
         
-        return Errors.StepColumnNotFound();
+        return new CoreStepColumnNotFoundError();
     }
 }

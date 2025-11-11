@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
+using NtoLib.Recipes.MbeTable.ModuleApplication.ErrorPolicy;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
@@ -34,8 +35,6 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
-
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
@@ -79,8 +78,6 @@ public static class MbeTableServiceConfigurator
         RegisterRuntimeState(services, mbeTableFb);
         RegisterLoggerServices(services);
         RegisterStatusService(services);
-        RegisterResultExtension(services);
-        AddMbeTableStateProvider(services);
         RegisterCompiledFormulas(services, compiledFormulas);
         RegisterCoreServices(services);
         RegisterCsvServices(services);
@@ -157,22 +154,12 @@ public static class MbeTableServiceConfigurator
 
     private static void RegisterLoggerServices(IServiceCollection services)
     {
-        services.AddSingleton(_ => new StatusFormatter(150));
+        services.AddSingleton(_ => new StatusFormatter(280));
     }
 
     private static void RegisterStatusService(IServiceCollection services)
     {
         services.AddSingleton<IStatusService, StatusService>();
-    }
-
-    private static void RegisterResultExtension(IServiceCollection services)
-    {
-        services.AddSingleton<ErrorDefinitionRegistry>();
-    }
-
-    private static void AddMbeTableStateProvider(this IServiceCollection services)
-    {
-        services.AddSingleton<IStateProvider, StateProvider>();
     }
 
     private static void RegisterCoreServices(IServiceCollection services)
@@ -245,7 +232,9 @@ public static class MbeTableServiceConfigurator
 
     private static void RegisterApplicationServices(IServiceCollection services)
     {
+        services.AddSingleton<ErrorPolicyRegistry>();
         services.AddSingleton<ResultResolver>();
+        services.AddSingleton<IStateProvider, StateProvider>();
         services.AddSingleton<ActionComboBox>();
         services.AddSingleton<TargetComboBox>();
         services.AddSingleton<TextBoxExtension>();

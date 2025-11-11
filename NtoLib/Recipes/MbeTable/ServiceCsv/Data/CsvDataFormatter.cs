@@ -34,17 +34,20 @@ public sealed class CsvDataFormatter : ICsvDataFormatter
         var stringBuilder = new StringBuilder();
         using var stringWriter = new StringWriter(stringBuilder);
         using var csvWriter = _csvHelperFactory.CreateWriter(stringWriter);
-        
-        var writableColumns = _columns
-            .Where(column => column.SaveToCsv)
-            .ToArray();
+
+        var writableColumns = GetColumnsToWriteToCsv(_columns);
         
         WriteHeader(csvWriter, writableColumns);
         WriteSteps(csvWriter, recipe, writableColumns);
         
-        return Result.Ok(stringBuilder.ToString());
+        return stringBuilder.ToString();
     }
 
+    private static ColumnDefinition[] GetColumnsToWriteToCsv(IReadOnlyList<ColumnDefinition> columns)
+    {
+        return columns.Where(column => column.SaveToCsv).ToArray();
+    }
+    
     private static void WriteHeader(CsvHelper.CsvWriter csvWriter, IEnumerable<ColumnDefinition> columns)
     {
         foreach (var column in columns)

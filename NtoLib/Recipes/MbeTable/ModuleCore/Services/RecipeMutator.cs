@@ -8,10 +8,9 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -57,33 +56,33 @@ public sealed class RecipeMutator
     public Result<Recipe> RemoveStep(Recipe recipe, int rowIndex)
     {
         return rowIndex < 0 || rowIndex >= recipe.Steps.Count
-            ? Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count)
-            : Result.Ok(new Recipe(recipe.Steps.RemoveAt(rowIndex)));
+            ? new CoreIndexOutOfRangeError(rowIndex, recipe.Steps.Count)
+            : new Recipe(recipe.Steps.RemoveAt(rowIndex));
     }
 
     public Result<Recipe> UpdateStepProperty(Recipe recipe, int rowIndex, ColumnIdentifier key, object value)
     {
         if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
-            return Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count);
+            return new CoreIndexOutOfRangeError(rowIndex, recipe.Steps.Count);
 
         var step = recipe.Steps[rowIndex];
 
         if (!step.Properties.TryGetValue(key, out var property) || property == null)
-            return Errors.StepPropertyNotFound(key.Value, rowIndex);
+            return new CoreStepPropertyNotFoundError(key.Value, rowIndex);
 
         var newPropertyResult = property.WithValue(value);
         if (newPropertyResult.IsFailed)
-            return newPropertyResult.ToResult().WithError(Errors.StepPropertyUpdateFailed(rowIndex, key.Value));;
+            return newPropertyResult.ToResult().WithError(new CoreStepPropertyUpdateFailedError(rowIndex, key.Value));
 
         var updatedProperties = step.Properties.SetItem(key, newPropertyResult.Value);
         var updatedStep = step with { Properties = updatedProperties };
-        return Result.Ok(new Recipe(recipe.Steps.SetItem(rowIndex, updatedStep)));
+        return new Recipe(recipe.Steps.SetItem(rowIndex, updatedStep));
     }
 
     public Result<Recipe> ReplaceStepAction(Recipe recipe, int rowIndex, short newActionId)
     {
         if (rowIndex < 0 || rowIndex >= recipe.Steps.Count) 
-            return Errors.IndexOutOfRange(rowIndex, recipe.Steps.Count);
+            return new CoreIndexOutOfRangeError(rowIndex, recipe.Steps.Count);
 
         var stepResult = CreateDefaultStep(newActionId);
         if (stepResult.IsFailed)
@@ -95,7 +94,7 @@ public sealed class RecipeMutator
             return stepResult.ToResult();
         }
 
-        return Result.Ok(new Recipe(recipe.Steps.SetItem(rowIndex, stepResult.Value)));
+        return new Recipe(recipe.Steps.SetItem(rowIndex, stepResult.Value));
     }
 
 
@@ -125,7 +124,7 @@ public sealed class RecipeMutator
                     _logger.LogError(new InvalidOperationException(setResult.Errors.First().Message), 
                         "Failed to set default target for column '{ColumnKey}'",
                         col.Key);
-                    //todo: new error needed
+                    return new CoreStepFailedToSetDefaultTarget(col.Key);
                 }
             }
             catch (Exception ex)

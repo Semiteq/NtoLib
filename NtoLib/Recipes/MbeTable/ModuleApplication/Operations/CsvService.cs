@@ -5,19 +5,15 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
+using NtoLib.Recipes.MbeTable.ModuleApplication.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 
-/// <summary>
-/// Executes high-level CSV recipe operations (read / write).
-/// Owns full pipeline: disk I/O → extraction / formatting → assembly → validation.
-/// </summary>
 public sealed class CsvService : ICsvService
 {
     private readonly IRecipeFileService _fileService;
@@ -40,7 +36,7 @@ public sealed class CsvService : ICsvService
     public async Task<Result<Recipe>> ReadCsvAsync(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            return ResultBox.Fail(Codes.IoFileNotFound);
+            return new ApplicationFilePathEmptyError();
 
         try
         {
@@ -57,25 +53,31 @@ public sealed class CsvService : ICsvService
             _logger.LogDebug("Assembled recipe with {StepsCount} steps", recipe.Steps.Count);
 
             var validationResult = _validator.ValidateRecipe(recipe);
-            if (validationResult.IsFailed) return validationResult;
+            if (validationResult.IsFailed) return validationResult.ToResult<Recipe>();
 
-            // rawDataResult may contain a reason for hash mismatch
-            return Result.Ok(recipe).WithReasons(rawDataResult.Reasons);
+            var result = Result.Ok(recipe);
+            
+            if (rawDataResult.Reasons.Count > 0)
+                result = result.WithReasons(rawDataResult.Reasons);
+            
+            if (validationResult.Reasons.Count > 0)
+                result = result.WithReasons(validationResult.Reasons);
+
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Unexpected error reading CSV from {FilePath}", filePath);
-            return ResultBox.Fail<Recipe>(Codes.IoReadError);
+            return Result.Fail<Recipe>(new BilingualError(
+                "Unexpected error reading CSV file",
+                "Непредвиденная ошибка при чтении CSV файла").CausedBy(ex));
         }
     }
 
     public async Task<Result> WriteCsvAsync(Recipe recipe, string filePath)
     {
-        if (recipe == null)
-            return ResultBox.Fail(Codes.CoreInvalidOperation);
-
         if (string.IsNullOrWhiteSpace(filePath))
-            return ResultBox.Fail(Codes.IoFileNotFound);
+            return new ApplicationFilePathEmptyError();
 
         try
         {
@@ -85,14 +87,18 @@ public sealed class CsvService : ICsvService
             var writeResult = await _fileService.WriteRecipeAsync(recipe, filePath);
             if (writeResult.IsFailed) return writeResult;
 
-            writeResult.WithReasons(validationResult.Reasons);
+            if (validationResult.Reasons.Count > 0)
+                writeResult = writeResult.WithReasons(validationResult.Reasons);
+
             return writeResult;
         }
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Unexpected error writing CSV to {FilePath}. Step count: {StepCount}", filePath,
                 recipe.Steps.Count);
-            return ResultBox.Fail(Codes.IoWriteError);
+            return Result.Fail(new BilingualError(
+                "Unexpected error writing CSV file",
+                "Непредвиденная ошибка при записи CSV файла").CausedBy(ex));
         }
     }
 }

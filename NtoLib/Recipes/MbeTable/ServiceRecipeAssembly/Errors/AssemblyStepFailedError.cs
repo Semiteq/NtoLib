@@ -1,0 +1,17 @@
+using NtoLib.Recipes.MbeTable.ResultsExtension;
+
+namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Errors;
+
+public sealed class AssemblyStepFailedError : BilingualError
+{
+    public int StepIndex { get; }
+
+    public AssemblyStepFailedError(int stepIndex)
+        : base(
+            $"Failed to assemble step {stepIndex}",
+            $"Не удалось собрать шаг {stepIndex}")
+    {
+        StepIndex = stepIndex;
+        Metadata["stepIndex"] = stepIndex;
+    }
+}

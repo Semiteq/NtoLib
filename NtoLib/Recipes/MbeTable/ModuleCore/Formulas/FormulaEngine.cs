@@ -6,24 +6,23 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.ResultsExtension;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 
 public sealed class FormulaEngine : IFormulaEngine
 {
     private readonly IReadOnlyDictionary<short, CompiledFormula> _compiledFormulas;
-    private readonly ILogger<FormulaEngine> _logger;
 
     public FormulaEngine(
         IReadOnlyDictionary<short, CompiledFormula> compiledFormulas,
         ILogger<FormulaEngine> logger)
     {
-        _compiledFormulas = compiledFormulas ?? new Dictionary<short, CompiledFormula>();
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _compiledFormulas = compiledFormulas ?? throw new ArgumentNullException(nameof(compiledFormulas));
+        if (logger == null) throw new ArgumentNullException(nameof(logger));
         
-        _logger.LogDebug("Received {Count} compiled formulas.", _compiledFormulas.Count);
-        _logger.LogTrace("Formulas are: {formulas}", string.Join(", ", _compiledFormulas.Select(kvp => $"[{kvp.Key}: {kvp.Value}]")));
+        logger.LogDebug("Received {Count} compiled formulas.", _compiledFormulas.Count);
+        logger.LogTrace("Formulas are: {formulas}", string.Join(", ", _compiledFormulas.Select(kvp => $"[{kvp.Key}: {kvp.Value}]")));
     }
 
     public Result<IReadOnlyDictionary<string, double>> Calculate(
@@ -43,6 +42,6 @@ public sealed class FormulaEngine : IFormulaEngine
     {
         return _compiledFormulas.TryGetValue(actionId, out var formula)
             ? formula
-            : Errors.FormulaNotFound(actionId);
+            : new CoreFormulaNotFoundError(actionId);
     }
 }

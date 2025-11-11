@@ -5,11 +5,10 @@ using EasyModbus;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 
@@ -59,12 +58,14 @@ public sealed class PlcRecipeSerializer
                 {
                     case "Int":
                         var getShortResult = prop.GetValue<short>();
-                        if (getShortResult.IsFailed) return FailedToGetPropertyError(col.Key);
+                        if (getShortResult.IsFailed)
+                            return new PlcPropertyNotFoundError(col.Key.Value);
                         intArr[row * _layout.IntColumnCount + mapping.Index] = getShortResult.Value;
                         break;
                     case "Float":
                         var getFloatResult = prop.GetValue<float>();
-                        if (getFloatResult.IsFailed) return FailedToGetPropertyError(col.Key);
+                        if (getFloatResult.IsFailed)
+                            return new PlcPropertyNotFoundError(col.Key.Value);
                         WriteFloat(floatArr, row * _layout.FloatColumnCount * 2 + mapping.Index * 2,
                             getFloatResult.Value, registerOrder);
                         break;
@@ -80,12 +81,5 @@ public sealed class PlcRecipeSerializer
         var regs = ModbusClient.ConvertFloatToRegisters(value, order);
         buffer[offset] = regs[0];
         buffer[offset + 1] = regs[1];
-    }
-    
-    private static Result FailedToGetPropertyError(ColumnIdentifier propertyKey)
-    {
-        return Result.Fail(new Error($"Failed to get property '{propertyKey}' from step.")
-            .WithMetadata(nameof(Codes), Codes.PlcRecipeSerializationPropertyNotFound)
-            .WithMetadata("propertyKey", propertyKey));
     }
 }

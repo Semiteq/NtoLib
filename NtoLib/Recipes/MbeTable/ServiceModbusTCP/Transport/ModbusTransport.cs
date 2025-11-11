@@ -10,7 +10,8 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 using Polly;
 
@@ -19,6 +20,7 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 internal sealed class ModbusTransport : IModbusTransport
 {
     private readonly ModbusConnectionManager _connectionManager;
+    private readonly IRuntimeOptionsProvider _optionsProvider;
     private readonly ILogger<ModbusTransport> _logger;
     private readonly SemaphoreSlim _operationLock = new(1, 1);
 
@@ -26,9 +28,11 @@ internal sealed class ModbusTransport : IModbusTransport
 
     public ModbusTransport(
         ModbusConnectionManager connectionManager,
+        IRuntimeOptionsProvider optionsProvider,
         ILogger<ModbusTransport> logger)
     {
         _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
+        _optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -135,7 +139,9 @@ internal sealed class ModbusTransport : IModbusTransport
                 "Communication error [{OperationId}]: {Type} addr={Address} size={Size} conn=[{ConnectionId}] exception=[{ExceptionType}]",
                 opContext.OperationId, opContext.Type, opContext.Address, opContext.Size,
                 opContext.ConnectionId, ex.GetType().Name);
-            return Result.Fail(new Error(ex.Message).WithMetadata(nameof(Codes), Codes.PlcTimeout)).ToResult<T>();
+            
+            var settings = _optionsProvider.GetCurrent();
+            return Result.Fail(new ModbusTcpTimeoutError(opContext.Type, settings.TimeoutMs).CausedBy(ex)).ToResult<T>();
         }
         catch (ModbusException mex)
         {
@@ -144,7 +150,10 @@ internal sealed class ModbusTransport : IModbusTransport
                 "PLC operation failed [{OperationId}]: {Type} addr={Address} size={Size} conn=[{ConnectionId}]",
                 opContext.OperationId, opContext.Type, opContext.Address, opContext.Size,
                 opContext.ConnectionId);
-            return Result.Fail(new Error(mex.Message).WithMetadata(nameof(Codes), Codes.PlcReadFailed)).ToResult<T>();
+            
+            return opContext.Type == "Read"
+                ? Result.Fail(new ModbusTcpReadFailedError(opContext.Address, opContext.Size, mex.Message)).ToResult<T>()
+                : Result.Fail(new ModbusTcpFailedError(opContext.Address, opContext.Size, mex.Message)).ToResult<T>();
         }
     }
 }

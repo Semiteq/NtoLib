@@ -2,7 +2,7 @@
 
 namespace NtoLib.Recipes.MbeTable.ResultsExtension;
 
-public sealed class BilingualError : Error
+public class BilingualError : Error
 {
     public string MessageEn { get; }
     public string MessageRu { get; }

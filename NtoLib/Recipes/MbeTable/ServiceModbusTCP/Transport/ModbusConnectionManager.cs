@@ -9,6 +9,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 using Polly;
 
@@ -160,15 +161,19 @@ internal sealed class ModbusConnectionManager : IDisposable
         {
             DisconnectInternal("connect_error");
             _logger.LogError(ex, "Communication error during PLC connection: {ExceptionType}", ex.GetType().Name);
-            return Result.Fail(
-                new Error(ex.Message).WithMetadata(nameof(ResultsExtension.ErrorDefinitions.Codes), ResultsExtension.ErrorDefinitions.Codes.PlcConnectionFailed));
+            return Result.Fail(new ModbusTcpConnectionFailedError(
+                settings.IpAddress.ToString(), 
+                settings.Port, 
+                ex));
         }
         catch (EasyModbus.Exceptions.ModbusException mex)
         {
             DisconnectInternal("connect_error");
             _logger.LogError(mex, "PLC connection failed");
-            return Result.Fail(
-                new Error(mex.Message).WithMetadata(nameof(ResultsExtension.ErrorDefinitions.Codes), ResultsExtension.ErrorDefinitions.Codes.PlcConnectionFailed));
+            return Result.Fail(new ModbusTcpConnectionFailedError(
+                settings.IpAddress.ToString(), 
+                settings.Port, 
+                mex));
         }
     }
 

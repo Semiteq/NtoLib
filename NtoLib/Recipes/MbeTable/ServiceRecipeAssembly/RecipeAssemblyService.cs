@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Errors;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Strategies;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
 
@@ -62,9 +63,7 @@ public sealed class RecipeAssemblyService : IRecipeAssemblyService
     public Result<Recipe> AssembleFromCsvData(object csvData)
     {
         if (csvData is not CsvRawData rawData)
-        {
-            return Result.Fail<Recipe>("Invalid CSV data type");
-        }
+            return new AssemblyInvalidDataTypeError("CsvRawData", csvData?.GetType()?.Name ?? "null");
         
         _logger.LogDebug("Starting CSV assembly for {RecordCount} rows", rawData.Records.Count);
         

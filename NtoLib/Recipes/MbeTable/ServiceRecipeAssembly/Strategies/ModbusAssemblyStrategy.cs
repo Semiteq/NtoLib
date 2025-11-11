@@ -10,10 +10,11 @@ using FluentResults;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Strategies;
 
@@ -44,25 +45,19 @@ public sealed class ModbusAssemblyStrategy
         _intColumnCount = CalculateColumnCount("Int");
         _floatColumnCount = CalculateColumnCount("Float");
 
-        _actionColumn = _configuration.Columns.FirstOrDefault(c =>
-            c.Key == MandatoryColumns.Action);
-        _stepDurationColumn = _configuration.Columns.FirstOrDefault(c =>
-            c.Key == MandatoryColumns.StepDuration);
+        _actionColumn = _configuration.Columns.FirstOrDefault(column =>
+            column.Key == MandatoryColumns.Action);
+        _stepDurationColumn = _configuration.Columns.FirstOrDefault(column =>
+            column.Key == MandatoryColumns.StepDuration);
     }
 
     public Result<Recipe> AssembleFromModbusData(int[] intData, int[] floatData, int rowCount)
     {
-        if (intData == null)
-            return Result.Fail<Recipe>(
-                new Error("Integer data array is null").WithMetadata(nameof(Codes), Codes.PlcReadFailed));
-        if (floatData == null)
-            return Result.Fail<Recipe>(
-                new Error("Float data array is null").WithMetadata(nameof(Codes), Codes.PlcReadFailed));
         if (rowCount < 0)
-            return Result.Fail<Recipe>(new Error("Invalid row count").WithMetadata(nameof(Codes), Codes.PlcReadFailed));
+            return new AssemblyInvalidRowCountError(rowCount);
 
         if (rowCount == 0)
-            return Result.Ok(new Recipe(ImmutableList<Step>.Empty));
+            return new Recipe(ImmutableList<Step>.Empty);
 
         var validationResult = ValidateMandatoryColumns();
         if (validationResult.IsFailed)
@@ -74,16 +69,12 @@ public sealed class ModbusAssemblyStrategy
         {
             var stepResult = AssembleStep(intData, floatData, row);
             if (stepResult.IsFailed)
-            {
-                return Result.Fail<Recipe>(new Error($"Failed to assemble step {row}")
-                    .WithMetadata(nameof(Codes), Codes.CoreValidationFailed)
-                    .CausedBy(stepResult.Errors));
-            }
+                return new AssemblyStepFailedError(row).CausedBy(stepResult.Errors);
 
             steps.Add(stepResult.Value);
         }
 
-        return Result.Ok(new Recipe(steps.ToImmutableList()));
+        return new Recipe(steps.ToImmutableList());
     }
 
     private Result<Step> AssembleStep(int[] intData, int[] floatData, int row)
@@ -95,10 +86,8 @@ public sealed class ModbusAssemblyStrategy
         var actionId = actionIdResult.Value;
 
         if (!_configuration.Actions.TryGetValue(actionId, out var actionDef))
-        {
-            return Result.Fail<Step>(new Error($"Unknown action ID: {actionId}")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound));
-        }
+            return new CoreActionNotFoundError(actionId);
+        
 
         var createBuilderResult = StepBuilder.Create(actionDef, _propertyRegistry, _configuration.Columns);
         if (createBuilderResult.IsFailed) return createBuilderResult.ToResult();
@@ -126,24 +115,21 @@ public sealed class ModbusAssemblyStrategy
             }
         }
 
-        return Result.Ok(builder.Build());
+        return builder.Build();
     }
 
     private Result<short> ExtractActionId(int[] intData, int row)
     {
         if (_actionColumn?.PlcMapping == null)
-            return Result.Fail<short>(
-                new Error("Action column has no PLC mapping").WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema));
+            return new AssemblyMissingPlcMappingError("Action");
 
         var intBase = row * _intColumnCount;
         var index = intBase + _actionColumn.PlcMapping.Index;
 
         if (index < 0 || index >= intData.Length)
-            return Result.Fail<short>(
-                new Error($"Action index {index} out of range for row {row}").WithMetadata(nameof(Codes),
-                    Codes.CoreIndexOutOfRange));
+            return new AssemblyPlcIndexOutOfRangeError(index, row, "Action", "Int");
 
-        return Result.Ok((short)intData[index]);
+        return (short)intData[index];
     }
 
     private Result<object?> ExtractValue(
@@ -163,13 +149,9 @@ public sealed class ModbusAssemblyStrategy
                 var index = intBase + mapping.Index;
 
                 if (index < 0 || index >= intData.Length)
-                {
-                    return Result.Fail<object?>(
-                        new Error($"Int index {index} out of range for column {column.Key.Value}").WithMetadata(
-                            nameof(Codes), Codes.CoreIndexOutOfRange));
-                }
+                    return new AssemblyPlcIndexOutOfRangeError(index, row, column.Key.Value, "Int");
 
-                return Result.Ok<object?>(intData[index]);
+                return intData[index];
             }
 
             case "float":
@@ -178,41 +160,27 @@ public sealed class ModbusAssemblyStrategy
                 var index = floatBase + (mapping.Index * 2);
 
                 if (index < 0 || index + 1 >= floatData.Length)
-                {
-                    return Result.Fail<object?>(
-                        new Error($"Float index {index} out of range for column {column.Key.Value}").WithMetadata(
-                            nameof(Codes), Codes.CoreIndexOutOfRange));
-                }
-
+                    return new AssemblyPlcIndexOutOfRangeError(index, row, column.Key.Value, "Float");
+                
                 var registers = new[] { floatData[index], floatData[index + 1] };
-                var value = ModbusClient.ConvertRegistersToFloat(registers, registerOrder);
-                return Result.Ok<object?>(value);
+                return ModbusClient.ConvertRegistersToFloat(registers, registerOrder);
             }
 
             default:
-                return Result.Fail<object?>($"Unknown PLC area: {mapping.Area}");
+                return new AssemblyUnknownPlcAreaError(mapping.Area);
         }
     }
 
     private Result ValidateMandatoryColumns()
     {
         if (_actionColumn == null)
-        {
-            return Result.Fail(new Error("Action column not found in configuration")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound));
-        }
+            return new AssemblyMandatoryColumnMissingError("Action");
 
         if (_actionColumn.PlcMapping == null)
-        {
-            return Result.Fail(new Error("Action column has no PLC mapping")
-                .WithMetadata(nameof(Codes), Codes.ConfigInvalidSchema));
-        }
+            return new AssemblyMissingPlcMappingError("Action");
 
         if (_stepDurationColumn == null)
-        {
-            return Result.Fail(new Error("StepDuration column not found in configuration")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound));
-        }
+            return new AssemblyMandatoryColumnMissingError("StepDuration");
 
         return Result.Ok();
     }

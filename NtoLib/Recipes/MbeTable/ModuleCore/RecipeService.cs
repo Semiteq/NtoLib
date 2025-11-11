@@ -10,6 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
@@ -18,13 +19,15 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore;
 
 public sealed class RecipeService : IRecipeService
 {
-    private Recipe _currentRecipe = Recipe.Empty;
+    public Recipe CurrentRecipe { get; private set; } = Recipe.Empty;
 
     private readonly RecipeMutator _mutator;
     private readonly IRecipeAttributesService _attributesService;
     private readonly FormulaApplicationCoordinator _formulaCoordinator;
     private readonly IActionRepository _actionRepository;
     private readonly ILogger<RecipeService> _logger;
+
+    public int StepCount => CurrentRecipe.Steps.Count;
 
     public event Action<bool>? ValidationStateChanged
     {
@@ -46,8 +49,6 @@ public sealed class RecipeService : IRecipeService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public Recipe GetCurrentRecipe() => _currentRecipe;
-
     public Result<TimeSpan> GetStepStartTime(int stepIndex) =>
         _attributesService.GetStepStartTime(stepIndex);
 
@@ -65,20 +66,20 @@ public sealed class RecipeService : IRecipeService
 
     public IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex) =>
         _attributesService.GetEnclosingLoops(stepIndex);
-    
+
     public Result SetRecipeAndUpdateAttributes(Recipe recipe)
     {
         var analysisResult = _attributesService.UpdateAttributes(recipe);
         if (analysisResult.IsFailed)
             return analysisResult;
 
-        _currentRecipe = recipe;
+        CurrentRecipe = recipe;
         return analysisResult;
     }
 
     public Result AddStep(int rowIndex)
     {
-        var mutationResult = _mutator.AddDefaultStep(_currentRecipe, rowIndex);
+        var mutationResult = _mutator.AddDefaultStep(CurrentRecipe, rowIndex);
 
         return mutationResult.IsSuccess
             ? SetRecipeAndUpdateAttributes(mutationResult.Value)
@@ -87,17 +88,17 @@ public sealed class RecipeService : IRecipeService
 
     public Result RemoveStep(int rowIndex)
     {
-        var mutationResult = _mutator.RemoveStep(_currentRecipe, rowIndex);
-        
-        return mutationResult.IsSuccess 
+        var mutationResult = _mutator.RemoveStep(CurrentRecipe, rowIndex);
+
+        return mutationResult.IsSuccess
             ? SetRecipeAndUpdateAttributes(mutationResult.Value)
             : mutationResult.ToResult();
     }
 
     public Result UpdateStepProperty(int rowIndex, ColumnIdentifier columnIdentifier, object value)
     {
-        if (rowIndex < 0 || rowIndex >= _currentRecipe.Steps.Count)
-            return Result.Fail(Errors.IndexOutOfRange(rowIndex, _currentRecipe.Steps.Count));
+        if (rowIndex < 0 || rowIndex >= CurrentRecipe.Steps.Count)
+            return new CoreIndexOutOfRangeError(rowIndex, CurrentRecipe.Steps.Count);
 
         var actionResult = GetActionForStep(rowIndex);
         if (actionResult.IsFailed)
@@ -106,7 +107,7 @@ public sealed class RecipeService : IRecipeService
             return actionResult.ToResult();
         }
 
-        var mutationResult = _mutator.UpdateStepProperty(_currentRecipe, rowIndex, columnIdentifier, value);
+        var mutationResult = _mutator.UpdateStepProperty(CurrentRecipe, rowIndex, columnIdentifier, value);
         if (mutationResult.IsFailed)
         {
             LogOperationFailure("UpdateStepProperty", mutationResult.ToResult(),
@@ -122,26 +123,18 @@ public sealed class RecipeService : IRecipeService
         {
             LogOperationFailure("ApplyFormula", formulaResult.ToResult(),
                 new { RowIndex = rowIndex, Column = columnIdentifier.Value });
-            return formulaResult.ToResult();
+            return formulaResult.WithError(new CoreStepPropertyUpdateFailedError(rowIndex, columnIdentifier.Value)).ToResult();
         }
 
         var stepsWithFormula = mutatedRecipe.Steps.SetItem(rowIndex, formulaResult.Value);
         var recipeWithFormulas = new Recipe(stepsWithFormula);
 
-        var analysisResult = _attributesService.UpdateAttributes(recipeWithFormulas);
-        if (analysisResult.IsFailed)
-        {
-            LogOperationFailure("UpdateAttributes", analysisResult, new { RowIndex = rowIndex });
-            return analysisResult;
-        }
-
-        _currentRecipe = recipeWithFormulas;
-        return analysisResult;
+        return AnalyzeAndCommit(recipeWithFormulas, rowIndex);
     }
 
     public Result ReplaceStepAction(int rowIndex, short newActionId)
     {
-        var mutationResult = _mutator.ReplaceStepAction(_currentRecipe, rowIndex, newActionId);
+        var mutationResult = _mutator.ReplaceStepAction(CurrentRecipe, rowIndex, newActionId);
         if (mutationResult.IsFailed)
         {
             LogOperationFailure("ReplaceStepAction", mutationResult.ToResult(),
@@ -149,25 +142,15 @@ public sealed class RecipeService : IRecipeService
             return mutationResult.ToResult();
         }
 
-        var mutatedRecipe = mutationResult.Value;
-
-        var analysisResult = _attributesService.UpdateAttributes(mutatedRecipe);
-        if (analysisResult.IsFailed)
-        {
-            LogOperationFailure("UpdateAttributes", analysisResult, new { RowIndex = rowIndex });
-            return analysisResult;
-        }
-
-        _currentRecipe = mutatedRecipe;
-        return analysisResult;
+        return AnalyzeAndCommit(mutationResult.Value, rowIndex);
     }
 
     private Result<ActionDefinition> GetActionForStep(int rowIndex)
     {
-        var step = _currentRecipe.Steps[rowIndex];
-        var actionProperty = step.Properties[MandatoryColumns.Action];
-        if (actionProperty == null)
-            return Result.Fail(Errors.StepActionPropertyNull(rowIndex));
+        var step = CurrentRecipe.Steps[rowIndex];
+
+        if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
+            return new CoreStepActionPropertyNullError(rowIndex);
 
         var valueResult = actionProperty.GetValue<short>();
         if (valueResult.IsFailed)
@@ -179,6 +162,19 @@ public sealed class RecipeService : IRecipeService
             return actionResult.ToResult();
 
         return actionResult;
+    }
+
+    private Result AnalyzeAndCommit(Recipe recipe, int rowIndexForLog)
+    {
+        var analysisResult = _attributesService.UpdateAttributes(recipe);
+        if (analysisResult.IsFailed)
+        {
+            LogOperationFailure("UpdateAttributes", analysisResult, new { RowIndex = rowIndexForLog });
+            return analysisResult;
+        }
+
+        CurrentRecipe = recipe;
+        return analysisResult;
     }
 
     private void LogOperationFailure(string operation, Result result, object? context = null)

@@ -12,7 +12,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
@@ -49,9 +49,7 @@ internal sealed class MagicNumberValidator
 
             if (magicValue != settings.MagicNumber)
             {
-                return Result.Fail(
-                    new Error($"Control register validation failed. Expected {settings.MagicNumber}, got {magicValue}")
-                        .WithMetadata(nameof(Codes), Codes.PlcInvalidResponse));
+                return Result.Fail(new ModbusTcpInvalidResponseError(settings.MagicNumber, magicValue));
             }
 
             return Result.Ok();
@@ -59,14 +57,12 @@ internal sealed class MagicNumberValidator
         catch (Exception ex) when (ex is IOException or SocketException or ConnectionException)
         {
             _logger.LogError(ex, "Communication error during PLC validation");
-            return Result.Fail(
-                new Error(ex.Message).WithMetadata(nameof(Codes), Codes.PlcTimeout));
+            return Result.Fail(new ModbusTcpTimeoutError("magic validation", settings.TimeoutMs).CausedBy(ex));
         }
         catch (ModbusException mex)
         {
             _logger.LogError(mex, "PLC validation failed");
-            return Result.Fail(
-                new Error(mex.Message).WithMetadata(nameof(Codes), Codes.PlcReadFailed));
+            return Result.Fail(new ModbusTcpReadFailedError(settings.ControlRegister, 1, mex.Message));
         }
     }
 }

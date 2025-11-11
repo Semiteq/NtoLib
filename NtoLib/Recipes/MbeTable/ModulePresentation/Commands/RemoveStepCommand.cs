@@ -5,8 +5,8 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Errors;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 
@@ -28,5 +28,5 @@ public sealed class RemoveStepCommand : CommandBase
     protected override OperationKind GetOperationKind() => OperationKind.None;
 
     protected override Task<Result> ExecuteInternalAsync(CancellationToken ct)
-        => Task.FromResult(Result.Fail(new Error("Index is required").WithMetadata(nameof(Codes), Codes.UiOperationFailed)));
+        => Task.FromResult(Result.Fail(new PresentationParameterRequiredError("Index")));
 }

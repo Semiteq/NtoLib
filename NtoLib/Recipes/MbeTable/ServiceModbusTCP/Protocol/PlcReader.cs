@@ -7,7 +7,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
@@ -52,8 +52,7 @@ internal sealed class PlcReader : IPlcReader
         _logger.LogTrace("Read row count: {RowCount}", value);
 
         return value < 0
-            ? Result.Fail(new Error($"Invalid row count: {value}")
-                .WithMetadata(nameof(Codes), Codes.PlcReadFailed))
+            ? Result.Fail(new ModbusTcpInvalidResponseError($"Invalid row count: {value}"))
             : Result.Ok(value);
     }
 

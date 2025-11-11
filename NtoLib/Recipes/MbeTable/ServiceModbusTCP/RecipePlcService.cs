@@ -8,10 +8,11 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 
@@ -52,9 +53,7 @@ public sealed class RecipePlcService : IRecipePlcService
     public async Task<Result> SendAsync(Recipe recipe, CancellationToken ct = default)
     {
         _logger.LogDebug("Sending recipe to PLC");
-        if (recipe is null)
-            return Result.Fail(new Error("Recipe is null").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
-
+        
         try
         {
             var settings = _runtimeOptionsProvider.GetCurrent();
@@ -95,12 +94,14 @@ public sealed class RecipePlcService : IRecipePlcService
         catch (OperationCanceledException)
         {
             _logger.LogWarning("Send operation was cancelled."); 
-            return Result.Fail(new Error("Operation cancelled").WithMetadata(nameof(Codes), Codes.CoreInvalidOperation));
+            return Result.Fail(new BilingualError("Operation cancelled", "Операция отменена"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred during recipe serialization or sending.");
-            return Result.Fail(new Error("An unexpected error occurred.").CausedBy(ex));
+            return Result.Fail(new BilingualError(
+                "An unexpected error occurred during send operation",
+                "Непредвиденная ошибка при отправке рецепта").CausedBy(ex));
         }
         finally
         {
@@ -127,7 +128,8 @@ public sealed class RecipePlcService : IRecipePlcService
             if (rows == 0)
             {
                 _logger.LogDebug("No rows in PLC. Nothing to read");
-                return Result.Ok((Array.Empty<int>(), Array.Empty<int>(), 0));
+                return Result.Ok((Array.Empty<int>(), Array.Empty<int>(), 0))
+                    .WithReason(new ModbusTcpZeroRowsWarning());
             }
 
             _logger.LogDebug("Received {RowCount} rows from PLC", rows);
@@ -151,7 +153,7 @@ public sealed class RecipePlcService : IRecipePlcService
         }
         catch (OperationCanceledException)
         {
-            return Result.Fail("Operation cancelled")
+            return Result.Fail(new BilingualError("Operation cancelled", "Операция отменена"))
                 .ToResult<(int[], int[], int)>();
         }
     }

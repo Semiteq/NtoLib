@@ -5,10 +5,10 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Metadata;
+using NtoLib.Recipes.MbeTable.ServiceCsv.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 
@@ -67,10 +67,8 @@ public sealed class RecipeReader : IRecipeReader
     {
         if (meta.Rows > 0 && meta.Rows != data.Rows.Count)
         {
-            return Result.Fail(new Error("Row count mismatch")
-                .WithMetadata(nameof(Codes), Codes.IoReadError)
-                .WithMetadata("Expected", meta.Rows)
-                .WithMetadata("Actual", data.Rows.Count));
+            _logger.LogWarning("CSV row count mismatch: expected {Expected}, actual {Actual}", meta.Rows, data.Rows.Count);
+            return Result.Ok().WithReason(new CsvRowCountMismatchWarning(meta.Rows, data.Rows.Count));
         }
 
         if (!string.IsNullOrWhiteSpace(meta.BodyHashBase64))
@@ -79,10 +77,9 @@ public sealed class RecipeReader : IRecipeReader
             var check = _integrityService.VerifyIntegrity(meta.BodyHashBase64, actual);
             if (!check.IsValid)
             {
-                return Result.Fail(new Error("Body hash mismatch")
-                    .WithMetadata(nameof(Codes), Codes.IoReadError)
-                    .WithMetadata("ExpectedHash", check.ExpectedHash)
-                    .WithMetadata("ActualHash", check.ActualHash));
+                _logger.LogWarning("CSV body hash mismatch: expected {ExpectedHash}, actual {ActualHash}",
+                    check.ExpectedHash, check.ActualHash);
+                return Result.Ok().WithReason(new CsvHashMismatchWarning(check.ExpectedHash, check.ActualHash));
             }
         }
 

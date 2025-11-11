@@ -6,8 +6,7 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -23,14 +22,14 @@ public sealed class ActionRepository : IActionRepository
     public Result<ActionDefinition> GetActionDefinitionById(short id)
     {
         return Actions.TryGetValue(id, out var action) 
-            ? Result.Ok(action) 
-            : Errors.ActionNotFound(id);
+            ? action
+            : new CoreActionNotFoundError(id);
     }
 
     public Result<ActionDefinition> GetResultActionDefinitionByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return Errors.ActionNameEmpty();
+            return new CoreActionNameEmptyError();
 
         var action = Actions.Values.FirstOrDefault(a => 
             string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase));
@@ -38,14 +37,14 @@ public sealed class ActionRepository : IActionRepository
         if (action != null)
             return Result.Ok(action);
 
-        return Errors.ActionNameNotFound(name);
+        return new CoreActionNameNotFoundError(name);
     }
 
     public Result<short> GetResultDefaultActionId()
     {
         var first = Actions.Values.FirstOrDefault();
         return first is null 
-            ? Errors.NoActionsInConfig() 
+            ? new CoreNoActionsInConfigError()
             : Result.Ok(first.Id);
     }
 }

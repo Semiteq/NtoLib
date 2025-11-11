@@ -4,14 +4,11 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 
-/// <summary>
-/// Validates that a recipe fits into PLC memory areas.
-/// </summary>
 public sealed class PlcCapacityCalculator
 {
     private readonly RecipeColumnLayout _layout;
@@ -37,14 +34,10 @@ public sealed class PlcCapacityCalculator
         var requiredFloat = rows * _layout.FloatColumnCount * 2;
 
         if (requiredInt > settings.IntAreaSize)
-            return Result.Fail(
-                new Error($"INT area capacity exceeded: need {requiredInt}, available {settings.IntAreaSize}")
-                    .WithMetadata(nameof(Codes), Codes.PlcCapacityExceeded));
+            return Result.Fail(new ModbusTcpCapacityExceededError("INT", requiredInt, settings.IntAreaSize));
 
         if (requiredFloat > settings.FloatAreaSize)
-            return Result.Fail(
-                new Error($"FLOAT area capacity exceeded: need {requiredFloat}, available {settings.FloatAreaSize}")
-                    .WithMetadata(nameof(Codes), Codes.PlcCapacityExceeded));
+            return Result.Fail(new ModbusTcpCapacityExceededError("FLOAT", requiredFloat, settings.FloatAreaSize));
 
         return Result.Ok();
     }
@@ -52,8 +45,7 @@ public sealed class PlcCapacityCalculator
     public Result ValidateReadCapacity(int rowCount)
     {
         if (rowCount < 0)
-            return Result.Fail(new Error("Invalid negative row count")
-                .WithMetadata(nameof(Codes), Codes.PlcReadFailed));
+            return Result.Fail(new ModbusTcpInvalidResponseError("Invalid negative row count"));
             
         if (rowCount == 0)
             return Result.Ok();
@@ -63,14 +55,10 @@ public sealed class PlcCapacityCalculator
         var requiredFloat = rowCount * _layout.FloatColumnCount * 2;
 
         if (requiredInt > settings.IntAreaSize)
-            return Result.Fail(
-                new Error($"INT area read capacity exceeded: need {requiredInt}, available {settings.IntAreaSize}")
-                    .WithMetadata(nameof(Codes), Codes.PlcInvalidResponse));
+            return Result.Fail(new ModbusTcpCapacityExceededError("INT", requiredInt, settings.IntAreaSize));
 
         if (requiredFloat > settings.FloatAreaSize)
-            return Result.Fail(
-                new Error($"FLOAT area read capacity exceeded: need {requiredFloat}, available {settings.FloatAreaSize}")
-                    .WithMetadata(nameof(Codes), Codes.PlcInvalidResponse));
+            return Result.Fail(new ModbusTcpCapacityExceededError("FLOAT", requiredFloat, settings.FloatAreaSize));
 
         return Result.Ok();
     }

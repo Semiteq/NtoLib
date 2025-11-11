@@ -10,17 +10,16 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
+using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Strategies;
 
-/// <summary>
-/// Assembly strategy for building Recipe from CSV data.
-/// </summary>
 public sealed class CsvAssemblyStrategy
 {
     private readonly IActionRepository _actionRepository;
@@ -47,7 +46,7 @@ public sealed class CsvAssemblyStrategy
     {
         if (rawData.Records.Count == 0)
         {
-            return Result.Ok(new Recipe(ImmutableList<Step>.Empty));
+            return new Recipe(ImmutableList<Step>.Empty);
         }
     
         var bindingResult = _headerBinder.Bind(rawData.Headers.ToArray(), new TableColumns(_columns));
@@ -68,7 +67,6 @@ public sealed class CsvAssemblyStrategy
         
             if (stepResult.IsFailed)
             {
-                // ADD THIS
                 _logger.LogError("Step assembly failed at row {RowIndex}: {Errors}",
                     rowIndex + 2,
                     string.Join("; ", stepResult.Errors.Select(e => e.Message)));
@@ -78,7 +76,7 @@ public sealed class CsvAssemblyStrategy
             steps.Add(stepResult.Value);
         }
     
-        return Result.Ok(new Recipe(steps.ToImmutableList()));
+        return new Recipe(steps.ToImmutableList());
     }
 
     private Result<Step> AssembleStep(string[] record, CsvHeaderBinder.Binding binding, int lineNumber)
@@ -86,19 +84,13 @@ public sealed class CsvAssemblyStrategy
         var actionIdResult = ExtractActionId(record, binding);
         if (actionIdResult.IsFailed)
         {
-            return Result.Fail<Step>(new Error($"Line {lineNumber}: Failed to extract action ID")
-                .WithMetadata(nameof(Codes), Codes.CsvInvalidData)
-                .CausedBy(actionIdResult.Errors));
+            return new CsvInvalidDataError("Failed to extract action ID", lineNumber).CausedBy(actionIdResult.Errors);
         }
         
         var actionId = actionIdResult.Value;
         var actionResult = _actionRepository.GetActionDefinitionById(actionId);
         if (actionResult.IsFailed)
-        {
-            return Result.Fail<Step>(new Error($"Line {lineNumber}: Unknown action ID {actionId}")
-                .WithMetadata(nameof(Codes), Codes.CoreActionNotFound)
-                .CausedBy(actionResult.Errors));
-        }
+            return new CoreActionNotFoundError(actionId);
         
         var actionDefinition = actionResult.Value;
         var createBuilderResult = StepBuilder.Create(actionDefinition, _propertyRegistry, _columns);
@@ -111,45 +103,33 @@ public sealed class CsvAssemblyStrategy
             var columnDef = kvp.Value;
             
             if (columnDef.Key == MandatoryColumns.Action || columnDef.Key == MandatoryColumns.StepStartTime)
-            {
                 continue;
-            }
             
             var rawValue = fileIndex < record.Length ? record[fileIndex] : string.Empty;
             
             if (!builder.Supports(columnDef.Key))
             {
                 if (!string.IsNullOrWhiteSpace(rawValue))
-                {
-                    return Result.Fail<Step>(new Error($"Line {lineNumber}: Column '{columnDef.Code}' not applicable for action '{actionDefinition.Name}' but has value '{rawValue}'")
-                        .WithMetadata(nameof(Codes), Codes.CsvInvalidData));
-                }
+                    return new AssemblyColumnNotApplicableError(columnDef.Code, actionDefinition.Name, rawValue, lineNumber);
+                
                 continue;
             }
             
             if (string.IsNullOrWhiteSpace(rawValue))
-            {
                 continue;
-            }
             
             var propertyDef = _propertyRegistry.GetPropertyDefinition(columnDef.PropertyTypeId);
             var parseResult = ParseValue(rawValue, propertyDef.SystemType);
             
             if (parseResult.IsFailed)
-            {
-                return Result.Fail<Step>(new Error($"Line {lineNumber}: Invalid value '{rawValue}' in column '{columnDef.Code}'")
-                    .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed)
-                    .CausedBy(parseResult.Errors));
-            }
+                return new CorePropertyConversionFailedError(rawValue, propertyDef.SystemType.Name).CausedBy(parseResult.Errors);
             
             var setResult = builder.WithOptionalDynamic(columnDef.Key, parseResult.Value);
             if (setResult.IsFailed)
-            {
                 return setResult.ToResult<Step>();
-            }
         }
         
-        return Result.Ok(builder.Build());
+        return builder.Build();
     }
 
     private static Result<short> ExtractActionId(string[] record, CsvHeaderBinder.Binding binding)
@@ -157,20 +137,14 @@ public sealed class CsvAssemblyStrategy
         var actionIndex = FindColumnIndex(binding, MandatoryColumns.Action);
         
         if (actionIndex < 0 || actionIndex >= record.Length)
-        {
-            return Result.Fail<short>(new Error("Action column not found or out of range")
-                .WithMetadata(nameof(Codes), Codes.CsvInvalidData));
-        }
+            return new AssemblyActionColumnOutOfRangeError();
         
         var actionValue = record[actionIndex];
         
         if (!short.TryParse(actionValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var actionId))
-        {
-            return Result.Fail<short>(new Error($"Invalid action ID: '{actionValue}'")
-                .WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
-        }
+            return new CorePropertyConversionFailedError(actionValue, "short");
         
-        return Result.Ok(actionId);
+        return actionId;
     }
 
     private static short FindColumnIndex(CsvHeaderBinder.Binding binding, ColumnIdentifier key)
@@ -178,9 +152,7 @@ public sealed class CsvAssemblyStrategy
         foreach (var kvp in binding.FileIndexToColumn)
         {
             if (kvp.Value.Key == key)
-            {
                 return kvp.Key;
-            }
         }
         
         return -1;
@@ -189,28 +161,24 @@ public sealed class CsvAssemblyStrategy
     private static Result<object> ParseValue(string rawValue, Type targetType)
     {
         if (targetType == typeof(string))
-        {
             return Result.Ok<object>(rawValue);
-        }
         
         if (targetType == typeof(short))
         {
             if (short.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var shortValue))
-            {
-                return Result.Ok<object>(shortValue);
-            }
-            return Result.Fail(new Error("Value must be a valid integer").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
+                Result.Ok<object>(shortValue);
+            
+            return new CorePropertyConversionFailedError(rawValue, "short");
         }
         
         if (targetType == typeof(float))
         {
             if (float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
-            {
                 return Result.Ok<object>(floatValue);
-            }
-            return Result.Fail(new Error("Value must be a valid floating-point number").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
+            
+            return new CorePropertyConversionFailedError(rawValue, "float");
         }
         
-        return Result.Fail(new Error($"Unsupported type: {targetType.Name}").WithMetadata(nameof(Codes), Codes.PropertyConversionFailed));
+        return new CsvInvalidDataError($"Unsupported type: {targetType.Name}");
     }
 }

@@ -8,13 +8,10 @@ using FluentResults;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 
-/// <summary>
-/// Compares two recipes step-by-step with epsilon tolerance for floats.
-/// </summary>
 public sealed class RecipeComparator
 {
     private readonly IRuntimeOptionsProvider _optionsProvider;
@@ -30,17 +27,15 @@ public sealed class RecipeComparator
         if (recipe2 is null) throw new ArgumentNullException(nameof(recipe2));
 
         if (recipe1.Steps.Count != recipe2.Steps.Count)
-            return Result.Fail(
-                new Error($"Row count differs: {recipe1.Steps.Count} vs {recipe2.Steps.Count}").WithMetadata(
-                    nameof(Codes), Codes.PlcVerificationFailed));
+            return Result.Fail(new ModbusTcpVerificationFailedError(
+                $"Row count differs: {recipe1.Steps.Count} vs {recipe2.Steps.Count}"));
 
         for (var i = 0; i < recipe1.Steps.Count; i++)
         {
             var cmp = CompareSteps(recipe1.Steps[i], recipe2.Steps[i]);
             if (cmp.IsFailed)
-                return Result.Fail(
-                    new Error($"Row {i} differs: {string.Join("; ", cmp.Errors.Select(e => e.Message))}").WithMetadata(
-                        nameof(Codes), Codes.PlcVerificationFailed));
+                return Result.Fail(new ModbusTcpVerificationFailedError(
+                    $"Row {i} differs: {string.Join("; ", cmp.Errors.Select(e => e.Message))}"));
         }
 
         return Result.Ok();
@@ -70,8 +65,8 @@ public sealed class RecipeComparator
             var vb = pb?.GetValueAsObject;
 
             if (!ValueEquals(va, vb, epsilon))
-                return Result.Fail(
-                    new Error($"Key={key.Value}, A='{Format(va)}', B='{Format(vb)}'"));
+                return Result.Fail(new ModbusTcpVerificationFailedError(
+                    $"Key={key.Value}, A='{Format(va)}', B='{Format(vb)}'"));
         }
 
         return Result.Ok();

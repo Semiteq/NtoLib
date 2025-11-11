@@ -4,8 +4,8 @@ using System.Globalization;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
@@ -38,7 +38,7 @@ public sealed class ConfigurableEnumDefinition : IPropertyTypeDefinition
     public Result TryValidate(object value)
         => value is short
             ? Result.Ok()
-            : Errors.PropertyValidationFailed("value must be Int16");
+            : new CorePropertyValidationFailedError("value must be Int16");
 
     /// <inheritdoc/>
     public string FormatValue(object value) => value.ToString();
@@ -51,6 +51,6 @@ public sealed class ConfigurableEnumDefinition : IPropertyTypeDefinition
 
         return short.TryParse(input, numberStyles, invariantCulture, out var s)
             ? Result.Ok<object>(s)
-            : Errors.PropertyConversionFailed(input, "Int16");
+            : new CorePropertyConversionFailedError(input, "Int16");
     }
 }

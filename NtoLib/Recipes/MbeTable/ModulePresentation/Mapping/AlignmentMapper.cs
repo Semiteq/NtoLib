@@ -2,7 +2,7 @@
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Columns;
 
-namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
+namespace NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 
 public sealed class AlignmentMapper : IAlignmentMapper
 {

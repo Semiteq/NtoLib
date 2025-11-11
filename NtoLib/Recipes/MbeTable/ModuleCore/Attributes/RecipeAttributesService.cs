@@ -1,28 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 using FluentResults;
 
-using Microsoft.Extensions.Logging;
-
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 
-/// <summary>
-/// Manages Recipe analysis results including structure validation, loop validation, and time calculation.
-/// Stores computed attributes and provides query API for accessing them.
-/// </summary>
 public sealed class RecipeAttributesService : IRecipeAttributesService
 {
     private readonly RecipeStructureValidator _structureValidator;
     private readonly RecipeLoopValidator _loopValidator;
     private readonly RecipeTimeCalculator _timeCalculator;
-    private readonly ErrorDefinitionRegistry _errorRegistry;
-    private readonly ILogger<RecipeAttributesService> _logger;
 
     private readonly IReadOnlyList<LoopMetadata> _emptyLoopList = Array.Empty<LoopMetadata>();
 
@@ -37,19 +29,15 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     public RecipeAttributesService(
         RecipeStructureValidator structureValidator,
         RecipeLoopValidator loopValidator,
-        RecipeTimeCalculator timeCalculator,
-        ErrorDefinitionRegistry errorRegistry,
-        ILogger<RecipeAttributesService> logger)
+        RecipeTimeCalculator timeCalculator)
     {
         _structureValidator = structureValidator ?? throw new ArgumentNullException(nameof(structureValidator));
         _loopValidator = loopValidator ?? throw new ArgumentNullException(nameof(loopValidator));
         _timeCalculator = timeCalculator ?? throw new ArgumentNullException(nameof(timeCalculator));
-        _errorRegistry = errorRegistry ?? throw new ArgumentNullException(nameof(errorRegistry));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _loopNestingLevels = new Dictionary<int, int>();
-        _stepStartTimes = new Dictionary<int, TimeSpan>();
-        _enclosingLoopsMap = new Dictionary<int, IReadOnlyList<LoopMetadata>>();
+        _loopNestingLevels = ImmutableDictionary<int, int>.Empty;
+        _stepStartTimes = ImmutableDictionary<int, TimeSpan>.Empty;
+        _enclosingLoopsMap = ImmutableDictionary<int, IReadOnlyList<LoopMetadata>>.Empty;
         _totalDuration = TimeSpan.Zero;
         _isValid = false;
     }
@@ -88,33 +76,29 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
 
         var allReasons = loopResult.Reasons.Concat(timeResult.Reasons).ToList();
 
-        _isValid = !allReasons
-            .Select(reason => reason.TryGetCode(out var code) ? code : Codes.UnknownError)
-            .Any(code => _errorRegistry.Blocks(code, BlockingScope.SaveAndSend));
+        _isValid = true;
 
         NotifyValidationStateChanged(previousValidState);
 
         var finalResult = Result.Ok();
         if (allReasons.Any())
-        {
             finalResult.WithReasons(allReasons);
-        }
 
         return finalResult;
     }
 
     public Result<int> GetLoopNestingLevel(int stepIndex)
     {
-        return _loopNestingLevels.TryGetValue(stepIndex, out var level) 
-            ? Result.Ok(level) 
-            : Errors.IndexOutOfRange(stepIndex, _loopNestingLevels.Count);
+        return _loopNestingLevels.TryGetValue(stepIndex, out var level)
+            ? Result.Ok(level)
+            : new CoreIndexOutOfRangeError(stepIndex, _loopNestingLevels.Count);
     }
 
     public Result<TimeSpan> GetStepStartTime(int stepIndex)
     {
-        return _stepStartTimes.TryGetValue(stepIndex, out var time) 
-            ? Result.Ok(time) 
-            : Errors.IndexOutOfRange(stepIndex, _stepStartTimes.Count);
+        return _stepStartTimes.TryGetValue(stepIndex, out var time)
+            ? Result.Ok(time)
+            : new CoreIndexOutOfRangeError(stepIndex, _stepStartTimes.Count);
     }
 
     public IReadOnlyList<LoopMetadata> GetEnclosingLoops(int stepIndex)
@@ -133,19 +117,16 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     private void ResetToInvalidState(bool previousState)
     {
         _isValid = false;
-        _loopNestingLevels = new Dictionary<int, int>();
-        _stepStartTimes = new Dictionary<int, TimeSpan>();
-        _enclosingLoopsMap = new Dictionary<int, IReadOnlyList<LoopMetadata>>();
+        _loopNestingLevels = ImmutableDictionary<int, int>.Empty;
+        _stepStartTimes = ImmutableDictionary<int, TimeSpan>.Empty;
+        _enclosingLoopsMap = ImmutableDictionary<int, IReadOnlyList<LoopMetadata>>.Empty;
         _totalDuration = TimeSpan.Zero;
         NotifyValidationStateChanged(previousState);
     }
 
-
     private void NotifyValidationStateChanged(bool previousState)
     {
         if (previousState != _isValid)
-        {
             ValidationStateChanged?.Invoke(_isValid);
-        }
     }
 }

@@ -5,9 +5,8 @@ using System.Linq;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
+using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
-using NtoLib.Recipes.MbeTable.ResultsExtension;
-using NtoLib.Recipes.MbeTable.ResultsExtension.ErrorDefinitions;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -49,25 +48,25 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
 
     private static Result<PropertyConfig> GetColumn(ActionDefinition action, string columnKey)
     {
-        var col = action.Columns.FirstOrDefault(c =>
+        var column = action.Columns.FirstOrDefault(c =>
             string.Equals(c.Key, columnKey, StringComparison.OrdinalIgnoreCase));
 
-        return col == null
-            ? Errors.ColumnNotFoundInAction(action.Name, action.Id, columnKey)
-            : Result.Ok(col);
+        return column == null
+            ? new CoreColumnNotFoundInActionError(action.Name, action.Id, columnKey)
+            : column;
     }
 
     private static Result<PropertyConfig> ValidateColumn(PropertyConfig column)
     {
         return string.IsNullOrWhiteSpace(column.GroupName) 
-            ? Errors.ColumnGroupNameEmpty() 
+            ? new CoreColumnGroupNameEmptyError() 
             : Result.Ok(column);
     }
 
     private Result<IReadOnlyDictionary<short, string>> GetFilteredTargets(string groupName)
     {
         if (!_targets.TryGetTargets(groupName, out var targets))
-            return Errors.TargetsNotDefined();
+            return new CoreTargetsNotDefinedError();
 
         return Result.Ok<IReadOnlyDictionary<short, string>>(targets
             .Where(kv => !string.IsNullOrEmpty(kv.Value))
