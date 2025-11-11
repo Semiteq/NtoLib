@@ -83,9 +83,7 @@ public sealed class CsvAssemblyStrategy
     {
         var actionIdResult = ExtractActionId(record, binding);
         if (actionIdResult.IsFailed)
-        {
             return new CsvInvalidDataError("Failed to extract action ID", lineNumber).CausedBy(actionIdResult.Errors);
-        }
         
         var actionId = actionIdResult.Value;
         var actionResult = _actionRepository.GetActionDefinitionById(actionId);
@@ -161,12 +159,12 @@ public sealed class CsvAssemblyStrategy
     private static Result<object> ParseValue(string rawValue, Type targetType)
     {
         if (targetType == typeof(string))
-            return Result.Ok<object>(rawValue);
+            return rawValue;
         
         if (targetType == typeof(short))
         {
             if (short.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var shortValue))
-                Result.Ok<object>(shortValue);
+                return shortValue;
             
             return new CorePropertyConversionFailedError(rawValue, "short");
         }
@@ -174,7 +172,7 @@ public sealed class CsvAssemblyStrategy
         if (targetType == typeof(float))
         {
             if (float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
-                return Result.Ok<object>(floatValue);
+                return floatValue;
             
             return new CorePropertyConversionFailedError(rawValue, "float");
         }
