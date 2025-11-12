@@ -6,21 +6,21 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
 /// <inheritdoc />
 public sealed class ComboboxDataProvider : IComboboxDataProvider
 {
-    private readonly IActionRepository      _actions;
-    private readonly IActionTargetProvider  _targets;
+    private readonly IActionRepository _actions;
+    private readonly IActionTargetProvider _targets;
 
     public ComboboxDataProvider(
         IActionRepository actionRepository,
         IActionTargetProvider actionTargetProvider)
     {
-        _actions = actionRepository  ?? throw new ArgumentNullException(nameof(actionRepository));
+        _actions = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
         _targets = actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));
     }
 
@@ -39,7 +39,8 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
         if (validationResult.IsFailed)
             return validationResult.ToResult();
 
-        return GetFilteredTargets(columnResult.Value.GroupName!);
+        var groupName = columnResult.Value.GroupName;
+        return _targets.GetFilteredGroupTargets(groupName);
     }
 
     /// <inheritdoc />
@@ -58,18 +59,8 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
 
     private static Result<PropertyConfig> ValidateColumn(PropertyConfig column)
     {
-        return string.IsNullOrWhiteSpace(column.GroupName) 
-            ? new CoreColumnGroupNameEmptyError() 
+        return string.IsNullOrWhiteSpace(column.GroupName)
+            ? new CoreColumnGroupNameEmptyError()
             : Result.Ok(column);
-    }
-
-    private Result<IReadOnlyDictionary<short, string>> GetFilteredTargets(string groupName)
-    {
-        if (!_targets.TryGetTargets(groupName, out var targets))
-            return new CoreTargetsNotDefinedError();
-
-        return Result.Ok<IReadOnlyDictionary<short, string>>(targets
-            .Where(kv => !string.IsNullOrEmpty(kv.Value))
-            .ToDictionary(kv => (short)kv.Key, kv => kv.Value));
     }
 }

@@ -6,7 +6,7 @@ using FluentResults;
 using NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
 

@@ -20,8 +20,7 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 

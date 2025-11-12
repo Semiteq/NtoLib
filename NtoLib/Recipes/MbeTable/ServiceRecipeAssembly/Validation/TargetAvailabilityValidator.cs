@@ -8,7 +8,7 @@ using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
@@ -24,7 +24,7 @@ public sealed class TargetAvailabilityValidator
         IActionTargetProvider targetProvider)
     {
         var errors = new List<string>();
-        var snapshot = targetProvider.GetAllTargetsSnapshot();
+        var snapshot = targetProvider.GetAllTargetsFilteredSnapshot();
 
         for (var i = 0; i < recipe.Steps.Count; i++)
         {
@@ -46,7 +46,7 @@ public sealed class TargetAvailabilityValidator
         Step step,
         int stepIndex,
         IActionRepository actionRepository,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> snapshot,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<short, string>> snapshot,
         List<string> errors)
     {
         var actionIdResult = ExtractActionId(step);
@@ -96,7 +96,7 @@ public sealed class TargetAvailabilityValidator
         short actionId,
         string actionName,
         PropertyConfig column,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> snapshot,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<short, string>> snapshot,
         List<string> errors)
     {
         if (ShouldSkipColumn(column))
@@ -162,7 +162,7 @@ public sealed class TargetAvailabilityValidator
         string columnKey,
         string groupName,
         short targetId,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> snapshot,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<short, string>> snapshot,
         List<string> errors)
     {
         if (!snapshot.TryGetValue(groupName, out var targetDictionary))

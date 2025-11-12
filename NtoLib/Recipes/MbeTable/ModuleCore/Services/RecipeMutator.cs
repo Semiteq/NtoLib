@@ -10,7 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTartget;
+using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -114,22 +114,19 @@ public sealed class RecipeMutator
         {
             var key = new ColumnIdentifier(col.Key);
             if (!builder.Supports(key)) continue;
-
-            try
+                
+            var minimalTargetResult = _actionTargetProvider.GetMinimalTargetId(col.GroupName!);
+            if (minimalTargetResult.IsFailed)
+                return Result.Fail(new CoreStepFailedToSetDefaultTarget(col.Key)).WithErrors(minimalTargetResult.Errors);
+                
+            var targetId = minimalTargetResult.Value;
+            var setResult = builder.WithOptionalDynamic(key, targetId);
+            if (setResult.IsFailed)
             {
-                var targetId = _actionTargetProvider.GetMinimalTargetId(col.GroupName!);
-                var setResult = builder.WithOptionalDynamic(key, targetId);
-                if (setResult.IsFailed)
-                {
-                    _logger.LogError(new InvalidOperationException(setResult.Errors.First().Message), 
-                        "Failed to set default target for column '{ColumnKey}'",
-                        col.Key);
-                    return new CoreStepFailedToSetDefaultTarget(col.Key);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get default target for column '{ColumnKey}'", col.Key);
+                _logger.LogError(new InvalidOperationException(setResult.Errors.First().Message), 
+                    "Failed to set default target for column '{ColumnKey}'",
+                    col.Key);
+                return new CoreStepFailedToSetDefaultTarget(col.Key);
             }
         }
 
