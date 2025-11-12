@@ -90,9 +90,7 @@ public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
     private void OnComboBoxSelectedIndexChanged(object? sender, EventArgs e)
     {
         if (DataGridView != null && !DataGridView.IsDisposed)
-        {
             DataGridView.NotifyCurrentCellDirty(true);
-        }
     }
 
     protected override void Paint(

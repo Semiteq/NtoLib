@@ -73,24 +73,21 @@ public sealed class TableBehaviorManager : IDisposable
         
         if (disposing)
         {
-            try { Detach(); } catch { /* ignored */ }
-            try { _table.Disposed -= OnTableDisposed; } catch { /* ignored */ }
+            try { Detach(); } catch { }
+            try { _table.Disposed -= OnTableDisposed; } catch { }
         }
     }
 
     private void OnTableDisposed(object? sender, EventArgs e)
     {
-        try { Detach(); } catch { /* ignored */ }
+        try { Detach(); } catch { }
     }
     
     private void OnCellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-        
-        var cell = _table.Rows[e.RowIndex].Cells[e.ColumnIndex];
-        
-        // Force commit for ComboBox cells
-        if (cell is RecipeComboBoxCell && _table.IsCurrentCellInEditMode)
+
+        if (_table.IsCurrentCellInEditMode && _table.IsCurrentCellDirty)
         {
             try
             {
@@ -99,7 +96,7 @@ public sealed class TableBehaviorManager : IDisposable
             }
             catch
             {
-                // Ignore validation errors - will be handled in DataError event
+                // ignored
             }
         }
     }
@@ -143,32 +140,47 @@ public sealed class TableBehaviorManager : IDisposable
                 textBox.ForeColor = style.ForeColor;
                 textBox.Font = style.Font;
             }
-            catch { /* ignored */ }
+            catch { }
         }
 
         if (e.Control is ComboBox comboBox)
         {
-            // Add handler to auto-commit on selection change
+            // Ensure dropdown list mode for consistency; no commit here (centralized in OnCurrentCellDirtyStateChanged)
+            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+
+            // Optional visual sizing only (does not affect commit logic)
+            comboBox.DropDown -= OnComboBoxDropDownAdjustSize;
+            comboBox.DropDown += OnComboBoxDropDownAdjustSize;
+
+            // Remove immediate commit here to avoid duplicates
             comboBox.SelectionChangeCommitted -= OnComboBoxSelectionChangeCommitted;
-            comboBox.SelectionChangeCommitted += OnComboBoxSelectionChangeCommitted;
         }
+    }
+
+    private void OnComboBoxDropDownAdjustSize(object? sender, EventArgs e)
+    {
+        if (sender is not ComboBox comboBox) return;
+
+        var desired = comboBox.MaxDropDownItems;
+        try
+        {
+            if (_table.CurrentCell is not null &&
+                _table.Columns[_table.CurrentCell.ColumnIndex] is DataGridViewComboBoxColumn col &&
+                col.MaxDropDownItems > 0)
+            {
+                desired = col.MaxDropDownItems;
+            }
+        }
+        catch { }
+
+        var visible = Math.Max(1, Math.Min(desired, comboBox.Items.Count));
+        comboBox.IntegralHeight = true;
+        comboBox.MaxDropDownItems = visible;
     }
     
     private void OnComboBoxSelectionChangeCommitted(object? sender, EventArgs e)
     {
-        // Force immediate commit when user selects an item
-        if (_table.IsCurrentCellInEditMode)
-        {
-            try
-            {
-                _table.CommitEdit(DataGridViewDataErrorContexts.Commit);
-                _table.EndEdit();
-            }
-            catch
-            {
-                // Ignore commit errors
-            }
-        }
+        // intentionally empty; commit is centralized elsewhere
     }
 
     private void OnDataError(object? sender, DataGridViewDataErrorEventArgs e)
@@ -189,7 +201,7 @@ public sealed class TableBehaviorManager : IDisposable
         if (cell is DataGridViewComboBoxCell || grid.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn)
         {
             e.ThrowException = false;
-            e.Cancel = false; // Allow the operation to continue
+            e.Cancel = false;
             return;
         }
 

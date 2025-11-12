@@ -38,8 +38,7 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
         IColorSchemeProvider colorSchemeProvider)
     {
         _table = table ?? throw new ArgumentNullException(nameof(table));
-        _rowExecutionStateProvider = rowExecutionStateProvider ??
-                                     throw new ArgumentNullException(nameof(rowExecutionStateProvider));
+        _rowExecutionStateProvider = rowExecutionStateProvider ?? throw new ArgumentNullException(nameof(rowExecutionStateProvider));
         _cellStateResolver = cellStateResolver ?? throw new ArgumentNullException(nameof(cellStateResolver));
         _recipeViewModel = recipeViewModel ?? throw new ArgumentNullException(nameof(recipeViewModel));
         _columns = columns ?? throw new ArgumentNullException(nameof(columns));
@@ -80,59 +79,12 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
 
     private void DetachEventHandlers()
     {
-        try
-        {
-            _table.CellFormatting -= OnCellFormatting;
-        }
-        catch
-        {
-            /* ignored */
-        }
-
-        try
-        {
-            _table.CellBeginEdit -= OnCellBeginEdit;
-        }
-        catch
-        {
-            /* ignored */
-        }
-
-        try
-        {
-            _table.CurrentCellDirtyStateChanged -= OnCurrentCellDirtyStateChanged;
-        }
-        catch
-        {
-            /* ignored */
-        }
-
-        try
-        {
-            _table.CellPainting -= OnCellPaintingPreFormat;
-        }
-        catch
-        {
-            /* ignored */
-        }
-
-        try
-        {
-            _rowExecutionStateProvider.CurrentLineChanged -= OnCurrentLineChanged;
-        }
-        catch
-        {
-            /* ignored */
-        }
-
-        try
-        {
-            _colorSchemeProvider.Changed -= OnColorSchemeChanged;
-        }
-        catch
-        {
-            /* ignored */
-        }
+        try { _table.CellFormatting -= OnCellFormatting; } catch { /* ignored */ }
+        try { _table.CellBeginEdit -= OnCellBeginEdit; } catch { /* ignored */ }
+        try { _table.CurrentCellDirtyStateChanged -= OnCurrentCellDirtyStateChanged; } catch { /* ignored */ }
+        try { _table.CellPainting -= OnCellPaintingPreFormat; } catch { /* ignored */ }
+        try { _rowExecutionStateProvider.CurrentLineChanged -= OnCurrentLineChanged; } catch { /* ignored */ }
+        try { _colorSchemeProvider.Changed -= OnColorSchemeChanged; } catch { /* ignored */ }
     }
 
     private void ForceInitialFormatting()
@@ -206,8 +158,7 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to validate edit permissions for cell [{Row},{Column}]", rowIndex,
-                columnIndex);
+            _logger.LogError(ex, "Failed to validate edit permissions for cell [{Row},{Column}]", rowIndex, columnIndex);
             return true;
         }
     }
@@ -226,11 +177,28 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
 
     private void OnCurrentCellDirtyStateChanged(object? sender, EventArgs e)
     {
-        if (!_table.IsCurrentCellDirty || _table.CurrentCell == null)
+        var cell = _table.CurrentCell;
+        if (cell == null || !_table.IsCurrentCellDirty)
             return;
 
-        if (IsCellDisabled(_table.CurrentCell.RowIndex, _table.CurrentCell.ColumnIndex))
+        if (IsCellDisabled(cell.RowIndex, cell.ColumnIndex))
+        {
             _table.CancelEdit();
+            return;
+        }
+
+        if (cell is DataGridViewComboBoxCell or RecipeComboBoxCell or DataGridViewCheckBoxCell)
+        {
+            try
+            {
+                _table.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                _table.EndEdit();
+            }
+            catch
+            {
+                // ignored
+            }
+        }
     }
 
     private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
@@ -311,24 +279,29 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
         if (IsCellCurrentlyEditing(rowIndex, columnIndex))
             return;
 
-        if (cell.ReadOnly != isReadOnly)
-            cell.ReadOnly = isReadOnly;
+        cell.ReadOnly = isReadOnly;
     }
 
     private bool IsCellCurrentlyEditing(int rowIndex, int columnIndex)
     {
-        return _table.IsCurrentCellInEditMode &&
-               _table.CurrentCell?.RowIndex == rowIndex &&
-               _table.CurrentCell?.ColumnIndex == columnIndex;
+        return _table.IsCurrentCellInEditMode 
+               && _table.CurrentCell.RowIndex == rowIndex 
+               && _table.CurrentCell.ColumnIndex == columnIndex;
     }
 
     private void UpdateComboBoxDisplayStyle(DataGridViewCell cell, DataGridViewComboBoxDisplayStyle displayStyle)
     {
-        if (cell is DataGridViewComboBoxCell combo && combo.DisplayStyle != displayStyle)
-            combo.DisplayStyle = displayStyle;
-        else if (cell is RecipeComboBoxCell recipeCombo && recipeCombo.DisplayStyle != displayStyle)
-            recipeCombo.DisplayStyle = displayStyle;
+        switch (cell)
+        {
+            case RecipeComboBoxCell recipeCombo:
+                recipeCombo.DisplayStyle = displayStyle;
+                break;
+            case DataGridViewComboBoxCell combo:
+                combo.DisplayStyle = displayStyle;
+                break;
+        }
     }
+
 
     private void ApplyVisualStateToCellStyle(DataGridViewCell cell, CellVisualState visual)
     {
@@ -336,14 +309,14 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
             return;
 
         var currentStyle = cell.InheritedStyle;
-        if (ShouldUpdateCellStyle(currentStyle, visual))
-        {
-            cell.Style.Font = visual.Font;
-            cell.Style.ForeColor = visual.ForeColor;
-            cell.Style.BackColor = visual.BackColor;
-            cell.Style.SelectionBackColor = visual.BackColor;
-            cell.Style.SelectionForeColor = visual.ForeColor;
-        }
+        if (!ShouldUpdateCellStyle(currentStyle, visual)) 
+            return;
+        
+        cell.Style.Font = visual.Font;
+        cell.Style.ForeColor = visual.ForeColor;
+        cell.Style.BackColor = visual.BackColor;
+        cell.Style.SelectionBackColor = visual.BackColor;
+        cell.Style.SelectionForeColor = visual.ForeColor;
     }
 
     private bool ShouldUpdateCellStyle(DataGridViewCellStyle currentStyle, CellVisualState visual)
