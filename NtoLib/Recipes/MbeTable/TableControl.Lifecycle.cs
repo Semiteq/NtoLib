@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
+using NtoLib.Recipes.MbeTable.ModuleApplication.State.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
@@ -25,6 +26,9 @@ namespace NtoLib.Recipes.MbeTable;
 
 public partial class TableControl
 {
+    [NonSerialized] private System.Windows.Forms.Timer? _permissionsDebounceTimer;
+    [NonSerialized] private UiPermissions _pendingPermissions;
+
     private void InitializeServicesAndRuntime()
     {
         if (_runtimeInitialized) return;
@@ -65,6 +69,10 @@ public partial class TableControl
     {
         var stateProvider = _serviceProvider!.GetRequiredService<IStateProvider>();
         stateProvider.PermissionsChanged += OnPermissionsChanged;
+
+        // init debounce timer
+        _permissionsDebounceTimer = new System.Windows.Forms.Timer { Interval = 80 };
+        _permissionsDebounceTimer.Tick += PermissionsDebounceTimer_Tick;
 
         var status = _serviceProvider!.GetRequiredService<IStatusService>();
         var scheme = _serviceProvider!.GetRequiredService<ColorScheme>();
@@ -186,6 +194,29 @@ public partial class TableControl
             return;
         }
 
+        // Debounce: store latest, restart timer
+        _pendingPermissions = permissions;
+        if (_permissionsDebounceTimer != null)
+        {
+            _permissionsDebounceTimer.Stop();
+            _permissionsDebounceTimer.Start();
+        }
+        else
+        {
+            // Fallback: apply immediately if timer is not available
+            ApplyPermissionsNow(permissions);
+        }
+    }
+
+    private void PermissionsDebounceTimer_Tick(object? sender, EventArgs e)
+    {
+        if (_permissionsDebounceTimer == null) return;
+        _permissionsDebounceTimer.Stop();
+        ApplyPermissionsNow(_pendingPermissions);
+    }
+
+    private void ApplyPermissionsNow(UiPermissions permissions)
+    {
         var scheme = _serviceProvider?.GetService<ColorScheme>();
         if (scheme == null) return;
 
@@ -299,11 +330,17 @@ public partial class TableControl
             stateProvider.PermissionsChanged -= OnPermissionsChanged;
         }
 
+        if (_permissionsDebounceTimer != null)
+        {
+            try { _permissionsDebounceTimer.Stop(); } catch { }
+            try { _permissionsDebounceTimer.Tick -= PermissionsDebounceTimer_Tick; } catch { }
+            try { _permissionsDebounceTimer.Dispose(); } catch { }
+            _permissionsDebounceTimer = null;
+        }
+
         var status = _serviceProvider!.GetService<IStatusService>();
         try { status?.Detach(); } catch { }
     }
-
-
 
     private void DisposeRuntimeComponents()
     {

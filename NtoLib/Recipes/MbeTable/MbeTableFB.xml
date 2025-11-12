@@ -26,7 +26,10 @@
 			
 			<!-- Total time left till the end of the line. -->
 			<Pout ID="102" Name="LineTimeLeft"		Type="Вещественный"/>
-
+            
+            <!-- Is recipe is consistent between ModbusTCP client and in app -->
+            <Pout ID="103" Name="IsRecipeConsistent" Type="Логический"/>
+            
             <!-- ActionTarget pins are added automatically in MbeTableFb.cs -->
             
 		</Items>

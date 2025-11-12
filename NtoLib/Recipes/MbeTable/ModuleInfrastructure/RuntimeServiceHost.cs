@@ -25,6 +25,7 @@ internal sealed class RuntimeServiceHost : IDisposable
         _owner = serviceProvider.GetRequiredService<MbeTableFB>();
 
         _timerService.TimesUpdated += OnTimesUpdated;
+        _stateProvider.RecipeConsistencyChanged += OnRecipeConsistentChanged;
         _runtimeState.RecipeActiveChanged += OnRecipeActiveChanged;
         _runtimeState.SendEnabledChanged += OnSendEnabledChanged;
     }
@@ -40,6 +41,11 @@ internal sealed class RuntimeServiceHost : IDisposable
         _owner.UpdateTimerPins(stepTimeLeft, totalTimeLeft);
     }
 
+    private void OnRecipeConsistentChanged(bool isRecipeConsistent)
+    {
+        _owner.UpdateRecipeConsistentPin(isRecipeConsistent);
+    }
+    
     private void OnRecipeActiveChanged(bool recipeActive)
     {
         var snapshot = _stateProvider.GetSnapshot();
@@ -55,6 +61,7 @@ internal sealed class RuntimeServiceHost : IDisposable
     public void Dispose()
     {
         _timerService.TimesUpdated -= OnTimesUpdated;
+        _stateProvider.RecipeConsistencyChanged -= OnRecipeConsistentChanged;
         _runtimeState.RecipeActiveChanged -= OnRecipeActiveChanged;
         _runtimeState.SendEnabledChanged -= OnSendEnabledChanged;
     }
