@@ -25,6 +25,8 @@ public sealed class StateProvider : IStateProvider
     private OperationKind? _activeOperation;
 
     public event Action<UiPermissions>? PermissionsChanged;
+    
+    public event Action<bool>? RecipeConsistencyChanged;
 
     public StateProvider(ErrorPolicyRegistry policyRegistry, ILogger<StateProvider> logger)
     {

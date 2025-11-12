@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
-using NtoLib.Recipes.MbeTable.ModuleApplication.State.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
@@ -26,7 +25,7 @@ namespace NtoLib.Recipes.MbeTable;
 
 public partial class TableControl
 {
-    [NonSerialized] private System.Windows.Forms.Timer? _permissionsDebounceTimer;
+    [NonSerialized] private Timer? _permissionsDebounceTimer;
     [NonSerialized] private UiPermissions _pendingPermissions;
 
     private void InitializeServicesAndRuntime()
@@ -71,7 +70,7 @@ public partial class TableControl
         stateProvider.PermissionsChanged += OnPermissionsChanged;
 
         // init debounce timer
-        _permissionsDebounceTimer = new System.Windows.Forms.Timer { Interval = 80 };
+        _permissionsDebounceTimer = new Timer { Interval = 80 };
         _permissionsDebounceTimer.Tick += PermissionsDebounceTimer_Tick;
 
         var status = _serviceProvider!.GetRequiredService<IStatusService>();
@@ -133,13 +132,13 @@ public partial class TableControl
 
         if (IsHandleCreated)
         {
-            BeginInvoke(new Action(async () =>
+            BeginInvoke(new Action(async void () =>
             {
                 try
                 {
                     await _presenter.ReceiveRecipeAsync().ConfigureAwait(true);
                 }
-                catch { }
+                catch { /* ignored */ }
             }));
         }
         else
@@ -169,7 +168,7 @@ public partial class TableControl
                 OnPermissionsChanged(permissions);
             }
         }
-        catch { }
+        catch { /* ignored */ }
     }
 
     private void HandleInitializationError(Exception ex)
@@ -234,7 +233,7 @@ public partial class TableControl
             {
                 if (makeReadOnly)
                 {
-                    try { _table.EndEdit(); } catch { }
+                    try { _table.EndEdit(); } catch { /* ignored */ }
                 }
                 _table.ReadOnly = makeReadOnly;
             }
@@ -310,14 +309,13 @@ public partial class TableControl
     {
         try
         {
-            if (_serviceProvider == null) return;
+            if (_serviceProvider == null) 
+                return;
 
             UnsubscribeGlobalServices();
             DisposeRuntimeComponents();
         }
-        catch
-        {
-        }
+        catch { /* ignored */ }
 
         ResetRuntimeFields();
     }
@@ -332,14 +330,14 @@ public partial class TableControl
 
         if (_permissionsDebounceTimer != null)
         {
-            try { _permissionsDebounceTimer.Stop(); } catch { }
-            try { _permissionsDebounceTimer.Tick -= PermissionsDebounceTimer_Tick; } catch { }
-            try { _permissionsDebounceTimer.Dispose(); } catch { }
+            try { _permissionsDebounceTimer.Stop(); } catch { /* ignored */ }
+            try { _permissionsDebounceTimer.Tick -= PermissionsDebounceTimer_Tick; } catch { /* ignored */ }
+            try { _permissionsDebounceTimer.Dispose(); } catch { /* ignored */ }
             _permissionsDebounceTimer = null;
         }
 
         var status = _serviceProvider!.GetService<IStatusService>();
-        try { status?.Detach(); } catch { }
+        try { status?.Detach(); } catch { /* ignored */ }
     }
 
     private void DisposeRuntimeComponents()
@@ -381,6 +379,6 @@ public partial class TableControl
 
     private static void TryDisposeFont(Font? font)
     {
-        try { font?.Dispose(); } catch { }
+        try { font?.Dispose(); } catch { /* ignored */ }
     }
 }

@@ -8,6 +8,8 @@ public interface IStateProvider
 {
     event Action<UiPermissions>? PermissionsChanged;
 
+    event Action<bool>? RecipeConsistencyChanged;
+
     UiPermissions GetUiPermissions();
 
     UiStateSnapshot GetSnapshot();

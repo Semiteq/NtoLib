@@ -251,6 +251,7 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationSendBlockedByPlcError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationUnexpectedIoReadError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationUnexpectedIoWriteError.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationUnexpectedOperationError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationValidationFailedError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Services\RussianText.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\DecisionKind.cs" />
@@ -339,6 +340,11 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreForLoopMissingIterationCountWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreForLoopUnmatchedWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreStepDurationNegativeWarning.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTarget\ActionTargetProvider.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTarget\IActionTargetProvider.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\Errors\InfrastructureTargetGroupEmptyError.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\Errors\InfrastructureTargetGroupNoNonEmptyError.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\Errors\InfrastructureTargetsNotDefinedError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeServiceHost.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Errors\PresentationFileNotFoundError.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Errors\PresentationOperationCanceledError.cs" />
@@ -466,8 +472,6 @@
     <Compile Include="Recipes\MbeTable\ServiceCsv\Parsing\ICsvHeaderBinder.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\Parsing\ICsvHelperFactory.cs" />
     <Compile Include="Recipes\MbeTable\ServiceCsv\RecipeFileService.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTartget\ActionTargetProvider.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTartget\IActionTargetProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\FbPinAccessor.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\IPinAccessor.cs" />
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\IRecipeRuntimeState.cs" />
@@ -788,7 +792,7 @@
     <Content Include="Recipes\MbeTable\ServiceModbusTCP\readme.md" />
     <Content Include="Recipes\MbeTable\YamlTemplates\MBE\ActionsDefs.yaml" />
     <Content Include="Recipes\MbeTable\YamlTemplates\MBE\ColumnDefs.yaml" />
-    <Content Include="Recipes\MbeTable\YamlTemplates\MBE\PinGroups.yaml" />
+    <Content Include="Recipes\MbeTable\YamlTemplates\MBE\PinGroupDefs.yaml" />
     <Content Include="Recipes\MbeTable\YamlTemplates\MBE\PropertyDefs.yaml" />
     <Content Include="Recipes\MbeTable\YamlTemplates\MOCVD\ActionsDefs.yaml" />
     <Content Include="Recipes\MbeTable\YamlTemplates\MOCVD\ColumnDefs.yaml" />
