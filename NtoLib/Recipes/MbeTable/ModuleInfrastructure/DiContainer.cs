@@ -8,8 +8,10 @@ using Microsoft.Extensions.Logging;
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ErrorPolicy;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Services;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Policies;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Recipes;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Status;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
@@ -231,9 +233,24 @@ public static class MbeTableServiceConfigurator
 
     private static void RegisterApplicationServices(IServiceCollection services)
     {
+        // Policy registry and engines
         services.AddSingleton<ErrorPolicyRegistry>();
-        services.AddSingleton<ResultResolver>();
+        services.AddSingleton<IPolicyEngine, PolicyEngine>();
+
+        // UI state and policy reasons sink
         services.AddSingleton<IStateProvider, StateProvider>();
+        services.AddSingleton<IPolicyReasonsSink, PolicyReasonsSinkAdapter>();
+
+        // Status presenter (replaces ResultResolver)
+        services.AddSingleton<IStatusPresenter, StatusPresenter>();
+
+        // Validation snapshot provider from core
+        services.AddSingleton<IValidationSnapshotProvider, ValidationSnapshotProvider>();
+
+        // Operation pipeline
+        services.AddSingleton<IOperationPipeline, OperationPipeline>();
+
+        // View models and app services
         services.AddSingleton<ActionComboBox>();
         services.AddSingleton<TargetComboBox>();
         services.AddSingleton<TextBoxExtension>();

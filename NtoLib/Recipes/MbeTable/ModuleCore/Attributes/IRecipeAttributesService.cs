@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using FluentResults;
-
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
@@ -17,6 +15,11 @@ public interface IRecipeAttributesService
     /// Raised when validation state changes.
     /// </summary>
     event Action<bool>? ValidationStateChanged;
+
+    /// <summary>
+    /// Raised when validation snapshot changes.
+    /// </summary>
+    event Action<ValidationSnapshot>? ValidationSnapshotChanged;
 
     /// <summary>
     /// Analyzes Recipe and updates internal state.
@@ -52,4 +55,9 @@ public interface IRecipeAttributesService
     /// Checks if the Recipe is valid (structure + loops + timing).
     /// </summary>
     bool IsValid();
+
+    /// <summary>
+    /// Gets the current validation snapshot for the committed recipe.
+    /// </summary>
+    ValidationSnapshot GetValidationSnapshot();
 }

@@ -28,6 +28,9 @@ internal sealed class RuntimeServiceHost : IDisposable
         _stateProvider.RecipeConsistencyChanged += OnRecipeConsistentChanged;
         _runtimeState.RecipeActiveChanged += OnRecipeActiveChanged;
         _runtimeState.SendEnabledChanged += OnSendEnabledChanged;
+
+        var snap = _stateProvider.GetSnapshot();
+        _owner.UpdateRecipeConsistentPin(snap.IsRecipeConsistent);
     }
     
     public void Poll()

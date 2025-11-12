@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-
 using FluentResults;
-
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 
@@ -23,8 +21,10 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     private IReadOnlyDictionary<int, IReadOnlyList<LoopMetadata>> _enclosingLoopsMap;
     private TimeSpan _totalDuration;
     private bool _isValid;
+    private IReadOnlyList<IReason> _lastReasons;
 
     public event Action<bool>? ValidationStateChanged;
+    public event Action<ValidationSnapshot>? ValidationSnapshotChanged;
 
     public RecipeAttributesService(
         RecipeStructureValidator structureValidator,
@@ -39,7 +39,8 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         _stepStartTimes = ImmutableDictionary<int, TimeSpan>.Empty;
         _enclosingLoopsMap = ImmutableDictionary<int, IReadOnlyList<LoopMetadata>>.Empty;
         _totalDuration = TimeSpan.Zero;
-        _isValid = false;
+        _isValid = true;
+        _lastReasons = Array.Empty<IReason>();
     }
 
     public Result UpdateAttributes(Recipe recipe)
@@ -49,14 +50,13 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         var structureResult = _structureValidator.Validate(recipe);
         if (structureResult.IsFailed)
         {
-            ResetToInvalidState(previousValidState);
+            // Do not mutate current snapshot on failure; keep state of committed recipe intact.
             return structureResult;
         }
 
         var loopResult = _loopValidator.Validate(recipe);
         if (loopResult.IsFailed)
         {
-            ResetToInvalidState(previousValidState);
             return loopResult.ToResult();
         }
 
@@ -65,7 +65,6 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         var timeResult = _timeCalculator.Calculate(recipe);
         if (timeResult.IsFailed)
         {
-            ResetToInvalidState(previousValidState);
             return timeResult.ToResult();
         }
 
@@ -77,8 +76,10 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         var allReasons = loopResult.Reasons.Concat(timeResult.Reasons).ToList();
 
         _isValid = true;
+        _lastReasons = allReasons;
 
         NotifyValidationStateChanged(previousValidState);
+        NotifySnapshotChanged();
 
         var finalResult = Result.Ok();
         if (allReasons.Any())
@@ -114,19 +115,23 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
 
     public bool IsValid() => _isValid;
 
-    private void ResetToInvalidState(bool previousState)
-    {
-        _isValid = false;
-        _loopNestingLevels = ImmutableDictionary<int, int>.Empty;
-        _stepStartTimes = ImmutableDictionary<int, TimeSpan>.Empty;
-        _enclosingLoopsMap = ImmutableDictionary<int, IReadOnlyList<LoopMetadata>>.Empty;
-        _totalDuration = TimeSpan.Zero;
-        NotifyValidationStateChanged(previousState);
-    }
+    public ValidationSnapshot GetValidationSnapshot() =>
+        new ValidationSnapshot(_isValid, _lastReasons);
 
     private void NotifyValidationStateChanged(bool previousState)
     {
         if (previousState != _isValid)
             ValidationStateChanged?.Invoke(_isValid);
     }
-}
+
+    private void NotifySnapshotChanged()
+    {
+        try
+        {
+            ValidationSnapshotChanged?.Invoke(new ValidationSnapshot(_isValid, _lastReasons));
+        }
+        catch
+        {
+        }
+    }
+}   

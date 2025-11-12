@@ -10,7 +10,7 @@ public sealed class RecipeStructureValidator
     public Result Validate(Recipe recipe)
     {
         if (recipe.Steps.Count == 0)
-            return new CoreRecipeStepsNullError();
+            return Result.Ok();
 
         for (int i = 0; i < recipe.Steps.Count; i++)
         {

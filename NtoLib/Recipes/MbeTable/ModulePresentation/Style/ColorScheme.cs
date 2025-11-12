@@ -108,7 +108,7 @@ public record ColorScheme
         
         // Status colorscheme
         StatusInfoColor = Color.LightGreen;
-        StatusWarningColor = Color.LightYellow;
+        StatusWarningColor = Color.Gold;
         StatusErrorColor = Color.LightCoral;
         StatusBgColor = SystemColors.ControlLight;
     }

@@ -5,6 +5,7 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Warnings;
+using NtoLib.Recipes.MbeTable.ModuleCore.Warnings;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
@@ -18,6 +19,7 @@ public sealed class ErrorPolicyRegistry
     {
         RegisterCsvPolicies();
         RegisterModbusTcpPolicies();
+        RegisterApplicationPolicies();
         RegisterCorePolicies();
     }
 
@@ -40,12 +42,21 @@ public sealed class ErrorPolicyRegistry
         Register<ModbusTcpSerializationError>(ErrorSeverity.Error, BlockingScope.SaveAndSend);
     }
 
-    private void RegisterCorePolicies()
+    private void RegisterApplicationPolicies()
     {
         Register<ApplicationEmptyRecipeWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
         Register<ApplicationValidationFailedError>(ErrorSeverity.Error, BlockingScope.SaveAndSend);
         Register<ApplicationInvalidOperationError>(ErrorSeverity.Error, BlockingScope.None);
         Register<ApplicationRecipeActiveError>(ErrorSeverity.Error, BlockingScope.AllOperations);
+        Register<ApplicationEmptyRecipeWarning >(ErrorSeverity.Info, BlockingScope.None);
+    }
+    
+    private void RegisterCorePolicies()
+    {
+        Register<CoreForLoopUnmatchedWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+        Register<CoreForLoopInvalidIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+        Register<CoreForLoopMaxDepthExceededWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+        Register<CoreForLoopMissingIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
     }
 
     private void Register<T>(ErrorSeverity severity, BlockingScope scope) where T : IReason

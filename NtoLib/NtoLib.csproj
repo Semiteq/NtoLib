@@ -239,12 +239,12 @@
     </Compile>
     <Compile Include="Devices\Pumps\Status.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ErrorPolicy\BlockingScope.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\ErrorPolicy\ApplicationIndexOutOfRangeError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ErrorPolicy\ErrorPolicy.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ErrorPolicy\ErrorPolicyRegistry.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ErrorPolicy\ErrorSeverity.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationAnotherOperationActiveError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationFilePathEmptyError.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationIndexOutOfRangeError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationInvalidColumnIndexError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationInvalidOperationError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationRecipeActiveError.cs" />
@@ -253,16 +253,25 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationUnexpectedIoWriteError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationUnexpectedOperationError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Errors\ApplicationValidationFailedError.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\RussianText.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\IOperationPipeline.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\OperationPipeline.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Policies\IPolicyEngine.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Policies\PolicyEngine.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Recipes\IValidationSnapshotProvider.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Recipes\ValidationSnapshotProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\DecisionKind.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\State\IPolicyReasonsSink.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\IStateProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\OperationDecision.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\OperationId.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\OperationKind.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\State\PolicyReasonsSinkAdapter.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\StateProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\StatusKind.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\UiPermissions.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\UiStateSnapshot.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Status\IStatusPresenter.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Status\StatusPresenter.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Warnings\ApplicationEmptyRecipeWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ConfigError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ConfigException.cs" />
@@ -292,6 +301,7 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopAnalysisResult.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopFrame.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopMetadata.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\ValidationSnapshot.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Errors\CoreActionNameEmptyError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Errors\CoreActionNameNotFoundError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Errors\CoreActionNotFoundError.cs" />
@@ -334,6 +344,7 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\IFormulaEngine.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\IStepVariableAdapter.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\StepVariableAdapter.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Operations\MutationOutcome.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\ITimerControl.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreForLoopInvalidIterationCountWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreForLoopMaxDepthExceededWarning.cs" />
@@ -363,7 +374,6 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\IModbusTcpService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\ModbusTcpService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\RecipeApplicationService.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Services\ResultResolver.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ViewModels\RecipeViewModel.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\ViewModels\StepViewModel.cs" />
     <Compile Include="Recipes\MbeTable\ModuleConfig\Common\ColumnTypeIds.cs" />
