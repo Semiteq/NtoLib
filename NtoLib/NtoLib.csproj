@@ -257,8 +257,6 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\OperationPipeline.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Policies\IPolicyEngine.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Policies\PolicyEngine.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Recipes\IValidationSnapshotProvider.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Recipes\ValidationSnapshotProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\DecisionKind.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\IPolicyReasonsSink.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\State\IStateProvider.cs" />
@@ -301,7 +299,6 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopAnalysisResult.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopFrame.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\LoopMetadata.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleCore\Attributes\ValidationSnapshot.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Errors\CoreActionNameEmptyError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Errors\CoreActionNameNotFoundError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Errors\CoreActionNotFoundError.cs" />
@@ -344,8 +341,9 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\IFormulaEngine.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\IStepVariableAdapter.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Formulas\StepVariableAdapter.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleCore\Operations\MutationOutcome.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Services\ITimerControl.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\ValidationSnapshot.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreEmptyRecipeWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreForLoopInvalidIterationCountWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreForLoopMaxDepthExceededWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Warnings\CoreForLoopMissingIterationCountWarning.cs" />
@@ -538,6 +536,7 @@
     <Compile Include="Recipes\MbeTable\ServiceStatus\IStatusSink.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\LabelStatusSink.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusFormatter.cs" />
+    <Compile Include="Recipes\MbeTable\ServiceStatus\StatusKind.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusService.cs" />
     <Compile Include="Recipes\MbeTable\ServiceLogger\LoggingBootstrapper.cs" />
     <Compile Include="Recipes\MbeTable\ServiceLogger\LoggingOptions.cs" />

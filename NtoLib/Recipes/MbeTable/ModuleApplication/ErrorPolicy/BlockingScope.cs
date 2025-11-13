@@ -12,5 +12,6 @@ public enum BlockingScope
     Load = 1 << 3,
     
     SaveAndSend = Save | Send,
-    AllOperations = Save | Send | Edit | Load
+    AllOperations = Save | Send | Edit | Load,
+    NotSave = Send | Edit | Load,
 }

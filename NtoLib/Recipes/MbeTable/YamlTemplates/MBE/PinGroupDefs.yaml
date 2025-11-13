@@ -14,9 +14,9 @@
 - group_name: "HeaterNames"
   pin_group_id: 225
   first_pin_id: 226
-  pin_quantity: 16
+  pin_quantity: 27
 
 - group_name: "NitrogenSourcesNames"
-  pin_group_id: 250
-  first_pin_id: 251
+  pin_group_id: 280
+  first_pin_id: 281
   pin_quantity: 16

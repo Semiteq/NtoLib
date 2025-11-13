@@ -64,9 +64,6 @@ public class RecipeTimeCalculator
             result.WithReasons(stepProcessingResult.Reasons);
         }
 
-        // Do not emit unmatched loop warnings here; Validator is responsible for warnings.
-        // Any remaining frames are ignored for timing adjustments (only completed loops add extra iterations).
-
         var sortedEnclosingMap = BuildEnclosingMap(enclosingMapBuilder);
 
         var analysis = new LoopAnalysisResult(

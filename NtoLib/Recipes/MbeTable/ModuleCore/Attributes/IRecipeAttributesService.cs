@@ -12,16 +12,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 public interface IRecipeAttributesService
 {
     /// <summary>
-    /// Raised when validation state changes.
-    /// </summary>
-    event Action<bool>? ValidationStateChanged;
-
-    /// <summary>
-    /// Raised when validation snapshot changes.
-    /// </summary>
-    event Action<ValidationSnapshot>? ValidationSnapshotChanged;
-
-    /// <summary>
     /// Analyzes Recipe and updates internal state.
     /// </summary>
     Result UpdateAttributes(Recipe recipe);

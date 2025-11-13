@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Windows.Forms;
-
-using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ServiceStatus;
 
-/// <summary>
-/// WinForms sink that writes messages into a Label using ColorScheme and UI-thread marshaling.
-/// </summary>
 public sealed class LabelStatusSink : IStatusSink, IDisposable
 {
     private readonly Label _label;
@@ -30,13 +25,7 @@ public sealed class LabelStatusSink : IStatusSink, IDisposable
         {
             if (_disposed) return;
             _label.Text = message ?? string.Empty;
-            _label.BackColor = kind switch
-            {
-                StatusKind.Info => _scheme.StatusInfoColor,
-                StatusKind.Warning => _scheme.StatusWarningColor,
-                StatusKind.Error => _scheme.StatusErrorColor,
-                _ => _scheme.StatusBgColor
-            };
+            _label.BackColor = ResolveBackColor(kind);
         }
 
         TryInvoke(Apply);
@@ -60,6 +49,24 @@ public sealed class LabelStatusSink : IStatusSink, IDisposable
     public void Dispose()
     {
         _disposed = true;
+    }
+
+    private System.Drawing.Color ResolveBackColor(StatusKind kind)
+    {
+        switch (kind)
+        {
+            case StatusKind.Info:
+                return _scheme.StatusInfoColor;
+            case StatusKind.Success:
+                return _scheme.StatusSuccessColor;
+            case StatusKind.Warning:
+                return _scheme.StatusWarningColor;
+            case StatusKind.Error:
+                return _scheme.StatusErrorColor;
+            case StatusKind.None:
+            default:
+                return _scheme.StatusBgColor;
+        }
     }
 
     private bool EnsureHandle()

@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Policies;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Recipes;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Status;
+using NtoLib.Recipes.MbeTable.ModuleCore;
+using NtoLib.Recipes.MbeTable.ModuleCore.Attributes;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
@@ -18,7 +19,6 @@ public sealed class OperationPipeline : IOperationPipeline
     private readonly IStateProvider _state;
     private readonly IPolicyEngine _policy;
     private readonly IStatusPresenter _status;
-    private readonly IValidationSnapshotProvider _snapshotProvider;
     private readonly IPolicyReasonsSink _reasonsSink;
 
     public OperationPipeline(
@@ -26,14 +26,12 @@ public sealed class OperationPipeline : IOperationPipeline
         IStateProvider state,
         IPolicyEngine policy,
         IStatusPresenter status,
-        IValidationSnapshotProvider snapshotProvider,
         IPolicyReasonsSink reasonsSink)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _policy = policy ?? throw new ArgumentNullException(nameof(policy));
         _status = status ?? throw new ArgumentNullException(nameof(status));
-        _snapshotProvider = snapshotProvider ?? throw new ArgumentNullException(nameof(snapshotProvider));
         _reasonsSink = reasonsSink ?? throw new ArgumentNullException(nameof(reasonsSink));
     }
 
@@ -46,89 +44,42 @@ public sealed class OperationPipeline : IOperationPipeline
     {
         if (execute == null) throw new ArgumentNullException(nameof(execute));
 
-        Result<IDisposable>? gate = null;
-        if (operationKind != OperationKind.None)
+        var gateResult = AcquireGate(operationKind, operationId);
+        if (gateResult.IsFailed)
         {
-            gate = _state.BeginOperation(operationKind, operationId);
-            if (gate.IsFailed)
-            {
-                _logger.LogInformation("Operation [{Operation}] blocked before start", operationId);
-                _status.ShowError(StatusPresenter.BuildErrorMessage(gate.ToResult(), GetOperationNameRu(operationId)));
-                return gate.ToResult();
-            }
+            LogOperationBlocked(operationId);
+            ShowErrorStatus(gateResult.ToResult(), operationId);
+            return gateResult.ToResult();
         }
 
-        using (gate?.Value)
+        using (gateResult.Value)
         {
             try
             {
                 _status.Clear();
 
-                var result = await execute().ConfigureAwait(false);
+                var operationResult = await execute().ConfigureAwait(false);
+                var mergedReasons = operationResult.Reasons;
 
-                // Treat any IError as failure, even if IsSuccess is true.
-                var errorReasons = result.Reasons.OfType<IError>().ToList();
-                if (errorReasons.Count > 0)
+                if (ContainsErrors(mergedReasons))
                 {
-                    var failed = Result.Fail(errorReasons.ToArray());
-                    _logger.LogWarning("Operation [{Operation}] finished with error reasons, forcing failure", operationId);
-                    _status.ShowError(StatusPresenter.BuildErrorMessage(failed, GetOperationNameRu(operationId)));
-
-                    if (affectsRecipe)
-                    {
-                        var snapshot = _snapshotProvider.GetSnapshot();
-                        _reasonsSink.SetPolicyReasons(SelectPersistentReasons(snapshot.Reasons));
-                    }
-
-                    return failed;
+                    LogOperationFailedWithErrors(operationId);
+                    ShowErrorStatus(operationResult, operationId);
+                    return CreateFailureFromErrors(mergedReasons);
                 }
 
-                var decision = _policy.Decide(operationId, result.Reasons);
-                switch (decision.Kind)
+                PresentOperationStatus(operationId, operationResult, mergedReasons, successMessage);
+
+                if (affectsRecipe && operationResult.IsSuccess)
                 {
-                    case DecisionKind.BlockedError:
-                        _logger.LogWarning("Operation [{Operation}] completed with blocking error reason {ReasonType}", operationId, decision.PrimaryReason?.GetType().Name);
-                        _status.ShowError(StatusPresenter.BuildErrorMessage(result, GetOperationNameRu(operationId)));
-                        return result.IsFailed ? result : Result.Fail(result.Reasons.OfType<IError>().ToArray());
-
-                    case DecisionKind.BlockedWarning:
-                        _logger.LogWarning("Operation [{Operation}] completed with blocking warning reason {ReasonType}", operationId, decision.PrimaryReason?.GetType().Name);
-                        _status.ShowWarning(StatusPresenter.BuildWarningMessage(result, GetOperationNameRu(operationId)));
-                        break;
-
-                    case DecisionKind.Allowed:
-                        var hasWarnings = result.Reasons.OfType<BilingualWarning>().Any();
-                        if (hasWarnings)
-                        {
-                            _status.ShowWarning(StatusPresenter.BuildWarningMessage(result, GetOperationNameRu(operationId)));
-                        }
-                        else
-                        {
-                            var kind = GetCompletionMessageKind(operationId);
-                            if (kind == CompletionMessageKind.Success && !string.IsNullOrWhiteSpace(successMessage))
-                                _status.ShowSuccess(successMessage);
-                            else if (kind == CompletionMessageKind.Info && !string.IsNullOrWhiteSpace(successMessage))
-                                _status.ShowInfo(successMessage);
-                            else
-                                _status.Clear();
-                        }
-                        break;
+                    UpdatePersistentReasons(mergedReasons);
                 }
 
-                if (affectsRecipe && result.IsSuccess)
-                {
-                    var snapshot = _snapshotProvider.GetSnapshot();
-                    _reasonsSink.SetPolicyReasons(SelectPersistentReasons(snapshot.Reasons));
-                }
-
-                return result;
+                return operationResult;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Operation [{Operation}] failed unexpectedly", operationId);
-                var error = Result.Fail(new Error("Unexpected operation error").CausedBy(ex));
-                _status.ShowError(StatusPresenter.BuildErrorMessage(error, GetOperationNameRu(operationId)));
-                return error;
+                return HandleUnexpectedException(ex, operationId);
             }
         }
     }
@@ -141,16 +92,221 @@ public sealed class OperationPipeline : IOperationPipeline
         bool affectsRecipe = false)
     {
         if (execute == null) throw new ArgumentNullException(nameof(execute));
-        return RunAsync(operationId, operationKind, () => Task.FromResult(execute()), successMessage, affectsRecipe).GetAwaiter().GetResult();
+
+        Task<Result> ExecuteAsync()
+        {
+            return Task.FromResult(execute());
+        }
+
+        return RunAsync(operationId, operationKind, ExecuteAsync, successMessage, affectsRecipe)
+            .GetAwaiter()
+            .GetResult();
     }
 
-    private static IEnumerable<IReason> SelectPersistentReasons(IEnumerable<IReason> reasons)
+    public async Task<Result<T>> RunAsync<T>(
+        OperationId operationId,
+        OperationKind operationKind,
+        Func<Task<Result<T>>> execute,
+        string? successMessage = null,
+        bool affectsRecipe = false)
     {
-        return reasons ?? Enumerable.Empty<IReason>();
+        if (execute == null) throw new ArgumentNullException(nameof(execute));
+
+        var gateResult = AcquireGate(operationKind, operationId);
+        if (gateResult.IsFailed)
+        {
+            LogOperationBlocked(operationId);
+            ShowErrorStatus(gateResult.ToResult(), operationId);
+            return gateResult.ToResult<T>();
+        }
+
+        using (gateResult.Value)
+        {
+            try
+            {
+                _status.Clear();
+
+                var operationResult = await execute().ConfigureAwait(false);
+                var mergedReasons = ExtractMergedReasons(operationResult);
+
+                if (ContainsErrors(mergedReasons))
+                {
+                    LogOperationFailedWithErrors(operationId);
+                    ShowErrorStatus(operationResult.ToResult(), operationId);
+                    return CreateFailureFromErrors<T>(mergedReasons);
+                }
+
+                PresentOperationStatus(operationId, operationResult.ToResult(), mergedReasons, successMessage);
+
+                if (affectsRecipe && operationResult.IsSuccess)
+                {
+                    UpdatePersistentReasons(mergedReasons);
+                }
+
+                return operationResult;
+            }
+            catch (Exception ex)
+            {
+                return HandleUnexpectedException<T>(ex, operationId);
+            }
+        }
     }
 
-    private static string GetOperationNameRu(OperationId id) =>
-        id switch
+    public Result<T> Run<T>(
+        OperationId operationId,
+        OperationKind operationKind,
+        Func<Result<T>> execute,
+        string? successMessage = null,
+        bool affectsRecipe = false)
+    {
+        if (execute == null) throw new ArgumentNullException(nameof(execute));
+
+        Task<Result<T>> ExecuteAsync()
+        {
+            return Task.FromResult(execute());
+        }
+
+        return RunAsync(operationId, operationKind, ExecuteAsync, successMessage, affectsRecipe)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    private Result<IDisposable> AcquireGate(OperationKind operationKind, OperationId operationId)
+    {
+        if (operationKind == OperationKind.None)
+        {
+            return Result.Ok<IDisposable>(new NullDisposable());
+        }
+
+        return _state.BeginOperation(operationKind, operationId);
+    }
+
+    private static IEnumerable<IReason> ExtractMergedReasons<T>(Result<T> operationResult)
+    {
+        if (operationResult.IsSuccess && operationResult.Value is ValidationSnapshot snapshot)
+        {
+            var snapshotReasons = snapshot.Reasons ?? Array.Empty<IReason>();
+            return operationResult.Reasons.Concat(snapshotReasons);
+        }
+
+        return operationResult.Reasons;
+    }
+
+    private static bool ContainsErrors(IEnumerable<IReason> reasons)
+    {
+        return reasons.OfType<IError>().Any();
+    }
+
+    private static Result CreateFailureFromErrors(IEnumerable<IReason> reasons)
+    {
+        var errors = reasons.OfType<IError>().ToArray();
+        return Result.Fail(errors);
+    }
+
+    private static Result<T> CreateFailureFromErrors<T>(IEnumerable<IReason> reasons)
+    {
+        var errors = reasons.OfType<IError>().ToArray();
+        return Result.Fail<T>(errors);
+    }
+
+    private void PresentOperationStatus(
+        OperationId operationId,
+        Result baseResult,
+        IEnumerable<IReason> mergedReasons,
+        string? successMessage)
+    {
+        var decision = _policy.Decide(operationId, mergedReasons);
+
+        if (decision.Kind == DecisionKind.BlockedError)
+        {
+            ShowErrorStatus(baseResult, operationId);
+            return;
+        }
+
+        if (decision.Kind == DecisionKind.BlockedWarning)
+        {
+            ShowWarningStatus(baseResult, operationId);
+            return;
+        }
+
+        var hasWarnings = mergedReasons.OfType<BilingualWarning>().Any();
+        if (hasWarnings)
+        {
+            ShowWarningStatus(baseResult, operationId);
+            return;
+        }
+
+        ShowSuccessStatusIfNeeded(operationId, successMessage);
+    }
+
+    private void ShowSuccessStatusIfNeeded(OperationId operationId, string? successMessage)
+    {
+        var messageKind = DetermineCompletionMessageKind(operationId);
+
+        if (messageKind == CompletionMessageKind.Success && !string.IsNullOrWhiteSpace(successMessage))
+        {
+            _status.ShowSuccess(successMessage);
+            return;
+        }
+
+        if (messageKind == CompletionMessageKind.Info && !string.IsNullOrWhiteSpace(successMessage))
+        {
+            _status.ShowInfo(successMessage);
+            return;
+        }
+
+        _status.Clear();
+    }
+
+    private void UpdatePersistentReasons(IEnumerable<IReason> mergedReasons)
+    {
+        var persistentReasons = mergedReasons ?? Enumerable.Empty<IReason>();
+        _reasonsSink.SetPolicyReasons(persistentReasons);
+    }
+
+    private void LogOperationBlocked(OperationId operationId)
+    {
+        _logger.LogInformation("Operation [{Operation}] blocked before start", operationId);
+    }
+
+    private void LogOperationFailedWithErrors(OperationId operationId)
+    {
+        _logger.LogWarning("Operation [{Operation}] finished with error reasons, forcing failure", operationId);
+    }
+
+    private void ShowErrorStatus(Result result, OperationId operationId)
+    {
+        var operationNameRu = GetOperationNameRu(operationId);
+        var errorMessage = StatusPresenter.BuildErrorMessage(result, operationNameRu);
+        _status.ShowError(errorMessage);
+    }
+
+    private void ShowWarningStatus(Result result, OperationId operationId)
+    {
+        var operationNameRu = GetOperationNameRu(operationId);
+        var warningMessage = StatusPresenter.BuildWarningMessage(result, operationNameRu);
+        _status.ShowWarning(warningMessage);
+    }
+
+    private Result HandleUnexpectedException(Exception ex, OperationId operationId)
+    {
+        _logger.LogError(ex, "Operation [{Operation}] failed unexpectedly", operationId);
+        var error = Result.Fail(new Error("Unexpected operation error").CausedBy(ex));
+        ShowErrorStatus(error, operationId);
+        return error;
+    }
+
+    private Result<T> HandleUnexpectedException<T>(Exception ex, OperationId operationId)
+    {
+        _logger.LogError(ex, "Operation [{Operation}] failed unexpectedly", operationId);
+        var error = Result.Fail(new Error("Unexpected operation error").CausedBy(ex));
+        ShowErrorStatus(error, operationId);
+        return error.ToResult<T>();
+    }
+
+    private static string GetOperationNameRu(OperationId id)
+    {
+        return id switch
         {
             OperationId.Load => "загрузка рецепта",
             OperationId.Save => "сохранение рецепта",
@@ -161,25 +317,34 @@ public sealed class OperationPipeline : IOperationPipeline
             OperationId.EditCell => "обновление ячейки",
             _ => "операция"
         };
+    }
 
-    private enum CompletionMessageKind { None, Info, Success }
-
-    private static CompletionMessageKind GetCompletionMessageKind(OperationId id) =>
-        id switch
+    private static CompletionMessageKind DetermineCompletionMessageKind(OperationId id)
+    {
+        return id switch
         {
-            // Long operations: success
             OperationId.Save => CompletionMessageKind.Success,
             OperationId.Send => CompletionMessageKind.Success,
-
-            // Informational only
             OperationId.Load => CompletionMessageKind.Info,
             OperationId.Receive => CompletionMessageKind.Info,
             OperationId.AddStep => CompletionMessageKind.Info,
             OperationId.RemoveStep => CompletionMessageKind.Info,
-
-            // No message for cell edits
             OperationId.EditCell => CompletionMessageKind.None,
-
             _ => CompletionMessageKind.Info
         };
+    }
+
+    private enum CompletionMessageKind
+    {
+        None,
+        Info,
+        Success
+    }
+
+    private sealed class NullDisposable : IDisposable
+    {
+        public void Dispose()
+        {
+        }
+    }
 }

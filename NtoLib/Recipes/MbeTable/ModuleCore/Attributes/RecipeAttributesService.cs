@@ -23,9 +23,6 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     private bool _isValid;
     private IReadOnlyList<IReason> _lastReasons;
 
-    public event Action<bool>? ValidationStateChanged;
-    public event Action<ValidationSnapshot>? ValidationSnapshotChanged;
-
     public RecipeAttributesService(
         RecipeStructureValidator structureValidator,
         RecipeLoopValidator loopValidator,
@@ -50,7 +47,6 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
         var structureResult = _structureValidator.Validate(recipe);
         if (structureResult.IsFailed)
         {
-            // Do not mutate current snapshot on failure; keep state of committed recipe intact.
             return structureResult;
         }
 
@@ -77,9 +73,6 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
 
         _isValid = true;
         _lastReasons = allReasons;
-
-        NotifyValidationStateChanged(previousValidState);
-        NotifySnapshotChanged();
 
         var finalResult = Result.Ok();
         if (allReasons.Any())
@@ -116,22 +109,5 @@ public sealed class RecipeAttributesService : IRecipeAttributesService
     public bool IsValid() => _isValid;
 
     public ValidationSnapshot GetValidationSnapshot() =>
-        new ValidationSnapshot(_isValid, _lastReasons);
-
-    private void NotifyValidationStateChanged(bool previousState)
-    {
-        if (previousState != _isValid)
-            ValidationStateChanged?.Invoke(_isValid);
-    }
-
-    private void NotifySnapshotChanged()
-    {
-        try
-        {
-            ValidationSnapshotChanged?.Invoke(new ValidationSnapshot(_isValid, _lastReasons));
-        }
-        catch
-        {
-        }
-    }
-}   
+        new (_isValid, _lastReasons);
+}

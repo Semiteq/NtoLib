@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Windows.Forms;
-
-using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ServiceStatus;
 
-/// <summary>
-/// Thread-safe status facade. Does not depend on WinForms at API; Label can be attached through AttachLabel.
-/// </summary>
 public sealed class StatusService : IStatusService
 {
     private readonly StatusFormatter _formatter;
@@ -39,6 +34,7 @@ public sealed class StatusService : IStatusService
     }
 
     public void ShowInfo(string message) => Write(message, StatusKind.Info);
+    public void ShowSuccess(string message) => Write(message, StatusKind.Success);
     public void ShowWarning(string message) => Write(message, StatusKind.Warning);
     public void ShowError(string message) => Write(message, StatusKind.Error);
 

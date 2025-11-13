@@ -8,6 +8,7 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Warnings;
 using NtoLib.Recipes.MbeTable.ModuleCore.Warnings;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.ErrorPolicy;
 
@@ -25,30 +26,31 @@ public sealed class ErrorPolicyRegistry
 
     private void RegisterCsvPolicies()
     {
-        Register<CsvHeaderMismatchError>(ErrorSeverity.Critical, BlockingScope.AllOperations);
-        Register<CsvInvalidDataError>(ErrorSeverity.Error, BlockingScope.None);
-        Register<CsvEmptyHeaderError>(ErrorSeverity.Critical, BlockingScope.AllOperations);
+        // Register<CsvHeaderMismatchError>(ErrorSeverity.Critical, BlockingScope.AllOperations);
+        // Register<CsvInvalidDataError>(ErrorSeverity.Error, BlockingScope.None);
+        // Register<CsvEmptyHeaderError>(ErrorSeverity.Critical, BlockingScope.AllOperations);
     }
 
     private void RegisterModbusTcpPolicies()
     {
-        Register<ModbusTcpConnectionFailedError>(ErrorSeverity.Critical, BlockingScope.AllOperations);
-        Register<ModbusTcpCapacityExceededError>(ErrorSeverity.Error, BlockingScope.SaveAndSend);
-        Register<ModbusTcpVerificationFailedError>(ErrorSeverity.Error, BlockingScope.None);
-        Register<ModbusTcpInvalidResponseError>(ErrorSeverity.Error, BlockingScope.None);
-        Register<ModbusTcpReadFailedError>(ErrorSeverity.Error, BlockingScope.None);
-        Register<ModbusTcpFailedError>(ErrorSeverity.Error, BlockingScope.None);
-        Register<ModbusTcpTimeoutError>(ErrorSeverity.Error, BlockingScope.None);
-        Register<ModbusTcpSerializationError>(ErrorSeverity.Error, BlockingScope.SaveAndSend);
+        // Register<ModbusTcpConnectionFailedError>(ErrorSeverity.Critical, BlockingScope.None);
+        // Register<ModbusTcpCapacityExceededError>(ErrorSeverity.Error, BlockingScope.None);
+        // Register<ModbusTcpVerificationFailedError>(ErrorSeverity.Error, BlockingScope.None);
+        // Register<ModbusTcpInvalidResponseError>(ErrorSeverity.Error, BlockingScope.None);
+        // Register<ModbusTcpReadFailedError>(ErrorSeverity.Error, BlockingScope.None);
+        // Register<ModbusTcpFailedError>(ErrorSeverity.Error, BlockingScope.None);
+        // Register<ModbusTcpTimeoutError>(ErrorSeverity.Error, BlockingScope.None);
+        // Register<ModbusTcpSerializationError>(ErrorSeverity.Error, BlockingScope.None);
+        Register<ModbusTcpZeroRowsWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+        
     }
 
     private void RegisterApplicationPolicies()
     {
-        Register<ApplicationEmptyRecipeWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
         Register<ApplicationValidationFailedError>(ErrorSeverity.Error, BlockingScope.SaveAndSend);
-        Register<ApplicationInvalidOperationError>(ErrorSeverity.Error, BlockingScope.None);
-        Register<ApplicationRecipeActiveError>(ErrorSeverity.Error, BlockingScope.AllOperations);
-        Register<ApplicationEmptyRecipeWarning >(ErrorSeverity.Info, BlockingScope.None);
+        // Register<ApplicationInvalidOperationError>(ErrorSeverity.Error, BlockingScope.None);
+        Register<ApplicationRecipeActiveError>(ErrorSeverity.Error, BlockingScope.NotSave);
+        Register<ApplicationEmptyRecipeWarning >(ErrorSeverity.Info, BlockingScope.SaveAndSend);
     }
     
     private void RegisterCorePolicies()
@@ -57,6 +59,7 @@ public sealed class ErrorPolicyRegistry
         Register<CoreForLoopInvalidIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
         Register<CoreForLoopMaxDepthExceededWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
         Register<CoreForLoopMissingIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+        Register<CoreEmptyRecipeWarning>(ErrorSeverity.Info, BlockingScope.SaveAndSend);
     }
 
     private void Register<T>(ErrorSeverity severity, BlockingScope scope) where T : IReason

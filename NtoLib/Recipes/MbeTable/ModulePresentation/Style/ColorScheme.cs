@@ -58,6 +58,7 @@ public record ColorScheme
     
     // Status colorscheme
     public Color StatusInfoColor { get; init; }
+    public Color StatusSuccessColor { get; init; }
     public Color StatusWarningColor { get; init; }
     public Color StatusErrorColor { get; init; }
     public Color StatusBgColor { get; init; }
@@ -107,7 +108,8 @@ public record ColorScheme
         SelectedOutlineThickness = 1;
         
         // Status colorscheme
-        StatusInfoColor = Color.LightGreen;
+        StatusInfoColor = ControlBackgroundColor;
+        StatusSuccessColor = Color.LightGreen;
         StatusWarningColor = Color.Gold;
         StatusErrorColor = Color.LightCoral;
         StatusBgColor = SystemColors.ControlLight;

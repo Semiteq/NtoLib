@@ -19,16 +19,47 @@ public sealed class StatusPresenter : IStatusPresenter
 
     public void ShowSuccess(string message)
     {
-        _status.Clear();
-        if (!string.IsNullOrWhiteSpace(message))
-            _status.ShowInfo(ToSentence(message));
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            _status.Clear();
+            return;
+        }
+
+        _status.ShowSuccess(ToSentence(message));
     }
 
-    public void ShowWarning(string message) => _status.ShowWarning(ToSentence(message));
+    public void ShowWarning(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            _status.Clear();
+            return;
+        }
 
-    public void ShowError(string message) => _status.ShowError(ToSentence(message));
+        _status.ShowWarning(ToSentence(message));
+    }
 
-    public void ShowInfo(string message) => _status.ShowInfo(ToSentence(message));
+    public void ShowError(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            _status.Clear();
+            return;
+        }
+
+        _status.ShowError(ToSentence(message));
+    }
+
+    public void ShowInfo(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            _status.Clear();
+            return;
+        }
+
+        _status.ShowInfo(ToSentence(message));
+    }
 
     public static string BuildWarningMessage(Result result, string operationRu)
     {
