@@ -30,14 +30,14 @@ public sealed class StepViewModel
     public Result<IReadOnlyDictionary<short, string>> GetComboItems(ColumnIdentifier key)
     {
         var actionIdResult = GetCurrentActionId();
-        return actionIdResult.IsFailed 
-            ? actionIdResult.ToResult() : 
-            _comboboxDataProvider.GetResultEnumOptions(actionIdResult.Value, key.Value);
+        return actionIdResult.IsFailed
+            ? actionIdResult.ToResult()
+            : _comboboxDataProvider.GetResultEnumOptions(actionIdResult.Value, key.Value);
     }
 
     public Result<object?> GetPropertyValue(ColumnIdentifier identifier)
     {
-        if (identifier == MandatoryColumns.StepStartTime) 
+        if (identifier == MandatoryColumns.StepStartTime)
             return StepStartTime;
 
         var getPropertyResult = _step.GetProperty(identifier);
@@ -60,7 +60,7 @@ public sealed class StepViewModel
         var actionProperty = getPropertyResult.Value;
 
         var getValueResult = actionProperty.GetValue<short>();
-        if (getValueResult.IsFailed) 
+        if (getValueResult.IsFailed)
             return getValueResult.ToResult();
 
         return Result.Ok(getValueResult.Value);

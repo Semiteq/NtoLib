@@ -20,8 +20,8 @@ public sealed class ConfigFormulaCompilationError : Error
         : base(message)
     {
         ActionId = actionId;
-        ActionName = actionName ?? string.Empty;
-        Expression = expression ?? string.Empty;
+        ActionName = actionName;
+        Expression = expression;
 
         WithMetadata("actionId", ActionId.ToString());
         WithMetadata("actionName", ActionName);

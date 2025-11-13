@@ -1,0 +1,20 @@
+﻿using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
+
+namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
+
+public static class OperationScopesMap
+{
+    public static BlockingScope Map(OperationId operation) =>
+        operation switch
+        {
+            OperationId.Save => BlockingScope.Save,
+            OperationId.Send => BlockingScope.Send,
+            OperationId.Load => BlockingScope.Load,
+            OperationId.Receive => BlockingScope.Load,
+            OperationId.AddStep => BlockingScope.Edit,
+            OperationId.RemoveStep => BlockingScope.Edit,
+            OperationId.EditCell => BlockingScope.Edit,
+            _ => BlockingScope.None
+        };
+}

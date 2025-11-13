@@ -224,7 +224,7 @@ public partial class TableControl
         ApplyButtonPermission(_buttonAddBefore, permissions.CanAddStep, scheme);
         ApplyButtonPermission(_buttonAddAfter, permissions.CanAddStep, scheme);
         ApplyButtonPermission(_buttonDel, permissions.CanDeleteStep, scheme);
-        ApplyButtonPermission(_buttonWrite, permissions.CanWriteRecipe, scheme);
+        ApplyButtonPermission(_buttonWrite, permissions.CanSendRecipe, scheme);
     
         if (_table != null)
         {

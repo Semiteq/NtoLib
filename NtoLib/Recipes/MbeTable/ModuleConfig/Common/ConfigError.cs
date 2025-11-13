@@ -15,8 +15,8 @@ public sealed class ConfigError : Error
     public ConfigError(string message, string section, string context, Exception? cause = null)
         : base(message)
     {
-        Section = section ?? string.Empty;
-        Context = context ?? string.Empty;
+        Section = section;
+        Context = context;
 
         AddMeta("section", Section);
         AddMeta("context", Context);

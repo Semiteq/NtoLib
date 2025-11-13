@@ -57,12 +57,12 @@ internal sealed class MagicNumberValidator
         catch (Exception ex) when (ex is IOException or SocketException or ConnectionException)
         {
             _logger.LogError(ex, "Communication error during PLC validation");
-            return Result.Fail(new ModbusTcpTimeoutError("magic validation", settings.TimeoutMs).CausedBy(ex));
+            return Result.Fail(new ModbusTcpTimeoutError("magic validation", settings.TimeoutMs)).WithError(ex.Message);
         }
         catch (ModbusException mex)
         {
             _logger.LogError(mex, "PLC validation failed");
-            return Result.Fail(new ModbusTcpReadFailedError(settings.ControlRegister, 1, mex.Message));
+            return Result.Fail(new ModbusTcpReadFailedError(settings.ControlRegister, 1, mex.Message)).WithError(mex.Message);
         }
     }
 }

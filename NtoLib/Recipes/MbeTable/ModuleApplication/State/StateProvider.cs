@@ -2,10 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+
 using FluentResults;
+
 using Microsoft.Extensions.Logging;
-using NtoLib.Recipes.MbeTable.ModuleApplication.ErrorPolicy;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Errors;
+
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
@@ -32,7 +37,6 @@ public sealed class StateProvider : IStateProvider
         _policyRegistry = policyRegistry ?? throw new ArgumentNullException(nameof(policyRegistry));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        // Default: recipe is not consistent until explicitly set after successful send.
         _isRecipeConsistent = false;
     }
 
@@ -41,7 +45,7 @@ public sealed class StateProvider : IStateProvider
         lock (_lock)
         {
             return new UiPermissions(
-                CanWriteRecipe: EvaluateUnsafe(OperationId.Send).Kind == DecisionKind.Allowed,
+                CanSendRecipe: EvaluateUnsafe(OperationId.Send).Kind == DecisionKind.Allowed,
                 CanOpenFile: EvaluateUnsafe(OperationId.Load).Kind == DecisionKind.Allowed,
                 CanAddStep: EvaluateUnsafe(OperationId.AddStep).Kind == DecisionKind.Allowed,
                 CanDeleteStep: EvaluateUnsafe(OperationId.RemoveStep).Kind == DecisionKind.Allowed,
@@ -127,6 +131,7 @@ public sealed class StateProvider : IStateProvider
                 changed = true;
             }
         }
+
         if (changed) RaisePermissionsChanged();
     }
 
@@ -180,12 +185,13 @@ public sealed class StateProvider : IStateProvider
         bool changed = false;
         lock (_lock)
         {
-            if (!ReferenceEquals(_policyReasons, newList))
+            if (!ReasonSequenceComparer.SequenceEqual(_policyReasons, newList))
             {
                 _policyReasons = newList;
                 changed = true;
             }
         }
+
         if (changed) RaisePermissionsChanged();
     }
 
@@ -205,8 +211,15 @@ public sealed class StateProvider : IStateProvider
 
         if (changed)
         {
-            _logger.LogTrace("State changed: RecipeConsistent. Old: {OldValue}, New: {NewValue}.", oldValue, isConsistent);
-            try { RecipeConsistencyChanged?.Invoke(isConsistent); } catch { }
+            _logger.LogTrace("State changed: RecipeConsistent. Old: {OldValue}, New: {NewValue}.", oldValue,
+                isConsistent);
+            try
+            {
+                RecipeConsistencyChanged?.Invoke(isConsistent);
+            }
+            catch
+            {
+            }
         }
     }
 
@@ -225,7 +238,12 @@ public sealed class StateProvider : IStateProvider
             return OperationDecision.BlockedError(new ApplicationRecipeActiveError());
         }
 
-        var scope = MapOperationToScope(operation);
+        if (operation == OperationId.Send && !_enaSendOk)
+        {
+            return OperationDecision.BlockedError(new ApplicationSendBlockedByPlcError());
+        }
+
+        var scope = OperationScopesMap.Map(operation);
         foreach (var r in _policyReasons)
         {
             if (_policyRegistry.Blocks(r, scope))
@@ -240,22 +258,15 @@ public sealed class StateProvider : IStateProvider
         return OperationDecision.Allowed();
     }
 
-    private static BlockingScope MapOperationToScope(OperationId operation) =>
-        operation switch
-        {
-            OperationId.Save => BlockingScope.Save,
-            OperationId.Send => BlockingScope.Send,
-            OperationId.Load => BlockingScope.Load,
-            OperationId.Receive => BlockingScope.Load,
-            OperationId.AddStep => BlockingScope.Edit,
-            OperationId.RemoveStep => BlockingScope.Edit,
-            OperationId.EditCell => BlockingScope.Edit,
-            _ => BlockingScope.None
-        };
-
     private void RaisePermissionsChanged()
     {
-        try { PermissionsChanged?.Invoke(GetUiPermissions()); } catch { }
+        try
+        {
+            PermissionsChanged?.Invoke(GetUiPermissions());
+        }
+        catch
+        {
+        }
     }
 
     private sealed class Gate : IDisposable

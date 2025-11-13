@@ -1,12 +1,10 @@
-﻿
-
-namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
+﻿namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
 
 /// <summary>
-/// Represents computed UI permissions based on current application state.
+/// Represents computed UI permissions based on the current application state.
 /// </summary>
 public sealed record UiPermissions(
-    bool CanWriteRecipe,
+    bool CanSendRecipe,
     bool CanOpenFile,
     bool CanAddStep,
     bool CanDeleteStep,

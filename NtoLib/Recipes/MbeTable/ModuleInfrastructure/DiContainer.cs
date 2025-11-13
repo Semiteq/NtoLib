@@ -6,9 +6,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ModuleApplication.ErrorPolicy;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Policies;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.AddStep;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.EditCell;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Load;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Recive;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Remove;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Save;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Send;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Policy;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Status;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
@@ -233,14 +244,14 @@ public static class MbeTableServiceConfigurator
     private static void RegisterApplicationServices(IServiceCollection services)
     {
         services.AddSingleton<ErrorPolicyRegistry>();
-        services.AddSingleton<IPolicyEngine, PolicyEngine>();
+        services.AddSingleton<PolicyEngine>();
 
         services.AddSingleton<IStateProvider, StateProvider>();
-        services.AddSingleton<IPolicyReasonsSink, PolicyReasonsSinkAdapter>();
+        services.AddSingleton<PolicyReasonsSinkAdapter>();
 
         services.AddSingleton<IStatusPresenter, StatusPresenter>();
 
-        services.AddSingleton<IOperationPipeline, OperationPipeline>();
+        services.AddSingleton<OperationPipeline>();
 
         services.AddSingleton<ActionComboBox>();
         services.AddSingleton<TargetComboBox>();
@@ -250,6 +261,22 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IModbusTcpService, ModbusTcpService>();
         services.AddSingleton<ICsvService, CsvService>();
         services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
+        
+        services.AddSingleton<EditCellOperationDefinition>();
+        services.AddSingleton<AddStepOperationDefinition>();
+        services.AddSingleton<RemoveStepOperationDefinition>();
+        services.AddSingleton<LoadRecipeOperationDefinition>();
+        services.AddSingleton<SaveRecipeOperationDefinition>();
+        services.AddSingleton<SendRecipeOperationDefinition>();
+        services.AddSingleton<ReceiveRecipeOperationDefinition>();
+        
+        services.AddSingleton<IRecipeOperationHandler<EditCellArgs>, EditCellOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<AddStepArgs>, AddStepOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<RemoveStepArgs>, RemoveStepOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<LoadRecipeArgs>, LoadRecipeOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<SaveRecipeArgs>, SaveRecipeOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<SendRecipeArgs>, SendRecipeOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<ReceiveRecipeArgs>, ReceiveRecipeOperationHandler>();
     }
 
     private static void RegisterPresentationServices(IServiceCollection services)

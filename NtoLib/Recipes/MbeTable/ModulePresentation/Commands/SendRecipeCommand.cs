@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 

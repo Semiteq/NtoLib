@@ -10,6 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
+using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Warnings;
@@ -89,7 +90,7 @@ public sealed class RecipePlcService : IRecipePlcService
                 await Task.Delay(verifyDelayMs, ct).ConfigureAwait(false);
             }
 
-            return Result.Ok().WithSuccess("Recipe successfully written to PLC");
+            return Result.Ok();
         }
         catch (OperationCanceledException)
         {
@@ -99,9 +100,7 @@ public sealed class RecipePlcService : IRecipePlcService
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred during recipe serialization or sending.");
-            return Result.Fail(new BilingualError(
-                "An unexpected error occurred during send operation",
-                "Непредвиденная ошибка при отправке рецепта").CausedBy(ex));
+            return Result.Fail(new ModbusTcpUnexpectedError(ex.Message));
         }
         finally
         {

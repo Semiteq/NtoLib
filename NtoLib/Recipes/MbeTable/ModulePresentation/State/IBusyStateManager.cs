@@ -1,5 +1,6 @@
 ﻿using System;
 
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.State;

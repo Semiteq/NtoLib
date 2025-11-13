@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using FluentResults;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
 
-public sealed class PolicyReasonsSinkAdapter : IPolicyReasonsSink
+public sealed class PolicyReasonsSinkAdapter
 {
     private readonly IStateProvider _state;
 

@@ -141,7 +141,7 @@ internal sealed class ModbusTransport : IModbusTransport
                 opContext.ConnectionId, ex.GetType().Name);
             
             var settings = _optionsProvider.GetCurrent();
-            return Result.Fail(new ModbusTcpTimeoutError(opContext.Type, settings.TimeoutMs).CausedBy(ex)).ToResult<T>();
+            return Result.Fail(new ModbusTcpTimeoutError(opContext.Type, settings.TimeoutMs)).WithError(ex.Message).ToResult<T>();
         }
         catch (ModbusException mex)
         {

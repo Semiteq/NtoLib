@@ -106,7 +106,7 @@ public sealed class RecipeFileService : IRecipeFileService
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Failed to read file: {FilePath}", filePath);
-            return new CsvReadFailedError(ex.Message).CausedBy(ex);
+            return Result.Fail(new CsvReadFailedError(ex.Message)).WithError(ex.Message);
         }
     }
 
@@ -145,7 +145,7 @@ public sealed class RecipeFileService : IRecipeFileService
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Failed to write file: {FilePath}", filePath);
-            return new CsvWriteFailedError(ex.Message).CausedBy(ex);
+            return Result.Fail(new CsvWriteFailedError(ex.Message)).WithError(ex.Message);
         }
         finally
         {

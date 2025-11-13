@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.ModuleApplication.Errors;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
@@ -29,11 +29,13 @@ public sealed class RecipeViewModel
     {
         _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
         _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
-        _propertyStateProvider = propertyStateProvider ?? throw new ArgumentNullException(nameof(propertyStateProvider));
+        _propertyStateProvider =
+            propertyStateProvider ?? throw new ArgumentNullException(nameof(propertyStateProvider));
         _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns));
 
         RebuildViewModels();
     }
+
     public void OnRecipeStructureChanged() => RebuildViewModels();
 
     public void OnTimeRecalculated(int fromStepIndex)
@@ -54,7 +56,7 @@ public sealed class RecipeViewModel
     public Result<object?> GetCellValue(int rowIndex, int columnIndex)
     {
         if (rowIndex < 0 || rowIndex >= _viewModels.Count)
-            return new ApplicationInvalidColumnIndexError(columnIndex);
+            return new ApplicationInvalidRowIndexError(rowIndex);
 
         if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
             return new ApplicationInvalidColumnIndexError(columnIndex);
@@ -68,8 +70,10 @@ public sealed class RecipeViewModel
 
     public PropertyState GetCellState(int rowIndex, int columnIndex)
     {
-        if (rowIndex < 0 || rowIndex >= _viewModels.Count) return PropertyState.Disabled;
-        if (columnIndex < 0 || columnIndex >= _tableColumns.Count) return PropertyState.Disabled;
+        if (rowIndex < 0 || rowIndex >= _viewModels.Count)
+            return PropertyState.Disabled;
+        if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
+            return PropertyState.Disabled;
 
         var step = _recipeService.CurrentRecipe.Steps[rowIndex];
         var columnKey = _tableColumns[columnIndex].Key;

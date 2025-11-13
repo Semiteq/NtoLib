@@ -1,4 +1,6 @@
-﻿namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
+﻿using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
+
+namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
 
 // Immutable state snapshot for diagnostics and testing.
 public sealed record UiStateSnapshot(

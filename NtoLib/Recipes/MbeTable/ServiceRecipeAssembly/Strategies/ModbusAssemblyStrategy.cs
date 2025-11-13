@@ -69,7 +69,7 @@ public sealed class ModbusAssemblyStrategy
         {
             var stepResult = AssembleStep(intData, floatData, row);
             if (stepResult.IsFailed)
-                return new AssemblyStepFailedError(row).CausedBy(stepResult.Errors);
+                return Result.Fail(new AssemblyStepFailedError(row)).WithErrors(stepResult.Errors);
 
             steps.Add(stepResult.Value);
         }
