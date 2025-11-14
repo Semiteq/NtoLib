@@ -122,7 +122,7 @@ public sealed class StateProvider : IStateProvider
 
     public void EndOperation()
     {
-        bool changed = false;
+        var changed = false;
         lock (_lock)
         {
             if (_activeOperation != null)
@@ -137,8 +137,8 @@ public sealed class StateProvider : IStateProvider
 
     public void SetStepCount(int stepCount)
     {
-        bool changed = false;
-        int oldValue = _stepCount;
+        var changed = false;
+        var oldValue = _stepCount;
         lock (_lock)
         {
             if (_stepCount != stepCount)
@@ -158,7 +158,7 @@ public sealed class StateProvider : IStateProvider
 
     public void SetPlcFlags(bool enaSendOk, bool recipeActive)
     {
-        bool changed = false;
+        var changed = false;
         var oldValue = (_enaSendOk, _recipeActive);
         lock (_lock)
         {
@@ -172,9 +172,8 @@ public sealed class StateProvider : IStateProvider
 
         if (changed)
         {
-            _logger.LogTrace(
-                "State changed: PLC Flags. Old: {OldValue}, New: {NewValue}. State: {State}",
-                oldValue, (enaSendOk, recipeActive), GetSnapshot());
+            _logger.LogTrace("State changed: PLC Flags. Old: {OldValue}, New: {NewValue}. State: {State}", oldValue,
+                (enaSendOk, recipeActive), GetSnapshot());
             RaisePermissionsChanged();
         }
     }
@@ -182,7 +181,7 @@ public sealed class StateProvider : IStateProvider
     public void SetPolicyReasons(IEnumerable<IReason> reasons)
     {
         var newList = (reasons ?? Enumerable.Empty<IReason>()).ToList().AsReadOnly();
-        bool changed = false;
+        var changed = false;
         lock (_lock)
         {
             if (!ReasonSequenceComparer.SequenceEqual(_policyReasons, newList))
@@ -197,7 +196,7 @@ public sealed class StateProvider : IStateProvider
 
     public void SetRecipeConsistent(bool isConsistent)
     {
-        bool changed = false;
+        var changed = false;
         bool oldValue;
         lock (_lock)
         {
@@ -219,6 +218,7 @@ public sealed class StateProvider : IStateProvider
             }
             catch
             {
+                /* ignored */
             }
         }
     }
@@ -232,10 +232,9 @@ public sealed class StateProvider : IStateProvider
 
         if (_recipeActive)
         {
-            if (operation is OperationId.Receive or OperationId.Save)
-                return OperationDecision.Allowed();
-
-            return OperationDecision.BlockedError(new ApplicationRecipeActiveError());
+            return operation is OperationId.Receive or OperationId.Save 
+                ? OperationDecision.Allowed() 
+                : OperationDecision.BlockedError(new ApplicationRecipeActiveWarning());
         }
 
         if (operation == OperationId.Send && !_enaSendOk)
@@ -246,13 +245,12 @@ public sealed class StateProvider : IStateProvider
         var scope = OperationScopesMap.Map(operation);
         foreach (var r in _policyReasons)
         {
-            if (_policyRegistry.Blocks(r, scope))
-            {
-                var severity = _policyRegistry.GetSeverity(r);
-                return severity == ErrorSeverity.Warning
-                    ? OperationDecision.BlockedWarning(r)
-                    : OperationDecision.BlockedError(r);
-            }
+            if (!_policyRegistry.Blocks(r, scope)) continue;
+            
+            var severity = _policyRegistry.GetSeverity(r);
+            return severity == ErrorSeverity.Warning
+                ? OperationDecision.BlockedWarning(r)
+                : OperationDecision.BlockedError(r);
         }
 
         return OperationDecision.Allowed();
@@ -266,6 +264,7 @@ public sealed class StateProvider : IStateProvider
         }
         catch
         {
+            /* ignored */
         }
     }
 

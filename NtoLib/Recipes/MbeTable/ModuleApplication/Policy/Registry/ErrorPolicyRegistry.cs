@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Warnings;
 using NtoLib.Recipes.MbeTable.ModuleCore.Warnings;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Warnings;
 
@@ -29,9 +28,7 @@ public sealed class ErrorPolicyRegistry
 
     private void RegisterApplicationPolicies()
     {
-        Register<ApplicationValidationFailedError>(ErrorSeverity.Error, BlockingScope.SaveAndSend);
-        Register<ApplicationRecipeActiveError>(ErrorSeverity.Error, BlockingScope.NotSave);
-        Register<ApplicationEmptyRecipeWarning>(ErrorSeverity.Info, BlockingScope.SaveAndSend);
+        Register<ApplicationRecipeActiveWarning>(ErrorSeverity.Warning, BlockingScope.NotSave);
     }
 
     private void RegisterCorePolicies()

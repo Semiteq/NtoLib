@@ -291,7 +291,7 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationInvalidColumnIndexError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationInvalidOperationError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationInvalidRowIndexError.cs" />
-    <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationRecipeActiveError.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationRecipeActiveWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationSendBlockedByPlcError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationUnexpectedIoReadError.cs" />
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Errors\ApplicationUnexpectedIoWriteError.cs" />
@@ -823,9 +823,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="NtoLibTableConfig\ActionsDefs.yaml" />
+    <Content Include="NtoLibTableConfig\ColumnDefs.yaml" />
     <Content Include="NtoLibTableConfig\PinGroupDefs.yaml" />
     <Content Include="NtoLibTableConfig\PropertyDefs.yaml" />
-    <Content Include="NtoLibTableConfig\ColumnDefs.yaml" />
     <Content Include="Recipes\MbeTable\MbeTableFB.png" />
     <Content Include="Recipes\MbeTable\ModuleConfig\readme.md" />
     <Content Include="Recipes\MbeTable\ModuleInfrastructure\readme.md" />
