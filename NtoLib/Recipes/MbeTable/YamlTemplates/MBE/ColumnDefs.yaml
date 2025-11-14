@@ -57,7 +57,7 @@
     code: "initial_value"
     ui_name: "Начальное значение"
     column_type: "property_field"
-    width: 230
+    width: 120
     alignment: "MiddleCenter"
   business_logic:
     property_type_id: "Float"
@@ -72,7 +72,7 @@
     code: "task"
     ui_name: "Задание"
     column_type: "property_field"
-    width: 160
+    width: 120
     alignment: "MiddleCenter"
   business_logic:
     property_type_id: "Float"
@@ -87,7 +87,7 @@
     code: "speed"
     ui_name: "Скорость"
     column_type: "property_field"
-    width: 110
+    width: 120
     alignment: "MiddleCenter"
   business_logic:
     property_type_id: "pressure_bar"

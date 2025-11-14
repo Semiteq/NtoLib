@@ -20,3 +20,8 @@
   pin_group_id: 280
   first_pin_id: 281
   pin_quantity: 16
+
+- group_name: "ChamberHeaterNames"
+  pin_group_id: 300
+  first_pin_id: 301
+  pin_quantity: 16

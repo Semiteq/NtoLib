@@ -4,7 +4,7 @@
 #   units: "°C"                   # Единицы измерения для UI. Могут принимать любое текстовое значение. При валидации отбрасываются и в логике не участвуют.
 #   min: 0                        # Минимально допустимое значение (для числовых типов) в пределах указанного типа (float или Int16).
 #   max: 2000                     # Максимально допустимое значение в пределах указанного типа (float или Int16).
-#   format_kind: "Numeric"        # Формат отображения. Варианты: Numeric, Scientific, TimeHms. Numeric выводит данные в формате 123.## с опциональной дробной частью, Scientific 123.##E123, TimeHms 01:02:03.###.
+#   format_kind: "Numeric"           # Формат отображения. Варианты: Numeric, Scientific, TimeHms. Numeric выводит данные в формате 123.## с опциональной дробной частью, Scientific 123.##E123, TimeHms 01:02:03.###.
 # (Детальное описание см. в документации)
 # --- End Of Example ---
 
@@ -12,7 +12,7 @@
 
 ## Целое число
 ## Используем Short (Int16), т.к в PLC применяется 16-битный Int
-## См https://learn.microsoft.com/en-us/dotnet/api/system.int16?view=netframework-4.8.1
+## См https://learn.microsoft.com/en-us/dotnet/api/system.int16?view=net-9.0
 - property_type_id: "int"
   system_type: "System.Int16"
   units: ""
@@ -20,7 +20,7 @@
 
 ## Число с плавающей точкой
 ## Здесь и далее используем Single (aka Float), т.к в PLC применяется 32-битный Real
-## См https://learn.microsoft.com/en-us/dotnet/api/system.single?view=netframework-4.8.1
+## См https://learn.microsoft.com/en-us/dotnet/api/system.single?view=net-9.0
 - property_type_id: "float"
   system_type: "System.Single"
   units: ""
@@ -85,7 +85,7 @@
 ## Число с плавающей точкой размерности давления (мБар)
 - property_type_id: "pressure_bar"
   system_type: "System.Single"
-  units: "мБар"
+  units: "мбар"
   min: -2000
   max: 2000
   format_kind: "Numeric"

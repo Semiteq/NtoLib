@@ -85,7 +85,22 @@
   min: -100
   max: 100
   format_kind: "Numeric"
+  
+- property_type_id: "rotation_speed"
+  system_type: "System.Single"
+  units: "об/мин"
+  non_negative: false
+  min: -10
+  max: 10
+  format_kind: "Numeric"
 
+- property_type_id: "height"
+  system_type: "System.Single"
+  units: "мм"
+  non_negative: false
+  min: 0
+  max: 100
+  format_kind: "Numeric"
 
 ## 1атм = 101,325Па = 1013.25мБар
 ## или грубо 1атм ~ 100,000Па ~ 1,000мБар
@@ -117,6 +132,14 @@
   max: 2000
   format_kind: "Numeric"
 
+- property_type_id: "chamber_temp"
+  system_type: "System.Single"
+  units: "°C"
+  non_negative: false
+  min: 0
+  max: 300
+  format_kind: "Numeric"
+
 ## Число с плавающей точкой размерности температуры/время (°C/мин)
 - property_type_id: "temp_speed"
   system_type: "System.Single"
@@ -124,6 +147,24 @@
   non_negative: true
   min: -1000
   max: 1000
+  format_kind: "Numeric"
+  
+- property_type_id: "chamber_temp_speed"
+  system_type: "System.Single"
+  units: "°C/ч"
+  non_negative: true
+  min: -100
+  max: 100
+  format_kind: "Numeric"
+  
+## Управление источником мышьяка
+
+- property_type_id: "arsenic_source_flow"
+  system_type: "System.Single"
+  units: "мм"
+  non_negative: true
+  min: 0
+  max: 200
   format_kind: "Numeric"
 
 ## Время в секундах

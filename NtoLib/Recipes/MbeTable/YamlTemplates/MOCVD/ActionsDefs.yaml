@@ -27,7 +27,7 @@
     - key: "comment"
       property_type_id: "string"
 
-### Wait по достижению температуры
+### Wait по достижению температуры со стабилизацией
 - id: 11
   name: "Wait_Temp"
   deploy_duration: "Immediate"
@@ -41,7 +41,7 @@
     - key: "comment"
       property_type_id: "string"
 
-#### Wait по достижению давления
+#### Wait по достижению давления со стабилизацией
 - id: 12
   name: "Wait_Pressure"
   deploy_duration: "Immediate"
@@ -55,6 +55,33 @@
     - key: "comment"
       property_type_id: "string"
 
+#### Wait по достижению <= давления
+- id: 15
+  name: "Wait_Pressure <="
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "PressureSensor"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "pressure_bar"
+    - key: "comment"
+      property_type_id: "string"
+
+#### Wait по достижению >= давления
+- id: 16
+  name: "Wait_Pressure >="
+  deploy_duration: "Immediate"
+  columns:
+    - key: "channel"
+      group_name: "PressureSensor"
+      property_type_id: "enum"
+    - key: "target_value"
+      default_value: "0"
+      property_type_id: "pressure_bar"
+    - key: "comment"
+      property_type_id: "string"
 ## Конец группы WAIT
 
 ## Пауза
@@ -438,6 +465,9 @@
     - key: "target_value"
       default_value: "0"
       property_type_id: "pressure_bar"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
     - key: "comment"
       property_type_id: "string"
 
@@ -448,6 +478,9 @@
     - key: "target_value"
       default_value: "0"
       property_type_id: "percent"
+    - key: "step_duration"
+      default_value: "0"
+      property_type_id: "time"
     - key: "comment"
       property_type_id: "string"
 

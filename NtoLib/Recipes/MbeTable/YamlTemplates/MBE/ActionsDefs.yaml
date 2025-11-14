@@ -79,7 +79,7 @@
 
 - id: 70
   name: "Открыть на время"
-  deploy_duration: "LongLasting"
+  deploy_duration: "Immediate"
   columns:
     - key: "target"
       group_name: "ShutterNames"
@@ -233,6 +233,68 @@
       property_type_id: "enum"
     - key: "task"
       property_type_id: "flow"
+      default_value: "10"
+    - key: "comment"
+      property_type_id: "string"
+      
+- id: 180
+  name: "Вращение РМ"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "speed"
+      property_type_id: "rotation_speed"
+      default_value: "0"
+    - key: "comment"
+      property_type_id: "string"
+      
+- id: 190
+  name: "Высота РМ"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "task"
+      property_type_id: "height"
+      default_value: "0"
+    - key: "comment"
+      property_type_id: "string"
+      
+- id: 200
+  name: "Прогрев скачком"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "ChamberHeaterNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "chamber_temp"
+      default_value: "100"
+    - key: "comment"
+      property_type_id: "string"
+      
+- id: 210
+  name: "Прогрев плавно"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "ChamberHeaterNames"
+      property_type_id: "enum"
+    - key: "initial_value"
+      property_type_id: "chamber_temp"
+      default_value: "100"
+    - key: "task"
+      property_type_id: "chamber_temp"
+      default_value: "200"
+    - key: "speed"
+      property_type_id: "chamber_temp_speed"
+      default_value: "10"
+    - key: "comment"
+      property_type_id: "string"
+    
+- id: 220
+  name: "Подача NH3"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "task"
+      property_type_id: "arsenic_source_flow"
       default_value: "10"
     - key: "comment"
       property_type_id: "string"
