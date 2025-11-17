@@ -8,10 +8,11 @@
         <NukeScriptDirectory>..</NukeScriptDirectory>
         <NukeTelemetryVersion>1</NukeTelemetryVersion>
         <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Nuke.Common" Version="9.0.4" />
+        <PackageReference Include="Nuke.Common" Version="9.0.4"/>
     </ItemGroup>
 
 </Project>
