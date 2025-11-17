@@ -1,4 +1,7 @@
-﻿namespace NtoLib.Test.MbeTable.Config.Helpers;
+﻿using System;
+using System.IO;
+
+namespace NtoLib.Test.MbeTable.Config.Helpers;
 
 public sealed class TempDirectory : IDisposable
 {

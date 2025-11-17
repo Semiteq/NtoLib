@@ -1,4 +1,6 @@
-﻿using FluentResults;
+﻿using System;
+
+using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 

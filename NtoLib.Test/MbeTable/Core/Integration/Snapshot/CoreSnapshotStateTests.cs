@@ -1,3 +1,5 @@
+using System;
+
 using FluentAssertions;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;

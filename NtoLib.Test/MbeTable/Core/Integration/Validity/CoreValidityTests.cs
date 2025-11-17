@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+
 using FluentAssertions;
 
 using NtoLib.Recipes.MbeTable.ResultsExtension;
