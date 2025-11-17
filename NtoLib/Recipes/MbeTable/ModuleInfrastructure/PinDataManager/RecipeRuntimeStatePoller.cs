@@ -15,13 +15,12 @@ internal sealed class RecipeRuntimeStatePoller : IRecipeRuntimeState
 
     private bool _initialized;
     private bool _qualityOk;
-    private RecipeRuntimeSnapshot _current;
 
-    public event Action<bool> RecipeActiveChanged;
-    public event Action<bool> SendEnabledChanged;
-    public event Action<StepPhase> StepPhaseChanged;
+    public event Action<bool>? RecipeActiveChanged;
+    public event Action<bool>? SendEnabledChanged;
+    public event Action<StepPhase>? StepPhaseChanged;
 
-    public RecipeRuntimeSnapshot Current => _current;
+    public RecipeRuntimeSnapshot Current { get; private set; }
 
     // Pin IDs injected via MbeTableFB (made internal there, or provide accessors)
     private readonly int _idRecipeActive;
@@ -75,13 +74,13 @@ internal sealed class RecipeRuntimeStatePoller : IRecipeRuntimeState
 
         if (!_initialized || recovered)
         {
-            _current = newSnap;
+            Current = newSnap;
             _initialized = true;
             FireAllInitial(newSnap);
             return;
         }
 
-        var prev = _current;
+        var prev = Current;
 
         // Decide changes
         bool recipeActiveChanged = prev.RecipeActive != newSnap.RecipeActive;
@@ -93,7 +92,7 @@ internal sealed class RecipeRuntimeStatePoller : IRecipeRuntimeState
             || prev.ForLevel2Count != newSnap.ForLevel2Count
             || prev.ForLevel3Count != newSnap.ForLevel3Count;
         
-        _current = newSnap;
+        Current = newSnap;
 
         if (recipeActiveChanged)
             SafeInvoke(() => RecipeActiveChanged?.Invoke(newSnap.RecipeActive));

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using FluentResults;
-
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
@@ -14,7 +12,7 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Errors;
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
 
 /// <summary>
-/// Validates that columns bound to pin groups reference existing targets in the current environment.
+/// Validates that enum columns with group_name reference available targets.
 /// </summary>
 public sealed class TargetAvailabilityValidator
 {
@@ -83,8 +81,7 @@ public sealed class TargetAvailabilityValidator
 
     private static Result<short> ExtractActionId(Step step)
     {
-        var actionProperty = step.Properties[MandatoryColumns.Action];
-        if (actionProperty == null)
+        if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty is null)
             return Result.Ok((short)0);
 
         return actionProperty.GetValue<short>();
@@ -99,19 +96,14 @@ public sealed class TargetAvailabilityValidator
         IReadOnlyDictionary<string, IReadOnlyDictionary<short, string>> snapshot,
         List<string> errors)
     {
-        if (ShouldSkipColumn(column))
+        if (!ShouldValidateColumn(column))
             return Result.Ok();
 
         var keyId = new ColumnIdentifier(column.Key);
 
         if (!TryGetPropertyValue(step, keyId, out var property))
         {
-            errors.Add(new ValidationTargetValueEmptyError(
-                stepIndex,
-                actionId,
-                actionName,
-                column.Key,
-                column.GroupName!).Message);
+            errors.Add(new ValidationTargetValueEmptyError(stepIndex, actionId, actionName, column.Key, column.GroupName!).Message);
             return Result.Ok();
         }
 
@@ -121,26 +113,18 @@ public sealed class TargetAvailabilityValidator
 
         var targetId = targetIdResult.Value;
 
-        return ValidateTargetExists(
-            stepIndex,
-            actionId,
-            actionName,
-            column.Key,
-            column.GroupName!,
-            targetId,
-            snapshot,
-            errors);
+        return ValidateTargetExists(stepIndex, actionId, actionName, column.Key, column.GroupName!, targetId, snapshot, errors);
     }
 
-    private static bool ShouldSkipColumn(PropertyConfig column)
+    private static bool ShouldValidateColumn(PropertyConfig column)
     {
-        if (string.Equals(column.PropertyTypeId, "Enum", StringComparison.OrdinalIgnoreCase))
-            return true;
+        if (!string.Equals(column.PropertyTypeId, "Enum", StringComparison.OrdinalIgnoreCase))
+            return false;
 
         if (string.IsNullOrWhiteSpace(column.GroupName))
-            return true;
+            return false;
 
-        return false;
+        return true;
     }
 
     private static bool TryGetPropertyValue(Step step, ColumnIdentifier keyId, out Property property)
@@ -167,35 +151,19 @@ public sealed class TargetAvailabilityValidator
     {
         if (!snapshot.TryGetValue(groupName, out var targetDictionary))
         {
-            errors.Add(new ValidationTargetGroupNotAvailableError(
-                stepIndex,
-                actionId,
-                actionName,
-                columnKey,
-                groupName).Message);
+            errors.Add(new ValidationTargetGroupNotAvailableError(stepIndex, actionId, actionName, columnKey, groupName).Message);
             return Result.Ok();
         }
 
         if (targetDictionary.Count == 0)
         {
-            errors.Add(new ValidationTargetGroupEmptyError(
-                stepIndex,
-                actionId,
-                actionName,
-                columnKey,
-                groupName).Message);
+            errors.Add(new ValidationTargetGroupEmptyError(stepIndex, actionId, actionName, columnKey, groupName).Message);
             return Result.Ok();
         }
 
         if (!targetDictionary.ContainsKey(targetId))
         {
-            errors.Add(new ValidationTargetNotFoundError(
-                stepIndex,
-                actionId,
-                actionName,
-                columnKey,
-                targetId,
-                groupName).Message);
+            errors.Add(new ValidationTargetNotFoundError(stepIndex, actionId, actionName, columnKey, targetId, groupName).Message);
         }
 
         return Result.Ok();

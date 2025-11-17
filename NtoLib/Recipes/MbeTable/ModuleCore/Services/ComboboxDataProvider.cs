@@ -5,7 +5,7 @@ using System.Linq;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;

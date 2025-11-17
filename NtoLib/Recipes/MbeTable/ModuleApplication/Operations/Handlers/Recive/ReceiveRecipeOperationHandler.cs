@@ -10,7 +10,10 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleCore;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
+using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Recive;
 
@@ -19,8 +22,8 @@ public sealed class ReceiveRecipeOperationHandler : IRecipeOperationHandler<Rece
     private readonly OperationPipeline _pipeline;
     private readonly ReceiveRecipeOperationDefinition _op;
     private readonly IModbusTcpService _modbus;
-    private readonly IRecipeService _recipeService;
-    private readonly ITimerControl _timer;
+    private readonly IRecipeFacade _recipeService;
+    private readonly ITimerService _timer;
     private readonly RecipeViewModel _viewModel;
     private readonly ILogger<ReceiveRecipeOperationHandler> _logger;
 
@@ -28,8 +31,8 @@ public sealed class ReceiveRecipeOperationHandler : IRecipeOperationHandler<Rece
         OperationPipeline pipeline,
         ReceiveRecipeOperationDefinition op,
         IModbusTcpService modbus,
-        IRecipeService recipeService,
-        ITimerControl timer,
+        IRecipeFacade recipeService,
+        ITimerService timer,
         RecipeViewModel viewModel,
         ILogger<ReceiveRecipeOperationHandler> logger)
     {
@@ -44,7 +47,7 @@ public sealed class ReceiveRecipeOperationHandler : IRecipeOperationHandler<Rece
 
     public async Task<Result> ExecuteAsync(ReceiveRecipeArgs args)
     {
-        var result = await _pipeline.RunAsync<ValidationSnapshot>(
+        var result = await _pipeline.RunAsync(
             _op,
             PerformReceiveAsync,
             successMessage: "Рецепт успешно прочитан из контроллера");
@@ -52,21 +55,21 @@ public sealed class ReceiveRecipeOperationHandler : IRecipeOperationHandler<Rece
         if (result.IsSuccess)
         {
             _viewModel.OnRecipeStructureChanged();
-            _timer.ResetForNewRecipe();
+            _timer.Reset();
         }
 
         return result.ToResult();
     }
 
-    private async Task<Result<ValidationSnapshot>> PerformReceiveAsync()
+    private async Task<Result<RecipeAnalysisSnapshot>> PerformReceiveAsync()
     {
         try
         {
             var receiveResult = await _modbus.ReceiveRecipeAsync().ConfigureAwait(false);
             if (receiveResult.IsFailed || receiveResult.Value == null)
-                return receiveResult.ToResult<ValidationSnapshot>();
+                return receiveResult.ToResult<RecipeAnalysisSnapshot>();
 
-            var setResult = _recipeService.SetRecipeAndUpdateAttributes(receiveResult.Value);
+            var setResult = _recipeService.LoadRecipe(receiveResult.Value);
             if (setResult.IsFailed)
                 return setResult;
 
@@ -75,7 +78,7 @@ public sealed class ReceiveRecipeOperationHandler : IRecipeOperationHandler<Rece
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Unexpected error during receive operation");
-            return Result.Fail<ValidationSnapshot>(new ApplicationUnexpectedIoReadError());
+            return Result.Fail<RecipeAnalysisSnapshot>(new ApplicationUnexpectedIoReadError());
         }
     }
 }

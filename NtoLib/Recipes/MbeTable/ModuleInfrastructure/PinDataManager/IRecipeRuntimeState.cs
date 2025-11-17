@@ -8,13 +8,13 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 public interface IRecipeRuntimeState
 {
     /// <summary>Raised when runtime signals that recipe active flag changed.</summary>
-    event Action<bool> RecipeActiveChanged;
+    event Action<bool>? RecipeActiveChanged;
 
     /// <summary>Raised when runtime signals that send-enabled flag changed.</summary>
-    event Action<bool> SendEnabledChanged;
+    event Action<bool>? SendEnabledChanged;
 
     /// <summary>Raised when step index or any for-loop counter changes.</summary>
-    event Action<StepPhase> StepPhaseChanged;
+    event Action<StepPhase>? StepPhaseChanged;
 
     /// <summary>The last valid snapshot (frozen while quality is degraded).</summary>
     RecipeRuntimeSnapshot Current { get; }

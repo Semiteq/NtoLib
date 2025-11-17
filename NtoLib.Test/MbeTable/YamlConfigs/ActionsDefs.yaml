@@ -1,0 +1,300 @@
+# --- Example ---
+# - id: 9999                       # Уникальный числовой ID действия.
+#   name: "Name"                   # Имя, которое пользователь видит в выпадающем списке столбца "action".
+#   deploy_duration: "Immediate"   # Тип длительности. Immediate - мгновенное действие, не учитывается duration в расчете общего времени. LongLasting - учитывается.
+#   columns:
+#     - key: "channel"             # Для этой команды используется столбец с ключом "channel"
+#       property_type_id: "enum"   # Поле "channel" имеет тип "enum", который описан в PropertyDefs.yaml.
+#       group_name: "Valve"       # Выпадающий список для "channel" будет заполнен именами из группы "Valves" из PinGroupDefs.yaml
+#     - key: "comment"             # Также используется столбец "comment"
+#       property_type_id: "string" # Поле "comment" имеет тип "string".
+# (Детальное описание см. в документации)
+# --- End Of Example ---
+
+# --- Начало сервисных действий ---
+
+## Начало группы WAIT
+### Ожидание по времени, температуре или давлению
+
+#### Wait по времени
+- id: 10
+  name: "Ждать"
+  deploy_duration: "LongLasting"
+  columns:
+    - key: "step_duration"
+      default_value: "10"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+#### Начало цикла FOR
+- id: 20
+  name: "Цикл начало"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "task"
+      default_value: "1"
+      property_type_id: "float_as_int"
+    - key: "comment"
+      property_type_id: "string"
+
+#### Конец цикла FOR
+- id: 30
+  name: "Цикл конец"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "string"
+
+
+### Пауза выполнения, ожидается пользовательское подтверждение для продолжения
+- id: 40
+  name: "Пауза"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "string"
+
+# --- Конец сервисных действий ---
+
+- id: 50
+  name: "Закрыть"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "ShutterNames"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 60
+  name: "Открыть"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "ShutterNames"
+      property_type_id: "enum"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 70
+  name: "Открыть на время"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "ShutterNames"
+      property_type_id: "enum"
+    - key: "step_duration"
+      property_type_id: "time"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 80
+  name: "Закрыть все"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 90
+  name: "t°C скачком"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "HeaterNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "temp"
+      default_value: "500"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 100
+  name: "t°C скачком + ждать"
+  deploy_duration: "LongLasting"
+  columns:
+    - key: "target"
+      group_name: "HeaterNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "temp"
+      default_value: "500"
+    - key: "step_duration"
+      property_type_id: "time"
+      default_value: "60"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 110
+  name: "t°C плавно"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "HeaterNames"
+      property_type_id: "enum"
+    - key: "initial_value"
+      property_type_id: "temp"
+      default_value: "500"
+    - key: "task"
+      property_type_id: "temp"
+      default_value: "600"
+    - key: "speed"
+      property_type_id: "temp_speed"
+      default_value: "10"
+    - key: "step_duration"
+      property_type_id: "time"
+      default_value: "600"
+    - key: "comment"
+      property_type_id: "string"
+  formula:
+    expression: "(task - initial_value) / speed * 60 = step_duration"
+    recalc_order: [ "step_duration", "speed", "task", "initial_value" ]
+
+- id: 120
+  name: "P% скачком"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "HeaterNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "percent"
+      default_value: "10"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 130
+  name: "P% скачком + ждать"
+  deploy_duration: "LongLasting"
+  columns:
+    - key: "target"
+      group_name: "HeaterNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "percent"
+      default_value: "10"
+    - key: "step_duration"
+      property_type_id: "time"
+      default_value: "60"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 140
+  name: "P% плавно"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "HeaterNames"
+      property_type_id: "enum"
+    - key: "initial_value"
+      property_type_id: "percent"
+      default_value: "10"
+    - key: "task"
+      property_type_id: "percent"
+      default_value: "20"
+    - key: "speed"
+      property_type_id: "power_speed"
+      default_value: "1"
+    - key: "step_duration"
+      property_type_id: "time"
+      default_value: "600"
+    - key: "comment"
+      property_type_id: "string"
+  formula:
+    expression: "(task - initial_value) / speed * 60 = step_duration"
+    recalc_order: [ "step_duration", "speed", "task", "initial_value" ]
+
+- id: 150
+  name: "N Run"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "NitrogenSourcesNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "flow"
+      default_value: "10"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 160
+  name: "N закрыть"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 170
+  name: "N Vent"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "NitrogenSourcesNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "flow"
+      default_value: "10"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 180
+  name: "Вращение РМ"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "speed"
+      property_type_id: "rotation_speed"
+      default_value: "0"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 190
+  name: "Высота РМ"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "task"
+      property_type_id: "height"
+      default_value: "0"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 200
+  name: "Прогрев скачком"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "ChamberHeaterNames"
+      property_type_id: "enum"
+    - key: "task"
+      property_type_id: "chamber_temp"
+      default_value: "100"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 210
+  name: "Прогрев плавно"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "target"
+      group_name: "ChamberHeaterNames"
+      property_type_id: "enum"
+    - key: "initial_value"
+      property_type_id: "chamber_temp"
+      default_value: "100"
+    - key: "task"
+      property_type_id: "chamber_temp"
+      default_value: "200"
+    - key: "speed"
+      property_type_id: "chamber_temp_speed"
+      default_value: "10"
+    - key: "comment"
+      property_type_id: "string"
+
+- id: 220
+  name: "Подача NH3"
+  deploy_duration: "Immediate"
+  columns:
+    - key: "task"
+      property_type_id: "arsenic_source_flow"
+      default_value: "10"
+    - key: "comment"
+      property_type_id: "string"

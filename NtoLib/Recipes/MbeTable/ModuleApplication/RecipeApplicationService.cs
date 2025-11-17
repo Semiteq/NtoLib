@@ -15,12 +15,13 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication;
 
 public sealed class RecipeApplicationService : IRecipeApplicationService
 {
-    private readonly IRecipeService _recipeService;
+    private readonly IRecipeFacade _recipeService;
 
     private readonly IRecipeOperationHandler<EditCellArgs> _editCell;
     private readonly IRecipeOperationHandler<AddStepArgs> _addStep;
@@ -36,7 +37,7 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     public event Action<int>? StepDataChanged;
 
     public RecipeApplicationService(
-        IRecipeService recipeService,
+        IRecipeFacade recipeService,
         IRecipeOperationHandler<EditCellArgs> editCell,
         IRecipeOperationHandler<AddStepArgs> addStep,
         IRecipeOperationHandler<RemoveStepArgs> removeStep,
@@ -59,9 +60,9 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
     }
 
-    public Recipe GetCurrentRecipe() => _recipeService.CurrentRecipe;
+    public Recipe GetCurrentRecipe() => _recipeService.CurrentSnapshot.Recipe;
 
-    public int GetRowCount() => _recipeService.StepCount;
+    public int GetRowCount() => _recipeService.CurrentSnapshot.Recipe.Steps.Count;
 
     public async Task<Result> SetCellValueAsync(int rowIndex, ColumnIdentifier columnKey, object value)
     {

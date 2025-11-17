@@ -10,7 +10,10 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
+using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.EditCell;
 
@@ -18,16 +21,16 @@ public sealed class EditCellOperationHandler : IRecipeOperationHandler<EditCellA
 {
     private readonly OperationPipeline _pipeline;
     private readonly EditCellOperationDefinition _op;
-    private readonly IRecipeService _recipeService;
-    private readonly ITimerControl _timer;
+    private readonly IRecipeFacade _recipeService;
+    private readonly ITimerService _timer;
     private readonly RecipeViewModel _viewModel;
     private readonly ILogger<EditCellOperationHandler> _logger;
 
     public EditCellOperationHandler(
         OperationPipeline pipeline,
         EditCellOperationDefinition op,
-        IRecipeService recipeService,
-        ITimerControl timer,
+        IRecipeFacade recipeService,
+        ITimerService timer,
         RecipeViewModel viewModel,
         ILogger<EditCellOperationHandler> logger)
     {
@@ -48,21 +51,21 @@ public sealed class EditCellOperationHandler : IRecipeOperationHandler<EditCellA
 
         if (result.IsSuccess)
         {
-            _timer.ResetForNewRecipe();
+            _timer.Reset();
             _viewModel.OnTimeRecalculated(args.RowIndex);
         }
 
         return result.ToResult();
     }
 
-    private Task<Result<ValidationSnapshot>> PerformCellUpdateAsync(int rowIndex, ColumnIdentifier columnKey,
+    private Task<Result<RecipeAnalysisSnapshot>> PerformCellUpdateAsync(int rowIndex, ColumnIdentifier columnKey,
         object value)
     {
-        var validation = ValidateExistingRowIndex(rowIndex, _recipeService.StepCount);
+        var validation = ValidateExistingRowIndex(rowIndex, _recipeService.CurrentSnapshot.StepCount);
         if (validation.IsFailed)
         {
             _logger.LogWarning("EditCell validation failed: rowIndex={RowIndex}", rowIndex);
-            return Task.FromResult(validation.ToResult<ValidationSnapshot>());
+            return Task.FromResult(validation.ToResult<RecipeAnalysisSnapshot>());
         }
 
         var applyResult = ApplyPropertyUpdate(rowIndex, columnKey, value);
@@ -77,11 +80,11 @@ public sealed class EditCellOperationHandler : IRecipeOperationHandler<EditCellA
         return Result.Ok();
     }
 
-    private Result<ValidationSnapshot> ApplyPropertyUpdate(int rowIndex, ColumnIdentifier columnKey, object value)
+    private Result<RecipeAnalysisSnapshot> ApplyPropertyUpdate(int rowIndex, ColumnIdentifier columnKey, object value)
     {
         if (columnKey == MandatoryColumns.Action && value is short actionId)
-            return _recipeService.ReplaceStepAction(rowIndex, actionId);
+            return _recipeService.ReplaceAction(rowIndex, actionId);
 
-        return _recipeService.UpdateStepProperty(rowIndex, columnKey, value);
+        return _recipeService.UpdateProperty(rowIndex, columnKey, value);
     }
 }

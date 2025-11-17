@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;

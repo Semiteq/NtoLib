@@ -5,8 +5,8 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
@@ -17,20 +17,19 @@ public sealed class RecipeViewModel
 
     private readonly List<StepViewModel> _viewModels = new();
     private readonly IReadOnlyList<ColumnDefinition> _tableColumns;
-    private readonly IRecipeService _recipeService;
+    private readonly IRecipeFacade _recipeService;
     private readonly IComboboxDataProvider _comboboxDataProvider;
     private readonly PropertyStateProvider _propertyStateProvider;
 
     public RecipeViewModel(
-        IRecipeService recipeService,
+        IRecipeFacade recipeService,
         IComboboxDataProvider comboboxDataProvider,
         PropertyStateProvider propertyStateProvider,
         IReadOnlyList<ColumnDefinition> tableColumns)
     {
         _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
         _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
-        _propertyStateProvider =
-            propertyStateProvider ?? throw new ArgumentNullException(nameof(propertyStateProvider));
+        _propertyStateProvider = propertyStateProvider ?? throw new ArgumentNullException(nameof(propertyStateProvider));
         _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns));
 
         RebuildViewModels();
@@ -43,8 +42,8 @@ public sealed class RecipeViewModel
         if (fromStepIndex < 0 || fromStepIndex >= _viewModels.Count)
             return;
 
-        var recipe = _recipeService.CurrentRecipe;
-        var startTimes = _recipeService.GetAllStepStartTimes();
+        var recipe = _recipeService.CurrentSnapshot.Recipe;
+        var startTimes = _recipeService.CurrentSnapshot.StepStartTimes;
 
         for (var i = fromStepIndex; i < _viewModels.Count; i++)
         {
@@ -75,7 +74,7 @@ public sealed class RecipeViewModel
         if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
             return PropertyState.Disabled;
 
-        var step = _recipeService.CurrentRecipe.Steps[rowIndex];
+        var step = _recipeService.CurrentSnapshot.Recipe.Steps[rowIndex];
         var columnKey = _tableColumns[columnIndex].Key;
 
         return _propertyStateProvider.GetPropertyState(step, columnKey);
@@ -85,8 +84,8 @@ public sealed class RecipeViewModel
     {
         _viewModels.Clear();
 
-        var recipe = _recipeService.CurrentRecipe;
-        var startTimes = _recipeService.GetAllStepStartTimes();
+        var recipe = _recipeService.CurrentSnapshot.Recipe;
+        var startTimes = _recipeService.CurrentSnapshot.StepStartTimes;
 
         for (var i = 0; i < recipe.Steps.Count; i++)
         {

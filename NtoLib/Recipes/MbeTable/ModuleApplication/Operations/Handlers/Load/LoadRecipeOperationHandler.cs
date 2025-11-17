@@ -11,7 +11,10 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleCore;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
+using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Load;
 
@@ -20,8 +23,8 @@ public sealed class LoadRecipeOperationHandler : IRecipeOperationHandler<LoadRec
     private readonly OperationPipeline _pipeline;
     private readonly LoadRecipeOperationDefinition _op;
     private readonly ICsvService _csv;
-    private readonly IRecipeService _recipeService;
-    private readonly ITimerControl _timer;
+    private readonly IRecipeFacade _recipeService;
+    private readonly ITimerService _timer;
     private readonly RecipeViewModel _viewModel;
     private readonly ILogger<LoadRecipeOperationHandler> _logger;
 
@@ -29,8 +32,8 @@ public sealed class LoadRecipeOperationHandler : IRecipeOperationHandler<LoadRec
         OperationPipeline pipeline,
         LoadRecipeOperationDefinition op,
         ICsvService csv,
-        IRecipeService recipeService,
-        ITimerControl timer,
+        IRecipeFacade recipeService,
+        ITimerService timer,
         RecipeViewModel viewModel,
         ILogger<LoadRecipeOperationHandler> logger)
     {
@@ -45,7 +48,7 @@ public sealed class LoadRecipeOperationHandler : IRecipeOperationHandler<LoadRec
 
     public async Task<Result> ExecuteAsync(LoadRecipeArgs args)
     {
-        var result = await _pipeline.RunAsync<ValidationSnapshot>(
+        var result = await _pipeline.RunAsync<RecipeAnalysisSnapshot>(
             _op,
             () => PerformLoadAsync(args.FilePath),
             successMessage: $"Загружен рецепт из {Path.GetFileName(args.FilePath)}");
@@ -53,13 +56,13 @@ public sealed class LoadRecipeOperationHandler : IRecipeOperationHandler<LoadRec
         if (result.IsSuccess)
         {
             _viewModel.OnRecipeStructureChanged();
-            _timer.ResetForNewRecipe();
+            _timer.Reset();
         }
 
         return result.ToResult();
     }
 
-    private async Task<Result<ValidationSnapshot>> PerformLoadAsync(string filePath)
+    private async Task<Result<RecipeAnalysisSnapshot>> PerformLoadAsync(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
             return new ApplicationFilePathEmptyError();
@@ -68,9 +71,9 @@ public sealed class LoadRecipeOperationHandler : IRecipeOperationHandler<LoadRec
         {
             var loadResult = await _csv.ReadCsvAsync(filePath).ConfigureAwait(false);
             if (loadResult.IsFailed)
-                return loadResult.ToResult<ValidationSnapshot>();
+                return loadResult.ToResult<RecipeAnalysisSnapshot>();
 
-            var setResult = _recipeService.SetRecipeAndUpdateAttributes(loadResult.Value);
+            var setResult = _recipeService.LoadRecipe(loadResult.Value);
             if (setResult.IsFailed)
                 return setResult;
 
@@ -79,7 +82,7 @@ public sealed class LoadRecipeOperationHandler : IRecipeOperationHandler<LoadRec
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Unexpected error during load operation");
-            return Result.Fail<ValidationSnapshot>(new ApplicationUnexpectedIoReadError());
+            return Result.Fail<RecipeAnalysisSnapshot>(new ApplicationUnexpectedIoReadError());
         }
     }
 }

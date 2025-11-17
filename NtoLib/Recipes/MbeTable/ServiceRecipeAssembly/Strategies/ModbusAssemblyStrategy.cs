@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
-
 using EasyModbus;
-
 using FluentResults;
-
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Strategies;
 
 /// <summary>
-/// Assembly strategy for building Recipe from Modbus data.
+/// Builds Recipe from Modbus data using column PLC mapping.
 /// </summary>
 public sealed class ModbusAssemblyStrategy
 {
@@ -39,16 +38,13 @@ public sealed class ModbusAssemblyStrategy
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _propertyRegistry = propertyRegistry ?? throw new ArgumentNullException(nameof(propertyRegistry));
-        _runtimeOptionsProvider =
-            runtimeOptionsProvider ?? throw new ArgumentNullException(nameof(runtimeOptionsProvider));
+        _runtimeOptionsProvider = runtimeOptionsProvider ?? throw new ArgumentNullException(nameof(runtimeOptionsProvider));
 
         _intColumnCount = CalculateColumnCount("Int");
         _floatColumnCount = CalculateColumnCount("Float");
 
-        _actionColumn = _configuration.Columns.FirstOrDefault(column =>
-            column.Key == MandatoryColumns.Action);
-        _stepDurationColumn = _configuration.Columns.FirstOrDefault(column =>
-            column.Key == MandatoryColumns.StepDuration);
+        _actionColumn = _configuration.Columns.FirstOrDefault(column => column.Key == MandatoryColumns.Action);
+        _stepDurationColumn = _configuration.Columns.FirstOrDefault(column => column.Key == MandatoryColumns.StepDuration);
     }
 
     public Result<Recipe> AssembleFromModbusData(int[] intData, int[] floatData, int rowCount)
@@ -84,15 +80,15 @@ public sealed class ModbusAssemblyStrategy
             return actionIdResult.ToResult<Step>();
 
         var actionId = actionIdResult.Value;
-
         if (!_configuration.Actions.TryGetValue(actionId, out var actionDef))
             return new CoreActionNotFoundError(actionId);
-        
 
         var createBuilderResult = StepBuilder.Create(actionDef, _propertyRegistry, _configuration.Columns);
-        if (createBuilderResult.IsFailed) return createBuilderResult.ToResult();
+        if (createBuilderResult.IsFailed)
+            return createBuilderResult.ToResult();
+
         var builder = createBuilderResult.Value;
-        
+
         var settings = _runtimeOptionsProvider.GetCurrent();
         var registerOrder = settings.WordOrder == WordOrder.HighLow
             ? ModbusClient.RegisterOrder.HighLow
@@ -103,13 +99,14 @@ public sealed class ModbusAssemblyStrategy
             if (!builder.Supports(column.Key))
                 continue;
 
-            var valueResult = ExtractValue(intData, floatData, row, column, registerOrder);
+            var valueResult = ExtractTypedValue(intData, floatData, row, column, registerOrder);
             if (valueResult.IsFailed)
                 return valueResult.ToResult<Step>();
 
-            if (valueResult.Value != null)
+            var value = valueResult.Value;
+            if (value != null)
             {
-                var setResult = builder.WithOptionalDynamic(column.Key, valueResult.Value);
+                var setResult = builder.WithOptionalDynamic(column.Key, value);
                 if (setResult.IsFailed)
                     return setResult.ToResult<Step>();
             }
@@ -132,7 +129,7 @@ public sealed class ModbusAssemblyStrategy
         return (short)intData[index];
     }
 
-    private Result<object?> ExtractValue(
+    private Result<object?> ExtractTypedValue(
         int[] intData,
         int[] floatData,
         int row,
@@ -140,6 +137,7 @@ public sealed class ModbusAssemblyStrategy
         ModbusClient.RegisterOrder registerOrder)
     {
         var mapping = column.PlcMapping!;
+        var propDef = _propertyRegistry.GetPropertyDefinition(column.PropertyTypeId);
 
         switch (mapping.Area.ToLowerInvariant())
         {
@@ -147,23 +145,38 @@ public sealed class ModbusAssemblyStrategy
             {
                 var intBase = row * _intColumnCount;
                 var index = intBase + mapping.Index;
-
                 if (index < 0 || index >= intData.Length)
                     return new AssemblyPlcIndexOutOfRangeError(index, row, column.Key.Value, "Int");
 
-                return intData[index];
+                var raw = intData[index];
+                if (propDef.SystemType == typeof(short))
+                    return (short)raw;
+                if (propDef.SystemType == typeof(float))
+                    return (float)raw;
+                if (propDef.SystemType == typeof(string))
+                    return raw.ToString(CultureInfo.InvariantCulture);
+
+                return new CsvInvalidDataError($"Unsupported target system type: {propDef.SystemType.Name}");
             }
 
             case "float":
             {
                 var floatBase = row * _floatColumnCount * 2;
                 var index = floatBase + (mapping.Index * 2);
-
                 if (index < 0 || index + 1 >= floatData.Length)
                     return new AssemblyPlcIndexOutOfRangeError(index, row, column.Key.Value, "Float");
-                
+
                 var registers = new[] { floatData[index], floatData[index + 1] };
-                return ModbusClient.ConvertRegistersToFloat(registers, registerOrder);
+                var f = ModbusClient.ConvertRegistersToFloat(registers, registerOrder);
+
+                if (propDef.SystemType == typeof(float))
+                    return f;
+                if (propDef.SystemType == typeof(short))
+                    return (short)Math.Round(f);
+                if (propDef.SystemType == typeof(string))
+                    return f.ToString(CultureInfo.InvariantCulture);
+
+                return new CsvInvalidDataError($"Unsupported target system type: {propDef.SystemType.Name}");
             }
 
             default:

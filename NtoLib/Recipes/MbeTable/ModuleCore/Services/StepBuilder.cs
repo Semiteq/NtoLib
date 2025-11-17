@@ -8,8 +8,8 @@ using FluentResults;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 

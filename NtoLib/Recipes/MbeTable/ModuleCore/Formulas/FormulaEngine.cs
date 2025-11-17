@@ -6,7 +6,7 @@ using FluentResults;
 
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 

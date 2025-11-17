@@ -3,7 +3,7 @@ using System.Linq;
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.ModuleCore;
+using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 
@@ -18,11 +18,8 @@ internal sealed class ReasonMerger
     {
         var own = result.Reasons ?? Enumerable.Empty<IReason>();
 
-        if (result.IsSuccess && result.Value is ValidationSnapshot snapshot)
-        {
-            var snap = snapshot.Reasons ?? Enumerable.Empty<IReason>();
-            return own.Concat(snap);
-        }
+        if (result.IsSuccess && result.Value is RecipeAnalysisSnapshot snapshot)
+            return own.Concat(snapshot.Reasons);
 
         return own;
     }

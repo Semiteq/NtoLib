@@ -6,7 +6,7 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 

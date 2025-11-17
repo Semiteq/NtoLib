@@ -11,6 +11,7 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Save;
 
@@ -19,14 +20,14 @@ public sealed class SaveRecipeOperationHandler : IRecipeOperationHandler<SaveRec
     private readonly OperationPipeline _pipeline;
     private readonly SaveRecipeOperationDefinition _op;
     private readonly ICsvService _csv;
-    private readonly IRecipeService _recipeService;
+    private readonly IRecipeFacade _recipeService;
     private readonly ILogger<SaveRecipeOperationHandler> _logger;
 
     public SaveRecipeOperationHandler(
         OperationPipeline pipeline,
         SaveRecipeOperationDefinition op,
         ICsvService csv,
-        IRecipeService recipeService,
+        IRecipeFacade recipeService,
         ILogger<SaveRecipeOperationHandler> logger)
     {
         _pipeline = pipeline;
@@ -51,7 +52,7 @@ public sealed class SaveRecipeOperationHandler : IRecipeOperationHandler<SaveRec
 
         try
         {
-            Recipe currentRecipe = _recipeService.CurrentRecipe;
+            var currentRecipe = _recipeService.LastValidSnapshot!.Recipe;
             return await _csv.WriteCsvAsync(currentRecipe, filePath).ConfigureAwait(false);
         }
         catch (Exception ex)

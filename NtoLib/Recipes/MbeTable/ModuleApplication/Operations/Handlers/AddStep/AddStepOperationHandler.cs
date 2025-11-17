@@ -4,8 +4,8 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
-using NtoLib.Recipes.MbeTable.ModuleCore;
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
+using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.AddStep;
 
@@ -13,16 +13,16 @@ public sealed class AddStepOperationHandler : IRecipeOperationHandler<AddStepArg
 {
     private readonly OperationPipeline _pipeline;
     private readonly AddStepOperationDefinition _op;
-    private readonly ITimerControl _timer;
+    private readonly ITimerService _timer;
     private readonly RecipeViewModel _viewModel;
-    private readonly IRecipeService _recipeService;
+    private readonly IRecipeFacade _recipeService;
 
     public AddStepOperationHandler(
         OperationPipeline pipeline,
         AddStepOperationDefinition op,
-        ITimerControl timer,
+        ITimerService timer,
         RecipeViewModel viewModel,
-        IRecipeService recipeService)
+        IRecipeFacade recipeService)
     {
         _pipeline = pipeline;
         _op = op;
@@ -41,7 +41,7 @@ public sealed class AddStepOperationHandler : IRecipeOperationHandler<AddStepArg
         if (result.IsSuccess)
         {
             _viewModel.OnRecipeStructureChanged();
-            _timer.ResetForNewRecipe();
+            _timer.Reset();
         }
 
         return result.ToResult();

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
-using NtoLib.Recipes.MbeTable.ModuleCore.Warnings;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Warnings;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
@@ -36,7 +36,6 @@ public sealed class ErrorPolicyRegistry
         Register<CoreForLoopUnmatchedWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
         Register<CoreForLoopInvalidIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
         Register<CoreForLoopMaxDepthExceededWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
-        Register<CoreForLoopMissingIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
         Register<CoreEmptyRecipeWarning>(ErrorSeverity.Info, BlockingScope.SaveAndSend);
     }
 

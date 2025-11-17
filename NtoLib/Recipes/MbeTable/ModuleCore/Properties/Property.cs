@@ -2,8 +2,8 @@
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 using OneOf;
 

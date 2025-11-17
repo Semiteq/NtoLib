@@ -5,8 +5,8 @@ using System.Linq;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Properties;
-using NtoLib.Recipes.MbeTable.ModuleCore.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties.Contracts;
+using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
