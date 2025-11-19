@@ -1,4 +1,6 @@
-﻿using FluentResults;
+﻿using System.Collections.Generic;
+
+using FluentResults;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
@@ -18,4 +20,6 @@ public interface IRecipeFacade
     Result<RecipeAnalysisSnapshot> ReplaceAction(int index, short actionId);
     Result<RecipeAnalysisSnapshot> UpdateProperty(int index, ColumnIdentifier column, object value);
     Result<RecipeAnalysisSnapshot> LoadRecipe(Recipe recipe);
+    Result<RecipeAnalysisSnapshot> InsertSteps(int index, IReadOnlyList<Step> steps);
+    Result<RecipeAnalysisSnapshot> DeleteSteps(IReadOnlyCollection<int> indices);
 }

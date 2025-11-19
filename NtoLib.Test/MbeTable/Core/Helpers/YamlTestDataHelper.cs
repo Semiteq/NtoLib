@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace NtoLib.Test.MbeTable.Core.Helpers;
+﻿namespace NtoLib.Test.MbeTable.Core.Helpers;
 
 public static class YamlTestDataHelper
 {

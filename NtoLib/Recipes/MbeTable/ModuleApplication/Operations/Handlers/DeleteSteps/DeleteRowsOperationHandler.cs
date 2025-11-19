@@ -1,0 +1,76 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+using FluentResults;
+
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
+using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
+using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
+using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
+
+namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.DeleteSteps;
+
+public sealed class DeleteRowsOperationHandler : IRecipeOperationHandler<DeleteRowsArgs>
+{
+    private readonly OperationPipeline _pipeline;
+    private readonly DeleteRowsOperationDefinition _op;
+    private readonly IRecipeFacade _facade;
+    private readonly ITimerService _timer;
+    private readonly RecipeViewModel _viewModel;
+
+    public DeleteRowsOperationHandler(
+        OperationPipeline pipeline,
+        DeleteRowsOperationDefinition op,
+        IRecipeFacade facade,
+        ITimerService timer,
+        RecipeViewModel viewModel)
+    {
+        _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
+        _op = op ?? throw new ArgumentNullException(nameof(op));
+        _facade = facade ?? throw new ArgumentNullException(nameof(facade));
+        _timer = timer ?? throw new ArgumentNullException(nameof(timer));
+        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+    }
+
+    public async Task<Result> ExecuteAsync(DeleteRowsArgs args)
+    {
+        var result = await _pipeline.RunAsync(
+            _op,
+            () => Task.FromResult(PerformDelete(args.Indices)),
+            successMessage: args.Indices.Count == 0 ? null : $"Удалено {args.Indices.Count} строк");
+
+        if (result.IsSuccess)
+        {
+            _viewModel.OnRecipeStructureChanged();
+            _timer.Reset();
+        }
+
+        return result;
+    }
+
+    private Result PerformDelete(IReadOnlyList<int> indices)
+    {
+        if (indices == null) throw new ArgumentNullException(nameof(indices));
+        
+        var recipe = _facade.CurrentSnapshot.Recipe;
+        var valid = indices.Where(i => i >= 0 && i < recipe.Steps.Count).Distinct().ToList();
+        
+        if (valid.Count == 0)
+            return Result.Ok();
+        
+        var deleteResult = _facade.DeleteSteps(valid);
+        return deleteResult.ToResult();
+    }
+}
+
+public sealed class DeleteRowsArgs
+{
+    public IReadOnlyList<int> Indices { get; }
+
+    public DeleteRowsArgs(IReadOnlyList<int> indices)
+    {
+        Indices = indices ?? throw new ArgumentNullException(nameof(indices));
+    }
+}

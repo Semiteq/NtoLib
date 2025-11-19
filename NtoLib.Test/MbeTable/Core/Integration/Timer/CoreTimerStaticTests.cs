@@ -1,5 +1,3 @@
-using System;
-
 using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;

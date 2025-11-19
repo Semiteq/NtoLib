@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using FluentResults;
+﻿using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 

@@ -9,20 +9,21 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
-using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
 
 public sealed class CsvService : ICsvService
 {
     private readonly IRecipeFileService _fileService;
-    private readonly IRecipeAssemblyService _assemblyService;
+    private readonly ICsvRecipeAssemblyService _assemblyService;
     private readonly AssemblyValidator _validator;
     private readonly ILogger<CsvService> _logger;
 
     public CsvService(
         IRecipeFileService fileService,
-        IRecipeAssemblyService assemblyService,
+        ICsvRecipeAssemblyService assemblyService,
         AssemblyValidator validator,
         ILogger<CsvService> logger)
     {

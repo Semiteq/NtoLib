@@ -9,5 +9,10 @@ public enum OperationId
     Receive,
     AddStep,
     RemoveStep,
-    EditCell
+    EditCell,
+    CopyRows,
+    CutRows,
+    PasteRows,
+    DeleteRows,
+    InsertRows
 }

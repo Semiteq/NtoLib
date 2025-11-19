@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -8,6 +6,8 @@ using NtoLib.Recipes.MbeTable.ModuleConfig;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
+
+using Xunit.Sdk;
 
 namespace NtoLib.Test.MbeTable.Config.Helpers;
 
@@ -69,7 +69,7 @@ public static class TestHelper
                 return ex;
             }
 
-            throw new Xunit.Sdk.XunitException(
+            throw new XunitException(
                 "Expected a ConfigException to be thrown, but neither load nor precompile failed.");
         }
         catch (ConfigException ex)

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 
@@ -128,5 +130,27 @@ public sealed class RecipeFacade : IRecipeFacade
         if (valResult.IsFailed) return valResult.ToResult<ActionDefinition>();
 
         return _actionRepository.GetActionDefinitionById(valResult.Value);
+    }
+    
+    public Result<RecipeAnalysisSnapshot> InsertSteps(int index, IReadOnlyList<Step> steps)
+    {
+        if (steps == null) throw new ArgumentNullException(nameof(steps));
+        if (steps.Count == 0) return Result.Ok(CurrentSnapshot);
+
+        var mutation = _mutator.InsertSteps(_recipe, index, steps);
+        if (mutation.IsFailed) return mutation.ToResult<RecipeAnalysisSnapshot>();
+
+        return Commit(mutation.Value);
+    }
+
+    public Result<RecipeAnalysisSnapshot> DeleteSteps(IReadOnlyCollection<int> indices)
+    {
+        if (indices == null) throw new ArgumentNullException(nameof(indices));
+        if (indices.Count == 0) return Result.Ok(CurrentSnapshot);
+
+        var mutation = _mutator.RemoveSteps(_recipe, indices);
+        if (mutation.IsFailed) return mutation.ToResult<RecipeAnalysisSnapshot>();
+
+        return Commit(mutation.Value);
     }
 }

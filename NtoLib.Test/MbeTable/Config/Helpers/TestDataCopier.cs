@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace NtoLib.Test.MbeTable.Config.Helpers;
+﻿namespace NtoLib.Test.MbeTable.Config.Helpers;
 
 public static class TestDataCopier
 {

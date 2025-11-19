@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging.Abstractions;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;

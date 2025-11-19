@@ -1,19 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.AddStep;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CopySteps;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CutSteps;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.DeleteSteps;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.EditCell;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Load;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.PasteSteps;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Recive;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Remove;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Save;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Send;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 
@@ -30,6 +34,10 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     private readonly IRecipeOperationHandler<SaveRecipeArgs> _save;
     private readonly IRecipeOperationHandler<SendRecipeArgs> _send;
     private readonly IRecipeOperationHandler<ReceiveRecipeArgs> _receive;
+    private readonly IRecipeOperationHandler<CopyRowsArgs> _copyRows;
+    private readonly IRecipeOperationHandler<CutRowsArgs> _cutRows;
+    private readonly IRecipeOperationHandler<PasteRowsArgs> _pasteRows;
+    private readonly IRecipeOperationHandler<DeleteRowsArgs> _deleteRows;
 
     public RecipeViewModel ViewModel { get; }
 
@@ -45,6 +53,10 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         IRecipeOperationHandler<SaveRecipeArgs> save,
         IRecipeOperationHandler<SendRecipeArgs> send,
         IRecipeOperationHandler<ReceiveRecipeArgs> receive,
+        IRecipeOperationHandler<CopyRowsArgs> copyRows,
+        IRecipeOperationHandler<CutRowsArgs> cutRows,
+        IRecipeOperationHandler<PasteRowsArgs> pasteRows,
+        IRecipeOperationHandler<DeleteRowsArgs> deleteRows,
         RecipeViewModel viewModel)
     {
         _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
@@ -56,6 +68,10 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
         _save = save ?? throw new ArgumentNullException(nameof(save));
         _send = send ?? throw new ArgumentNullException(nameof(send));
         _receive = receive ?? throw new ArgumentNullException(nameof(receive));
+        _copyRows = copyRows ?? throw new ArgumentNullException(nameof(copyRows));
+        _cutRows = cutRows ?? throw new ArgumentNullException(nameof(cutRows));
+        _pasteRows = pasteRows ?? throw new ArgumentNullException(nameof(pasteRows));
+        _deleteRows = deleteRows ?? throw new ArgumentNullException(nameof(deleteRows));
 
         ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
     }
@@ -121,6 +137,42 @@ public sealed class RecipeApplicationService : IRecipeApplicationService
     public async Task<Result> ReceiveRecipeAsync()
     {
         var result = await _receive.ExecuteAsync(new ReceiveRecipeArgs());
+        if (result.IsSuccess)
+        {
+            RaiseRecipeStructureChanged();
+        }
+
+        return result;
+    }
+
+    public Task<Result> CopyRowsAsync(IReadOnlyList<int> indices) =>
+        _copyRows.ExecuteAsync(new CopyRowsArgs(indices));
+
+    public async Task<Result> CutRowsAsync(IReadOnlyList<int> indices)
+    {
+        var result = await _cutRows.ExecuteAsync(new CutRowsArgs(indices));
+        if (result.IsSuccess)
+        {
+            RaiseRecipeStructureChanged();
+        }
+
+        return result;
+    }
+
+    public async Task<Result> PasteRowsAsync(int targetIndex)
+    {
+        var result = await _pasteRows.ExecuteAsync(new PasteRowsArgs(targetIndex));
+        if (result.IsSuccess)
+        {
+            RaiseRecipeStructureChanged();
+        }
+
+        return result;
+    }
+
+    public async Task<Result> DeleteRowsAsync(IReadOnlyList<int> indices)
+    {
+        var result = await _deleteRows.ExecuteAsync(new DeleteRowsArgs(indices));
         if (result.IsSuccess)
         {
             RaiseRecipeStructureChanged();

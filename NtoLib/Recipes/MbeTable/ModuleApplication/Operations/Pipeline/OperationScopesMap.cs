@@ -15,6 +15,11 @@ public static class OperationScopesMap
             OperationId.AddStep => BlockingScope.Edit,
             OperationId.RemoveStep => BlockingScope.Edit,
             OperationId.EditCell => BlockingScope.Edit,
+            OperationId.CopyRows => BlockingScope.None,
+            OperationId.CutRows => BlockingScope.Edit,
+            OperationId.PasteRows => BlockingScope.Edit,
+            OperationId.DeleteRows => BlockingScope.Edit,
+            OperationId.InsertRows => BlockingScope.Edit,
             _ => BlockingScope.None
         };
 }

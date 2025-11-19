@@ -132,4 +132,46 @@ public sealed class RecipeMutator
 
         return Result.Ok(builder.Build());
     }
+    
+    public Result<Recipe> InsertSteps(Recipe recipe, int index, IReadOnlyList<Step> steps)
+    {
+        if (recipe == null) throw new ArgumentNullException(nameof(recipe));
+        if (steps == null) throw new ArgumentNullException(nameof(steps));
+        if (steps.Count == 0) return recipe;
+
+        var clampedIndex = Math.Max(0, Math.Min(index, recipe.Steps.Count));
+        var updatedSteps = recipe.Steps;
+
+        foreach (var step in steps)
+        {
+            updatedSteps = updatedSteps.Insert(clampedIndex, step);
+            clampedIndex++;
+        }
+
+        return new Recipe(updatedSteps);
+    }
+
+    public Result<Recipe> RemoveSteps(Recipe recipe, IReadOnlyCollection<int> indices)
+    {
+        if (recipe == null) throw new ArgumentNullException(nameof(recipe));
+        if (indices == null) throw new ArgumentNullException(nameof(indices));
+        if (indices.Count == 0) return recipe;
+
+        var sortedIndices = indices
+            .Where(i => i >= 0 && i < recipe.Steps.Count)
+            .OrderByDescending(i => i)
+            .ToList();
+
+        if (sortedIndices.Count == 0)
+            return recipe;
+
+        var updatedSteps = recipe.Steps;
+
+        foreach (var index in sortedIndices)
+        {
+            updatedSteps = updatedSteps.RemoveAt(index);
+        }
+
+        return new Recipe(updatedSteps);
+    }
 }

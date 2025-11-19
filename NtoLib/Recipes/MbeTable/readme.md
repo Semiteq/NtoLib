@@ -10,6 +10,7 @@
 - [Взаимодействие с ПЛК по Modbus TCP](./ServiceModbusTCP/readme.md)
 - [Импорт и экспорт рецептов в CSV](./ServiceCsv/readme.md)
 - [Пины функционального блока (FB Pins)](./ModuleInfrastructure/readme.md)
+- [UI/UX](./ModulePresentation/readme.md)
 - [Диагностика](./ServiceLogger/readme.md)
 - [Тестирование поведения](../../../NtoLib.Test/readme.md)
 

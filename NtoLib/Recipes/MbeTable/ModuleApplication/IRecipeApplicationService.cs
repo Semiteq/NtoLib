@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using FluentResults;
@@ -27,4 +28,9 @@ public interface IRecipeApplicationService
     Task<Result> SaveRecipeAsync(string filePath);
     Task<Result> SendRecipeAsync();
     Task<Result> ReceiveRecipeAsync();
+
+    Task<Result> CopyRowsAsync(IReadOnlyList<int> indices);
+    Task<Result> CutRowsAsync(IReadOnlyList<int> indices);
+    Task<Result> PasteRowsAsync(int targetIndex);
+    Task<Result> DeleteRowsAsync(IReadOnlyList<int> indices);
 }

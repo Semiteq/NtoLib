@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using NtoLib.Test.MbeTable.Core.Helpers;
+
 using Xunit;
 
 namespace NtoLib.Test.MbeTable.Core.Integration.Loops;
@@ -17,7 +19,7 @@ public sealed class CoreLoopTests
     public void ClosedLoop_ComputesIterationTiming()
     {
         var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as System.IDisposable;
+        using var _ = services as IDisposable;
 
         var d = new RecipeTestDriver(facade);
         d.AddFor(0, IterationCount);
@@ -27,19 +29,19 @@ public sealed class CoreLoopTests
         var snap = facade.CurrentSnapshot;
 
         snap.IsValid.Should().BeTrue();
-        snap.TotalDuration.Should().Be(System.TimeSpan.FromSeconds(SingleIterationDuration * IterationCount));
+        snap.TotalDuration.Should().Be(TimeSpan.FromSeconds(SingleIterationDuration * IterationCount));
         snap.LoopTree.ByStartIndex.ContainsKey(0).Should().BeTrue();
 
         var loop = snap.LoopTree.ByStartIndex[0];
         loop.EffectiveIterationCount.Should().Be(IterationCount);
-        loop.SingleIterationDuration.Should().Be(System.TimeSpan.FromSeconds(SingleIterationDuration));
+        loop.SingleIterationDuration.Should().Be(TimeSpan.FromSeconds(SingleIterationDuration));
     }
 
     [Fact]
     public void UnclosedLoop_InvalidatesRecipe()
     {
         var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as System.IDisposable;
+        using var _ = services as IDisposable;
 
         var d = new RecipeTestDriver(facade);
         d.AddFor(0, 2);
@@ -55,7 +57,7 @@ public sealed class CoreLoopTests
     public void MaxDepthExceeded_InvalidAndHasWarning()
     {
         var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as System.IDisposable;
+        using var _ = services as IDisposable;
 
         var d = new RecipeTestDriver(facade);
 

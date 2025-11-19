@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.AddStep;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CopySteps;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CutSteps;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.DeleteSteps;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.EditCell;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Load;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.PasteSteps;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Recive;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Remove;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Save;
@@ -22,7 +28,6 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Status;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
@@ -43,6 +48,8 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
+using NtoLib.Recipes.MbeTable.ServiceClipboard;
+using NtoLib.Recipes.MbeTable.ServiceClipboard.Serialization;
 using NtoLib.Recipes.MbeTable.ServiceCsv;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
@@ -54,10 +61,15 @@ using NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
-using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
-using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Strategies;
-using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Validation;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Assembly;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Parsing;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Schema;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Transform;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Modbus;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
+
 using Serilog;
 
 namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure;
@@ -231,7 +243,18 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<ModbusAssemblyStrategy>();
         services.AddSingleton<AssemblyValidator>();
         services.AddSingleton<TargetAvailabilityValidator>();
-        services.AddSingleton<IRecipeAssemblyService, RecipeAssemblyService>();
+        services.AddSingleton<IModbusRecipeAssemblyService, ModbusRecipeAssemblyService>();
+        services.AddSingleton<ICsvRecipeAssemblyService, CsvRecipeAssemblyService>();
+
+        services.AddSingleton<IClipboardSchemaDescriptor>(sp =>
+        {
+            var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
+            return new ClipboardSchemaDescriptor(columns);
+        });
+        services.AddSingleton<IClipboardSchemaValidator, ClipboardSchemaValidator>();
+        services.AddSingleton<IClipboardParser, ClipboardParser>();
+        services.AddSingleton<IClipboardStepsTransformer, ClipboardStepsTransformer>();
+        services.AddSingleton<IClipboardAssemblyService, ClipboardAssemblyService>();
     }
 
     private static void RegisterApplicationServices(IServiceCollection services)
@@ -243,6 +266,11 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IStatusPresenter, StatusPresenter>();
         services.AddSingleton<OperationPipeline>();
 
+        // ServiceClipboard services
+        services.AddSingleton<IClipboardRawAccess, SystemClipboardRawAccess>();
+        services.AddSingleton<IClipboardSerializationService, ClipboardSerializationService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
+
         services.AddSingleton<ActionComboBox>();
         services.AddSingleton<TargetComboBox>();
         services.AddSingleton<TextBoxExtension>();
@@ -252,6 +280,7 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<ICsvService, CsvService>();
         services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
 
+        // Existing operation definitions
         services.AddSingleton<EditCellOperationDefinition>();
         services.AddSingleton<AddStepOperationDefinition>();
         services.AddSingleton<RemoveStepOperationDefinition>();
@@ -260,6 +289,13 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<SendRecipeOperationDefinition>();
         services.AddSingleton<ReceiveRecipeOperationDefinition>();
 
+        // Clipboard operation definitions
+        services.AddSingleton<CopyRowsOperationDefinition>();
+        services.AddSingleton<CutRowsOperationDefinition>();
+        services.AddSingleton<PasteRowsOperationDefinition>();
+        services.AddSingleton<DeleteRowsOperationDefinition>();
+
+        // Existing operation handlers
         services.AddSingleton<IRecipeOperationHandler<EditCellArgs>, EditCellOperationHandler>();
         services.AddSingleton<IRecipeOperationHandler<AddStepArgs>, AddStepOperationHandler>();
         services.AddSingleton<IRecipeOperationHandler<RemoveStepArgs>, RemoveStepOperationHandler>();
@@ -267,6 +303,12 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<IRecipeOperationHandler<SaveRecipeArgs>, SaveRecipeOperationHandler>();
         services.AddSingleton<IRecipeOperationHandler<SendRecipeArgs>, SendRecipeOperationHandler>();
         services.AddSingleton<IRecipeOperationHandler<ReceiveRecipeArgs>, ReceiveRecipeOperationHandler>();
+
+        // Clipboard operation handlers
+        services.AddSingleton<IRecipeOperationHandler<CopyRowsArgs>, CopyRowsOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<CutRowsArgs>, CutRowsOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<PasteRowsArgs>, PasteRowsOperationHandler>();
+        services.AddSingleton<IRecipeOperationHandler<DeleteRowsArgs>, DeleteRowsOperationHandler>();
     }
 
     private static void RegisterPresentationServices(IServiceCollection services)

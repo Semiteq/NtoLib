@@ -10,19 +10,20 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Modbus;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
 
 public sealed class ModbusTcpService : IModbusTcpService
 {
     private readonly IRecipePlcService _plcService;
-    private readonly IRecipeAssemblyService _assemblyService;
+    private readonly IModbusRecipeAssemblyService _assemblyService;
     private readonly RecipeComparator _comparator;
     private readonly ILogger<ModbusTcpService> _logger;
 
     public ModbusTcpService(
         IRecipePlcService plcService,
-        IRecipeAssemblyService assemblyService,
+        IModbusRecipeAssemblyService assemblyService,
         RecipeComparator comparator,
         ILogger<ModbusTcpService> logger)
     {
