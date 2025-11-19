@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
+using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
@@ -110,12 +112,36 @@ public sealed class TablePresenter : ITablePresenter
     {
         if (e.Value == null)
             return;
-        
+
         var key = _view.GetColumnKey(e.ColumnIndex);
-        if (key != null)
+        if (key == null)
+            return;
+
+        var currentValueResult = _app.ViewModel.GetCellValue(e.RowIndex, e.ColumnIndex);
+        if (currentValueResult.IsSuccess)
         {
-            await _app.SetCellValueAsync(e.RowIndex, key, e.Value).ConfigureAwait(false);
+            var currentValue = currentValueResult.Value;
+            if (ValuesAreEqual(currentValue, e.Value))
+                return;
         }
+
+        await _app.SetCellValueAsync(e.RowIndex, key, e.Value).ConfigureAwait(false);
+    }
+
+    private static bool ValuesAreEqual(object? left, object? right)
+    {
+        if (ReferenceEquals(left, right))
+            return true;
+
+        if (left == null || right == null)
+            return false;
+
+        if (left.Equals(right))
+            return true;
+
+        var leftString = left.ToString();
+        var rightString = right.ToString();
+        return string.Equals(leftString, rightString, StringComparison.Ordinal);
     }
 
     private void OnRecipeStructureChanged()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -243,7 +243,30 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
 
     private CellVisualState ResolveCellVisualState(int rowIndex, int columnIndex)
     {
-        return _cellStateResolver.Resolve(rowIndex, columnIndex, _recipeViewModel);
+        var baseVisual = _cellStateResolver.Resolve(rowIndex, columnIndex, _recipeViewModel);
+
+        if (!IsRowSelectedByUser(rowIndex))
+            return baseVisual;
+
+        var executionState = _rowExecutionStateProvider.GetState(rowIndex);
+        if (executionState is RowExecutionState.Current or RowExecutionState.Passed)
+            return baseVisual;
+
+        var scheme = _colorSchemeProvider.Current;
+        return new CellVisualState(
+            Font: baseVisual.Font,
+            ForeColor: scheme.RowSelectionTextColor,
+            BackColor: scheme.RowSelectionBgColor,
+            IsReadOnly: baseVisual.IsReadOnly,
+            ComboDisplayStyle: baseVisual.ComboDisplayStyle);
+    }
+
+    private bool IsRowSelectedByUser(int rowIndex)
+    {
+        if (rowIndex < 0 || rowIndex >= _table.Rows.Count)
+            return false;
+
+        return _table.Rows[rowIndex].Selected;
     }
 
     private void ApplyVisualStateToCell(
@@ -284,8 +307,8 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
 
     private bool IsCellCurrentlyEditing(int rowIndex, int columnIndex)
     {
-        return _table.IsCurrentCellInEditMode 
-               && _table.CurrentCell.RowIndex == rowIndex 
+        return _table.IsCurrentCellInEditMode
+               && _table.CurrentCell.RowIndex == rowIndex
                && _table.CurrentCell.ColumnIndex == columnIndex;
     }
 
@@ -302,16 +325,15 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
         }
     }
 
-
     private void ApplyVisualStateToCellStyle(DataGridViewCell cell, CellVisualState visual)
     {
         if (!cell.HasStyle)
             return;
 
         var currentStyle = cell.InheritedStyle;
-        if (!ShouldUpdateCellStyle(currentStyle, visual)) 
+        if (!ShouldUpdateCellStyle(currentStyle, visual))
             return;
-        
+
         cell.Style.Font = visual.Font;
         cell.Style.ForeColor = visual.ForeColor;
         cell.Style.BackColor = visual.BackColor;

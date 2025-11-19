@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -334,6 +334,12 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<RemoveStepCommand>();
         services.AddSingleton<AddStepCommand>();
 
+        services.AddSingleton<CopyRowsCommand>();
+        services.AddSingleton<CutRowsCommand>();
+        services.AddSingleton<PasteRowsCommand>();
+        services.AddSingleton<DeleteRowsCommand>();
+        services.AddSingleton<InsertRowCommand>();
+
         services.AddSingleton(_ => new OpenFileDialog
         {
             Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
@@ -349,4 +355,5 @@ public static class MbeTableServiceConfigurator
             Title = @"Save recipe file"
         });
     }
+
 }

@@ -59,7 +59,7 @@ public sealed class TableBehaviorManager : IDisposable
 
         _attached = false;
     }
-    
+
     public void Dispose()
     {
         Dispose(true);
@@ -70,7 +70,7 @@ public sealed class TableBehaviorManager : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        
+
         if (disposing)
         {
             try { Detach(); } catch { }
@@ -82,22 +82,25 @@ public sealed class TableBehaviorManager : IDisposable
     {
         try { Detach(); } catch { }
     }
-    
+
     private void OnCellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
 
-        if (_table.IsCurrentCellInEditMode && _table.IsCurrentCellDirty)
+        if (!_table.IsCurrentCellInEditMode)
+            return;
+
+        if (!_table.IsCurrentCellDirty)
+            return;
+
+        try
         {
-            try
-            {
-                _table.CommitEdit(DataGridViewDataErrorContexts.Commit);
-                _table.EndEdit();
-            }
-            catch
-            {
-                // ignored
-            }
+            _table.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            _table.EndEdit();
+        }
+        catch
+        {
+            // ignored
         }
     }
 
@@ -145,14 +148,11 @@ public sealed class TableBehaviorManager : IDisposable
 
         if (e.Control is ComboBox comboBox)
         {
-            // Ensure dropdown list mode for consistency; no commit here (centralized in OnCurrentCellDirtyStateChanged)
             comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
-            // Optional visual sizing only (does not affect commit logic)
             comboBox.DropDown -= OnComboBoxDropDownAdjustSize;
             comboBox.DropDown += OnComboBoxDropDownAdjustSize;
 
-            // Remove immediate commit here to avoid duplicates
             comboBox.SelectionChangeCommitted -= OnComboBoxSelectionChangeCommitted;
         }
     }
@@ -177,10 +177,9 @@ public sealed class TableBehaviorManager : IDisposable
         comboBox.IntegralHeight = true;
         comboBox.MaxDropDownItems = visible;
     }
-    
+
     private void OnComboBoxSelectionChangeCommitted(object? sender, EventArgs e)
     {
-        // intentionally empty; commit is centralized elsewhere
     }
 
     private void OnDataError(object? sender, DataGridViewDataErrorEventArgs e)

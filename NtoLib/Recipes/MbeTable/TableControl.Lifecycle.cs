@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -16,7 +16,9 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Selection;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
@@ -27,6 +29,8 @@ public partial class TableControl
 {
     [NonSerialized] private Timer? _permissionsDebounceTimer;
     [NonSerialized] private UiPermissions _pendingPermissions;
+
+    [NonSerialized] private TableInputManager? _inputManager;
 
     private void InitializeServicesAndRuntime()
     {
@@ -45,6 +49,7 @@ public partial class TableControl
             ConfigureRecipeTable();
             AttachBehaviorManager();
             InitializeRenderCoordinatorInternal();
+            InitializeInputManager();
 
             InitializePresenter();
 
@@ -110,6 +115,30 @@ public partial class TableControl
             _table);
 
         _renderCoordinator.Initialize();
+    }
+    
+    private void InitializeInputManager()
+    {
+        if (_serviceProvider == null || _table == null || _table.IsDisposed)
+            return;
+
+        var app = _serviceProvider.GetRequiredService<IRecipeApplicationService>();
+        var copy = _serviceProvider.GetRequiredService<CopyRowsCommand>();
+        var cut = _serviceProvider.GetRequiredService<CutRowsCommand>();
+        var paste = _serviceProvider.GetRequiredService<PasteRowsCommand>();
+        var delete = _serviceProvider.GetRequiredService<DeleteRowsCommand>();
+        var insert = _serviceProvider.GetRequiredService<InsertRowCommand>();
+
+        _inputManager = new TableInputManager(
+            _table,
+            app,
+            copy,
+            cut,
+            paste,
+            delete,
+            insert);
+
+        _inputManager.Attach();
     }
 
     private void InitializePresenter()
@@ -346,6 +375,9 @@ public partial class TableControl
         (_tableView as IDisposable)?.Dispose();
         _behaviorManager?.Dispose();
         _behaviorManager = null;
+
+        _inputManager?.Dispose();
+        _inputManager = null;
     }
 
     private void ResetRuntimeFields()

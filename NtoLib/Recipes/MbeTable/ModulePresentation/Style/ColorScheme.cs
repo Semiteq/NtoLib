@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -33,7 +33,7 @@ public record ColorScheme
     public Color LineBgColor { get; init; }
     public Color LineTextColor { get; init; }
 
-    // Selected (current) line colors
+    // Selected (current execution) line colors
     public Color SelectedLineBgColor { get; init; }
     public Color SelectedLineTextColor { get; init; }
 
@@ -52,16 +52,20 @@ public record ColorScheme
     // Sizing
     public int LineHeight { get; init; }
 
-    // Selection outline
+    // Selection outline for current cell
     public Color SelectedOutlineColor { get; init; }
     public int SelectedOutlineThickness { get; init; }
-    
+
     // Status colorscheme
     public Color StatusInfoColor { get; init; }
     public Color StatusSuccessColor { get; init; }
     public Color StatusWarningColor { get; init; }
     public Color StatusErrorColor { get; init; }
     public Color StatusBgColor { get; init; }
+
+    // User row selection (DataGridView row selection, not execution "Current" state)
+    public Color RowSelectionBgColor { get; init; }
+    public Color RowSelectionTextColor { get; init; }
 
     public ColorScheme()
     {
@@ -84,7 +88,7 @@ public record ColorScheme
         LineBgColor = SystemColors.Window;
         LineTextColor = Color.Black;
 
-        // Selected (current) line colors
+        // Selected (current execution) line colors
         SelectedLineBgColor = Color.DeepSkyBlue;
         SelectedLineTextColor = Color.White;
 
@@ -106,13 +110,17 @@ public record ColorScheme
         // Selection outline
         SelectedOutlineColor = Color.DeepSkyBlue;
         SelectedOutlineThickness = 1;
-        
+
         // Status colorscheme
         StatusInfoColor = ControlBackgroundColor;
         StatusSuccessColor = Color.LightGreen;
         StatusWarningColor = Color.Gold;
         StatusErrorColor = Color.LightCoral;
         StatusBgColor = SystemColors.ControlLight;
+
+        // User row selection (tinted variant of normal line color)
+        RowSelectionBgColor = CreateTint(LineBgColor, SelectedLineBgColor, 0.3f);
+        RowSelectionTextColor = LineTextColor;
     }
 
     /// <summary>
@@ -165,5 +173,26 @@ public record ColorScheme
 
             _ => throw new ArgumentOutOfRangeException(nameof(rowState))
         };
+    }
+
+    private static Color CreateTint(Color baseColor, Color accentColor, float accentWeight)
+    {
+        if (accentWeight < 0f) accentWeight = 0f;
+        if (accentWeight > 1f) accentWeight = 1f;
+
+        float baseWeight = 1f - accentWeight;
+
+        int r = (int)(baseColor.R * baseWeight + accentColor.R * accentWeight);
+        int g = (int)(baseColor.G * baseWeight + accentColor.G * accentWeight);
+        int b = (int)(baseColor.B * baseWeight + accentColor.B * accentWeight);
+
+        return Color.FromArgb(baseColor.A, ClampToByte(r), ClampToByte(g), ClampToByte(b));
+    }
+
+    private static int ClampToByte(int value)
+    {
+        if (value < 0) return 0;
+        if (value > 255) return 255;
+        return value;
     }
 }

@@ -1,9 +1,11 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 
-/// <summary>Sets VirtualMode / selection / double-buffer flags once.</summary>
+/// <summary>
+/// Applies common DataGridView options once during table initialization.
+/// </summary>
 internal static class GridOptionsApplier
 {
     public static void Apply(DataGridView grid)
@@ -12,12 +14,18 @@ internal static class GridOptionsApplier
         grid.AutoGenerateColumns = false;
         grid.AllowUserToAddRows = false;
         grid.AllowUserToDeleteRows = false;
+
         grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        grid.MultiSelect = false;
+        grid.MultiSelect = true;
+
         grid.EditMode = DataGridViewEditMode.EditOnEnter;
         grid.EnableHeadersVisualStyles = false;
 
-        // Enable double buffering by reflection (WinForms hack)
+        EnableDoubleBuffering(grid);
+    }
+
+    private static void EnableDoubleBuffering(DataGridView grid)
+    {
         typeof(DataGridView).InvokeMember(
             "DoubleBuffered",
             BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
