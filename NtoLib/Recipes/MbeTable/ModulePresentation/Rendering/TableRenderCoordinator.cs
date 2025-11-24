@@ -244,21 +244,43 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
     private CellVisualState ResolveCellVisualState(int rowIndex, int columnIndex)
     {
         var baseVisual = _cellStateResolver.Resolve(rowIndex, columnIndex, _recipeViewModel);
-
-        if (!IsRowSelectedByUser(rowIndex))
-            return baseVisual;
-
-        var executionState = _rowExecutionStateProvider.GetState(rowIndex);
-        if (executionState is RowExecutionState.Current or RowExecutionState.Passed)
-            return baseVisual;
-
         var scheme = _colorSchemeProvider.Current;
-        return new CellVisualState(
-            Font: baseVisual.Font,
-            ForeColor: scheme.RowSelectionTextColor,
-            BackColor: scheme.RowSelectionBgColor,
-            IsReadOnly: baseVisual.IsReadOnly,
-            ComboDisplayStyle: baseVisual.ComboDisplayStyle);
+        var executionState = _rowExecutionStateProvider.GetState(rowIndex);
+
+        // Apply loop nesting overlay only for Upcoming rows (not Current/Passed)
+        if (executionState == RowExecutionState.Upcoming)
+        {
+            var depth = _recipeViewModel.GetLoopNesting(rowIndex);
+            if (depth > 0 && depth <= 3)
+            {
+                // Only overlay if cell is in normal editable state (keep blocked/readonly as-is)
+                bool isNormalEditable = !baseVisual.IsReadOnly && baseVisual.BackColor == scheme.LineBgColor;
+                if (isNormalEditable)
+                {
+                    var loopColor = depth switch
+                    {
+                        1 => scheme.LoopLevel1BgColor,
+                        2 => scheme.LoopLevel2BgColor,
+                        3 => scheme.LoopLevel3BgColor,
+                        _ => scheme.LineBgColor
+                    };
+                    baseVisual = baseVisual with { BackColor = loopColor };
+                }
+            }
+        }
+
+        // User row selection overlay (after loop coloring), excluded for Current/Passed
+        if (IsRowSelectedByUser(rowIndex) && executionState is not (RowExecutionState.Current or RowExecutionState.Passed))
+        {
+            baseVisual = new CellVisualState(
+                Font: baseVisual.Font,
+                ForeColor: scheme.RowSelectionTextColor,
+                BackColor: scheme.RowSelectionBgColor,
+                IsReadOnly: baseVisual.IsReadOnly,
+                ComboDisplayStyle: baseVisual.ComboDisplayStyle);
+        }
+
+        return baseVisual;
     }
 
     private bool IsRowSelectedByUser(int rowIndex)

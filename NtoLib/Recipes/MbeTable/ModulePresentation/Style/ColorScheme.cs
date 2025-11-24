@@ -67,6 +67,11 @@ public record ColorScheme
     public Color RowSelectionBgColor { get; init; }
     public Color RowSelectionTextColor { get; init; }
 
+    // Loop nesting background colors (depth 1..3)
+    public Color LoopLevel1BgColor { get; init; }
+    public Color LoopLevel2BgColor { get; init; }
+    public Color LoopLevel3BgColor { get; init; }
+
     public ColorScheme()
     {
         // Background colors
@@ -121,6 +126,12 @@ public record ColorScheme
         // User row selection (tinted variant of normal line color)
         RowSelectionBgColor = CreateTint(LineBgColor, SelectedLineBgColor, 0.3f);
         RowSelectionTextColor = LineTextColor;
+
+        // Loop nesting colors (chosen distinctive purples)
+        // Depth 1 - Royal Purple, Depth 2 - Twitch Purple, Depth 3 - Bright Purple
+        LoopLevel1BgColor = Color.FromArgb(0x4B, 0x00, 0x82); // Royal Purple
+        LoopLevel2BgColor = Color.FromArgb(0x64, 0x41, 0xA5); // Twitch Purple (approx)
+        LoopLevel3BgColor = Color.FromArgb(0xBF, 0x40, 0xBF); // Bright Purple
     }
 
     /// <summary>
