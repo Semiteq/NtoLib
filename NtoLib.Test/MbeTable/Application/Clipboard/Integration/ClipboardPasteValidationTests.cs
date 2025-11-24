@@ -17,7 +17,7 @@ public sealed class ClipboardPasteValidationTests
     private const short ActionIdWithTask = 90;
 
     [Fact]
-    public void PasteWithNegativeDuration_Fails()
+    public async Task PasteWithNegativeDuration_Fails()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -25,20 +25,20 @@ public sealed class ClipboardPasteValidationTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         tsv = tsv.Replace("10\t", "-5\t");
         clipboard.SetText(tsv);
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsFailed.Should().BeTrue();
         app.GetRowCount().Should().Be(beforeCount);
     }
 
     [Fact]
-    public void PasteWithExcessiveDuration_Fails()
+    public async Task PasteWithExcessiveDuration_Fails()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -46,20 +46,20 @@ public sealed class ClipboardPasteValidationTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         tsv = tsv.Replace("10\t", "9999999\t");
         clipboard.SetText(tsv);
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsFailed.Should().BeTrue();
         app.GetRowCount().Should().Be(beforeCount);
     }
 
     [Fact]
-    public void PasteWithInvalidFloatFormat_Fails()
+    public async Task PasteWithInvalidFloatFormat_Fails()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -67,20 +67,20 @@ public sealed class ClipboardPasteValidationTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         tsv = tsv.Replace("10\t", "abc\t");
         clipboard.SetText(tsv);
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsFailed.Should().BeTrue();
         app.GetRowCount().Should().Be(beforeCount);
     }
 
     [Fact]
-    public void PasteWithNegativeTask_Fails()
+    public async Task PasteWithNegativeTask_Fails()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -95,7 +95,7 @@ public sealed class ClipboardPasteValidationTests
         var d = new ClipboardTestDriver(app);
         d.AddActionStep(0, ActionIdWithTask);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         var parts = tsv.Split('\t');
         if (parts.Length > 1)
@@ -105,7 +105,7 @@ public sealed class ClipboardPasteValidationTests
             clipboard.SetText(tsv);
 
             var beforeCount = app.GetRowCount();
-            var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+            var result = await app.PasteRowsAsync(0);
 
             result.IsFailed.Should().BeTrue();
             app.GetRowCount().Should().Be(beforeCount);
@@ -113,7 +113,7 @@ public sealed class ClipboardPasteValidationTests
     }
 
     [Fact]
-    public void PasteWithExcessiveTask_Fails()
+    public async Task PasteWithExcessiveTask_Fails()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -128,7 +128,7 @@ public sealed class ClipboardPasteValidationTests
         var d = new ClipboardTestDriver(app);
         d.AddActionStep(0, ActionIdWithTask);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         var parts = tsv.Split('\t');
         if (parts.Length > 1)
@@ -138,7 +138,7 @@ public sealed class ClipboardPasteValidationTests
             clipboard.SetText(tsv);
 
             var beforeCount = app.GetRowCount();
-            var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+            var result = await app.PasteRowsAsync(0);
 
             result.IsFailed.Should().BeTrue();
             app.GetRowCount().Should().Be(beforeCount);
@@ -146,7 +146,7 @@ public sealed class ClipboardPasteValidationTests
     }
 
     [Fact]
-    public void PasteMultipleRows_OneInvalid_FailsAll()
+    public async Task PasteMultipleRows_OneInvalid_FailsAll()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -154,7 +154,7 @@ public sealed class ClipboardPasteValidationTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1).AddWait(2);
 
-        app.CopyRowsAsync(new List<int> { 0, 1, 2 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0, 1, 2 });
         var tsv = clipboard.WrittenText;
         var lines = tsv.Split('\n');
         if (lines.Length > 1)
@@ -164,7 +164,7 @@ public sealed class ClipboardPasteValidationTests
             clipboard.SetText(tsv);
 
             var beforeCount = app.GetRowCount();
-            var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+            var result = await app.PasteRowsAsync(0);
 
             result.IsFailed.Should().BeTrue();
             app.GetRowCount().Should().Be(beforeCount);

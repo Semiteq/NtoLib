@@ -82,7 +82,7 @@ public sealed class CorePropertyParsingEdgeCasesTests
 
         result.IsSuccess.Should().BeTrue();
         var actualValue = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.Task]
+            .Properties[MandatoryColumns.Task]!
             .GetValue<float>().Value;
         actualValue.Should().Be(expectedTruncated);
     }

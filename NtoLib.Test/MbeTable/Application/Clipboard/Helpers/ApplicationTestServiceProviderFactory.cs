@@ -136,6 +136,8 @@ public static class ApplicationTestServiceProviderFactory
 
         services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
 
+        services.AddSingleton<IForLoopNestingProvider, ForLoopNestingProvider>();
+
         return services.BuildServiceProvider();
     }
 

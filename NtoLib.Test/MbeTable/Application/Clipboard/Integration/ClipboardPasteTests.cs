@@ -12,7 +12,7 @@ namespace NtoLib.Test.MbeTable.Application.Clipboard.Integration;
 public sealed class ClipboardPasteTests
 {
     [Fact]
-    public void PasteSingleRow_ValidClipboard_InsertsStep()
+    public async Task PasteSingleRow_ValidClipboard_InsertsStep()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -20,19 +20,19 @@ public sealed class ClipboardPasteTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         clipboard.SetText(tsv);
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(1).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(1);
 
         result.IsSuccess.Should().BeTrue();
         app.GetRowCount().Should().Be(beforeCount + 1);
     }
 
     [Fact]
-    public void PasteMultipleRows_ValidClipboard_InsertsAll()
+    public async Task PasteMultipleRows_ValidClipboard_InsertsAll()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -40,19 +40,19 @@ public sealed class ClipboardPasteTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1).AddWait(2).AddWait(3);
 
-        app.CopyRowsAsync(new List<int> { 0, 1, 2 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0, 1, 2 });
         var tsv = clipboard.WrittenText;
         clipboard.SetText(tsv);
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsSuccess.Should().BeTrue();
         app.GetRowCount().Should().Be(beforeCount + 3);
     }
 
     [Fact]
-    public void PasteIntoEmptyRecipe_InsertsRows()
+    public async Task PasteIntoEmptyRecipe_InsertsRows()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -60,22 +60,21 @@ public sealed class ClipboardPasteTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1);
 
-        app.CopyRowsAsync(new List<int> { 0, 1 }).GetAwaiter().GetResult();
-        app.DeleteRowsAsync(new List<int> { 0, 1 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0, 1 });
+        await app.DeleteRowsAsync(new List<int> { 0, 1 });
         var tsv = clipboard.WrittenText;
         clipboard.Clear();
 
-        d = new ClipboardTestDriver(app);
         clipboard.SetText(tsv);
 
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsSuccess.Should().BeTrue();
         app.GetRowCount().Should().Be(2);
     }
 
     [Fact]
-    public void PasteWithInvalidActionId_Fails()
+    public async Task PasteWithInvalidActionId_Fails()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -83,20 +82,20 @@ public sealed class ClipboardPasteTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         tsv = tsv.Replace("10\t", "999\t");
         clipboard.SetText(tsv);
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsFailed.Should().BeTrue();
         app.GetRowCount().Should().Be(beforeCount);
     }
 
     [Fact]
-    public void PasteWithColumnCountMismatch_Fails()
+    public async Task PasteWithColumnCountMismatch_Fails()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -107,14 +106,14 @@ public sealed class ClipboardPasteTests
         clipboard.SetText("10\t\t10\t\t");
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsFailed.Should().BeTrue();
         app.GetRowCount().Should().Be(beforeCount);
     }
 
     [Fact]
-    public void PasteEmptyClipboard_SucceedsWithWarning()
+    public async Task PasteEmptyClipboard_SucceedsWithWarning()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -125,7 +124,7 @@ public sealed class ClipboardPasteTests
         clipboard.Clear();
 
         var beforeCount = app.GetRowCount();
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsSuccess.Should().BeTrue();
         result.Reasons.Should().NotBeEmpty();
@@ -133,7 +132,7 @@ public sealed class ClipboardPasteTests
     }
 
     [Fact]
-    public void PasteOutOfRangeTargetIndex_ClampsToEnd()
+    public async Task PasteOutOfRangeTargetIndex_ClampsToEnd()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -141,18 +140,18 @@ public sealed class ClipboardPasteTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         clipboard.SetText(tsv);
 
-        var result = app.PasteRowsAsync(10).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(10);
 
         result.IsSuccess.Should().BeTrue();
         app.GetRowCount().Should().Be(3);
     }
 
     [Fact]
-    public void PasteNegativeTargetIndex_ClampsToZero()
+    public async Task PasteNegativeTargetIndex_ClampsToZero()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -160,11 +159,11 @@ public sealed class ClipboardPasteTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         clipboard.SetText(tsv);
 
-        var result = app.PasteRowsAsync(-5).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(-5);
 
         result.IsSuccess.Should().BeTrue();
         app.GetRowCount().Should().Be(3);

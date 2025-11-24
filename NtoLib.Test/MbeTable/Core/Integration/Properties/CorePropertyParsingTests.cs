@@ -54,7 +54,7 @@ public sealed class CorePropertyParsingTests
         var step = facade.CurrentSnapshot.Recipe.Steps[0];
         var targetKey = new ColumnIdentifier("target");
 
-        step.Properties[targetKey].GetValue<short>().Value.Should().Be(ExpectedDefaultTargetId);
+        step.Properties[targetKey]!.GetValue<short>().Value.Should().Be(ExpectedDefaultTargetId);
     }
 
     [Fact]

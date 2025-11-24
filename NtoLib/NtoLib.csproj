@@ -702,6 +702,8 @@
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Style\ColorScheme.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Style\DesignTimeColorSchemeProvider.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Style\ColorStyleHelpers.cs" />
+
     <Compile Include="Recipes\MbeTable\ModulePresentation\Style\IColorSchemeProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Adapters\DataGridViewAdapter.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\TablePresenter.cs" />

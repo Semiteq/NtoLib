@@ -2,4 +2,7 @@
     <PropertyGroup>
         <LangVersion>9.0</LangVersion>
     </PropertyGroup>
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);MSB3277;MSB3884</NoWarn>
+    </PropertyGroup>
 </Project>

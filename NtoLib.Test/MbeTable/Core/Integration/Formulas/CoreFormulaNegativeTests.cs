@@ -51,13 +51,13 @@ public sealed class CoreFormulaNegativeTests
         d.AddDefaultStep(0).ReplaceAction(0, actionId);
 
         var durationBefore = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.StepDuration]
+            .Properties[MandatoryColumns.StepDuration]!
             .GetValue<float>().Value;
 
         facade.UpdateProperty(0, MandatoryColumns.Comment, "test comment");
 
         var durationAfter = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.StepDuration]
+            .Properties[MandatoryColumns.StepDuration]!
             .GetValue<float>().Value;
 
         durationAfter.Should().Be(durationBefore);
@@ -93,13 +93,13 @@ public sealed class CoreFormulaNegativeTests
         d.AddDefaultStep(0).ReplaceAction(0, actionId);
 
         var taskBefore = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.Task]
+            .Properties[MandatoryColumns.Task]!
             .GetValue<float>().Value;
 
         facade.UpdateProperty(0, new ColumnIdentifier("speed"), 2f);
 
         var taskAfter = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.Task]
+            .Properties[MandatoryColumns.Task]!
             .GetValue<float>().Value;
 
         taskAfter.Should().Be(taskBefore);

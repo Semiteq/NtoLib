@@ -34,14 +34,14 @@ public sealed class CoreFormulaTests
         d.AddDefaultStep(0).ReplaceAction(0, actionId);
 
         var before = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.StepDuration]
+            .Properties[MandatoryColumns.StepDuration]!
             .GetValue<float>().Value;
         before.Should().Be(DefaultTemperatureRampDuration);
 
         d.SetSpeed(0, CustomSpeed);
 
         var after = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.StepDuration]
+            .Properties[MandatoryColumns.StepDuration]!
             .GetValue<float>().Value;
         after.Should().Be(ExpectedDurationAfterSpeedChange);
     }
@@ -60,13 +60,13 @@ public sealed class CoreFormulaTests
         d.SetSpeed(0, DefaultTemperatureRampSpeed);
 
         var before = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.StepDuration]
+            .Properties[MandatoryColumns.StepDuration]!
             .GetValue<float>().Value;
 
         d.SetSpeed(0, DefaultTemperatureRampSpeed);
 
         var after = facade.CurrentSnapshot.Recipe.Steps[0]
-            .Properties[MandatoryColumns.StepDuration]
+            .Properties[MandatoryColumns.StepDuration]!
             .GetValue<float>().Value;
 
         after.Should().Be(before);

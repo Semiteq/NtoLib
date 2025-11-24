@@ -6,9 +6,9 @@ namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 
 public sealed class FakeClipboardRawAccess : IClipboardRawAccess
 {
-    public string? WrittenText { get; private set; }
+    public string WrittenText { get; private set; } = string.Empty;
 
-    public string? ReadText()
+    public string ReadText()
     {
         return WrittenText;
     }
@@ -26,6 +26,6 @@ public sealed class FakeClipboardRawAccess : IClipboardRawAccess
 
     public void Clear()
     {
-        WrittenText = null;
+        WrittenText = string.Empty;
     }
 }

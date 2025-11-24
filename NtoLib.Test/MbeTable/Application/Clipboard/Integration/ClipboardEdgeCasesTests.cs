@@ -27,7 +27,7 @@ public sealed class ClipboardEdgeCasesTests
     }
 
     [Fact]
-    public void PasteWithUnsafeCharacters_Sanitizes()
+    public async Task PasteWithUnsafeCharacters_Sanitizes()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -35,18 +35,18 @@ public sealed class ClipboardEdgeCasesTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var tsv = clipboard.WrittenText;
         tsv = tsv.Replace("\n", "\tComment\twith\ttabs\n");
         clipboard.SetText(tsv);
 
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void PasteWithExcessiveLength_Truncates()
+    public async Task PasteWithExcessiveLength_Truncates()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -54,7 +54,7 @@ public sealed class ClipboardEdgeCasesTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0);
 
-        app.CopyRowsAsync(new List<int> { 0 }).GetAwaiter().GetResult();
+        await app.CopyRowsAsync(new List<int> { 0 });
         var longString = new string('a', 3000);
 
         var tsv = clipboard.WrittenText;
@@ -62,13 +62,13 @@ public sealed class ClipboardEdgeCasesTests
 
         clipboard.SetText(tsv);
 
-        var result = app.PasteRowsAsync(0).GetAwaiter().GetResult();
+        var result = await app.PasteRowsAsync(0);
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void PasteMultipleOperationsInSequence_MaintainsConsistency()
+    public async Task PasteMultipleOperationsInSequence_MaintainsConsistency()
     {
         var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
         using var _ = services as IDisposable;
@@ -76,9 +76,9 @@ public sealed class ClipboardEdgeCasesTests
         var d = new ClipboardTestDriver(app);
         d.AddWait(0).AddWait(1).AddWait(2).AddWait(3).AddWait(4);
 
-        app.DeleteRowsAsync(new List<int> { 0, 4 }).GetAwaiter().GetResult();
-        app.CopyRowsAsync(new List<int> { 1 }).GetAwaiter().GetResult();
-        var result = app.PasteRowsAsync(2).GetAwaiter().GetResult();
+        await app.DeleteRowsAsync(new List<int> { 0, 4 });
+        await app.CopyRowsAsync(new List<int> { 1 });
+        var result = await app.PasteRowsAsync(2);
 
         result.IsSuccess.Should().BeTrue();
         app.GetRowCount().Should().Be(4);

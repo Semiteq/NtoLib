@@ -39,7 +39,7 @@ public sealed class CoreTargetsEdgeCasesTests
 
         var repo = services.GetRequiredService<IActionRepository>();
 
-        var result = repo.GetResultActionDefinitionByName(null);
+        var result = repo.GetResultActionDefinitionByName(string.Empty);
 
         result.IsFailed.Should().BeTrue();
     }
