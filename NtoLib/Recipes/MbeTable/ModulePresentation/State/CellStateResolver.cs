@@ -1,4 +1,6 @@
 ﻿using System;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
+
 using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
@@ -79,8 +81,8 @@ public sealed class CellStateResolver : ICellStateResolver
         // Apply execution tint only (no loop, no selection) for legacy callers
         var scheme = _colorSchemeProvider.Current;
         bool restricted = availability.IsReadOnly; // treat readonly/disabled same for tint scaling
-        var tintedBg = scheme.ApplyExecutionTint(availability.BackColor, rowState, restricted);
-        var adjustedFore = scheme.EnsureContrast(tintedBg, availability.ForeColor);
+        var tintedBg = ColorStyleHelpers.ApplyExecutionTint(availability.BackColor, rowState, restricted, scheme);
+        var adjustedFore = ColorStyleHelpers.EnsureContrast(tintedBg, availability.ForeColor);
         return availability with { BackColor = tintedBg, ForeColor = adjustedFore, Font = GetFontForExecution(rowState, scheme, availability.Font) };
     }
 

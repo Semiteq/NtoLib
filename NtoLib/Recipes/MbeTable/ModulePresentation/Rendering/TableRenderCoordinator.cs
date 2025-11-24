@@ -1,4 +1,6 @@
 using System;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
+
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -11,7 +13,6 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Models;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 
@@ -243,18 +244,15 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
 
     private CellVisualState ResolveCellVisualState(int rowIndex, int columnIndex)
     {
-        // Step 1: availability base
         var availability = _cellStateResolver.ResolveAvailability(rowIndex, columnIndex, _recipeViewModel);
         var scheme = _colorSchemeProvider.Current;
         var executionState = _rowExecutionStateProvider.GetState(rowIndex);
-        bool restricted = availability.IsReadOnly; // treat readonly/disabled the same for scaling
+        bool restricted = availability.IsReadOnly;
 
-        // Step 2: loop tint over availability
         var depth = _recipeViewModel.GetLoopNesting(rowIndex);
-        var afterLoopBg = scheme.ApplyLoopTint(availability.BackColor, depth, restricted);
+        var afterLoopBg = ColorStyleHelpers.ApplyLoopTint(availability.BackColor, depth, restricted, scheme);
 
-        // Step 3: execution tint (Current/Passed)
-        var afterExecutionBg = scheme.ApplyExecutionTint(afterLoopBg, executionState, restricted);
+        var afterExecutionBg = ColorStyleHelpers.ApplyExecutionTint(afterLoopBg, executionState, restricted, scheme);
         var finalFont = executionState switch
         {
             RowExecutionState.Current => scheme.SelectedLineFont,
@@ -262,7 +260,7 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
             _ => availability.Font
         };
 
-        var foreAfterContrast = scheme.EnsureContrast(afterExecutionBg, availability.ForeColor);
+        var foreAfterContrast = ColorStyleHelpers.EnsureContrast(afterExecutionBg, availability.ForeColor);
         var final = new CellVisualState(
             Font: finalFont,
             ForeColor: foreAfterContrast,
@@ -270,11 +268,10 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
             IsReadOnly: availability.IsReadOnly,
             ComboDisplayStyle: availability.ComboDisplayStyle);
 
-        // Optional Step 4: user selection tint (applies after all semantic layers)
         if (IsRowSelectedByUser(rowIndex) && executionState == RowExecutionState.Upcoming)
         {
-            var selectedBg = scheme.Blend(final.BackColor, scheme.RowSelectionBgColor, 0.35f);
-            var adjustedFore = scheme.EnsureContrast(selectedBg, final.ForeColor);
+            var selectedBg = ColorStyleHelpers.Blend(final.BackColor, scheme.RowSelectionBgColor, 0.35f);
+            var adjustedFore = ColorStyleHelpers.EnsureContrast(selectedBg, final.ForeColor);
             final = final with { BackColor = selectedBg, ForeColor = adjustedFore };
         }
 
