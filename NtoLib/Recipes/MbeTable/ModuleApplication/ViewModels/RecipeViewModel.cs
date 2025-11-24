@@ -20,16 +20,19 @@ public sealed class RecipeViewModel
     private readonly IRecipeFacade _recipeService;
     private readonly IComboboxDataProvider _comboboxDataProvider;
     private readonly PropertyStateProvider _propertyStateProvider;
+    private readonly IForLoopNestingProvider _loopNestingProvider;
 
     public RecipeViewModel(
         IRecipeFacade recipeService,
         IComboboxDataProvider comboboxDataProvider,
         PropertyStateProvider propertyStateProvider,
+        IForLoopNestingProvider loopNestingProvider,
         IReadOnlyList<ColumnDefinition> tableColumns)
     {
         _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
         _comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));
         _propertyStateProvider = propertyStateProvider ?? throw new ArgumentNullException(nameof(propertyStateProvider));
+        _loopNestingProvider = loopNestingProvider ?? throw new ArgumentNullException(nameof(loopNestingProvider));
         _tableColumns = tableColumns ?? throw new ArgumentNullException(nameof(tableColumns));
 
         RebuildViewModels();
@@ -78,6 +81,20 @@ public sealed class RecipeViewModel
         var columnKey = _tableColumns[columnIndex].Key;
 
         return _propertyStateProvider.GetPropertyState(step, columnKey);
+    }
+
+    public int GetLoopNesting(int rowIndex)
+    {
+        try
+        {
+            if (rowIndex < 0 || rowIndex >= _viewModels.Count)
+                return 0;
+            return _loopNestingProvider.GetNestingDepth(rowIndex);
+        }
+        catch
+        {
+            return 0;
+        }
     }
 
     private void RebuildViewModels()

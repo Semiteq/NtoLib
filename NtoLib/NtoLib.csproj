@@ -420,6 +420,8 @@
     <Compile Include="Recipes\MbeTable\ModuleCore\Reasons\Warnings\CoreStepDurationNegativeWarning.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Runtime\ITimerService.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Runtime\TimerService.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Services\IForLoopNestingProvider.cs" />
+    <Compile Include="Recipes\MbeTable\ModuleCore\Services\ForLoopNestingProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Snapshot\AnalysisFlags.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\Snapshot\RecipeAnalysisSnapshot.cs" />
     <Compile Include="Recipes\MbeTable\ModuleCore\State\IRecipeStateManager.cs" />

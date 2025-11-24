@@ -108,8 +108,6 @@ public sealed class LoopParser : ILoopParser
 
     private static int ExtractIterationCount(Step step)
     {
-        if (step == null) return 1;
-
         if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
             return 1;
 

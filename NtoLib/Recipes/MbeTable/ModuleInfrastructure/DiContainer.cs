@@ -185,6 +185,7 @@ public static class MbeTableServiceConfigurator
         services.AddSingleton<FormulaApplicationCoordinator>();
         services.AddSingleton<IRecipeFacade, RecipeFacade>();
         services.AddSingleton<ITimerService, TimerService>();
+        services.AddSingleton<IForLoopNestingProvider, ForLoopNestingProvider>();
     }
 
     private static void RegisterAnalyzerPipeline(IServiceCollection services)

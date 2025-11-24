@@ -7,9 +7,6 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
-/// <summary>
-/// Provides property state (Enabled/Readonly/Disabled) based on recipe data and column configuration.
-/// </summary>
 public sealed class PropertyStateProvider
 {
     private readonly IReadOnlyList<ColumnDefinition> _columnsInConfig;
