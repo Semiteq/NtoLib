@@ -10,11 +10,12 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.State;
 public interface ICellStateResolver
 {
     /// <summary>
-    /// Resolves the visual state for a cell.
+    /// Legacy full resolution (execution + availability) retained for backwards compatibility.
     /// </summary>
-    /// <param name="rowIndex">Row index.</param>
-    /// <param name="columnIndex">Column index.</param>
-    /// <param name="viewModel">Recipe view model.</param>
-    /// <returns>The resolved visual state.</returns>
     CellVisualState Resolve(int rowIndex, int columnIndex, RecipeViewModel viewModel);
+
+    /// <summary>
+    /// Resolves only the availability base style (Enabled/ReadOnly/Disabled).
+    /// </summary>
+    CellVisualState ResolveAvailability(int rowIndex, int columnIndex, RecipeViewModel viewModel);
 }

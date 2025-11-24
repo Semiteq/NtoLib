@@ -243,44 +243,42 @@ public sealed class TableRenderCoordinator : ITableRenderCoordinator
 
     private CellVisualState ResolveCellVisualState(int rowIndex, int columnIndex)
     {
-        var baseVisual = _cellStateResolver.Resolve(rowIndex, columnIndex, _recipeViewModel);
+        // Step 1: availability base
+        var availability = _cellStateResolver.ResolveAvailability(rowIndex, columnIndex, _recipeViewModel);
         var scheme = _colorSchemeProvider.Current;
         var executionState = _rowExecutionStateProvider.GetState(rowIndex);
+        bool restricted = availability.IsReadOnly; // treat readonly/disabled the same for scaling
 
-        // Apply loop nesting overlay only for Upcoming rows (not Current/Passed)
-        if (executionState == RowExecutionState.Upcoming)
+        // Step 2: loop tint over availability
+        var depth = _recipeViewModel.GetLoopNesting(rowIndex);
+        var afterLoopBg = scheme.ApplyLoopTint(availability.BackColor, depth, restricted);
+
+        // Step 3: execution tint (Current/Passed)
+        var afterExecutionBg = scheme.ApplyExecutionTint(afterLoopBg, executionState, restricted);
+        var finalFont = executionState switch
         {
-            var depth = _recipeViewModel.GetLoopNesting(rowIndex);
-            if (depth > 0 && depth <= 3)
-            {
-                // Only overlay if cell is in normal editable state (keep blocked/readonly as-is)
-                bool isNormalEditable = !baseVisual.IsReadOnly && baseVisual.BackColor == scheme.LineBgColor;
-                if (isNormalEditable)
-                {
-                    var loopColor = depth switch
-                    {
-                        1 => scheme.LoopLevel1BgColor,
-                        2 => scheme.LoopLevel2BgColor,
-                        3 => scheme.LoopLevel3BgColor,
-                        _ => scheme.LineBgColor
-                    };
-                    baseVisual = baseVisual with { BackColor = loopColor };
-                }
-            }
+            RowExecutionState.Current => scheme.SelectedLineFont,
+            RowExecutionState.Passed => scheme.PassedLineFont,
+            _ => availability.Font
+        };
+
+        var foreAfterContrast = scheme.EnsureContrast(afterExecutionBg, availability.ForeColor);
+        var final = new CellVisualState(
+            Font: finalFont,
+            ForeColor: foreAfterContrast,
+            BackColor: afterExecutionBg,
+            IsReadOnly: availability.IsReadOnly,
+            ComboDisplayStyle: availability.ComboDisplayStyle);
+
+        // Optional Step 4: user selection tint (applies after all semantic layers)
+        if (IsRowSelectedByUser(rowIndex) && executionState == RowExecutionState.Upcoming)
+        {
+            var selectedBg = scheme.Blend(final.BackColor, scheme.RowSelectionBgColor, 0.35f);
+            var adjustedFore = scheme.EnsureContrast(selectedBg, final.ForeColor);
+            final = final with { BackColor = selectedBg, ForeColor = adjustedFore };
         }
 
-        // User row selection overlay (after loop coloring), excluded for Current/Passed
-        if (IsRowSelectedByUser(rowIndex) && executionState is not (RowExecutionState.Current or RowExecutionState.Passed))
-        {
-            baseVisual = new CellVisualState(
-                Font: baseVisual.Font,
-                ForeColor: scheme.RowSelectionTextColor,
-                BackColor: scheme.RowSelectionBgColor,
-                IsReadOnly: baseVisual.IsReadOnly,
-                ComboDisplayStyle: baseVisual.ComboDisplayStyle);
-        }
-
-        return baseVisual;
+        return final;
     }
 
     private bool IsRowSelectedByUser(int rowIndex)

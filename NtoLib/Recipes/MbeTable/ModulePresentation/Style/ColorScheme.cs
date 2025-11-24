@@ -72,6 +72,15 @@ public record ColorScheme
     public Color LoopLevel2BgColor { get; init; }
     public Color LoopLevel3BgColor { get; init; }
 
+    // Loop tint weights
+    public float LoopLevel1TintWeight { get; init; }
+    public float LoopLevel2TintWeight { get; init; }
+    public float LoopLevel3TintWeight { get; init; }
+
+    // Execution tint weights
+    public float CurrentExecutionTintWeight { get; init; }
+    public float PassedExecutionTintWeight { get; init; }
+
     public ColorScheme()
     {
         // Background colors
@@ -132,6 +141,14 @@ public record ColorScheme
         LoopLevel1BgColor = Color.FromArgb(0x4B, 0x00, 0x82); // Royal Purple
         LoopLevel2BgColor = Color.FromArgb(0x64, 0x41, 0xA5); // Twitch Purple (approx)
         LoopLevel3BgColor = Color.FromArgb(0xBF, 0x40, 0xBF); // Bright Purple
+
+        // Tint weights
+        LoopLevel1TintWeight = 0.25f;
+        LoopLevel2TintWeight = 0.45f;
+        LoopLevel3TintWeight = 0.65f;
+
+        CurrentExecutionTintWeight = 0.55f;
+        PassedExecutionTintWeight = 0.40f;
     }
 
     /// <summary>
@@ -186,17 +203,75 @@ public record ColorScheme
         };
     }
 
+    public Color ApplyLoopTint(Color baseColor, int depth, bool isRestricted)
+    {
+        if (depth <= 0) return baseColor;
+        float w = depth switch
+        {
+            1 => LoopLevel1TintWeight,
+            2 => LoopLevel2TintWeight,
+            3 => LoopLevel3TintWeight,
+            _ => LoopLevel3TintWeight
+        };
+        if (isRestricted) w *= 0.6f; // reduce impact for disabled/readonly
+        var accent = depth switch
+        {
+            1 => LoopLevel1BgColor,
+            2 => LoopLevel2BgColor,
+            3 => LoopLevel3BgColor,
+            _ => LoopLevel3BgColor
+        };
+        return Blend(baseColor, accent, w);
+    }
+
+    public Color ApplyExecutionTint(Color baseColor, RowExecutionState state, bool isRestricted)
+    {
+        float w = state switch
+        {
+            RowExecutionState.Current => CurrentExecutionTintWeight,
+            RowExecutionState.Passed => PassedExecutionTintWeight,
+            _ => 0f
+        };
+        if (w <= 0f) return baseColor;
+        if (isRestricted) w *= 0.6f;
+        var accent = state switch
+        {
+            RowExecutionState.Current => SelectedLineBgColor,
+            RowExecutionState.Passed => PassedLineBgColor,
+            _ => baseColor
+        };
+        return Blend(baseColor, accent, w);
+    }
+
+    public Color Blend(Color baseColor, Color accentColor, float weight)
+    {
+        if (weight <= 0f) return baseColor;
+        if (weight > 1f) weight = 1f;
+        float inv = 1f - weight;
+        int r = (int)(baseColor.R * inv + accentColor.R * weight);
+        int g = (int)(baseColor.G * inv + accentColor.G * weight);
+        int b = (int)(baseColor.B * inv + accentColor.B * weight);
+        return Color.FromArgb(baseColor.A, ClampToByte(r), ClampToByte(g), ClampToByte(b));
+    }
+
+    public Color EnsureContrast(Color backColor, Color foreColor)
+    {
+        // Simple luminance-based adjustment; keep existing if sufficiently distinct.
+        int lumBack = (int)(0.299 * backColor.R + 0.587 * backColor.G + 0.114 * backColor.B);
+        int lumFore = (int)(0.299 * foreColor.R + 0.587 * foreColor.G + 0.114 * foreColor.B);
+        if (Math.Abs(lumBack - lumFore) > 60) return foreColor;
+        // Choose black or white based on background luminance midpoint.
+        return lumBack < 128 ? Color.White : Color.Black;
+
+    }
     private static Color CreateTint(Color baseColor, Color accentColor, float accentWeight)
     {
         if (accentWeight < 0f) accentWeight = 0f;
         if (accentWeight > 1f) accentWeight = 1f;
-
         float baseWeight = 1f - accentWeight;
-
         int r = (int)(baseColor.R * baseWeight + accentColor.R * accentWeight);
         int g = (int)(baseColor.G * baseWeight + accentColor.G * accentWeight);
         int b = (int)(baseColor.B * baseWeight + accentColor.B * accentWeight);
-
         return Color.FromArgb(baseColor.A, ClampToByte(r), ClampToByte(g), ClampToByte(b));
     }
 
