@@ -11,14 +11,14 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
 public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefinition>
 {
-	private static readonly HashSet<string> SupportedSystemTypes = new(StringComparer.OrdinalIgnoreCase)
+	private static readonly HashSet<string> _supportedSystemTypes = new(StringComparer.OrdinalIgnoreCase)
 	{
 		"System.String",
 		"System.Int16",
 		"System.Single",
 	};
 
-	private static readonly HashSet<string> SupportedFormatKinds = new(StringComparer.OrdinalIgnoreCase)
+	private static readonly HashSet<string> _supportedFormatKinds = new(StringComparer.OrdinalIgnoreCase)
 	{
 		"Numeric",
 		"Scientific",
@@ -26,7 +26,7 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
 		"Int"
 	};
 
-	private static readonly HashSet<string> SpecialTypes = new(StringComparer.OrdinalIgnoreCase)
+	private static readonly HashSet<string> _specialTypes = new(StringComparer.OrdinalIgnoreCase)
 	{
 		PropertyTypeIds.Time,
 		PropertyTypeIds.Enum
@@ -62,16 +62,16 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
 
 	private static Result ValidateTypeSupport(YamlPropertyDefinition def, string context)
 	{
-		if (SpecialTypes.Contains(def.PropertyTypeId))
+		if (_specialTypes.Contains(def.PropertyTypeId))
 			return Result.Ok();
 
 		var systemType = Type.GetType(def.SystemType, throwOnError: false, ignoreCase: true);
 		if (systemType == null)
 			return Result.Fail(ConfigPropertyErrors.UnknownSystemType(def.PropertyTypeId, def.SystemType, context));
 
-		if (!SupportedSystemTypes.Contains(systemType.FullName ?? string.Empty))
+		if (!_supportedSystemTypes.Contains(systemType.FullName ?? string.Empty))
 		{
-			var supported = string.Join(", ", SupportedSystemTypes);
+			var supported = string.Join(", ", _supportedSystemTypes);
 			return Result.Fail(
 				ConfigPropertyErrors.UnsupportedSystemType(def.PropertyTypeId, def.SystemType, supported, context));
 		}
@@ -104,12 +104,12 @@ public sealed class PropertyDefsValidator : ISectionValidator<YamlPropertyDefini
 
 	private static bool IsSupportedFormatKind(string formatKind)
 	{
-		return SupportedFormatKinds.Contains(formatKind);
+		return _supportedFormatKinds.Contains(formatKind);
 	}
 
 	private static Result CreateUnsupportedFormatKindError(YamlPropertyDefinition def, string context)
 	{
-		var supported = string.Join(", ", SupportedFormatKinds);
+		var supported = string.Join(", ", _supportedFormatKinds);
 		return Result.Fail(
 			ConfigPropertyErrors.UnsupportedFormatKind(def.PropertyTypeId, def.FormatKind, supported, context));
 	}

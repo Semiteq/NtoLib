@@ -1,10 +1,10 @@
 ﻿namespace NtoLib.Utils
 {
-    public enum ReadResult
-    {
-        Success,
-        AboveMax,
-        BelowMin,
-        ParseError
-    }
+	public enum ReadResult
+	{
+		Success,
+		AboveMax,
+		BelowMin,
+		ParseError
+	}
 }

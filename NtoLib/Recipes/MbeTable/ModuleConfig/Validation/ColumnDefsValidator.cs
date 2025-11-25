@@ -14,7 +14,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Validation;
 
 public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition>
 {
-	private static readonly List<ColumnIdentifier> ConfigMandatoryColumns = new()
+	private static readonly List<ColumnIdentifier> _configMandatoryColumns = new()
 	{
 		MandatoryColumns.Action,
 		MandatoryColumns.Task,
@@ -23,7 +23,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 		MandatoryColumns.Comment
 	};
 
-	private static readonly HashSet<string> SupportedColumnTypes = new(StringComparer.OrdinalIgnoreCase)
+	private static readonly HashSet<string> _supportedColumnTypes = new(StringComparer.OrdinalIgnoreCase)
 	{
 		ColumnTypeIds.ActionComboBox,
 		ColumnTypeIds.ActionTargetComboBox,
@@ -55,7 +55,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 	private static Result ValidateMandatoryColumns(IReadOnlyList<YamlColumnDefinition> items)
 	{
 		var definedKeys = new HashSet<string>(items.Select(d => d.Key), StringComparer.OrdinalIgnoreCase);
-		var missingKeys = ConfigMandatoryColumns
+		var missingKeys = _configMandatoryColumns
 			.Where(mc => !definedKeys.Contains(mc.Value))
 			.Select(mc => mc.Value)
 			.ToList();
@@ -73,7 +73,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 	{
 		var unsupported = items
 			.Where(d => !string.IsNullOrWhiteSpace(d.Ui?.ColumnType) &&
-						!SupportedColumnTypes.Contains(d.Ui.ColumnType))
+						!_supportedColumnTypes.Contains(d.Ui.ColumnType))
 			.Select(d => new { d.Key, ColumnType = d.Ui?.ColumnType })
 			.ToList();
 

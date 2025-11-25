@@ -1,8 +1,8 @@
 ﻿namespace NtoLib.Utils
 {
-    public enum ButtonOrientation
-    {
-        RigthBottom,
-        LeftTop
-    }
+	public enum ButtonOrientation
+	{
+		RigthBottom,
+		LeftTop
+	}
 }

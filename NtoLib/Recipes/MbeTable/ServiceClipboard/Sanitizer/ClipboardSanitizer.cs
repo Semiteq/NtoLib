@@ -5,7 +5,7 @@ namespace NtoLib.Recipes.MbeTable.ServiceClipboard.Sanitizer;
 
 public static class ClipboardSanitizer
 {
-	private static readonly Regex UnsafeRegex = new(@"[\x00-\x08\x0B\x0C\x0E-\x1F]", RegexOptions.Compiled);
+	private static readonly Regex _unsafeRegex = new(@"[\x00-\x08\x0B\x0C\x0E-\x1F]", RegexOptions.Compiled);
 	private const int MaxCellLength = 2000;
 
 	public static string SanitizeForCell(string? input)
@@ -20,7 +20,7 @@ public static class ClipboardSanitizer
 			.Replace('\n', ' ');
 
 		// Remove remaining unsafe control characters
-		normalized = UnsafeRegex.Replace(normalized, string.Empty);
+		normalized = _unsafeRegex.Replace(normalized, string.Empty);
 
 		// Trim and collapse multiple spaces
 		normalized = CollapseSpaces(normalized.Trim());

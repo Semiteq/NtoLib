@@ -9,39 +9,39 @@ namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 [Trait("Area", "CrossReference")]
 public sealed class CrossReferenceTests
 {
-    [Fact]
-    public void ActionReferencesMissingColumn_Fails()
-    {
-        TestHelper.LoadInvalidCaseExpectingError(
-            "CrossActionMissingColumn",
-            "ActionsDefs.yaml",
-            "ColumnKey=");
-    }
+	[Fact]
+	public void ActionReferencesMissingColumn_Fails()
+	{
+		TestHelper.LoadInvalidCaseExpectingError(
+			"CrossActionMissingColumn",
+			"ActionsDefs.yaml",
+			"ColumnKey=");
+	}
 
-    [Fact]
-    public void ActionReferencesMissingPropertyType_Fails()
-    {
-        TestHelper.LoadInvalidCaseExpectingError(
-            "CrossActionMissingPropertyType",
-            "ActionsDefs.yaml",
-            "ColumnKey=");
-    }
+	[Fact]
+	public void ActionReferencesMissingPropertyType_Fails()
+	{
+		TestHelper.LoadInvalidCaseExpectingError(
+			"CrossActionMissingPropertyType",
+			"ActionsDefs.yaml",
+			"ColumnKey=");
+	}
 
-    [Fact]
-    public void ColumnReferencesMissingPropertyType_Fails()
-    {
-        TestHelper.LoadInvalidCaseExpectingError(
-            "CrossColumnMissingPropertyType",
-            "ColumnDefs.yaml",
-            "Key=");
-    }
+	[Fact]
+	public void ColumnReferencesMissingPropertyType_Fails()
+	{
+		TestHelper.LoadInvalidCaseExpectingError(
+			"CrossColumnMissingPropertyType",
+			"ColumnDefs.yaml",
+			"Key=");
+	}
 
-    [Fact]
-    public void EnumGroupNameNotDefined_Fails()
-    {
-        TestHelper.LoadInvalidCaseExpectingError(
-            "CrossEnumGroupMissing",
-            "ActionsDefs.yaml",
-            "ColumnKey='target'");
-    }
+	[Fact]
+	public void EnumGroupNameNotDefined_Fails()
+	{
+		TestHelper.LoadInvalidCaseExpectingError(
+			"CrossEnumGroupMissing",
+			"ActionsDefs.yaml",
+			"ColumnKey='target'");
+	}
 }

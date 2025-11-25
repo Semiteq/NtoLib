@@ -4,97 +4,97 @@ using System.Windows.Forms;
 
 namespace NtoLib.Utils
 {
-    public partial class Lamp : UserControl
-    {
-        public Shape Shape { get; set; }
+	public partial class Lamp : UserControl
+	{
+		public Shape Shape { get; set; }
 
-        private Color _activeColor;
-        public Color ActiveColor 
-        {
-            get
-            {
-                return _activeColor;
-            }
-            set
-            {
-                _activeColor = value;
+		private Color _activeColor;
+		public Color ActiveColor
+		{
+			get
+			{
+				return _activeColor;
+			}
+			set
+			{
+				_activeColor = value;
 
-                if(_active)
-                    Invalidate();
-            }
-        }
+				if (_active)
+					Invalidate();
+			}
+		}
 
-        public string TextOnLamp { get; set; }
+		public string TextOnLamp { get; set; }
 
-        private bool _active;
-        public bool Active
-        {
-            get
-            {
-                return _active;
-            }
-            set
-            {
-                if(_active != value)
-                {
-                    _active = value;
-                    this.Invalidate();
-                }
-            }
-        }
-
-
-
-        public Lamp()
-        {
-            SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-            UpdateStyles();
-
-            Margin = new Padding(5);
-
-            InitializeComponent();
-        }
+		private bool _active;
+		public bool Active
+		{
+			get
+			{
+				return _active;
+			}
+			set
+			{
+				if (_active != value)
+				{
+					_active = value;
+					this.Invalidate();
+				}
+			}
+		}
 
 
 
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            Rectangle localBounds = new Rectangle(0, 0, Bounds.Width - 1, Bounds.Height - 1);
-            Pen pen = new Pen(Color.Black, 1f);
-            Brush brush;
+		public Lamp()
+		{
+			SetStyle(ControlStyles.UserPaint, true);
+			SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+			SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+			UpdateStyles();
+
+			Margin = new Padding(5);
+
+			InitializeComponent();
+		}
 
 
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-            if(Active)
-                brush = new SolidBrush(ActiveColor);
-            else
-                brush = new SolidBrush(Color.Transparent);
-
-            if(Shape == Shape.Circle)
-            {
-                e.Graphics.FillEllipse(brush, localBounds);
-                e.Graphics.DrawEllipse(pen, localBounds);
-            }
-            else if(Shape == Shape.Square)
-            {
-                e.Graphics.FillRectangle(brush, localBounds);
-                e.Graphics.DrawRectangle(pen, localBounds);
-            }
+		protected override void OnPaint(PaintEventArgs e)
+		{
+			Rectangle localBounds = new Rectangle(0, 0, Bounds.Width - 1, Bounds.Height - 1);
+			Pen pen = new Pen(Color.Black, 1f);
+			Brush brush;
 
 
-            if(TextOnLamp != string.Empty)
-            {
-                StringFormat format = StringFormat.GenericDefault;
-                format.Alignment = StringAlignment.Center;
-                format.LineAlignment = StringAlignment.Center;
+			e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-                e.Graphics.DrawString(TextOnLamp, Font, Brushes.Black, localBounds, format);
-            }
+			if (Active)
+				brush = new SolidBrush(ActiveColor);
+			else
+				brush = new SolidBrush(Color.Transparent);
 
-            base.OnPaint(e);
-        }
-    }
+			if (Shape == Shape.Circle)
+			{
+				e.Graphics.FillEllipse(brush, localBounds);
+				e.Graphics.DrawEllipse(pen, localBounds);
+			}
+			else if (Shape == Shape.Square)
+			{
+				e.Graphics.FillRectangle(brush, localBounds);
+				e.Graphics.DrawRectangle(pen, localBounds);
+			}
+
+
+			if (TextOnLamp != string.Empty)
+			{
+				StringFormat format = StringFormat.GenericDefault;
+				format.Alignment = StringAlignment.Center;
+				format.LineAlignment = StringAlignment.Center;
+
+				e.Graphics.DrawString(TextOnLamp, Font, Brushes.Black, localBounds, format);
+			}
+
+			base.OnPaint(e);
+		}
+	}
 }

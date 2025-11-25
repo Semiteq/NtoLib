@@ -2,62 +2,62 @@
 
 public static class ClipboardYamlHelper
 {
-    public static string PrepareYamlConfigDirectory()
-    {
-        var testDataRoot = GetYamlConfigRoot();
-        var tempDir = Path.Combine(Path.GetTempPath(), "NtoLib.ClipboardTests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempDir);
+	public static string PrepareYamlConfigDirectory()
+	{
+		var testDataRoot = GetYamlConfigRoot();
+		var tempDir = Path.Combine(Path.GetTempPath(), "NtoLib.ClipboardTests", Guid.NewGuid().ToString("N"));
+		Directory.CreateDirectory(tempDir);
 
-        CopyDirectory(testDataRoot, tempDir);
-        return tempDir;
-    }
+		CopyDirectory(testDataRoot, tempDir);
+		return tempDir;
+	}
 
-    private static string GetYamlConfigRoot()
-    {
-        var dir = AppContext.BaseDirectory;
-        for (var i = 0; i < 12 && !string.IsNullOrEmpty(dir); i++)
-        {
-            var probe = Path.Combine(dir, "MbeTable", "YamlConfigs");
-            if (Directory.Exists(probe))
-                return probe;
+	private static string GetYamlConfigRoot()
+	{
+		var dir = AppContext.BaseDirectory;
+		for (var i = 0; i < 12 && !string.IsNullOrEmpty(dir); i++)
+		{
+			var probe = Path.Combine(dir, "MbeTable", "YamlConfigs");
+			if (Directory.Exists(probe))
+				return probe;
 
-            dir = Directory.GetParent(dir)?.FullName ?? string.Empty;
-        }
+			dir = Directory.GetParent(dir)?.FullName ?? string.Empty;
+		}
 
-        throw new DirectoryNotFoundException(
-            "YamlConfigs root not found. Expected 'MbeTable/YamlConfigs' up the directory tree.");
-    }
+		throw new DirectoryNotFoundException(
+			"YamlConfigs root not found. Expected 'MbeTable/YamlConfigs' up the directory tree.");
+	}
 
-    private static void CopyDirectory(string sourceDir, string destDir)
-    {
-        foreach (var dirPath in Directory.GetDirectories(sourceDir, "*", SearchOption.AllDirectories))
-        {
-            var rel = ComputeRelativePath(sourceDir, dirPath);
-            var target = Path.Combine(destDir, rel);
-            Directory.CreateDirectory(target);
-        }
+	private static void CopyDirectory(string sourceDir, string destDir)
+	{
+		foreach (var dirPath in Directory.GetDirectories(sourceDir, "*", SearchOption.AllDirectories))
+		{
+			var rel = ComputeRelativePath(sourceDir, dirPath);
+			var target = Path.Combine(destDir, rel);
+			Directory.CreateDirectory(target);
+		}
 
-        foreach (var filePath in Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
-        {
-            var rel = ComputeRelativePath(sourceDir, filePath);
-            var target = Path.Combine(destDir, rel);
-            var targetDir = Path.GetDirectoryName(target);
-            if (!string.IsNullOrEmpty(targetDir))
-                Directory.CreateDirectory(targetDir);
+		foreach (var filePath in Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
+		{
+			var rel = ComputeRelativePath(sourceDir, filePath);
+			var target = Path.Combine(destDir, rel);
+			var targetDir = Path.GetDirectoryName(target);
+			if (!string.IsNullOrEmpty(targetDir))
+				Directory.CreateDirectory(targetDir);
 
-            File.Copy(filePath, target, overwrite: true);
-        }
-    }
+			File.Copy(filePath, target, overwrite: true);
+		}
+	}
 
-    private static string ComputeRelativePath(string baseDir, string fullPath)
-    {
-        var normBase = baseDir.EndsWith(Path.DirectorySeparatorChar.ToString())
-            ? baseDir
-            : baseDir + Path.DirectorySeparatorChar;
+	private static string ComputeRelativePath(string baseDir, string fullPath)
+	{
+		var normBase = baseDir.EndsWith(Path.DirectorySeparatorChar.ToString())
+			? baseDir
+			: baseDir + Path.DirectorySeparatorChar;
 
-        if (fullPath.StartsWith(normBase, StringComparison.OrdinalIgnoreCase))
-            return fullPath.Substring(normBase.Length);
+		if (fullPath.StartsWith(normBase, StringComparison.OrdinalIgnoreCase))
+			return fullPath.Substring(normBase.Length);
 
-        return Path.GetFileName(fullPath) ?? string.Empty;
-    }
+		return Path.GetFileName(fullPath) ?? string.Empty;
+	}
 }

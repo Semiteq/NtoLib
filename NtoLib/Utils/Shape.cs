@@ -1,8 +1,8 @@
 ﻿namespace NtoLib.Utils
 {
-    public enum Shape
-    {
-        Circle,
-        Square
-    }
+	public enum Shape
+	{
+		Circle,
+		Square
+	}
 }

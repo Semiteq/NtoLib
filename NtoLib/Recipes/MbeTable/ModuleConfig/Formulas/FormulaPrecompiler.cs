@@ -20,7 +20,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
 /// </summary>
 public sealed class FormulaPrecompiler : IFormulaPrecompiler
 {
-	private static readonly StringComparer VariableNameComparer = StringComparer.OrdinalIgnoreCase;
+	private static readonly StringComparer _variableNameComparer = StringComparer.OrdinalIgnoreCase;
 
 	private readonly ILogger<FormulaPrecompiler> _logger;
 
@@ -110,7 +110,7 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 	}
 
 	private static HashSet<string> ExtractVariables(Entity expression)
-		=> expression.Vars.Select(v => v.Name).ToHashSet(VariableNameComparer);
+		=> expression.Vars.Select(v => v.Name).ToHashSet(_variableNameComparer);
 
 	private static Result ValidateFormulaStructure(
 		HashSet<string> variables,
@@ -128,14 +128,14 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 	private static Result ValidateRecalcOrder(HashSet<string> variables, IReadOnlyList<string> recalcOrder)
 	{
 		var variablesNotInRecalcOrder = variables
-			.Where(v => !recalcOrder.Contains(v, VariableNameComparer))
+			.Where(v => !recalcOrder.Contains(v, _variableNameComparer))
 			.ToList();
 
 		if (variablesNotInRecalcOrder.Any())
 			return new ConfigFormulaRecalcOrderMissingError(string.Join(", ", variablesNotInRecalcOrder));
 
 		var orderVariablesNotInFormula = recalcOrder
-			.Where(v => !variables.Contains(v, VariableNameComparer))
+			.Where(v => !variables.Contains(v, _variableNameComparer))
 			.ToList();
 
 		return orderVariablesNotInFormula.Any()
@@ -183,7 +183,7 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 		HashSet<string> variables,
 		Entity parsedExpression)
 	{
-		var solvers = new Dictionary<string, Func<Dictionary<string, double>, double>>(VariableNameComparer);
+		var solvers = new Dictionary<string, Func<Dictionary<string, double>, double>>(_variableNameComparer);
 
 		foreach (var variable in variables)
 		{

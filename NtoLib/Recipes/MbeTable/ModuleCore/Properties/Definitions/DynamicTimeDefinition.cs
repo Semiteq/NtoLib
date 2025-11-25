@@ -20,7 +20,7 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
 	private const int SecondsPerMinute = 60;
 	private const int SecondsPerHour = 3600;
 
-	private static readonly Regex TimeRegex = new(TimeFormatPattern, RegexOptions.Compiled);
+	private static readonly Regex _timeRegex = new(TimeFormatPattern, RegexOptions.Compiled);
 
 	public DynamicTimeDefinition(YamlPropertyDefinition dto) : base(dto)
 	{
@@ -61,7 +61,7 @@ public sealed class DynamicTimeDefinition : ConfigurableNumericDefinition
 
 	private static Result<object> ParseTimeFormat(string sanitized, string originalInput)
 	{
-		var match = TimeRegex.Match(sanitized);
+		var match = _timeRegex.Match(sanitized);
 		if (!match.Success)
 			return new CorePropertyConversionFailedError(originalInput, "time format (expected hh:mm:ss.ms)");
 

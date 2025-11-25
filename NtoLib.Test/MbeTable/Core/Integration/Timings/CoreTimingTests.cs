@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using NtoLib.Test.MbeTable.Core.Helpers;
 
@@ -11,65 +11,65 @@ namespace NtoLib.Test.MbeTable.Core.Integration.Timings;
 [Trait("Area", "Timing")]
 public sealed class CoreTimingTests
 {
-    private const int DefaultWaitDurationSeconds = 10;
-    private const int WaitStepCount = 3;
+	private const int DefaultWaitDurationSeconds = 10;
+	private const int WaitStepCount = 3;
 
-    [Fact]
-    public void LinearAccumulation_WaitSteps()
-    {
-        var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as IDisposable;
+	[Fact]
+	public void LinearAccumulation_WaitSteps()
+	{
+		var (services, facade) = CoreTestHelper.BuildCore();
+		using var _ = services as IDisposable;
 
-        var d = new RecipeTestDriver(facade);
-        d.AddWait(0).AddWait(1).AddWait(2);
+		var d = new RecipeTestDriver(facade);
+		d.AddWait(0).AddWait(1).AddWait(2);
 
-        var snap = facade.CurrentSnapshot;
+		var snap = facade.CurrentSnapshot;
 
-        snap.TotalDuration.Should().Be(TimeSpan.FromSeconds(DefaultWaitDurationSeconds * WaitStepCount));
-        snap.StepStartTimes[2].Should().Be(TimeSpan.FromSeconds(DefaultWaitDurationSeconds * 2));
-    }
+		snap.TotalDuration.Should().Be(TimeSpan.FromSeconds(DefaultWaitDurationSeconds * WaitStepCount));
+		snap.StepStartTimes[2].Should().Be(TimeSpan.FromSeconds(DefaultWaitDurationSeconds * 2));
+	}
 
-    [Fact]
-    public void NegativeDuration_TreatedAsAbsolute()
-    {
-        var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as IDisposable;
+	[Fact]
+	public void NegativeDuration_TreatedAsAbsolute()
+	{
+		var (services, facade) = CoreTestHelper.BuildCore();
+		using var _ = services as IDisposable;
 
-        const int negativeDuration = -5;
+		const int NegativeDuration = -5;
 
-        var d = new RecipeTestDriver(facade);
-        d.AddWait(0).SetDuration(0, negativeDuration);
+		var d = new RecipeTestDriver(facade);
+		d.AddWait(0).SetDuration(0, NegativeDuration);
 
-        var snap = facade.CurrentSnapshot;
+		var snap = facade.CurrentSnapshot;
 
-        snap.TotalDuration.Should().Be(TimeSpan.FromSeconds(Math.Abs(negativeDuration)));
-        snap.IsValid.Should().BeTrue();
-    }
+		snap.TotalDuration.Should().Be(TimeSpan.FromSeconds(Math.Abs(NegativeDuration)));
+		snap.IsValid.Should().BeTrue();
+	}
 
-    [Fact]
-    public void NestedLoops_ComposeTotalDuration()
-    {
-        var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as IDisposable;
+	[Fact]
+	public void NestedLoops_ComposeTotalDuration()
+	{
+		var (services, facade) = CoreTestHelper.BuildCore();
+		using var _ = services as IDisposable;
 
-        const int outerIterations = 2;
-        const int innerIterations = 2;
-        const int bodyDuration = 5;
-        const int expectedTotal = outerIterations * innerIterations * bodyDuration;
-        const int expectedEnclosingCount = 2;
+		const int OuterIterations = 2;
+		const int InnerIterations = 2;
+		const int BodyDuration = 5;
+		const int ExpectedTotal = OuterIterations * InnerIterations * BodyDuration;
+		const int ExpectedEnclosingCount = 2;
 
-        var d = new RecipeTestDriver(facade);
-        d.AddFor(0, outerIterations);
-        d.AddFor(1, innerIterations);
-        d.AddWait(2).SetDuration(2, bodyDuration);
-        d.AddEndFor(3);
-        d.AddEndFor(4);
+		var d = new RecipeTestDriver(facade);
+		d.AddFor(0, OuterIterations);
+		d.AddFor(1, InnerIterations);
+		d.AddWait(2).SetDuration(2, BodyDuration);
+		d.AddEndFor(3);
+		d.AddEndFor(4);
 
-        var snap = facade.CurrentSnapshot;
+		var snap = facade.CurrentSnapshot;
 
-        snap.TotalDuration.Should().Be(TimeSpan.FromSeconds(expectedTotal));
+		snap.TotalDuration.Should().Be(TimeSpan.FromSeconds(ExpectedTotal));
 
-        var enclosing = snap.LoopTree.EnclosingLoopsForStep[2];
-        enclosing.Count.Should().Be(expectedEnclosingCount);
-    }
+		var enclosing = snap.LoopTree.EnclosingLoopsForStep[2];
+		enclosing.Count.Should().Be(ExpectedEnclosingCount);
+	}
 }

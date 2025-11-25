@@ -46,10 +46,10 @@ public sealed class ConfigurableEnumDefinition : IPropertyTypeDefinition
 	/// <inheritdoc/>
 	public Result<object> TryParse(string input)
 	{
-		const NumberStyles numberStyles = NumberStyles.Integer;
+		const NumberStyles NumberStyles = NumberStyles.Integer;
 		var invariantCulture = CultureInfo.InvariantCulture;
 
-		return short.TryParse(input, numberStyles, invariantCulture, out var s)
+		return short.TryParse(input, NumberStyles, invariantCulture, out var s)
 			? Result.Ok<object>(s)
 			: new CorePropertyConversionFailedError(input, "Int16");
 	}

@@ -36,14 +36,14 @@ public sealed class LoggingBootstrapper : IDisposable
 
 	private static Logger BuildSerilogLogger(LoggingOptions options)
 	{
-		const string template = "{Timestamp:O} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
+		const string Template = "{Timestamp:O} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
 		var invariant = CultureInfo.InvariantCulture;
 
 		var config = new LoggerConfiguration()
 			.MinimumLevel.Verbose()
 			.Enrich.FromLogContext()
-			.WriteTo.Console(outputTemplate: template, formatProvider: invariant)
-			.WriteTo.Debug(outputTemplate: template, formatProvider: invariant);
+			.WriteTo.Console(outputTemplate: Template, formatProvider: invariant)
+			.WriteTo.Debug(outputTemplate: Template, formatProvider: invariant);
 
 		if (!string.IsNullOrWhiteSpace(options.FilePath))
 		{
@@ -56,7 +56,7 @@ public sealed class LoggingBootstrapper : IDisposable
 				rollOnFileSizeLimit: true,
 				retainedFileCountLimit: 5,
 				shared: true,
-				outputTemplate: template,
+				outputTemplate: Template,
 				formatProvider: invariant);
 		}
 

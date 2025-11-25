@@ -14,48 +14,48 @@ namespace NtoLib.Test.MbeTable.Core.Integration.Targets;
 [Trait("Area", "TargetsEdgeCases")]
 public sealed class CoreTargetsEdgeCasesTests
 {
-    private const string EmptyActionName = "";
-    private const string CloseActionName = "Закрыть";
-    private const string InvalidColumnKey = "invalid_column";
+	private const string EmptyActionName = "";
+	private const string CloseActionName = "Закрыть";
+	private const string InvalidColumnKey = "invalid_column";
 
-    [Fact]
-    public void GetActionDefinitionByName_EmptyName_Fails()
-    {
-        var (services, _) = CoreTestHelper.BuildCore();
-        using var __ = services as IDisposable;
+	[Fact]
+	public void GetActionDefinitionByName_EmptyName_Fails()
+	{
+		var (services, _) = CoreTestHelper.BuildCore();
+		using var __ = services as IDisposable;
 
-        var repo = services.GetRequiredService<IActionRepository>();
+		var repo = services.GetRequiredService<IActionRepository>();
 
-        var result = repo.GetResultActionDefinitionByName(EmptyActionName);
+		var result = repo.GetResultActionDefinitionByName(EmptyActionName);
 
-        result.IsFailed.Should().BeTrue();
-    }
+		result.IsFailed.Should().BeTrue();
+	}
 
-    [Fact]
-    public void GetActionDefinitionByName_NullName_Fails()
-    {
-        var (services, _) = CoreTestHelper.BuildCore();
-        using var __ = services as IDisposable;
+	[Fact]
+	public void GetActionDefinitionByName_NullName_Fails()
+	{
+		var (services, _) = CoreTestHelper.BuildCore();
+		using var __ = services as IDisposable;
 
-        var repo = services.GetRequiredService<IActionRepository>();
+		var repo = services.GetRequiredService<IActionRepository>();
 
-        var result = repo.GetResultActionDefinitionByName(string.Empty);
+		var result = repo.GetResultActionDefinitionByName(string.Empty);
 
-        result.IsFailed.Should().BeTrue();
-    }
+		result.IsFailed.Should().BeTrue();
+	}
 
-    [Fact]
-    public void GetEnumOptions_InvalidColumnKey_Fails()
-    {
-        var (services, _) = CoreTestHelper.BuildCore();
-        using var __ = services as IDisposable;
+	[Fact]
+	public void GetEnumOptions_InvalidColumnKey_Fails()
+	{
+		var (services, _) = CoreTestHelper.BuildCore();
+		using var __ = services as IDisposable;
 
-        var repo = services.GetRequiredService<IActionRepository>();
-        var provider = services.GetRequiredService<IComboboxDataProvider>();
+		var repo = services.GetRequiredService<IActionRepository>();
+		var provider = services.GetRequiredService<IComboboxDataProvider>();
 
-        var actionId = ActionNameHelper.GetActionIdOrThrow(repo, CloseActionName);
-        var result = provider.GetResultEnumOptions(actionId, InvalidColumnKey);
+		var actionId = ActionNameHelper.GetActionIdOrThrow(repo, CloseActionName);
+		var result = provider.GetResultEnumOptions(actionId, InvalidColumnKey);
 
-        result.IsFailed.Should().BeTrue();
-    }
+		result.IsFailed.Should().BeTrue();
+	}
 }

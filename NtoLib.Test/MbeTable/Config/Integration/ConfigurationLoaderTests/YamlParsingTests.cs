@@ -11,14 +11,14 @@ namespace NtoLib.Test.MbeTable.Config.Integration.ConfigurationLoaderTests;
 [Trait("Area", "YamlParsing")]
 public sealed class ConfigurationLoaderYamlParsingTests
 {
-    [Fact]
-    public void ActionsSyntaxError_Fails()
-    {
-        var ex = TestHelper.LoadInvalidCaseExpectingAnyError("YamlSyntaxErrorActions");
+	[Fact]
+	public void ActionsSyntaxError_Fails()
+	{
+		var ex = TestHelper.LoadInvalidCaseExpectingAnyError("YamlSyntaxErrorActions");
 
-        ex.Errors.Should().Contain(e =>
-            e.Section == "YAML" &&
-            e.Context.Contains("deserialization") &&
-            e.Message.Contains("Failed to deserialize YAML"));
-    }
+		ex.Errors.Should().Contain(e =>
+			e.Section == "YAML" &&
+			e.Context.Contains("deserialization") &&
+			e.Message.Contains("Failed to deserialize YAML"));
+	}
 }

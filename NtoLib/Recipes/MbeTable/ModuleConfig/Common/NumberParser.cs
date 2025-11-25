@@ -7,15 +7,15 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 /// </summary>
 public sealed class NumberParser : INumberParser
 {
-	private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+	private static readonly CultureInfo _inv = CultureInfo.InvariantCulture;
 
 	public bool TryParseInt16(string text, out short value, NumberStyles styles = NumberStyles.Integer)
-		=> short.TryParse(text, styles, Inv, out value);
+		=> short.TryParse(text, styles, _inv, out value);
 
 	public bool TryParseInt32(string text, out int value, NumberStyles styles = NumberStyles.Integer)
-		=> int.TryParse(text, styles, Inv, out value);
+		=> int.TryParse(text, styles, _inv, out value);
 
 	public bool TryParseSingle(string text, out float value,
 		NumberStyles styles = NumberStyles.Float | NumberStyles.AllowThousands)
-		=> float.TryParse(text, styles, Inv, out value);
+		=> float.TryParse(text, styles, _inv, out value);
 }

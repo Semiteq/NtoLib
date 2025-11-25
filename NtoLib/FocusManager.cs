@@ -1,20 +1,21 @@
-﻿using FB.VisualFB;
-using System;
+﻿using System;
+
+using FB.VisualFB;
 
 namespace NtoLib
 {
-    public static class FocusManager
-    {
-        /// <summary>
-        /// Вызывается при смене фокуса. 
-        /// В качестве параметра передаётся объект, 
-        /// который теперь в фокусе, либо null
-        /// </summary>
-        public static event Action<VisualControlBase> Focused;
+	public static class FocusManager
+	{
+		/// <summary>
+		/// Вызывается при смене фокуса. 
+		/// В качестве параметра передаётся объект, 
+		/// который теперь в фокусе, либо null
+		/// </summary>
+		public static event Action<VisualControlBase> Focused;
 
-        public static void OnFocused(VisualControlBase focusedControl)
-        {
-            Focused?.Invoke(focusedControl);
-        }
-    }
+		public static void OnFocused(VisualControlBase focusedControl)
+		{
+			Focused?.Invoke(focusedControl);
+		}
+	}
 }

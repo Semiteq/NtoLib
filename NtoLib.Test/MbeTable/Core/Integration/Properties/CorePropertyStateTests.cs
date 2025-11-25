@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,38 +16,38 @@ namespace NtoLib.Test.MbeTable.Core.Integration.Properties;
 [Trait("Area", "PropertyState")]
 public sealed class CorePropertyStateTests
 {
-    private const string CloseActionName = "Закрыть";
+	private const string CloseActionName = "Закрыть";
 
-    [Fact]
-    public void StepStartTime_IsReadonly()
-    {
-        var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as IDisposable;
+	[Fact]
+	public void StepStartTime_IsReadonly()
+	{
+		var (services, facade) = CoreTestHelper.BuildCore();
+		using var _ = services as IDisposable;
 
-        var d = new RecipeTestDriver(facade);
-        d.AddWait(0);
+		var d = new RecipeTestDriver(facade);
+		d.AddWait(0);
 
-        var provider = services.GetRequiredService<PropertyStateProvider>();
-        var step = facade.CurrentSnapshot.Recipe.Steps[0];
+		var provider = services.GetRequiredService<PropertyStateProvider>();
+		var step = facade.CurrentSnapshot.Recipe.Steps[0];
 
-        provider.GetPropertyState(step, MandatoryColumns.StepStartTime).Should().Be(PropertyState.Readonly);
-    }
+		provider.GetPropertyState(step, MandatoryColumns.StepStartTime).Should().Be(PropertyState.Readonly);
+	}
 
-    [Fact]
-    public void UnsupportedColumn_Disabled()
-    {
-        var (services, facade) = CoreTestHelper.BuildCore();
-        using var _ = services as IDisposable;
+	[Fact]
+	public void UnsupportedColumn_Disabled()
+	{
+		var (services, facade) = CoreTestHelper.BuildCore();
+		using var _ = services as IDisposable;
 
-        var repo = services.GetRequiredService<IActionRepository>();
-        var actionId = ActionNameHelper.GetActionIdOrThrow(repo, CloseActionName);
+		var repo = services.GetRequiredService<IActionRepository>();
+		var actionId = ActionNameHelper.GetActionIdOrThrow(repo, CloseActionName);
 
-        var d = new RecipeTestDriver(facade);
-        d.AddDefaultStep(0).ReplaceAction(0, actionId);
+		var d = new RecipeTestDriver(facade);
+		d.AddDefaultStep(0).ReplaceAction(0, actionId);
 
-        var provider = services.GetRequiredService<PropertyStateProvider>();
-        var step = facade.CurrentSnapshot.Recipe.Steps[0];
+		var provider = services.GetRequiredService<PropertyStateProvider>();
+		var step = facade.CurrentSnapshot.Recipe.Steps[0];
 
-        provider.GetPropertyState(step, new ColumnIdentifier("speed")).Should().Be(PropertyState.Disabled);
-    }
+		provider.GetPropertyState(step, new ColumnIdentifier("speed")).Should().Be(PropertyState.Disabled);
+	}
 }
