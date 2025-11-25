@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using FluentResults;
+
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Loops;
 using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Warnings;
@@ -58,10 +60,9 @@ public sealed class RecipeAnalyzer : IRecipeAnalyzer
             flags = flags with { MaxDepthExceeded = true };
 
         var timing = _timingCalculator.Calculate(recipe, semantics);
-        // timing does not produce reasons but updates nodes
 
         var stepCount = recipe.Steps.Count;
-        
+
         var loopTree = LoopTree.Create(timing.UpdatedNodes);
 
         var hasStructuralErrors = structure.Reasons.OfType<BilingualError>().Any();
@@ -69,7 +70,7 @@ public sealed class RecipeAnalyzer : IRecipeAnalyzer
                       && !flags.EmptyRecipe
                       && !flags.LoopIntegrityCompromised
                       && !flags.MaxDepthExceeded;
-        
+
         return new RecipeAnalysisSnapshot(
             recipe,
             stepCount,

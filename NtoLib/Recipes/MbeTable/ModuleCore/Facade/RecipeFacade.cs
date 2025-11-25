@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using FluentResults;
+
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Actions;
@@ -47,7 +48,7 @@ public sealed class RecipeFacade : IRecipeFacade
         _analyzer = analyzer;
         _state = state;
         _logger = logger;
-        
+
         var initialSnapshot = _analyzer.Analyze(_recipe);
         _state.Update(initialSnapshot);
     }
@@ -55,7 +56,8 @@ public sealed class RecipeFacade : IRecipeFacade
     public Result<RecipeAnalysisSnapshot> AddStep(int index)
     {
         var mutation = _mutator.AddDefaultStep(_recipe, index);
-        if (mutation.IsFailed) return mutation.ToResult<RecipeAnalysisSnapshot>();
+        if (mutation.IsFailed)
+            return mutation.ToResult<RecipeAnalysisSnapshot>();
 
         return Commit(mutation.Value);
     }
@@ -66,7 +68,8 @@ public sealed class RecipeFacade : IRecipeFacade
             return Result.Fail(new CoreIndexOutOfRangeError(index, _recipe.Steps.Count));
 
         var mutation = _mutator.RemoveStep(_recipe, index);
-        if (mutation.IsFailed) return mutation.ToResult<RecipeAnalysisSnapshot>();
+        if (mutation.IsFailed)
+            return mutation.ToResult<RecipeAnalysisSnapshot>();
 
         return Commit(mutation.Value);
     }
@@ -127,18 +130,24 @@ public sealed class RecipeFacade : IRecipeFacade
             return Result.Fail(new CoreStepActionPropertyNullError(index));
 
         var valResult = property.GetValue<short>();
-        if (valResult.IsFailed) return valResult.ToResult<ActionDefinition>();
+
+        if (valResult.IsFailed)
+            return valResult.ToResult<ActionDefinition>();
 
         return _actionRepository.GetActionDefinitionById(valResult.Value);
     }
-    
+
     public Result<RecipeAnalysisSnapshot> InsertSteps(int index, IReadOnlyList<Step> steps)
     {
         if (steps == null) throw new ArgumentNullException(nameof(steps));
-        if (steps.Count == 0) return Result.Ok(CurrentSnapshot);
+
+        if (steps.Count == 0)
+            return Result.Ok(CurrentSnapshot);
 
         var mutation = _mutator.InsertSteps(_recipe, index, steps);
-        if (mutation.IsFailed) return mutation.ToResult<RecipeAnalysisSnapshot>();
+
+        if (mutation.IsFailed)
+            return mutation.ToResult<RecipeAnalysisSnapshot>();
 
         return Commit(mutation.Value);
     }
@@ -146,10 +155,14 @@ public sealed class RecipeFacade : IRecipeFacade
     public Result<RecipeAnalysisSnapshot> DeleteSteps(IReadOnlyCollection<int> indices)
     {
         if (indices == null) throw new ArgumentNullException(nameof(indices));
-        if (indices.Count == 0) return Result.Ok(CurrentSnapshot);
+
+        if (indices.Count == 0)
+            return Result.Ok(CurrentSnapshot);
 
         var mutation = _mutator.RemoveSteps(_recipe, indices);
-        if (mutation.IsFailed) return mutation.ToResult<RecipeAnalysisSnapshot>();
+
+        if (mutation.IsFailed)
+            return mutation.ToResult<RecipeAnalysisSnapshot>();
 
         return Commit(mutation.Value);
     }

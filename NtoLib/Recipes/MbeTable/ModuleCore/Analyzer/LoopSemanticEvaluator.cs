@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+
 using FluentResults;
+
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Loops;
 using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Warnings;
@@ -43,8 +45,8 @@ public sealed class LoopSemanticEvaluator : ILoopSemanticEvaluator
             enriched.Add(enrichedNode);
         }
 
-        // Include parse phase reasons
-        reasons.AddRange(parseResult.Reasons);
+        // Semantic evaluator отвечает только за свои семантические причины.
+        // Parse‑причины (parseResult.Reasons) добавляются на уровне RecipeAnalyzer.
 
         return new LoopSemanticsResult(enriched, reasons, loopIntegrity, maxDepthExceeded);
     }

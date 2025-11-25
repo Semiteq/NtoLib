@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using FluentResults;
@@ -63,12 +64,16 @@ public sealed class StatusPresenter : IStatusPresenter
         _status.ShowInfo(ToSentence(message));
     }
 
-    public static string BuildWarningMessage(Result result, string operationRu)
+    public static string BuildWarningMessage(Result result, string operationRu,
+        IEnumerable<IReason>? reasonsOverride = null)
     {
-        var warningsRu = result.Reasons
+        var reasons = reasonsOverride ?? result.Reasons;
+
+        var warningsRu = reasons
             .OfType<BilingualWarning>()
             .Select(w => w.MessageRu)
             .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
             .ToList();
 
         var message = warningsRu.Count == 0
@@ -78,23 +83,28 @@ public sealed class StatusPresenter : IStatusPresenter
         return $"{ToSentence(operationRu)}: {message}";
     }
 
-    public static string BuildErrorMessage(Result result, string operationRu)
+    public static string BuildErrorMessage(Result result, string operationRu,
+        IEnumerable<IReason>? reasonsOverride = null)
     {
-        var bilingualErrors = result.Reasons
+        var reasons = reasonsOverride ?? result.Reasons;
+
+        var bilingualErrors = reasons
             .OfType<IError>()
             .OfType<BilingualError>()
             .Select(e => e.MessageRu)
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Reverse()
+            .Distinct()
             .ToList();
 
         if (bilingualErrors.Count > 0)
             return $"Не удалось {operationRu}: {string.Join(" → ", bilingualErrors)}";
 
-        var genericErrors = result.Reasons
+        var genericErrors = reasons
             .OfType<IError>()
             .Select(e => string.IsNullOrWhiteSpace(e.Message) ? "Ошибка" : e.Message)
             .Reverse()
+            .Distinct()
             .ToList();
 
         var final = genericErrors.Count > 0 ? string.Join(" → ", genericErrors) : "Неизвестная ошибка";

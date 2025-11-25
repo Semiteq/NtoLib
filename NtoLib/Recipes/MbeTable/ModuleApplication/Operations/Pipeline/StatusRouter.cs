@@ -4,6 +4,7 @@ using System.Linq;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Policy;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Status;
 using NtoLib.Recipes.MbeTable.ResultsExtension;
@@ -33,20 +34,20 @@ internal sealed class StatusRouter
 
         if (decision.Kind == DecisionKind.BlockedError)
         {
-            ShowError(baseResult, op);
+            ShowError(baseResult, op, reasons);
             return;
         }
 
         if (decision.Kind == DecisionKind.BlockedWarning)
         {
-            ShowWarning(baseResult, op);
+            ShowWarning(baseResult, op, reasons);
             return;
         }
 
         var hasWarnings = reasons.OfType<BilingualWarning>().Any();
         if (hasWarnings)
         {
-            ShowWarning(baseResult, op);
+            ShowWarning(baseResult, op, reasons);
             return;
         }
 
@@ -74,7 +75,7 @@ internal sealed class StatusRouter
             else
             {
                 r = Result.Fail(
-                    new NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors.ApplicationInvalidOperationError(
+                    new ApplicationInvalidOperationError(
                         "Operation not allowed"));
                 if (decision.PrimaryReason != null)
                     r = r.WithReason(decision.PrimaryReason);
@@ -87,15 +88,15 @@ internal sealed class StatusRouter
         _status.Clear();
     }
 
-    public void ShowError(Result result, IOperationDefinition op)
+    public void ShowError(Result result, IOperationDefinition op, IReadOnlyList<IReason>? reasons = null)
     {
-        var msg = StatusPresenter.BuildErrorMessage(result, op.DisplayNameRu);
+        var msg = StatusPresenter.BuildErrorMessage(result, op.DisplayNameRu, reasons);
         _status.ShowError(msg);
     }
 
-    public void ShowWarning(Result result, IOperationDefinition op)
+    public void ShowWarning(Result result, IOperationDefinition op, IReadOnlyList<IReason>? reasons = null)
     {
-        var msg = StatusPresenter.BuildWarningMessage(result, op.DisplayNameRu);
+        var msg = StatusPresenter.BuildWarningMessage(result, op.DisplayNameRu, reasons);
         _status.ShowWarning(msg);
     }
 

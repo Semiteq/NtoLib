@@ -9,6 +9,7 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
+using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 using NtoLib.Recipes.MbeTable.ServiceClipboard;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Schema;
 
@@ -44,10 +45,13 @@ public sealed class CutRowsOperationHandler : IRecipeOperationHandler<CutRowsArg
 
     public async Task<Result> ExecuteAsync(CutRowsArgs args)
     {
+        if (args.Indices.Count == 0)
+            return Result.Ok();
+
         var result = await _pipeline.RunAsync(
             _op,
             () => Task.FromResult(PerformCut(args.Indices)),
-            successMessage: args.Indices.Count == 0 ? null : $"Вырезано {args.Indices.Count} строк");
+            successMessage: $"Вырезано {args.Indices.Count} строк");
 
         if (result.IsSuccess)
         {
@@ -55,26 +59,27 @@ public sealed class CutRowsOperationHandler : IRecipeOperationHandler<CutRowsArg
             _timer.Reset();
         }
 
-        return result;
+        return result.ToResult();
     }
 
-    private Result PerformCut(IReadOnlyList<int> indices)
+    private Result<RecipeAnalysisSnapshot> PerformCut(IReadOnlyList<int> indices)
     {
-        if (indices == null) throw new ArgumentNullException(nameof(indices));
-        
         var recipe = _facade.CurrentSnapshot.Recipe;
         var valid = indices.Where(i => i >= 0 && i < recipe.Steps.Count).Distinct().OrderBy(i => i).ToList();
-        
+
         if (valid.Count == 0)
-            return Result.Ok();
-        
+            return Result.Ok(_facade.CurrentSnapshot);
+
         var steps = valid.Select(i => recipe.Steps[i]).ToList();
         var writeResult = _clipboard.WriteSteps(steps, _schema.TransferColumns);
         if (writeResult.IsFailed)
-            return writeResult;
+            return writeResult.ToResult<RecipeAnalysisSnapshot>();
 
         var deleteResult = _facade.DeleteSteps(valid);
-        return deleteResult.ToResult();
+        if (deleteResult.IsFailed)
+            return deleteResult;
+
+        return deleteResult.WithReasons(writeResult.Reasons);
     }
 }
 

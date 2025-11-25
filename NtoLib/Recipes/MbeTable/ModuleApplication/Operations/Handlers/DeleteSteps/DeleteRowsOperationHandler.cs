@@ -9,6 +9,7 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
+using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.DeleteSteps;
 
@@ -36,10 +37,13 @@ public sealed class DeleteRowsOperationHandler : IRecipeOperationHandler<DeleteR
 
     public async Task<Result> ExecuteAsync(DeleteRowsArgs args)
     {
+        if (args.Indices.Count == 0)
+            return Result.Ok();
+
         var result = await _pipeline.RunAsync(
             _op,
             () => Task.FromResult(PerformDelete(args.Indices)),
-            successMessage: args.Indices.Count == 0 ? null : $"Удалено {args.Indices.Count} строк");
+            successMessage: $"Удалено {args.Indices.Count} строк");
 
         if (result.IsSuccess)
         {
@@ -47,21 +51,19 @@ public sealed class DeleteRowsOperationHandler : IRecipeOperationHandler<DeleteR
             _timer.Reset();
         }
 
-        return result;
+        return result.ToResult();
     }
 
-    private Result PerformDelete(IReadOnlyList<int> indices)
+    private Result<RecipeAnalysisSnapshot> PerformDelete(IReadOnlyList<int> indices)
     {
-        if (indices == null) throw new ArgumentNullException(nameof(indices));
-        
         var recipe = _facade.CurrentSnapshot.Recipe;
         var valid = indices.Where(i => i >= 0 && i < recipe.Steps.Count).Distinct().ToList();
-        
+
         if (valid.Count == 0)
-            return Result.Ok();
-        
+            return Result.Ok(_facade.CurrentSnapshot);
+
         var deleteResult = _facade.DeleteSteps(valid);
-        return deleteResult.ToResult();
+        return deleteResult;
     }
 }
 

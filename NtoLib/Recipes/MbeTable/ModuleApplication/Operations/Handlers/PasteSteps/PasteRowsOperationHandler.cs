@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
+using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
+using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Assembly;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.PasteSteps;
@@ -38,9 +41,24 @@ public sealed class PasteRowsOperationHandler : IRecipeOperationHandler<PasteRow
 
     public async Task<Result> ExecuteAsync(PasteRowsArgs args)
     {
+        var assembleResult = _assembly.AssembleFromClipboard();
+        if (assembleResult.IsFailed)
+            return assembleResult.ToResult();
+
+        var steps = assembleResult.Value;
+        if (steps.Count == 0)
+        {
+            var emptyResult = await _pipeline.RunAsync(
+                _op,
+                () => Task.FromResult(assembleResult.ToResult()),
+                successMessage: null);
+
+            return emptyResult;
+        }
+
         var result = await _pipeline.RunAsync(
             _op,
-            () => Task.FromResult(PerformPaste(args.TargetIndex)),
+            () => Task.FromResult(PerformPasteCore(args.TargetIndex, steps, assembleResult.Reasons)),
             successMessage: null);
 
         if (result.IsSuccess)
@@ -49,26 +67,20 @@ public sealed class PasteRowsOperationHandler : IRecipeOperationHandler<PasteRow
             _timer.Reset();
         }
 
-        return result;
+        return result.ToResult();
     }
 
-    private Result PerformPaste(int targetIndex)
+    private Result<RecipeAnalysisSnapshot> PerformPasteCore(
+        int targetIndex,
+        IReadOnlyList<Step> steps,
+        IReadOnlyList<IReason> assemblyReasons)
     {
-        var assembleResult = _assembly.AssembleFromClipboard();
-        if (assembleResult.IsFailed)
-            return assembleResult.ToResult();
-
-        var steps = assembleResult.Value;
-        if (steps.Count == 0)
-            return assembleResult.ToResult();
-
         var insertResult = _facade.InsertSteps(targetIndex, steps);
-        
-        var final = insertResult.ToResult();
-        if (assembleResult.Reasons.Count > 0)
-            final = final.WithReasons(assembleResult.Reasons);
-        
-        return final;
+
+        if (insertResult.IsFailed)
+            return insertResult;
+
+        return insertResult.WithReasons(assemblyReasons);
     }
 }
 

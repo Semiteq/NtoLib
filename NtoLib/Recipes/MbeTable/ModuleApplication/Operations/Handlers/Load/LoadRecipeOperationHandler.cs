@@ -10,10 +10,8 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
-using NtoLib.Recipes.MbeTable.ModuleCore;
 using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Load;
@@ -48,7 +46,7 @@ public sealed class LoadRecipeOperationHandler : IRecipeOperationHandler<LoadRec
 
     public async Task<Result> ExecuteAsync(LoadRecipeArgs args)
     {
-        var result = await _pipeline.RunAsync<RecipeAnalysisSnapshot>(
+        var result = await _pipeline.RunAsync(
             _op,
             () => PerformLoadAsync(args.FilePath),
             successMessage: $"Загружен рецепт из {Path.GetFileName(args.FilePath)}");

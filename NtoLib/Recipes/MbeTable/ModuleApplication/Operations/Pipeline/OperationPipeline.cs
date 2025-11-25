@@ -81,7 +81,7 @@ public sealed class OperationPipeline
                 if (ResultFailureFactory.ContainsErrors(reasons))
                 {
                     LogOperationFailedWithErrors(op.Id);
-                    _statusRouter.ShowError(operationResult, op);
+                    _statusRouter.ShowError(operationResult, op, reasons);
                     return ResultFailureFactory.FromReasons(reasons);
                 }
 
@@ -137,7 +137,7 @@ public sealed class OperationPipeline
                 if (ResultFailureFactory.ContainsErrors(reasons))
                 {
                     LogOperationFailedWithErrors(op.Id);
-                    _statusRouter.ShowError(operationResult.ToResult(), op);
+                    _statusRouter.ShowError(operationResult.ToResult(), op, reasons);
                     return ResultFailureFactory.FromReasons<T>(reasons);
                 }
 
