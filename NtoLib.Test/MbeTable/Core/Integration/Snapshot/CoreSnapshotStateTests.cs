@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System;
+
+using FluentAssertions;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Test.MbeTable.Core.Helpers;

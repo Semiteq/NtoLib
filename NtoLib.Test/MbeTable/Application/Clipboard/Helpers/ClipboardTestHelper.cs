@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ServiceClipboard;

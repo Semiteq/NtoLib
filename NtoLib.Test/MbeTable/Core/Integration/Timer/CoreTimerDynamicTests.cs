@@ -1,4 +1,7 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+
+using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,4 +1,6 @@
-﻿using FluentResults;
+﻿using System;
+
+using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
@@ -13,6 +15,7 @@ public static class ActionNameHelper
 	{
 		if (repo == null)
 			throw new ArgumentNullException(nameof(repo));
+
 		if (string.IsNullOrWhiteSpace(name))
 			throw new ArgumentNullException(nameof(name));
 

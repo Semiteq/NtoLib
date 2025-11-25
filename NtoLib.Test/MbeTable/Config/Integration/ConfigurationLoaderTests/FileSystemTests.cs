@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System;
+
+using FluentAssertions;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Common;

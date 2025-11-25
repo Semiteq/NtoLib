@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System.Linq;
+
+using FluentAssertions;
 
 using NtoLib.Test.MbeTable.Config.Helpers;
 

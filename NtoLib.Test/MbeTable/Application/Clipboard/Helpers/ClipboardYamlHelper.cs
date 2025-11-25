@@ -1,4 +1,7 @@
-﻿namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
+﻿using System;
+using System.IO;
+
+namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 
 public static class ClipboardYamlHelper
 {

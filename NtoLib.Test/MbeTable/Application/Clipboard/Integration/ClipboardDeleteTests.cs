@@ -1,4 +1,8 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using FluentAssertions;
 
 using NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 
