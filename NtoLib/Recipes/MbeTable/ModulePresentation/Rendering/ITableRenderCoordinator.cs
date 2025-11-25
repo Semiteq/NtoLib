@@ -8,8 +8,8 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 /// </summary>
 public interface ITableRenderCoordinator : IDisposable
 {
-    /// <summary>
-    /// Initializes event subscriptions and prepares for rendering coordination.
-    /// </summary>
-    void Initialize();
+	/// <summary>
+	/// Initializes event subscriptions and prepares for rendering coordination.
+	/// </summary>
+	void Initialize();
 }

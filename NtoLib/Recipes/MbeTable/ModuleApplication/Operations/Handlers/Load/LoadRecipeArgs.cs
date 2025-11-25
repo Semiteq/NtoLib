@@ -2,10 +2,10 @@
 
 public sealed class LoadRecipeArgs
 {
-    public string FilePath { get; }
+	public string FilePath { get; }
 
-    public LoadRecipeArgs(string filePath)
-    {
-        FilePath = filePath;
-    }
+	public LoadRecipeArgs(string filePath)
+	{
+		FilePath = filePath;
+	}
 }

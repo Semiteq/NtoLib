@@ -8,5 +8,5 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// </summary>
 public interface IRecipeAnalyzer
 {
-    RecipeAnalysisSnapshot Analyze(Recipe recipe);
+	RecipeAnalysisSnapshot Analyze(Recipe recipe);
 }

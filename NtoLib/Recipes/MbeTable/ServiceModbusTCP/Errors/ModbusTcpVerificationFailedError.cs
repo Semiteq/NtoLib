@@ -4,13 +4,13 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 public sealed class ModbusTcpVerificationFailedError : BilingualError
 {
-    public string Details { get; }
+	public string Details { get; }
 
-    public ModbusTcpVerificationFailedError(string details)
-        : base(
-            $"PLC verification failed: {details}",
-            $"Проверка данных в контроллере не пройдена: {details}")
-    {
-        Details = details;
-    }
+	public ModbusTcpVerificationFailedError(string details)
+		: base(
+			$"PLC verification failed: {details}",
+			$"Проверка данных в контроллере не пройдена: {details}")
+	{
+		Details = details;
+	}
 }

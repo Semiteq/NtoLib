@@ -14,62 +14,64 @@ namespace NtoLib.Recipes.MbeTable.ServiceClipboard.Serialization;
 
 public sealed class ClipboardSerializationService : IClipboardSerializationService
 {
-    public string SerializeSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns)
-    {
-        if (steps == null) throw new ArgumentNullException(nameof(steps));
-        if (columns == null) throw new ArgumentNullException(nameof(columns));
+	public string SerializeSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns)
+	{
+		if (steps == null)
+			throw new ArgumentNullException(nameof(steps));
+		if (columns == null)
+			throw new ArgumentNullException(nameof(columns));
 
-        var sb = new StringBuilder();
+		var sb = new StringBuilder();
 
-        for (var i = 0; i < steps.Count; i++)
-        {
-            var step = steps[i];
-            var cellValues = new List<string>(columns.Count);
+		for (var i = 0; i < steps.Count; i++)
+		{
+			var step = steps[i];
+			var cellValues = new List<string>(columns.Count);
 
-            foreach (var col in columns)
-            {
-                string value;
-                if (step.Properties.TryGetValue(col, out var prop) && prop != null)
-                {
-                    // For action we store raw numeric value; for others display value sanitized.
-                    value = col == MandatoryColumns.Action
-                        ? prop.GetValueAsObject.ToString()
-                        : prop.GetDisplayValue;
-                }
-                else
-                {
-                    value = string.Empty;
-                }
+			foreach (var col in columns)
+			{
+				string value;
+				if (step.Properties.TryGetValue(col, out var prop) && prop != null)
+				{
+					// For action we store raw numeric value; for others display value sanitized.
+					value = col == MandatoryColumns.Action
+						? prop.GetValueAsObject.ToString()
+						: prop.GetDisplayValue;
+				}
+				else
+				{
+					value = string.Empty;
+				}
 
-                value = ClipboardSanitizer.SanitizeForCell(value);
-                cellValues.Add(value);
-            }
+				value = ClipboardSanitizer.SanitizeForCell(value);
+				cellValues.Add(value);
+			}
 
-            sb.Append(string.Join("\t", cellValues));
-            if (i < steps.Count - 1)
-                sb.Append('\n');
-        }
+			sb.Append(string.Join("\t", cellValues));
+			if (i < steps.Count - 1)
+				sb.Append('\n');
+		}
 
-        return sb.ToString();
-    }
+		return sb.ToString();
+	}
 
-    public Result<IReadOnlyList<string[]>> SplitRows(string? tsv)
-    {
-        if (string.IsNullOrWhiteSpace(tsv))
-            return Result.Ok<IReadOnlyList<string[]>>(Array.Empty<string[]>())
-                .WithReason(new ClipboardEmptyWarning());
+	public Result<IReadOnlyList<string[]>> SplitRows(string? tsv)
+	{
+		if (string.IsNullOrWhiteSpace(tsv))
+			return Result.Ok<IReadOnlyList<string[]>>(Array.Empty<string[]>())
+				.WithReason(new ClipboardEmptyWarning());
 
-        var lines = tsv.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
-        var result = lines
-            .Select((line, idx) =>
-            {
-                var cells = line.Split('\t');
-                for (int c = 0; c < cells.Length; c++)
-                    cells[c] = ClipboardSanitizer.SanitizeForCell(cells[c]);
-                return cells;
-            })
-            .ToList()
-            .AsReadOnly();
-        return Result.Ok<IReadOnlyList<string[]>>(result);
-    }
+		var lines = tsv.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+		var result = lines
+			.Select((line, idx) =>
+			{
+				var cells = line.Split('\t');
+				for (int c = 0; c < cells.Length; c++)
+					cells[c] = ClipboardSanitizer.SanitizeForCell(cells[c]);
+				return cells;
+			})
+			.ToList()
+			.AsReadOnly();
+		return Result.Ok<IReadOnlyList<string[]>>(result);
+	}
 }

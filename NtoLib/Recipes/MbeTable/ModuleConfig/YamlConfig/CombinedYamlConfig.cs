@@ -5,7 +5,7 @@
 /// Replaces the monolithic RawConfiguration.
 /// </summary>
 public sealed record CombinedYamlConfig(
-    PropertyDefsYamlConfig PropertyDefs,
-    ColumnDefsYamlConfig ColumnDefs,
-    PinGroupDefsYamlConfig PinGroupDefs,
-    ActionDefsYamlConfig ActionDefs);
+	PropertyDefsYamlConfig PropertyDefs,
+	ColumnDefsYamlConfig ColumnDefs,
+	PinGroupDefsYamlConfig PinGroupDefs,
+	ActionDefsYamlConfig ActionDefs);

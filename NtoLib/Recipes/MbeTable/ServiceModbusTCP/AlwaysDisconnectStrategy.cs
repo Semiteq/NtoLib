@@ -2,5 +2,5 @@
 
 public sealed class AlwaysDisconnectStrategy : IDisconnectStrategy
 {
-    public bool ShouldDisconnect(string operationType) => true;
+	public bool ShouldDisconnect(string operationType) => true;
 }

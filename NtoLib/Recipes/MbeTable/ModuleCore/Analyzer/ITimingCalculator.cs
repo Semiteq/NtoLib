@@ -4,5 +4,5 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 
 public interface ITimingCalculator
 {
-    TimingResult Calculate(Recipe recipe, LoopSemanticsResult loopSemantics);
+	TimingResult Calculate(Recipe recipe, LoopSemanticsResult loopSemantics);
 }

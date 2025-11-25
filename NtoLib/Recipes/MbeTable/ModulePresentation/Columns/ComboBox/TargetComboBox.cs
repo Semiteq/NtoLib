@@ -11,14 +11,14 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 
 public sealed class TargetComboBox : FactoryColumnComboBoxBase
 {
-    public TargetComboBox(IServiceProvider serviceProvider, IColumnAlignmentResolver alignmentResolver)
-        : base(serviceProvider, alignmentResolver)
-    {
-    }
+	public TargetComboBox(IServiceProvider serviceProvider, IColumnAlignmentResolver alignmentResolver)
+		: base(serviceProvider, alignmentResolver)
+	{
+	}
 
-    protected override IList<KeyValuePair<short, string>> GetDataSource() =>
-        new List<KeyValuePair<short, string>>();
+	protected override IList<KeyValuePair<short, string>> GetDataSource() =>
+		new List<KeyValuePair<short, string>>();
 
-    protected override void AssignItemsProvider(RecipeComboBoxCell cell) =>
-        cell.SetItemsProvider(ServiceProvider.GetRequiredService<TargetItemsProvider>());
+	protected override void AssignItemsProvider(RecipeComboBoxCell cell) =>
+		cell.SetItemsProvider(ServiceProvider.GetRequiredService<TargetItemsProvider>());
 }

@@ -13,13 +13,13 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 /// </summary>
 public interface IRecipePlcService
 {
-    /// <summary>
-    /// Sends recipe to PLC.
-    /// </summary>
-    Task<Result> SendAsync(Recipe recipe, CancellationToken ct = default);
+	/// <summary>
+	/// Sends recipe to PLC.
+	/// </summary>
+	Task<Result> SendAsync(Recipe recipe, CancellationToken ct = default);
 
-    /// <summary>
-    /// Receives raw recipe data from PLC.
-    /// </summary>
-    Task<Result<(int[] IntData, int[] FloatData, int RowCount)>> ReceiveAsync(CancellationToken ct = default);
+	/// <summary>
+	/// Receives raw recipe data from PLC.
+	/// </summary>
+	Task<Result<(int[] IntData, int[] FloatData, int RowCount)>> ReceiveAsync(CancellationToken ct = default);
 }

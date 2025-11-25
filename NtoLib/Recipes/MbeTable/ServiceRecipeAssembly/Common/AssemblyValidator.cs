@@ -14,22 +14,22 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
 /// </summary>
 public sealed class AssemblyValidator
 {
-    private readonly TargetAvailabilityValidator _targetValidator;
-    private readonly IActionRepository _actionRepository;
-    private readonly IActionTargetProvider _targetProvider;
+	private readonly TargetAvailabilityValidator _targetValidator;
+	private readonly IActionRepository _actionRepository;
+	private readonly IActionTargetProvider _targetProvider;
 
-    public AssemblyValidator(
-        TargetAvailabilityValidator targetValidator,
-        IActionRepository actionRepository,
-        IActionTargetProvider targetProvider)
-    {
-        _targetValidator = targetValidator ?? throw new ArgumentNullException(nameof(targetValidator));
-        _actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
-        _targetProvider = targetProvider ?? throw new ArgumentNullException(nameof(targetProvider));
-    }
+	public AssemblyValidator(
+		TargetAvailabilityValidator targetValidator,
+		IActionRepository actionRepository,
+		IActionTargetProvider targetProvider)
+	{
+		_targetValidator = targetValidator ?? throw new ArgumentNullException(nameof(targetValidator));
+		_actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));
+		_targetProvider = targetProvider ?? throw new ArgumentNullException(nameof(targetProvider));
+	}
 
-    public Result ValidateRecipe(Recipe recipe)
-    {
-        return _targetValidator.Validate(recipe, _actionRepository, _targetProvider);
-    }
+	public Result ValidateRecipe(Recipe recipe)
+	{
+		return _targetValidator.Validate(recipe, _actionRepository, _targetProvider);
+	}
 }

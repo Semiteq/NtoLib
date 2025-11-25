@@ -1,6 +1,6 @@
 ﻿namespace NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
 
 public sealed record ErrorPolicy(
-    ErrorSeverity Severity,
-    BlockingScope BlockingScope
+	ErrorSeverity Severity,
+	BlockingScope BlockingScope
 );

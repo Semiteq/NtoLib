@@ -2,7 +2,7 @@
 
 public enum ConsistencyEffect
 {
-    None,
-    MarkConsistent,
-    MarkInconsistent
+	None,
+	MarkConsistent,
+	MarkInconsistent
 }

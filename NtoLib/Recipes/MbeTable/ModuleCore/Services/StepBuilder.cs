@@ -18,144 +18,147 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 /// </summary>
 public sealed class StepBuilder
 {
-    private readonly ActionDefinition _actionDefinition;
-    private ImmutableDictionary<ColumnIdentifier, Property?> _properties;
+	private readonly ActionDefinition _actionDefinition;
+	private ImmutableDictionary<ColumnIdentifier, Property?> _properties;
 
-    private StepBuilder(
-        ActionDefinition actionDefinition,
-        ImmutableDictionary<ColumnIdentifier, Property?> properties)
-    {
-        _actionDefinition = actionDefinition;
-        _properties = properties;
-    }
+	private StepBuilder(
+		ActionDefinition actionDefinition,
+		ImmutableDictionary<ColumnIdentifier, Property?> properties)
+	{
+		_actionDefinition = actionDefinition;
+		_properties = properties;
+	}
 
-    /// <summary>
-    /// Creates and initializes a new StepBuilder instance.
-    /// </summary>
-    public static Result<StepBuilder> Create(
-        ActionDefinition actionDefinition,
-        PropertyDefinitionRegistry propertyRegistry,
-        IReadOnlyList<ColumnDefinition> tableColumns)
-    {
-        var propertiesResult = InitializeProperties(actionDefinition, propertyRegistry, tableColumns);
-        if (propertiesResult.IsFailed) 
-            return propertiesResult.ToResult();
-        
-        return new StepBuilder(actionDefinition, propertiesResult.Value);
-    }
+	/// <summary>
+	/// Creates and initializes a new StepBuilder instance.
+	/// </summary>
+	public static Result<StepBuilder> Create(
+		ActionDefinition actionDefinition,
+		PropertyDefinitionRegistry propertyRegistry,
+		IReadOnlyList<ColumnDefinition> tableColumns)
+	{
+		var propertiesResult = InitializeProperties(actionDefinition, propertyRegistry, tableColumns);
+		if (propertiesResult.IsFailed)
+			return propertiesResult.ToResult();
 
-    /// <summary>
-    /// Constructs and returns the final immutable Step object.
-    /// </summary>
-    public Step Build() => new(_properties, _actionDefinition.DeployDuration);
+		return new StepBuilder(actionDefinition, propertiesResult.Value);
+	}
 
-    /// <summary>
-    /// Checks whether a specific column is supported (applicable) for the current action.
-    /// </summary>
-    public bool Supports(ColumnIdentifier key)
-    {
-        if (key == MandatoryColumns.Action) return true;
-        return _actionDefinition.Columns.Any(c => c.Key.Equals(key.Value, StringComparison.OrdinalIgnoreCase));
-    }
+	/// <summary>
+	/// Constructs and returns the final immutable Step object.
+	/// </summary>
+	public Step Build() => new(_properties, _actionDefinition.DeployDuration);
 
-    /// <summary>
-    /// Sets a property with a new value if the action supports the property.
-    /// </summary>
-    public Result<StepBuilder> WithOptionalDynamic(ColumnIdentifier key, object value)
-    {
-        if (!Supports(key))
-            return this;
+	/// <summary>
+	/// Checks whether a specific column is supported (applicable) for the current action.
+	/// </summary>
+	public bool Supports(ColumnIdentifier key)
+	{
+		if (key == MandatoryColumns.Action)
+			return true;
+		return _actionDefinition.Columns.Any(c => c.Key.Equals(key.Value, StringComparison.OrdinalIgnoreCase));
+	}
 
-        if (!_properties.TryGetValue(key, out var existingProperty) || existingProperty == null)
-            return this;
+	/// <summary>
+	/// Sets a property with a new value if the action supports the property.
+	/// </summary>
+	public Result<StepBuilder> WithOptionalDynamic(ColumnIdentifier key, object value)
+	{
+		if (!Supports(key))
+			return this;
 
-        var propertyResult = existingProperty.WithValue(value);
-        if (propertyResult.IsFailed)
-            return propertyResult.WithError(new CorePropertyDefaultValueFailedError(key.Value)).ToResult();
+		if (!_properties.TryGetValue(key, out var existingProperty) || existingProperty == null)
+			return this;
 
-        _properties = _properties.SetItem(key, propertyResult.Value);
-        return this;
-    }
+		var propertyResult = existingProperty.WithValue(value);
+		if (propertyResult.IsFailed)
+			return propertyResult.WithError(new CorePropertyDefaultValueFailedError(key.Value)).ToResult();
 
-    private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> InitializeProperties(
-        ActionDefinition actionDefinition,
-        PropertyDefinitionRegistry propertyRegistry,
-        IReadOnlyList<ColumnDefinition> tableColumns)
-    {
-        var properties = CreateEmptyProperties(tableColumns);
+		_properties = _properties.SetItem(key, propertyResult.Value);
+		return this;
+	}
 
-        var actionResult = AddActionProperty(properties, actionDefinition, propertyRegistry);
-        if (actionResult.IsFailed) 
-            return actionResult;
+	private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> InitializeProperties(
+		ActionDefinition actionDefinition,
+		PropertyDefinitionRegistry propertyRegistry,
+		IReadOnlyList<ColumnDefinition> tableColumns)
+	{
+		var properties = CreateEmptyProperties(tableColumns);
 
-        var columnsResult = AddColumnProperties(actionResult.Value, actionDefinition, propertyRegistry);
-        if (columnsResult.IsFailed) 
-            return columnsResult;
+		var actionResult = AddActionProperty(properties, actionDefinition, propertyRegistry);
+		if (actionResult.IsFailed)
+			return actionResult;
 
-        return columnsResult.Value;
-    }
+		var columnsResult = AddColumnProperties(actionResult.Value, actionDefinition, propertyRegistry);
+		if (columnsResult.IsFailed)
+			return columnsResult;
 
-    private static ImmutableDictionary<ColumnIdentifier, Property?> CreateEmptyProperties(
-        IReadOnlyList<ColumnDefinition> tableColumns)
-    {
-        var builder = ImmutableDictionary.CreateBuilder<ColumnIdentifier, Property?>();
-        foreach (var column in tableColumns)
-            builder[column.Key] = null;
-        return builder.ToImmutable();
-    }
+		return columnsResult.Value;
+	}
 
-    private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddActionProperty(
-        ImmutableDictionary<ColumnIdentifier, Property?> properties,
-        ActionDefinition actionDefinition,
-        PropertyDefinitionRegistry propertyRegistry)
-    {
-        var propertyDefinition = propertyRegistry.GetPropertyDefinition("Enum");
-        var propertyResult = Property.Create(actionDefinition.Id, propertyDefinition);
-        return propertyResult.IsFailed 
-            ? propertyResult.WithError(new CoreActionPropertyCreationFailedError(actionDefinition.Id)).ToResult() 
-            : properties.SetItem(MandatoryColumns.Action, propertyResult.Value);
-    }
+	private static ImmutableDictionary<ColumnIdentifier, Property?> CreateEmptyProperties(
+		IReadOnlyList<ColumnDefinition> tableColumns)
+	{
+		var builder = ImmutableDictionary.CreateBuilder<ColumnIdentifier, Property?>();
+		foreach (var column in tableColumns)
+			builder[column.Key] = null;
+		return builder.ToImmutable();
+	}
 
-    private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddColumnProperties(
-        ImmutableDictionary<ColumnIdentifier, Property?> properties,
-        ActionDefinition actionDefinition,
-        PropertyDefinitionRegistry propertyRegistry)
-    {
-        var current = properties;
+	private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddActionProperty(
+		ImmutableDictionary<ColumnIdentifier, Property?> properties,
+		ActionDefinition actionDefinition,
+		PropertyDefinitionRegistry propertyRegistry)
+	{
+		var propertyDefinition = propertyRegistry.GetPropertyDefinition("Enum");
+		var propertyResult = Property.Create(actionDefinition.Id, propertyDefinition);
+		return propertyResult.IsFailed
+			? propertyResult.WithError(new CoreActionPropertyCreationFailedError(actionDefinition.Id)).ToResult()
+			: properties.SetItem(MandatoryColumns.Action, propertyResult.Value);
+	}
 
-        foreach (var column in actionDefinition.Columns)
-        {
-            var result = AddColumnProperty(current, column, propertyRegistry);
-            if (result.IsFailed) return result;
-            current = result.Value;
-        }
+	private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddColumnProperties(
+		ImmutableDictionary<ColumnIdentifier, Property?> properties,
+		ActionDefinition actionDefinition,
+		PropertyDefinitionRegistry propertyRegistry)
+	{
+		var current = properties;
 
-        return current;
-    }
+		foreach (var column in actionDefinition.Columns)
+		{
+			var result = AddColumnProperty(current, column, propertyRegistry);
+			if (result.IsFailed)
+				return result;
+			current = result.Value;
+		}
 
-    private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddColumnProperty(
-        ImmutableDictionary<ColumnIdentifier, Property?> properties,
-        PropertyConfig column,
-        PropertyDefinitionRegistry propertyRegistry)
-    {
-        var propertyDefinition = propertyRegistry.GetPropertyDefinition(column.PropertyTypeId);
-        
-        var defaultValue = propertyDefinition.DefaultValue;
-        if (column.DefaultValue != null)
-        {
-            var parseResult = propertyDefinition.TryParse(column.DefaultValue);
-            if (parseResult.IsFailed)
-                return parseResult.WithError(new CorePropertyParsingFailedError(column.DefaultValue, column.Key)).ToResult();
+		return current;
+	}
 
-            defaultValue = parseResult.Value;
-        }
+	private static Result<ImmutableDictionary<ColumnIdentifier, Property?>> AddColumnProperty(
+		ImmutableDictionary<ColumnIdentifier, Property?> properties,
+		PropertyConfig column,
+		PropertyDefinitionRegistry propertyRegistry)
+	{
+		var propertyDefinition = propertyRegistry.GetPropertyDefinition(column.PropertyTypeId);
 
-        var propertyResult = Property.Create(defaultValue, propertyDefinition);
-        if (propertyResult.IsFailed)
-            return propertyResult.WithError(new CorePropertyCreationFailedError(column.Key)).ToResult();
+		var defaultValue = propertyDefinition.DefaultValue;
+		if (column.DefaultValue != null)
+		{
+			var parseResult = propertyDefinition.TryParse(column.DefaultValue);
+			if (parseResult.IsFailed)
+				return parseResult.WithError(new CorePropertyParsingFailedError(column.DefaultValue, column.Key))
+					.ToResult();
+
+			defaultValue = parseResult.Value;
+		}
+
+		var propertyResult = Property.Create(defaultValue, propertyDefinition);
+		if (propertyResult.IsFailed)
+			return propertyResult.WithError(new CorePropertyCreationFailedError(column.Key)).ToResult();
 
 
-        var key = new ColumnIdentifier(column.Key);
-        return properties.SetItem(key, propertyResult.Value);
-    }
+		var key = new ColumnIdentifier(column.Key);
+		return properties.SetItem(key, propertyResult.Value);
+	}
 }

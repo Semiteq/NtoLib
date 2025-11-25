@@ -1,13 +1,13 @@
-using NtoLib.Recipes.MbeTable.ResultsExtension;
+﻿using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreStepColumnNotFoundError : BilingualError
 {
-    public CoreStepColumnNotFoundError()
-        : base(
-            "Step doesn't contain property",
-            "Шаг не содержит свойство")
-    {
-    }
+	public CoreStepColumnNotFoundError()
+		: base(
+			"Step doesn't contain property",
+			"Шаг не содержит свойство")
+	{
+	}
 }

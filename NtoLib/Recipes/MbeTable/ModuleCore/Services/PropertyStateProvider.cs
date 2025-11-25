@@ -9,36 +9,36 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
 public sealed class PropertyStateProvider
 {
-    private readonly IReadOnlyList<ColumnDefinition> _columnsInConfig;
-    
-    public PropertyStateProvider(IReadOnlyList<ColumnDefinition> columnsInConfig)
-    {
-        _columnsInConfig = columnsInConfig ?? throw new ArgumentNullException(nameof(columnsInConfig));
-    }
+	private readonly IReadOnlyList<ColumnDefinition> _columnsInConfig;
 
-    public PropertyState GetPropertyState(Step step, ColumnIdentifier columnKey)
-    {
-        if (IsStepStartTimeColumn(columnKey))
-            return PropertyState.Readonly;
+	public PropertyStateProvider(IReadOnlyList<ColumnDefinition> columnsInConfig)
+	{
+		_columnsInConfig = columnsInConfig ?? throw new ArgumentNullException(nameof(columnsInConfig));
+	}
 
-        if (!PropertyExistsInStep(step, columnKey))
-            return PropertyState.Disabled;
+	public PropertyState GetPropertyState(Step step, ColumnIdentifier columnKey)
+	{
+		if (IsStepStartTimeColumn(columnKey))
+			return PropertyState.Readonly;
 
-        var columnDefinition = FindColumnDefinition(columnKey);
-        if (columnDefinition == null)
-            return PropertyState.Disabled;
+		if (!PropertyExistsInStep(step, columnKey))
+			return PropertyState.Disabled;
 
-        return columnDefinition.ReadOnly 
-            ? PropertyState.Readonly 
-            : PropertyState.Enabled;
-    }
+		var columnDefinition = FindColumnDefinition(columnKey);
+		if (columnDefinition == null)
+			return PropertyState.Disabled;
 
-    private static bool IsStepStartTimeColumn(ColumnIdentifier columnKey) =>
-        columnKey == MandatoryColumns.StepStartTime;
+		return columnDefinition.ReadOnly
+			? PropertyState.Readonly
+			: PropertyState.Enabled;
+	}
 
-    private static bool PropertyExistsInStep(Step step, ColumnIdentifier columnKey) =>
-        step.Properties.TryGetValue(columnKey, out var propertyValue) && propertyValue != null;
+	private static bool IsStepStartTimeColumn(ColumnIdentifier columnKey) =>
+		columnKey == MandatoryColumns.StepStartTime;
 
-    private ColumnDefinition? FindColumnDefinition(ColumnIdentifier columnKey) =>
-        _columnsInConfig.FirstOrDefault(c => c.Key == columnKey);
+	private static bool PropertyExistsInStep(Step step, ColumnIdentifier columnKey) =>
+		step.Properties.TryGetValue(columnKey, out var propertyValue) && propertyValue != null;
+
+	private ColumnDefinition? FindColumnDefinition(ColumnIdentifier columnKey) =>
+		_columnsInConfig.FirstOrDefault(c => c.Key == columnKey);
 }

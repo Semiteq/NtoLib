@@ -8,5 +8,5 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Parsing;
 
 public interface IClipboardParser
 {
-    Result<IReadOnlyList<PortableStepDto>> Parse(IReadOnlyList<string[]> rows);
+	Result<IReadOnlyList<PortableStepDto>> Parse(IReadOnlyList<string[]> rows);
 }

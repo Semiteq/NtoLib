@@ -2,10 +2,10 @@
 
 public sealed class RemoveStepArgs
 {
-    public int Index { get; }
+	public int Index { get; }
 
-    public RemoveStepArgs(int index)
-    {
-        Index = index;
-    }
+	public RemoveStepArgs(int index)
+	{
+		Index = index;
+	}
 }

@@ -5,8 +5,8 @@
 /// </summary>
 public enum ServiceActions
 {
-    Wait = 10,
-    ForLoop = 20,
-    EndForLoop = 30,
-    Pause = 40
+	Wait = 10,
+	ForLoop = 20,
+	EndForLoop = 30,
+	Pause = 40
 }

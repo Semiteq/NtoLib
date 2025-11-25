@@ -6,5 +6,5 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Schema;
 
 public interface IClipboardSchemaDescriptor
 {
-    IReadOnlyList<ColumnIdentifier> TransferColumns { get; }
+	IReadOnlyList<ColumnIdentifier> TransferColumns { get; }
 }

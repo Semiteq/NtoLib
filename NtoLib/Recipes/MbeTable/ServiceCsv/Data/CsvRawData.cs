@@ -9,23 +9,23 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 /// </summary>
 public sealed class CsvRawData
 {
-    /// <summary>
-    /// CSV column headers.
-    /// </summary>
-    public IReadOnlyList<string> Headers { get; set; } = new List<string>();
-    
-    /// <summary>
-    /// CSV data rows as strings (canonical format).
-    /// </summary>
-    public IReadOnlyList<string> Rows { get; set; } = new List<string>();
-    
-    /// <summary>
-    /// Parsed CSV records (row arrays).
-    /// </summary>
-    public IReadOnlyList<string[]> Records { get; set; } = new List<string[]>();
-    
-    /// <summary>
-    /// File metadata if available.
-    /// </summary>
-    public RecipeFileMetadata? Metadata { get; set; }
+	/// <summary>
+	/// CSV column headers.
+	/// </summary>
+	public IReadOnlyList<string> Headers { get; set; } = new List<string>();
+
+	/// <summary>
+	/// CSV data rows as strings (canonical format).
+	/// </summary>
+	public IReadOnlyList<string> Rows { get; set; } = new List<string>();
+
+	/// <summary>
+	/// Parsed CSV records (row arrays).
+	/// </summary>
+	public IReadOnlyList<string[]> Records { get; set; } = new List<string[]>();
+
+	/// <summary>
+	/// File metadata if available.
+	/// </summary>
+	public RecipeFileMetadata? Metadata { get; set; }
 }

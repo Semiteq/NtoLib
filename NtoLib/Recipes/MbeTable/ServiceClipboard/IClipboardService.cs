@@ -9,6 +9,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceClipboard;
 
 public interface IClipboardService
 {
-    Result WriteSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns);
-    Result<IReadOnlyList<string[]>> ReadRows();
+	Result WriteSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns);
+	Result<IReadOnlyList<string[]>> ReadRows();
 }

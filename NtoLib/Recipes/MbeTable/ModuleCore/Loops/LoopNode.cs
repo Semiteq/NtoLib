@@ -8,12 +8,12 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Loops;
 /// SingleIterationDuration may be null until timing calculation phase completes.
 /// </summary>
 public sealed record LoopNode(
-    int StartIndex,
-    int? EndIndex,
-    int NestingDepth,
-    int IterationCountRaw,
-    int EffectiveIterationCount,
-    int BodyStartIndex,
-    int? BodyEndIndex,
-    TimeSpan? SingleIterationDuration,
-    LoopStatus Status);
+	int StartIndex,
+	int? EndIndex,
+	int NestingDepth,
+	int IterationCountRaw,
+	int EffectiveIterationCount,
+	int BodyStartIndex,
+	int? BodyEndIndex,
+	TimeSpan? SingleIterationDuration,
+	LoopStatus Status);

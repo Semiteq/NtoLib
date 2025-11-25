@@ -6,18 +6,18 @@
 /// </summary>
 public enum RowExecutionState
 {
-    /// <summary>
-    /// Row is scheduled to execute in the future.
-    /// </summary>
-    Upcoming,
+	/// <summary>
+	/// Row is scheduled to execute in the future.
+	/// </summary>
+	Upcoming,
 
-    /// <summary>
-    /// Row is currently executing.
-    /// </summary>
-    Current,
+	/// <summary>
+	/// Row is currently executing.
+	/// </summary>
+	Current,
 
-    /// <summary>
-    /// Row has already been executed.
-    /// </summary>
-    Passed
+	/// <summary>
+	/// Row has already been executed.
+	/// </summary>
+	Passed
 }

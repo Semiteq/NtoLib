@@ -1,42 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <FBConfig>
 
-	<Map>
-		<!-- Non-visual pins start with 1 -->
-		<Items>
-			<!-- Flag if a recipe is currently running.  -->
-			<Pin ID="1" Name="RecipeActive"			Type="Логический" DefaultValue="false"/>
-			
-			<!-- Current recipe line number in operation mode. -->
-			<Pin ID="3" Name="ActualLineNumber"		Type="Целый" DefaultValue="-1"/>
+    <Map>
+        <!-- Non-visual pins start with 1 -->
+        <Items>
+            <!-- Flag if a recipe is currently running.  -->
+            <Pin ID="1" Name="RecipeActive" Type="Логический" DefaultValue="false"/>
 
-			<!-- Current recipe execution time.  -->
-			<Pin ID="4" Name="StepCurrentTime"		Type="Вещественный"/>
+            <!-- Current recipe line number in operation mode. -->
+            <Pin ID="3" Name="ActualLineNumber" Type="Целый" DefaultValue="-1"/>
 
-			<!-- Current step inside FOR loop by nesting level.  -->
-			<Pin ID="5" Name="ForLoopCount1"		Type="Целый"/>
-			<Pin ID="6" Name="ForLoopCount2"		Type="Целый"/>
-			<Pin ID="7" Name="ForLoopCount3"		Type="Целый"/>
+            <!-- Current recipe execution time.  -->
+            <Pin ID="4" Name="StepCurrentTime" Type="Вещественный"/>
 
-			<!-- Permission to write a recipe to PLC. -->
-			<Pin ID="8" Name="EnaSend"              Type="Логический" DefaultValue="true"/>
+            <!-- Current step inside FOR loop by nesting level.  -->
+            <Pin ID="5" Name="ForLoopCount1" Type="Целый"/>
+            <Pin ID="6" Name="ForLoopCount2" Type="Целый"/>
+            <Pin ID="7" Name="ForLoopCount3" Type="Целый"/>
 
-			<!-- Total time left till the end of a recipe. -->
-			<Pout ID="101" Name="TotalTimeLeft"		Type="Вещественный"/>
-			
-			<!-- Total time left till the end of the line. -->
-			<Pout ID="102" Name="LineTimeLeft"		Type="Вещественный"/>
-            
+            <!-- Permission to write a recipe to PLC. -->
+            <Pin ID="8" Name="EnaSend" Type="Логический" DefaultValue="true"/>
+
+            <!-- Total time left till the end of a recipe. -->
+            <Pout ID="101" Name="TotalTimeLeft" Type="Вещественный"/>
+
+            <!-- Total time left till the end of the line. -->
+            <Pout ID="102" Name="LineTimeLeft" Type="Вещественный"/>
+
             <!-- Is recipe is consistent between ModbusTCP client and in app -->
             <Pout ID="103" Name="IsRecipeConsistent" Type="Логический"/>
-            
-            <!-- ActionTarget pins are added automatically in MbeTableFb.cs -->
-            
-		</Items>
-	</Map>
 
-	<VisualMap>
-        
+            <!-- ActionTarget pins are added automatically in MbeTableFb.cs -->
+
+        </Items>
+    </Map>
+
+    <VisualMap>
+
         <!-- 
         !!! ATTENTION !!!
         
@@ -45,47 +45,47 @@
         
         !!! ATTENTION !!! 
         -->
-        
+
         <!-- Visual pins start with 1001 -->
         <Items>
             <!-- Base Address for Real (Float) Data Storage -->
-			<Pout ID="1003" Name="FloatBaseAddr"	Type="БеззнаковыйЦелый"/>
-			
-			<!-- Size of Real (Float) Data Storage Area -->
-			<Pout ID="1004" Name="FloatAreaSize"	Type="БеззнаковыйЦелый"/>
-			
-			<!-- Base Address for Int Data Storage -->
-			<Pout ID="1005" Name="IntBaseAddr"		Type="БеззнаковыйЦелый"/>
-			
-			<!-- Size of Int Data Storage Area -->
-			<Pout ID="1006" Name="IntAreaSize"		Type="БеззнаковыйЦелый"/>
-			
-			<!-- Base Address for Boolean Data Storage -->
-			<Pout ID="1007" Name="BoolBaseAddr"		Type="БеззнаковыйЦелый"/>
-			
-			<!-- Size of Boolean Data Storage Area -->
-			<Pout ID="1008" Name="BoolAreaSize"		Type="БеззнаковыйЦелый"/>
-			
-			<!-- Base Address of Control Area -->
-			<Pout ID="1009" Name="ControlBaseAddr"	Type="БеззнаковыйЦелый"/>
-			
-			<!-- Controller IP Address Byte 1 -->
-			<Pout ID="1010" Name="IP1"				Type="БеззнаковыйЦелый"/>
-			
-			<!-- Controller IP Address Byte 2 -->
-			<Pout ID="1011" Name="IP2"				Type="БеззнаковыйЦелый"/>
-			
-			<!-- Controller IP Address Byte 3 -->
-			<Pout ID="1012" Name="IP3"				Type="БеззнаковыйЦелый"/>
-			
-			<!-- Controller IP Address Byte 4 -->
-			<Pout ID="1013" Name="IP4"				Type="БеззнаковыйЦелый"/>
-			
-			<!-- TCP Port -->
-			<Pout ID="1014" Name="Port"				Type="БеззнаковыйЦелый"/>
-			
-			<!-- Timeout -->
-			<Pout ID="1015" Name="Timeout"			Type="БеззнаковыйЦелый"/>
+            <Pout ID="1003" Name="FloatBaseAddr" Type="БеззнаковыйЦелый"/>
+
+            <!-- Size of Real (Float) Data Storage Area -->
+            <Pout ID="1004" Name="FloatAreaSize" Type="БеззнаковыйЦелый"/>
+
+            <!-- Base Address for Int Data Storage -->
+            <Pout ID="1005" Name="IntBaseAddr" Type="БеззнаковыйЦелый"/>
+
+            <!-- Size of Int Data Storage Area -->
+            <Pout ID="1006" Name="IntAreaSize" Type="БеззнаковыйЦелый"/>
+
+            <!-- Base Address for Boolean Data Storage -->
+            <Pout ID="1007" Name="BoolBaseAddr" Type="БеззнаковыйЦелый"/>
+
+            <!-- Size of Boolean Data Storage Area -->
+            <Pout ID="1008" Name="BoolAreaSize" Type="БеззнаковыйЦелый"/>
+
+            <!-- Base Address of Control Area -->
+            <Pout ID="1009" Name="ControlBaseAddr" Type="БеззнаковыйЦелый"/>
+
+            <!-- Controller IP Address Byte 1 -->
+            <Pout ID="1010" Name="IP1" Type="БеззнаковыйЦелый"/>
+
+            <!-- Controller IP Address Byte 2 -->
+            <Pout ID="1011" Name="IP2" Type="БеззнаковыйЦелый"/>
+
+            <!-- Controller IP Address Byte 3 -->
+            <Pout ID="1012" Name="IP3" Type="БеззнаковыйЦелый"/>
+
+            <!-- Controller IP Address Byte 4 -->
+            <Pout ID="1013" Name="IP4" Type="БеззнаковыйЦелый"/>
+
+            <!-- TCP Port -->
+            <Pout ID="1014" Name="Port" Type="БеззнаковыйЦелый"/>
+
+            <!-- Timeout -->
+            <Pout ID="1015" Name="Timeout" Type="БеззнаковыйЦелый"/>
         </Items>
-	</VisualMap>
+    </VisualMap>
 </FBConfig>

@@ -11,5 +11,5 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 /// </summary>
 public interface IRecipeReader
 {
-    Result<CsvRawData> ReadAsync(TextReader reader);
+	Result<CsvRawData> ReadAsync(TextReader reader);
 }

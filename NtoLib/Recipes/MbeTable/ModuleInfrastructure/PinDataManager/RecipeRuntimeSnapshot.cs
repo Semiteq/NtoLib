@@ -5,13 +5,13 @@
 /// Updated only when all required pins are in good quality.
 /// </summary>
 public readonly record struct RecipeRuntimeSnapshot(
-    bool RecipeActive,
-    bool SendEnabled,
-    int StepIndex,
-    int ForLevel1Count,
-    int ForLevel2Count,
-    int ForLevel3Count,
-    float StepElapsedSeconds
+	bool RecipeActive,
+	bool SendEnabled,
+	int StepIndex,
+	int ForLevel1Count,
+	int ForLevel2Count,
+	int ForLevel3Count,
+	float StepElapsedSeconds
 );
 
 /// <summary>
@@ -19,5 +19,5 @@ public readonly record struct RecipeRuntimeSnapshot(
 /// Any change in any component means a new phase.
 /// </summary>
 public readonly record struct StepPhase(
-    int StepIndex
+	int StepIndex
 );

@@ -2,8 +2,8 @@
 
 public enum ErrorSeverity
 {
-    Info,
-    Warning,
-    Error,
-    Critical
+	Info,
+	Warning,
+	Error,
+	Critical
 }

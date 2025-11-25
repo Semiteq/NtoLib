@@ -7,5 +7,5 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 /// </summary>
 public interface IConfigurationLoader
 {
-    AppConfiguration LoadConfiguration(string configurationDirectory, params string[] fileNames);
+	AppConfiguration LoadConfiguration(string configurationDirectory, params string[] fileNames);
 }

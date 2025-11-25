@@ -1,6 +1,6 @@
-namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
+﻿namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
 public interface IForLoopNestingProvider
 {
-    int GetNestingDepth(int stepIndex);
+	int GetNestingDepth(int stepIndex);
 }

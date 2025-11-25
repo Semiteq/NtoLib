@@ -20,284 +20,284 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
 /// </summary>
 public sealed class FormulaPrecompiler : IFormulaPrecompiler
 {
-    private static readonly StringComparer VariableNameComparer = StringComparer.OrdinalIgnoreCase;
-    
-    private readonly ILogger<FormulaPrecompiler> _logger;
+	private static readonly StringComparer VariableNameComparer = StringComparer.OrdinalIgnoreCase;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FormulaPrecompiler"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public FormulaPrecompiler(ILogger<FormulaPrecompiler> logger)
-    {
-        _logger = logger;
-    }
+	private readonly ILogger<FormulaPrecompiler> _logger;
 
-    /// <summary>
-    /// Precompiles formulas from action definitions.
-    /// </summary>
-    /// <param name="actions">The action definitions containing formulas to compile.</param>
-    /// <returns>A dictionary mapping action IDs to compiled formulas.</returns>
-    public Result<IReadOnlyDictionary<short, CompiledFormula>> Precompile(
-        IReadOnlyDictionary<short, ActionDefinition> actions)
-    {
-        var compiled = new Dictionary<short, CompiledFormula>();
-        var errors = new List<IError>();
+	/// <summary>
+	/// Initializes a new instance of the <see cref="FormulaPrecompiler"/> class.
+	/// </summary>
+	/// <param name="logger">The logger instance.</param>
+	public FormulaPrecompiler(ILogger<FormulaPrecompiler> logger)
+	{
+		_logger = logger;
+	}
 
-        foreach (var action in actions.Values.Where(a => a.Formula != null))
-        {
-            var expression = action.Formula!.Expression ?? string.Empty;
-            var recalcOrder = action.Formula!.RecalcOrder;
+	/// <summary>
+	/// Precompiles formulas from action definitions.
+	/// </summary>
+	/// <param name="actions">The action definitions containing formulas to compile.</param>
+	/// <returns>A dictionary mapping action IDs to compiled formulas.</returns>
+	public Result<IReadOnlyDictionary<short, CompiledFormula>> Precompile(
+		IReadOnlyDictionary<short, ActionDefinition> actions)
+	{
+		var compiled = new Dictionary<short, CompiledFormula>();
+		var errors = new List<IError>();
 
-            var compilationResult = CompileFormula(expression, recalcOrder);
-            if (compilationResult.IsFailed)
-            {
-                var configError = ConvertToConfigError(action, compilationResult.Errors);
-                errors.Add(configError);
-                continue;
-            }
+		foreach (var action in actions.Values.Where(a => a.Formula != null))
+		{
+			var expression = action.Formula!.Expression ?? string.Empty;
+			var recalcOrder = action.Formula!.RecalcOrder;
 
-            compiled[action.Id] = compilationResult.Value;
-        }
+			var compilationResult = CompileFormula(expression, recalcOrder);
+			if (compilationResult.IsFailed)
+			{
+				var configError = ConvertToConfigError(action, compilationResult.Errors);
+				errors.Add(configError);
+				continue;
+			}
 
-        return errors.Count > 0
-            ? Result.Fail<IReadOnlyDictionary<short, CompiledFormula>>(errors)
-            : compiled;
-    }
+			compiled[action.Id] = compilationResult.Value;
+		}
 
-    private Result<CompiledFormula> CompileFormula(string expression, IReadOnlyList<string> recalcOrder)
-    {
-        var validationResult = ValidateInput(expression, recalcOrder);
-        if (validationResult.IsFailed)
-            return validationResult.ToResult<CompiledFormula>();
+		return errors.Count > 0
+			? Result.Fail<IReadOnlyDictionary<short, CompiledFormula>>(errors)
+			: compiled;
+	}
 
-        var parseResult = ParseExpression(expression);
-        if (parseResult.IsFailed)
-            return parseResult.ToResult<CompiledFormula>();
+	private Result<CompiledFormula> CompileFormula(string expression, IReadOnlyList<string> recalcOrder)
+	{
+		var validationResult = ValidateInput(expression, recalcOrder);
+		if (validationResult.IsFailed)
+			return validationResult.ToResult<CompiledFormula>();
 
-        var parsedExpression = parseResult.Value;
-        var variables = ExtractVariables(parsedExpression);
+		var parseResult = ParseExpression(expression);
+		if (parseResult.IsFailed)
+			return parseResult.ToResult<CompiledFormula>();
 
-        var structureValidationResult = ValidateFormulaStructure(variables, parsedExpression, recalcOrder);
-        if (structureValidationResult.IsFailed)
-            return structureValidationResult.ToResult<CompiledFormula>();
+		var parsedExpression = parseResult.Value;
+		var variables = ExtractVariables(parsedExpression);
 
-        return BuildCompiledFormula(parsedExpression, recalcOrder, variables);
-    }
+		var structureValidationResult = ValidateFormulaStructure(variables, parsedExpression, recalcOrder);
+		if (structureValidationResult.IsFailed)
+			return structureValidationResult.ToResult<CompiledFormula>();
 
-    private static Result ValidateInput(string expression, IReadOnlyList<string> recalcOrder)
-    {
-        if (string.IsNullOrWhiteSpace(expression))
-            return new ConfigFormulaEmptyExpressionError();
+		return BuildCompiledFormula(parsedExpression, recalcOrder, variables);
+	}
 
-        if (recalcOrder.Count == 0)
-            return new ConfigFormulaEmptyRecalcOrderError();
+	private static Result ValidateInput(string expression, IReadOnlyList<string> recalcOrder)
+	{
+		if (string.IsNullOrWhiteSpace(expression))
+			return new ConfigFormulaEmptyExpressionError();
 
-        return Result.Ok();
-    }
+		if (recalcOrder.Count == 0)
+			return new ConfigFormulaEmptyRecalcOrderError();
 
-    private Result<Entity> ParseExpression(string expression)
-    {
-        try
-        {
-            return (Entity)expression;
-        }
-        catch
-        {
-            _logger.LogError("Failed to parse formula expression: '{Expression}'", expression);
-            return new ConfigFormulaInvalidExpressionError(expression);
-        }
-    }
+		return Result.Ok();
+	}
 
-    private static HashSet<string> ExtractVariables(Entity expression) 
-        => expression.Vars.Select(v => v.Name).ToHashSet(VariableNameComparer);
+	private Result<Entity> ParseExpression(string expression)
+	{
+		try
+		{
+			return (Entity)expression;
+		}
+		catch
+		{
+			_logger.LogError("Failed to parse formula expression: '{Expression}'", expression);
+			return new ConfigFormulaInvalidExpressionError(expression);
+		}
+	}
 
-    private static Result ValidateFormulaStructure(
-        HashSet<string> variables,
-        Entity parsedExpression,
-        IReadOnlyList<string> recalcOrder)
-    {
-        var orderValidationResult = ValidateRecalcOrder(variables, recalcOrder);
-        if (orderValidationResult.IsFailed)
-            return orderValidationResult;
+	private static HashSet<string> ExtractVariables(Entity expression)
+		=> expression.Vars.Select(v => v.Name).ToHashSet(VariableNameComparer);
 
-        var linearityResult = ValidateLinearity(variables, parsedExpression);
-        return linearityResult;
-    }
+	private static Result ValidateFormulaStructure(
+		HashSet<string> variables,
+		Entity parsedExpression,
+		IReadOnlyList<string> recalcOrder)
+	{
+		var orderValidationResult = ValidateRecalcOrder(variables, recalcOrder);
+		if (orderValidationResult.IsFailed)
+			return orderValidationResult;
 
-    private static Result ValidateRecalcOrder(HashSet<string> variables, IReadOnlyList<string> recalcOrder)
-    {
-        var variablesNotInRecalcOrder = variables
-            .Where(v => !recalcOrder.Contains(v, VariableNameComparer))
-            .ToList();
-        
-        if (variablesNotInRecalcOrder.Any())
-            return new ConfigFormulaRecalcOrderMissingError(string.Join(", ", variablesNotInRecalcOrder));
+		var linearityResult = ValidateLinearity(variables, parsedExpression);
+		return linearityResult;
+	}
 
-        var orderVariablesNotInFormula = recalcOrder
-            .Where(v => !variables.Contains(v, VariableNameComparer))
-            .ToList();
+	private static Result ValidateRecalcOrder(HashSet<string> variables, IReadOnlyList<string> recalcOrder)
+	{
+		var variablesNotInRecalcOrder = variables
+			.Where(v => !recalcOrder.Contains(v, VariableNameComparer))
+			.ToList();
 
-        return orderVariablesNotInFormula.Any()
-            ? new ConfigFormulaRecalcOrderExtraError(string.Join(", ", orderVariablesNotInFormula))
-            : Result.Ok();
-    }
+		if (variablesNotInRecalcOrder.Any())
+			return new ConfigFormulaRecalcOrderMissingError(string.Join(", ", variablesNotInRecalcOrder));
 
-    private static Result ValidateLinearity(HashSet<string> variables, Entity expression)
-    {
-        var nonLinearVariables = variables
-            .Where(v => CountOccurrencesInExpression(expression, v) > 1)
-            .ToList();
-        
-        return nonLinearVariables.Any()
-            ? new ConfigFormulaNonLinearError()
-            : Result.Ok();
-    }
+		var orderVariablesNotInFormula = recalcOrder
+			.Where(v => !variables.Contains(v, VariableNameComparer))
+			.ToList();
 
-    private static int CountOccurrencesInExpression(Entity expression, string variableName)
-    {
-        var isMatchingVariable = expression is Entity.Variable v &&
-                                 string.Equals(v.Name, variableName, StringComparison.OrdinalIgnoreCase);
+		return orderVariablesNotInFormula.Any()
+			? new ConfigFormulaRecalcOrderExtraError(string.Join(", ", orderVariablesNotInFormula))
+			: Result.Ok();
+	}
 
-        return isMatchingVariable
-            ? 1
-            : expression.DirectChildren.Sum(child => CountOccurrencesInExpression(child, variableName));
-    }
+	private static Result ValidateLinearity(HashSet<string> variables, Entity expression)
+	{
+		var nonLinearVariables = variables
+			.Where(v => CountOccurrencesInExpression(expression, v) > 1)
+			.ToList();
 
-    private Result<CompiledFormula> BuildCompiledFormula(
-        Entity parsedExpression,
-        IReadOnlyList<string> recalcOrder,
-        HashSet<string> variables)
-    {
-        var solversResult = CompileSolvers(variables, parsedExpression);
-        if (solversResult.IsFailed)
-            return solversResult.ToResult<CompiledFormula>();
+		return nonLinearVariables.Any()
+			? new ConfigFormulaNonLinearError()
+			: Result.Ok();
+	}
 
-        return new CompiledFormula(
-            recalcOrder,
-            variables.ToList(),
-            solversResult.Value);
-    }
+	private static int CountOccurrencesInExpression(Entity expression, string variableName)
+	{
+		var isMatchingVariable = expression is Entity.Variable v &&
+								 string.Equals(v.Name, variableName, StringComparison.OrdinalIgnoreCase);
 
-    private Result<Dictionary<string, Func<Dictionary<string, double>, double>>> CompileSolvers(
-        HashSet<string> variables,
-        Entity parsedExpression)
-    {
-        var solvers = new Dictionary<string, Func<Dictionary<string, double>, double>>(VariableNameComparer);
+		return isMatchingVariable
+			? 1
+			: expression.DirectChildren.Sum(child => CountOccurrencesInExpression(child, variableName));
+	}
 
-        foreach (var variable in variables)
-        {
-            var solverResult = CreateSolverForVariable(parsedExpression, variable, variables);
-            if (solverResult.IsFailed)
-                return solverResult.ToResult<Dictionary<string, Func<Dictionary<string, double>, double>>>();
-            
-            solvers[variable] = solverResult.Value;
-        }
+	private Result<CompiledFormula> BuildCompiledFormula(
+		Entity parsedExpression,
+		IReadOnlyList<string> recalcOrder,
+		HashSet<string> variables)
+	{
+		var solversResult = CompileSolvers(variables, parsedExpression);
+		if (solversResult.IsFailed)
+			return solversResult.ToResult<CompiledFormula>();
 
-        return solvers;
-    }
+		return new CompiledFormula(
+			recalcOrder,
+			variables.ToList(),
+			solversResult.Value);
+	}
 
-    private Result<Func<Dictionary<string, double>, double>> CreateSolverForVariable(
-        Entity parsedExpression,
-        string targetVariable,
-        HashSet<string> allVariables)
-    {
-        try
-        {
-            var solved = parsedExpression.Solve(targetVariable);
-            var extracted = ExtractSingleElementIfSet(solved);
-            var simplified = extracted.Simplify();
+	private Result<Dictionary<string, Func<Dictionary<string, double>, double>>> CompileSolvers(
+		HashSet<string> variables,
+		Entity parsedExpression)
+	{
+		var solvers = new Dictionary<string, Func<Dictionary<string, double>, double>>(VariableNameComparer);
 
-            _logger.LogDebug(
-                "Solved expression for variable '{TargetVariable}': {Expression}",
-                targetVariable,
-                simplified.Stringize());
+		foreach (var variable in variables)
+		{
+			var solverResult = CreateSolverForVariable(parsedExpression, variable, variables);
+			if (solverResult.IsFailed)
+				return solverResult.ToResult<Dictionary<string, Func<Dictionary<string, double>, double>>>();
 
-            var solver = BuildSolverFunction(simplified, targetVariable, allVariables);
-            return Result.Ok(solver);
-        }
-        catch (Exception ex)
-        {
-            return new ConfigFormulaComputationFailedError(ex.Message);
-        }
-    }
+			solvers[variable] = solverResult.Value;
+		}
 
-    private static Entity ExtractSingleElementIfSet(Entity expression)
-    {
-        if (expression is Entity.Set)
-        {
-            var elements = expression.DirectChildren;
-            var count = elements.Count();
-            if (count == 1)
-                return elements.First();
-        }
+		return solvers;
+	}
 
-        return expression;
-    }
+	private Result<Func<Dictionary<string, double>, double>> CreateSolverForVariable(
+		Entity parsedExpression,
+		string targetVariable,
+		HashSet<string> allVariables)
+	{
+		try
+		{
+			var solved = parsedExpression.Solve(targetVariable);
+			var extracted = ExtractSingleElementIfSet(solved);
+			var simplified = extracted.Simplify();
 
-    private static Func<Dictionary<string, double>, double> BuildSolverFunction(
-        Entity solvedExpression,
-        string targetVariable,
-        HashSet<string> allVariables)
-    {
-        var otherVariables = GetOtherVariables(targetVariable, allVariables);
+			_logger.LogDebug(
+				"Solved expression for variable '{TargetVariable}': {Expression}",
+				targetVariable,
+				simplified.Stringize());
 
-        return values =>
-        {
-            var substituted = SubstituteValues(solvedExpression, otherVariables, values)
-                .Simplify();
+			var solver = BuildSolverFunction(simplified, targetVariable, allVariables);
+			return Result.Ok(solver);
+		}
+		catch (Exception ex)
+		{
+			return new ConfigFormulaComputationFailedError(ex.Message);
+		}
+	}
 
-            var expression = ExtractSingleElementIfSet(substituted);
+	private static Entity ExtractSingleElementIfSet(Entity expression)
+	{
+		if (expression is Entity.Set)
+		{
+			var elements = expression.DirectChildren;
+			var count = elements.Count();
+			if (count == 1)
+				return elements.First();
+		}
 
-            if (!expression.EvaluableNumerical)
-                throw new InvalidOperationException($"Cannot evaluate expression for '{targetVariable}' as a number");
+		return expression;
+	}
 
-            var result = expression.EvalNumerical();
-            return (double)result.RealPart;
-        };
-    }
+	private static Func<Dictionary<string, double>, double> BuildSolverFunction(
+		Entity solvedExpression,
+		string targetVariable,
+		HashSet<string> allVariables)
+	{
+		var otherVariables = GetOtherVariables(targetVariable, allVariables);
 
-    private static List<string> GetOtherVariables(string targetVariable, HashSet<string> allVariables)
-    {
-        return allVariables
-            .Where(v => !string.Equals(v, targetVariable, StringComparison.OrdinalIgnoreCase))
-            .ToList();
-    }
+		return values =>
+		{
+			var substituted = SubstituteValues(solvedExpression, otherVariables, values)
+				.Simplify();
 
-    private static Entity SubstituteValues(
-        Entity expression,
-        List<string> variables,
-        Dictionary<string, double> values)
-    {
-        var result = expression;
+			var expression = ExtractSingleElementIfSet(substituted);
 
-        foreach (var variable in variables)
-        {
-            if (values.TryGetValue(variable, out var value))
-                result = result.Substitute(variable, value);
-        }
+			if (!expression.EvaluableNumerical)
+				throw new InvalidOperationException($"Cannot evaluate expression for '{targetVariable}' as a number");
 
-        return result;
-    }
+			var result = expression.EvalNumerical();
+			return (double)result.RealPart;
+		};
+	}
 
-    private static ConfigError ConvertToConfigError(ActionDefinition action, IEnumerable<IError> innerErrors)
-    {
-        var innerErrorMessages = string.Join("; ", innerErrors.Select(e => e.Message));
-        var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
+	private static List<string> GetOtherVariables(string targetVariable, HashSet<string> allVariables)
+	{
+		return allVariables
+			.Where(v => !string.Equals(v, targetVariable, StringComparison.OrdinalIgnoreCase))
+			.ToList();
+	}
 
-        var configError = new ConfigError(
-                $"Failed to compile formula: {innerErrorMessages}",
-                section: "ActionsDefs.yaml",
-                context: context)
-            .WithDetail("actionId", action.Id)
-            .WithDetail("actionName", action.Name)
-            .WithDetail("expression", action.Formula!.Expression ?? string.Empty);
+	private static Entity SubstituteValues(
+		Entity expression,
+		List<string> variables,
+		Dictionary<string, double> values)
+	{
+		var result = expression;
 
-        foreach (var innerError in innerErrors)
-        {
-            configError.CausedBy(innerError);
-        }
+		foreach (var variable in variables)
+		{
+			if (values.TryGetValue(variable, out var value))
+				result = result.Substitute(variable, value);
+		}
 
-        return configError;
-    }
+		return result;
+	}
+
+	private static ConfigError ConvertToConfigError(ActionDefinition action, IEnumerable<IError> innerErrors)
+	{
+		var innerErrorMessages = string.Join("; ", innerErrors.Select(e => e.Message));
+		var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
+
+		var configError = new ConfigError(
+				$"Failed to compile formula: {innerErrorMessages}",
+				section: "ActionsDefs.yaml",
+				context: context)
+			.WithDetail("actionId", action.Id)
+			.WithDetail("actionName", action.Name)
+			.WithDetail("expression", action.Formula!.Expression ?? string.Empty);
+
+		foreach (var innerError in innerErrors)
+		{
+			configError.CausedBy(innerError);
+		}
+
+		return configError;
+	}
 }

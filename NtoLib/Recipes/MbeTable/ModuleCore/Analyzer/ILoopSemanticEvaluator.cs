@@ -2,5 +2,5 @@
 
 public interface ILoopSemanticEvaluator
 {
-    LoopSemanticsResult Evaluate(LoopParseResult parseResult);
+	LoopSemanticsResult Evaluate(LoopParseResult parseResult);
 }

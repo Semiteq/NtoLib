@@ -8,170 +8,190 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 
 public sealed class DataGridViewAdapter : ITableView, IDisposable
 {
-    private readonly DataGridView _grid;
+	private readonly DataGridView _grid;
 
-    public DataGridViewAdapter(DataGridView grid)
-    {
-        _grid = grid ?? throw new ArgumentNullException(nameof(grid));
-        _grid.CellValueNeeded += OnCellValueNeededInternal;
-        _grid.CellValuePushed += OnCellValuePushedInternal;
-        _grid.CurrentCellChanged += OnCurrentCellChangedInternal;
-    }
+	public DataGridViewAdapter(DataGridView grid)
+	{
+		_grid = grid ?? throw new ArgumentNullException(nameof(grid));
+		_grid.CellValueNeeded += OnCellValueNeededInternal;
+		_grid.CellValuePushed += OnCellValuePushedInternal;
+		_grid.CurrentCellChanged += OnCurrentCellChangedInternal;
+	}
 
-    public int RowCount
-    {
-        get => _grid.RowCount;
-        set
-        {
-            if (_grid.IsDisposed) return;
+	public int RowCount
+	{
+		get => _grid.RowCount;
+		set
+		{
+			if (_grid.IsDisposed)
+				return;
 
-            if (_grid.InvokeRequired)
-            {
-                try { _grid.BeginInvoke(new Action(() => _grid.RowCount = value)); }
-                catch { }
-            }
-            else
-            {
-                _grid.RowCount = value;
-            }
-        }
-    }
+			if (_grid.InvokeRequired)
+			{
+				try
+				{ _grid.BeginInvoke(new Action(() => _grid.RowCount = value)); }
+				catch { }
+			}
+			else
+			{
+				_grid.RowCount = value;
+			}
+		}
+	}
 
-    public bool IsHandleCreated => _grid.IsHandleCreated;
-    public bool IsDisposed => _grid.IsDisposed;
+	public bool IsHandleCreated => _grid.IsHandleCreated;
+	public bool IsDisposed => _grid.IsDisposed;
 
-    public void Invalidate()
-    {
-        if (_grid.IsDisposed) return;
+	public void Invalidate()
+	{
+		if (_grid.IsDisposed)
+			return;
 
-        if (_grid.InvokeRequired)
-        {
-            try { _grid.BeginInvoke(new Action(() => _grid.Invalidate())); }
-            catch { }
-        }
-        else
-        {
-            _grid.Invalidate();
-        }
-    }
+		if (_grid.InvokeRequired)
+		{
+			try
+			{ _grid.BeginInvoke(new Action(() => _grid.Invalidate())); }
+			catch { }
+		}
+		else
+		{
+			_grid.Invalidate();
+		}
+	}
 
-    public void InvalidateRow(int rowIndex)
-    {
-        if (_grid.IsDisposed) return;
-        if (rowIndex < 0) return;
+	public void InvalidateRow(int rowIndex)
+	{
+		if (_grid.IsDisposed)
+			return;
+		if (rowIndex < 0)
+			return;
 
-        if (_grid.InvokeRequired)
-        {
-            try { _grid.BeginInvoke(new Action(() => InvalidateRow(rowIndex))); }
-            catch { }
-            return;
-        }
+		if (_grid.InvokeRequired)
+		{
+			try
+			{ _grid.BeginInvoke(new Action(() => InvalidateRow(rowIndex))); }
+			catch { }
 
-        if (rowIndex < _grid.RowCount)
-            _grid.InvalidateRow(rowIndex);
-    }
+			return;
+		}
 
-    public void InvalidateCell(int columnIndex, int rowIndex)
-    {
-        if (_grid.IsDisposed) return;
-        if (rowIndex < 0 || columnIndex < 0) return;
+		if (rowIndex < _grid.RowCount)
+			_grid.InvalidateRow(rowIndex);
+	}
 
-        if (_grid.InvokeRequired)
-        {
-            try { _grid.BeginInvoke(new Action(() => InvalidateCell(columnIndex, rowIndex))); }
-            catch { }
-            return;
-        }
+	public void InvalidateCell(int columnIndex, int rowIndex)
+	{
+		if (_grid.IsDisposed)
+			return;
+		if (rowIndex < 0 || columnIndex < 0)
+			return;
 
-        if (rowIndex < _grid.RowCount && columnIndex < _grid.ColumnCount)
-            _grid.InvalidateCell(columnIndex, rowIndex);
-    }
+		if (_grid.InvokeRequired)
+		{
+			try
+			{ _grid.BeginInvoke(new Action(() => InvalidateCell(columnIndex, rowIndex))); }
+			catch { }
 
-    public void EnsureRowVisible(int rowIndex)
-    {
-        if (_grid.IsDisposed) return;
-        if (rowIndex < 0) return;
+			return;
+		}
 
-        if (_grid.InvokeRequired)
-        {
-            try { _grid.BeginInvoke(new Action(() => EnsureRowVisible(rowIndex))); }
-            catch { }
-            return;
-        }
+		if (rowIndex < _grid.RowCount && columnIndex < _grid.ColumnCount)
+			_grid.InvalidateCell(columnIndex, rowIndex);
+	}
 
-        if (!_grid.IsHandleCreated) return;
-        if (rowIndex >= _grid.RowCount) return;
+	public void EnsureRowVisible(int rowIndex)
+	{
+		if (_grid.IsDisposed)
+			return;
+		if (rowIndex < 0)
+			return;
 
-        try
-        {
-            var first = _grid.FirstDisplayedScrollingRowIndex;
-            var visible = _grid.DisplayedRowCount(false);
+		if (_grid.InvokeRequired)
+		{
+			try
+			{ _grid.BeginInvoke(new Action(() => EnsureRowVisible(rowIndex))); }
+			catch { }
 
-            if (first < 0 || visible <= 0 || rowIndex < first || rowIndex >= first + visible)
-                _grid.FirstDisplayedScrollingRowIndex = rowIndex;
-        }
-        catch
-        {
-            // Ignore transient failures when grid is in an invalid state (e.g., no rows yet displayed)
-        }
-    }
+			return;
+		}
 
-    public void BeginInvoke(Action action)
-    {
-        if (action == null) return;
-        if (_grid.IsDisposed) return;
+		if (!_grid.IsHandleCreated)
+			return;
+		if (rowIndex >= _grid.RowCount)
+			return;
 
-        if (_grid.InvokeRequired)
-            _grid.BeginInvoke(action);
-        else
-            action();
-    }
+		try
+		{
+			var first = _grid.FirstDisplayedScrollingRowIndex;
+			var visible = _grid.DisplayedRowCount(false);
 
-    public int CurrentRowIndex => _grid.CurrentCell?.RowIndex ?? -1;
+			if (first < 0 || visible <= 0 || rowIndex < first || rowIndex >= first + visible)
+				_grid.FirstDisplayedScrollingRowIndex = rowIndex;
+		}
+		catch
+		{
+			// Ignore transient failures when grid is in an invalid state (e.g., no rows yet displayed)
+		}
+	}
 
-    public ColumnIdentifier? GetColumnKey(int columnIndex)
-    {
-        if (columnIndex < 0 || columnIndex >= _grid.ColumnCount)
-            return null;
+	public void BeginInvoke(Action action)
+	{
+		if (action == null)
+			return;
+		if (_grid.IsDisposed)
+			return;
 
-        var column = _grid.Columns[columnIndex];
-        var key = !string.IsNullOrEmpty(column.Name)
-            ? new ColumnIdentifier(column.Name)
-            : null;
+		if (_grid.InvokeRequired)
+			_grid.BeginInvoke(action);
+		else
+			action();
+	}
 
-        return key;
-    }
+	public int CurrentRowIndex => _grid.CurrentCell?.RowIndex ?? -1;
 
-    public event EventHandler<CellValueEventArgs>? CellValueNeeded;
-    public event EventHandler<CellValueEventArgs>? CellValuePushed;
-    public event EventHandler? CurrentCellChanged;
+	public ColumnIdentifier? GetColumnKey(int columnIndex)
+	{
+		if (columnIndex < 0 || columnIndex >= _grid.ColumnCount)
+			return null;
 
-    private void OnCellValueNeededInternal(object? sender, DataGridViewCellValueEventArgs e)
-    {
-        var args = new CellValueEventArgs(e.RowIndex, e.ColumnIndex);
-        CellValueNeeded?.Invoke(this, args);
-        e.Value = args.Value;
-    }
+		var column = _grid.Columns[columnIndex];
+		var key = !string.IsNullOrEmpty(column.Name)
+			? new ColumnIdentifier(column.Name)
+			: null;
 
-    private void OnCellValuePushedInternal(object? sender, DataGridViewCellValueEventArgs e)
-    {
-        var args = new CellValueEventArgs(e.RowIndex, e.ColumnIndex, e.Value);
-        CellValuePushed?.Invoke(this, args);
-    }
+		return key;
+	}
 
-    private void OnCurrentCellChangedInternal(object? sender, EventArgs e)
-    {
-        CurrentCellChanged?.Invoke(this, EventArgs.Empty);
-    }
+	public event EventHandler<CellValueEventArgs>? CellValueNeeded;
+	public event EventHandler<CellValueEventArgs>? CellValuePushed;
+	public event EventHandler? CurrentCellChanged;
 
-    public void Dispose()
-    {
-        try
-        {
-            _grid.CellValueNeeded -= OnCellValueNeededInternal;
-            _grid.CellValuePushed -= OnCellValuePushedInternal;
-            _grid.CurrentCellChanged -= OnCurrentCellChangedInternal;
-        }
-        catch { }
-    }
+	private void OnCellValueNeededInternal(object? sender, DataGridViewCellValueEventArgs e)
+	{
+		var args = new CellValueEventArgs(e.RowIndex, e.ColumnIndex);
+		CellValueNeeded?.Invoke(this, args);
+		e.Value = args.Value;
+	}
+
+	private void OnCellValuePushedInternal(object? sender, DataGridViewCellValueEventArgs e)
+	{
+		var args = new CellValueEventArgs(e.RowIndex, e.ColumnIndex, e.Value);
+		CellValuePushed?.Invoke(this, args);
+	}
+
+	private void OnCurrentCellChangedInternal(object? sender, EventArgs e)
+	{
+		CurrentCellChanged?.Invoke(this, EventArgs.Empty);
+	}
+
+	public void Dispose()
+	{
+		try
+		{
+			_grid.CellValueNeeded -= OnCellValueNeededInternal;
+			_grid.CellValuePushed -= OnCellValuePushedInternal;
+			_grid.CurrentCellChanged -= OnCurrentCellChangedInternal;
+		}
+		catch { }
+	}
 }

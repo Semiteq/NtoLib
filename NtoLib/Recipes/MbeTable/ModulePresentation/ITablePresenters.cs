@@ -8,12 +8,12 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation;
 /// </summary>
 public interface ITablePresenter : IDisposable
 {
-    void Initialize();
-    Task LoadRecipeAsync();
-    Task SaveRecipeAsync();
-    Task SendRecipeAsync();
-    Task ReceiveRecipeAsync();
-    Task AddStepAfterCurrent();
-    Task AddStepBeforeCurrent();
-    Task RemoveCurrentStep();
+	void Initialize();
+	Task LoadRecipeAsync();
+	Task SaveRecipeAsync();
+	Task SendRecipeAsync();
+	Task ReceiveRecipeAsync();
+	Task AddStepAfterCurrent();
+	Task AddStepBeforeCurrent();
+	Task RemoveCurrentStep();
 }

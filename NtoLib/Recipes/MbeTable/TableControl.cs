@@ -23,18 +23,18 @@ namespace NtoLib.Recipes.MbeTable;
 [Guid("8161DF32-8D80-4B81-AF52-3021AE0AD293")]
 public partial class TableControl : VisualControlBase
 {
-    [NonSerialized] private IServiceProvider? _serviceProvider;
-    [NonSerialized] private ITablePresenter? _presenter;
-    [NonSerialized] private ITableView? _tableView;
-    [NonSerialized] private DesignTimeColorSchemeProvider? _colorSchemeProvider;
+	[NonSerialized] private IServiceProvider? _serviceProvider;
+	[NonSerialized] private ITablePresenter? _presenter;
+	[NonSerialized] private ITableView? _tableView;
+	[NonSerialized] private DesignTimeColorSchemeProvider? _colorSchemeProvider;
 
-    [NonSerialized] private bool _runtimeInitialized;
-    [NonSerialized] private TableBehaviorManager? _behaviorManager;
-    [NonSerialized] private ITableRenderCoordinator _renderCoordinator;
-    [NonSerialized] private ILogger? _logger;
+	[NonSerialized] private bool _runtimeInitialized;
+	[NonSerialized] private TableBehaviorManager? _behaviorManager;
+	[NonSerialized] private ITableRenderCoordinator _renderCoordinator;
+	[NonSerialized] private ILogger? _logger;
 
-    public TableControl() : base(true)
-    {
-        InitializeComponent();
-    }
+	public TableControl() : base(true)
+	{
+		InitializeComponent();
+	}
 }

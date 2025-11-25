@@ -4,11 +4,11 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations;
 
 public interface IOperationDefinition
 {
-    OperationId Id { get; }
-    OperationKind Kind { get; }
-    string DisplayNameRu { get; }
-    CompletionMessageKind CompletionMessage { get; }
-    bool IsLongRunning { get; }
-    bool UpdatesPolicyReasons { get; }
-    ConsistencyEffect ConsistencyEffect { get; }
+	OperationId Id { get; }
+	OperationKind Kind { get; }
+	string DisplayNameRu { get; }
+	CompletionMessageKind CompletionMessage { get; }
+	bool IsLongRunning { get; }
+	bool UpdatesPolicyReasons { get; }
+	ConsistencyEffect ConsistencyEffect { get; }
 }

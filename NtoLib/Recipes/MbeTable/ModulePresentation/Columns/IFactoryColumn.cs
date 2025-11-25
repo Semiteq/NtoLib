@@ -11,8 +11,8 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 /// </summary>
 public interface IFactoryColumn
 {
-    /// <summary>
-    /// Creates a <see cref="DataGridViewColumn"/> instance and applies default styling.
-    /// </summary>
-    DataGridViewColumn CreateColumn(ColumnDefinition definition, ColorScheme scheme);
+	/// <summary>
+	/// Creates a <see cref="DataGridViewColumn"/> instance and applies default styling.
+	/// </summary>
+	DataGridViewColumn CreateColumn(ColumnDefinition definition, ColorScheme scheme);
 }

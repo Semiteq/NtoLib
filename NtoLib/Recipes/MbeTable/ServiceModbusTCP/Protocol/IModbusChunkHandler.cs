@@ -12,23 +12,23 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 /// </summary>
 public interface IModbusChunkHandler
 {
-    /// <summary>
-    /// Writes data in chunks to specified address.
-    /// </summary>
-    Task<Result> WriteChunkedAsync(
-        IModbusTransport transport,
-        int baseAddress,
-        int[] data,
-        int chunkSize,
-        CancellationToken ct);
-    
-    /// <summary>
-    /// Reads data in chunks from specified address.
-    /// </summary>
-    Task<Result<int[]>> ReadChunkedAsync(
-        IModbusTransport transport,
-        int baseAddress,
-        int totalRegisters,
-        int chunkSize,
-        CancellationToken ct);
+	/// <summary>
+	/// Writes data in chunks to specified address.
+	/// </summary>
+	Task<Result> WriteChunkedAsync(
+		IModbusTransport transport,
+		int baseAddress,
+		int[] data,
+		int chunkSize,
+		CancellationToken ct);
+
+	/// <summary>
+	/// Reads data in chunks from specified address.
+	/// </summary>
+	Task<Result<int[]>> ReadChunkedAsync(
+		IModbusTransport transport,
+		int baseAddress,
+		int totalRegisters,
+		int chunkSize,
+		CancellationToken ct);
 }

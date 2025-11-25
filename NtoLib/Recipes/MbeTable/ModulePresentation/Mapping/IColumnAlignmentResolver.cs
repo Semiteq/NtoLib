@@ -6,5 +6,5 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 
 public interface IColumnAlignmentResolver
 {
-    DataGridViewContentAlignment Resolve(ColumnDefinition column);
+	DataGridViewContentAlignment Resolve(ColumnDefinition column);
 }

@@ -8,11 +8,11 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
 public interface IModbusTransport : IDisposable
 {
-    Task<Result> EnsureConnectedAsync(CancellationToken ct);
+	Task<Result> EnsureConnectedAsync(CancellationToken ct);
 
-    Task<Result<int[]>> ReadHoldingAsync(int startAddress, int length, CancellationToken ct);
+	Task<Result<int[]>> ReadHoldingAsync(int startAddress, int length, CancellationToken ct);
 
-    Task<Result> WriteHoldingAsync(int startAddress, int[] data, CancellationToken ct);
+	Task<Result> WriteHoldingAsync(int startAddress, int[] data, CancellationToken ct);
 
-    void Disconnect();
+	void Disconnect();
 }

@@ -4,5 +4,5 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 
 public interface ILoopParser
 {
-    LoopParseResult Parse(Recipe recipe);
+	LoopParseResult Parse(Recipe recipe);
 }

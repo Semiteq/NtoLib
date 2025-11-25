@@ -12,16 +12,16 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
 /// </summary>
 public interface IModbusTcpService
 {
-    /// <summary>
-    /// Sends the specified recipe to PLC asynchronously.
-    /// </summary>
-    /// <param name="recipe">Recipe to send.</param>
-    /// <returns>Result indicating success or errors.</returns>
-    Task<Result> SendRecipeAsync(Recipe recipe);
+	/// <summary>
+	/// Sends the specified recipe to PLC asynchronously.
+	/// </summary>
+	/// <param name="recipe">Recipe to send.</param>
+	/// <returns>Result indicating success or errors.</returns>
+	Task<Result> SendRecipeAsync(Recipe recipe);
 
-    /// <summary>
-    /// Receives a recipe from PLC asynchronously.
-    /// </summary>
-    /// <returns>Result containing the received recipe or errors.</returns>
-    Task<Result<Recipe>> ReceiveRecipeAsync();
+	/// <summary>
+	/// Receives a recipe from PLC asynchronously.
+	/// </summary>
+	/// <returns>Result containing the received recipe or errors.</returns>
+	Task<Result<Recipe>> ReceiveRecipeAsync();
 }

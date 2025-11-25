@@ -4,5 +4,5 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 
 public interface IStructureValidator
 {
-    StructureResult Validate(Recipe recipe);
+	StructureResult Validate(Recipe recipe);
 }

@@ -6,5 +6,5 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 
 public interface IAlignmentMapper
 {
-    DataGridViewContentAlignment Map(UiAlignment value);
+	DataGridViewContentAlignment Map(UiAlignment value);
 }

@@ -11,17 +11,17 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 /// </summary>
 public sealed class ActionItemsProvider : IComboBoxItemsProvider
 {
-    private readonly IComboboxDataProvider _provider;
+	private readonly IComboboxDataProvider _provider;
 
-    public ActionItemsProvider(IComboboxDataProvider provider)
-    {
-        _provider = provider;
-    }
+	public ActionItemsProvider(IComboboxDataProvider provider)
+	{
+		_provider = provider;
+	}
 
-    public List<KeyValuePair<short, string>> GetItems(int rowIndex, ColumnIdentifier columnKey)
-    {
-        return _provider.GetActions()
-            .Select(kv => new KeyValuePair<short, string>(kv.Key, kv.Value))
-            .ToList();
-    }
+	public List<KeyValuePair<short, string>> GetItems(int rowIndex, ColumnIdentifier columnKey)
+	{
+		return _provider.GetActions()
+			.Select(kv => new KeyValuePair<short, string>(kv.Key, kv.Value))
+			.ToList();
+	}
 }

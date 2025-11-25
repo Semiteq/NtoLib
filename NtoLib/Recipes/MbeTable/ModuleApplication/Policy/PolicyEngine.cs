@@ -12,39 +12,43 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Policy;
 
 public sealed class PolicyEngine
 {
-    private readonly ErrorPolicyRegistry _registry;
+	private readonly ErrorPolicyRegistry _registry;
 
-    public PolicyEngine(ErrorPolicyRegistry registry)
-    {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
-    }
+	public PolicyEngine(ErrorPolicyRegistry registry)
+	{
+		_registry = registry ?? throw new ArgumentNullException(nameof(registry));
+	}
 
-    public OperationDecision Decide(OperationId operation, IEnumerable<IReason> reasons)
-    {
-        var scope = OperationScopesMap.Map(operation);
+	public OperationDecision Decide(OperationId operation, IEnumerable<IReason> reasons)
+	{
+		var scope = OperationScopesMap.Map(operation);
 
-        IReason? blockingError = null;
-        IReason? blockingWarning = null;
+		IReason? blockingError = null;
+		IReason? blockingWarning = null;
 
-        foreach (var r in reasons)
-        {
-            if (!_registry.Blocks(r, scope)) continue;
+		foreach (var r in reasons)
+		{
+			if (!_registry.Blocks(r, scope))
+				continue;
 
-            var severity = _registry.GetSeverity(r);
-            if (severity == ErrorSeverity.Error || severity == ErrorSeverity.Critical)
-            {
-                blockingError ??= r;
-            }
-            else if (severity == ErrorSeverity.Warning)
-            {
-                blockingWarning ??= r;
-            }
+			var severity = _registry.GetSeverity(r);
+			if (severity == ErrorSeverity.Error || severity == ErrorSeverity.Critical)
+			{
+				blockingError ??= r;
+			}
+			else if (severity == ErrorSeverity.Warning)
+			{
+				blockingWarning ??= r;
+			}
 
-            if (blockingError != null) break;
-        }
+			if (blockingError != null)
+				break;
+		}
 
-        if (blockingError != null) return OperationDecision.BlockedError(blockingError);
-        if (blockingWarning != null) return OperationDecision.BlockedWarning(blockingWarning);
-        return OperationDecision.Allowed();
-    }
+		if (blockingError != null)
+			return OperationDecision.BlockedError(blockingError);
+		if (blockingWarning != null)
+			return OperationDecision.BlockedWarning(blockingWarning);
+		return OperationDecision.Allowed();
+	}
 }

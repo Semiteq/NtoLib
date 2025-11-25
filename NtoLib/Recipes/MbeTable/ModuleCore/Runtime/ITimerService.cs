@@ -10,7 +10,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
 /// </summary>
 public interface ITimerService
 {
-    public event Action<TimeSpan, TimeSpan>? TimesUpdated;
-    void Reset();
-    void UpdateRuntime(RecipeRuntimeSnapshot runtimeSnapshot, RecipeAnalysisSnapshot analysisSnapshot);
+	public event Action<TimeSpan, TimeSpan>? TimesUpdated;
+	void Reset();
+	void UpdateRuntime(RecipeRuntimeSnapshot runtimeSnapshot, RecipeAnalysisSnapshot analysisSnapshot);
 }

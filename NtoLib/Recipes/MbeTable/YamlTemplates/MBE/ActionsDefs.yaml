@@ -26,7 +26,7 @@
       property_type_id: "time"
     - key: "comment"
       property_type_id: "string"
-      
+
 #### Начало цикла FOR
 - id: 20
   name: "Цикл начало"
@@ -37,7 +37,7 @@
       property_type_id: "float_as_int"
     - key: "comment"
       property_type_id: "string"
-      
+
 #### Конец цикла FOR
 - id: 30
   name: "Цикл конец"
@@ -63,7 +63,7 @@
   columns:
     - key: "target"
       group_name: "ShutterNames"
-      property_type_id: "enum" 
+      property_type_id: "enum"
     - key: "comment"
       property_type_id: "string"
 
@@ -236,7 +236,7 @@
       default_value: "10"
     - key: "comment"
       property_type_id: "string"
-      
+
 - id: 180
   name: "Вращение РМ"
   deploy_duration: "Immediate"
@@ -246,7 +246,7 @@
       default_value: "0"
     - key: "comment"
       property_type_id: "string"
-      
+
 - id: 190
   name: "Высота РМ"
   deploy_duration: "Immediate"
@@ -256,7 +256,7 @@
       default_value: "0"
     - key: "comment"
       property_type_id: "string"
-      
+
 - id: 200
   name: "Прогрев скачком"
   deploy_duration: "Immediate"
@@ -269,7 +269,7 @@
       default_value: "100"
     - key: "comment"
       property_type_id: "string"
-      
+
 - id: 210
   name: "Прогрев плавно"
   deploy_duration: "Immediate"
@@ -288,7 +288,7 @@
       default_value: "10"
     - key: "comment"
       property_type_id: "string"
-    
+
 - id: 220
   name: "Подача NH3"
   deploy_duration: "Immediate"

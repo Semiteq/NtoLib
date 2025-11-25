@@ -11,14 +11,16 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
 /// </summary>
 public sealed class StepStartTime : FactoryColumnBase
 {
-    public StepStartTime(IColumnAlignmentResolver alignmentResolver) : base(alignmentResolver)
-    {}
-    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition) =>
-        new DataGridViewTextBoxColumn();
+	public StepStartTime(IColumnAlignmentResolver alignmentResolver) : base(alignmentResolver)
+	{
+	}
 
-    protected override void ConfigureColumn(DataGridViewColumn column)
-    {
-        column.DataPropertyName = nameof(StepViewModel.StepStartTime);
-        column.ReadOnly = true;
-    }
+	protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition) =>
+		new DataGridViewTextBoxColumn();
+
+	protected override void ConfigureColumn(DataGridViewColumn column)
+	{
+		column.DataPropertyName = nameof(StepViewModel.StepStartTime);
+		column.ReadOnly = true;
+	}
 }

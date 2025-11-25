@@ -17,32 +17,32 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 /// </summary>
 public sealed class FactoryColumnRegistry
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ConcurrentDictionary<string, Type> _mapping = new(StringComparer.OrdinalIgnoreCase);
-    
-    public FactoryColumnRegistry(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-        SetDefaultMapping();
-    }
+	private readonly IServiceProvider _serviceProvider;
+	private readonly ConcurrentDictionary<string, Type> _mapping = new(StringComparer.OrdinalIgnoreCase);
 
-    private void SetDefaultMapping()
-    {
-        _mapping["action_combo_box"] = typeof(ActionComboBox);
-        _mapping["action_target_combo_box"] = typeof(TargetComboBox);
-        _mapping["property_field"] = typeof(TextBoxExtension);
-        _mapping["step_start_time_field"] = typeof(StepStartTime);
-        _mapping["text_field"] = typeof(TextBoxExtension);
-    }
+	public FactoryColumnRegistry(IServiceProvider serviceProvider)
+	{
+		_serviceProvider = serviceProvider;
+		SetDefaultMapping();
+	}
 
-    
-    public DataGridViewColumn CreateColumn(ColumnDefinition definition)
-    {
-        if (!_mapping.TryGetValue(definition.ColumnType, out var factoryType))
-            throw new InvalidOperationException($"Unknown column_type '{definition.ColumnType}'.");
+	private void SetDefaultMapping()
+	{
+		_mapping["action_combo_box"] = typeof(ActionComboBox);
+		_mapping["action_target_combo_box"] = typeof(TargetComboBox);
+		_mapping["property_field"] = typeof(TextBoxExtension);
+		_mapping["step_start_time_field"] = typeof(StepStartTime);
+		_mapping["text_field"] = typeof(TextBoxExtension);
+	}
 
-        var factory = (IFactoryColumn)_serviceProvider.GetRequiredService(factoryType);
-        var scheme  = _serviceProvider.GetRequiredService<IColorSchemeProvider>().Current;
-        return factory.CreateColumn(definition, scheme);
-    }
+
+	public DataGridViewColumn CreateColumn(ColumnDefinition definition)
+	{
+		if (!_mapping.TryGetValue(definition.ColumnType, out var factoryType))
+			throw new InvalidOperationException($"Unknown column_type '{definition.ColumnType}'.");
+
+		var factory = (IFactoryColumn)_serviceProvider.GetRequiredService(factoryType);
+		var scheme = _serviceProvider.GetRequiredService<IColorSchemeProvider>().Current;
+		return factory.CreateColumn(definition, scheme);
+	}
 }

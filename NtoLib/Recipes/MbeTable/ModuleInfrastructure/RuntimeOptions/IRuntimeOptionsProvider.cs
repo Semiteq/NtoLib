@@ -2,5 +2,5 @@
 
 public interface IRuntimeOptionsProvider
 {
-    RuntimeOptions GetCurrent();
+	RuntimeOptions GetCurrent();
 }

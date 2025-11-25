@@ -2,9 +2,9 @@
 
 public enum StatusKind
 {
-    None,
-    Info,
-    Success,
-    Warning,
-    Error
+	None,
+	Info,
+	Success,
+	Warning,
+	Error
 }

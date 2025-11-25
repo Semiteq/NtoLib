@@ -3,7 +3,7 @@
 // High-level decision kinds.
 public enum DecisionKind
 {
-    Allowed,
-    BlockedWarning,
-    BlockedError
+	Allowed,
+	BlockedWarning,
+	BlockedError
 }

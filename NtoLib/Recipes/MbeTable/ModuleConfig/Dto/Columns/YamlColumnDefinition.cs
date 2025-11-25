@@ -2,7 +2,7 @@
 
 public sealed class YamlColumnDefinition
 {
-    public string Key { get; set; }
-    public YamlColumnBusinessLogic BusinessLogic { get; set; }
-    public YamlColumnUi Ui { get; set; }
+	public string Key { get; set; }
+	public YamlColumnBusinessLogic BusinessLogic { get; set; }
+	public YamlColumnUi Ui { get; set; }
 }

@@ -85,7 +85,7 @@
   min: -100
   max: 100
   format_kind: "Numeric"
-  
+
 - property_type_id: "rotation_speed"
   system_type: "System.Single"
   units: "об/мин"
@@ -148,7 +148,7 @@
   min: -1000
   max: 1000
   format_kind: "Numeric"
-  
+
 - property_type_id: "chamber_temp_speed"
   system_type: "System.Single"
   units: "°C/ч"
@@ -156,7 +156,7 @@
   min: -100
   max: 100
   format_kind: "Numeric"
-  
+
 ## Управление источником мышьяка
 
 - property_type_id: "arsenic_source_flow"

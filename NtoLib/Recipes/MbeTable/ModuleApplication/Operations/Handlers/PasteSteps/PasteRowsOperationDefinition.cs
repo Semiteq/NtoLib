@@ -4,11 +4,11 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.PasteSte
 
 public sealed class PasteRowsOperationDefinition : IOperationDefinition
 {
-    public OperationId Id => OperationId.PasteRows;
-    public OperationKind Kind => OperationKind.Other;
-    public string DisplayNameRu => "вставка строк";
-    public CompletionMessageKind CompletionMessage => CompletionMessageKind.Info;
-    public bool IsLongRunning => false;
-    public bool UpdatesPolicyReasons => true;
-    public ConsistencyEffect ConsistencyEffect => ConsistencyEffect.MarkInconsistent;
+	public OperationId Id => OperationId.PasteRows;
+	public OperationKind Kind => OperationKind.Other;
+	public string DisplayNameRu => "вставка строк";
+	public CompletionMessageKind CompletionMessage => CompletionMessageKind.Info;
+	public bool IsLongRunning => false;
+	public bool UpdatesPolicyReasons => true;
+	public ConsistencyEffect ConsistencyEffect => ConsistencyEffect.MarkInconsistent;
 }

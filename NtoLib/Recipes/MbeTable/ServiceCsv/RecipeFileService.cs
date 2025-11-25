@@ -19,201 +19,204 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv;
 
 public sealed class RecipeFileService : IRecipeFileService
 {
-    private readonly ICsvDataExtractor _dataExtractor;
-    private readonly IRecipeWriter _writer;
-    private readonly IMetadataService _metadataService;
-    private readonly IIntegrityService _integrityService;
-    private readonly ILogger<RecipeFileService> _logger;
-    private readonly object _fileLock = new();
+	private readonly ICsvDataExtractor _dataExtractor;
+	private readonly IRecipeWriter _writer;
+	private readonly IMetadataService _metadataService;
+	private readonly IIntegrityService _integrityService;
+	private readonly ILogger<RecipeFileService> _logger;
+	private readonly object _fileLock = new();
 
-    public RecipeFileService(
-        ICsvDataExtractor dataExtractor,
-        IRecipeWriter writer,
-        IMetadataService metadataService,
-        IIntegrityService integrityService,
-        ILogger<RecipeFileService> logger)
-    {
-        _dataExtractor = dataExtractor ?? throw new ArgumentNullException(nameof(dataExtractor));
-        _writer = writer ?? throw new ArgumentNullException(nameof(writer));
-        _metadataService = metadataService ?? throw new ArgumentNullException(nameof(metadataService));
-        _integrityService = integrityService ?? throw new ArgumentNullException(nameof(integrityService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+	public RecipeFileService(
+		ICsvDataExtractor dataExtractor,
+		IRecipeWriter writer,
+		IMetadataService metadataService,
+		IIntegrityService integrityService,
+		ILogger<RecipeFileService> logger)
+	{
+		_dataExtractor = dataExtractor ?? throw new ArgumentNullException(nameof(dataExtractor));
+		_writer = writer ?? throw new ArgumentNullException(nameof(writer));
+		_metadataService = metadataService ?? throw new ArgumentNullException(nameof(metadataService));
+		_integrityService = integrityService ?? throw new ArgumentNullException(nameof(integrityService));
+		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+	}
 
-    public async Task<Result<CsvRawData>> ReadRawDataAndCheckIntegrityAsync(string filePath, Encoding? encoding = null)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-            return new CsvFilePathEmptyError();
-        
+	public async Task<Result<CsvRawData>> ReadRawDataAndCheckIntegrityAsync(string filePath, Encoding? encoding = null)
+	{
+		if (string.IsNullOrWhiteSpace(filePath))
+			return new CsvFilePathEmptyError();
 
-        return await Task.Run(() =>
-        {
-            lock (_fileLock)
-            {
-                return ReadRawDataAndCheckIntegrityInternal(filePath, encoding);
-            }
-        });
-    }
 
-    public async Task<Result> WriteRecipeAsync(Recipe recipe, string filePath, Encoding? encoding = null)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            return new CsvFilePathEmptyError();
-        }
+		return await Task.Run(() =>
+		{
+			lock (_fileLock)
+			{
+				return ReadRawDataAndCheckIntegrityInternal(filePath, encoding);
+			}
+		});
+	}
 
-        return await Task.Run(() =>
-        {
-            lock (_fileLock)
-            {
-                return WriteRecipeInternal(recipe, filePath, encoding);
-            }
-        });
-    }
+	public async Task<Result> WriteRecipeAsync(Recipe recipe, string filePath, Encoding? encoding = null)
+	{
+		if (string.IsNullOrWhiteSpace(filePath))
+		{
+			return new CsvFilePathEmptyError();
+		}
 
-    private Result<CsvRawData> ReadRawDataAndCheckIntegrityInternal(string filePath, Encoding? encoding)
-    {
-        if (!File.Exists(filePath))
-        {
-            var error = new CsvFileNotFoundError(filePath);
-            _logger.LogError("Read failed - file not found: {FilePath}", filePath);
-            return Result.Fail(error);
-        }
+		return await Task.Run(() =>
+		{
+			lock (_fileLock)
+			{
+				return WriteRecipeInternal(recipe, filePath, encoding);
+			}
+		});
+	}
 
-        try
-        {
-            var actualEncoding = encoding ??
-                                 new UTF8Encoding(encoderShouldEmitUTF8Identifier: true, throwOnInvalidBytes: true);
+	private Result<CsvRawData> ReadRawDataAndCheckIntegrityInternal(string filePath, Encoding? encoding)
+	{
+		if (!File.Exists(filePath))
+		{
+			var error = new CsvFileNotFoundError(filePath);
+			_logger.LogError("Read failed - file not found: {FilePath}", filePath);
+			return Result.Fail(error);
+		}
 
-            using var stream = File.OpenRead(filePath);
-            using var reader = new StreamReader(stream, actualEncoding);
+		try
+		{
+			var actualEncoding = encoding ??
+								 new UTF8Encoding(encoderShouldEmitUTF8Identifier: true, throwOnInvalidBytes: true);
 
-            var fullText = reader.ReadToEnd();
+			using var stream = File.OpenRead(filePath);
+			using var reader = new StreamReader(stream, actualEncoding);
 
-            var (metadata, metadataLineCount) = _metadataService.ReadMetadata(fullText);
-            var bodyText = ExtractBodyText(fullText, metadataLineCount);
+			var fullText = reader.ReadToEnd();
 
-            using var bodyReader = new StringReader(bodyText);
+			var (metadata, metadataLineCount) = _metadataService.ReadMetadata(fullText);
+			var bodyText = ExtractBodyText(fullText, metadataLineCount);
 
-            var extractedRawData = _dataExtractor.ExtractRawData(bodyReader);
-            if (extractedRawData.IsFailed) 
-                return extractedRawData;
-            
-            var integrityResult = VerifyIntegrity(metadata, extractedRawData.Value);
-            
-            return Result.Ok(extractedRawData.Value).WithReasons(integrityResult.Reasons);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical(ex, "Failed to read file: {FilePath}", filePath);
-            return Result.Fail(new CsvReadFailedError(ex.Message)).WithError(ex.Message);
-        }
-    }
+			using var bodyReader = new StringReader(bodyText);
 
-    private Result WriteRecipeInternal(Recipe recipe, string filePath, Encoding? encoding)
-    {
-        var tempPath = $"{filePath}.tmp";
+			var extractedRawData = _dataExtractor.ExtractRawData(bodyReader);
+			if (extractedRawData.IsFailed)
+				return extractedRawData;
 
-        try
-        {
-            var directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
+			var integrityResult = VerifyIntegrity(metadata, extractedRawData.Value);
 
-            var actualEncoding = encoding ?? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+			return Result.Ok(extractedRawData.Value).WithReasons(integrityResult.Reasons);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical(ex, "Failed to read file: {FilePath}", filePath);
+			return Result.Fail(new CsvReadFailedError(ex.Message)).WithError(ex.Message);
+		}
+	}
 
-            using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (var writer = new StreamWriter(stream, actualEncoding))
-            {
-                var writeResult = _writer.WriteAsync(recipe, writer);
-                if (writeResult.IsFailed)
-                {
-                    return writeResult;
-                }
+	private Result WriteRecipeInternal(Recipe recipe, string filePath, Encoding? encoding)
+	{
+		var tempPath = $"{filePath}.tmp";
 
-                writer.Flush();
-                stream.Flush(flushToDisk: true);
-            }
+		try
+		{
+			var directory = Path.GetDirectoryName(filePath);
+			if (!string.IsNullOrEmpty(directory))
+			{
+				Directory.CreateDirectory(directory);
+			}
 
-            ReplaceFile(tempPath, filePath);
+			var actualEncoding = encoding ?? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
 
-            _logger.LogDebug("Successfully wrote recipe to: {FilePath}", filePath);
-            return Result.Ok();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical(ex, "Failed to write file: {FilePath}", filePath);
-            return Result.Fail(new CsvWriteFailedError(ex.Message)).WithError(ex.Message);
-        }
-        finally
-        {
-            CleanupTempFile(tempPath);
-        }
-    }
+			using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+			using (var writer = new StreamWriter(stream, actualEncoding))
+			{
+				var writeResult = _writer.WriteAsync(recipe, writer);
+				if (writeResult.IsFailed)
+				{
+					return writeResult;
+				}
 
-    private string ExtractBodyText(string fullText, int metadataLineCount)
-    {
-        using var stringReader = new StringReader(fullText);
+				writer.Flush();
+				stream.Flush(flushToDisk: true);
+			}
 
-        for (var i = 0; i < metadataLineCount; i++)
-        {
-            stringReader.ReadLine();
-        }
+			ReplaceFile(tempPath, filePath);
 
-        return stringReader.ReadToEnd() ?? string.Empty;
-    }
+			_logger.LogDebug("Successfully wrote recipe to: {FilePath}", filePath);
+			return Result.Ok();
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical(ex, "Failed to write file: {FilePath}", filePath);
+			return Result.Fail(new CsvWriteFailedError(ex.Message)).WithError(ex.Message);
+		}
+		finally
+		{
+			CleanupTempFile(tempPath);
+		}
+	}
 
-    private Result VerifyIntegrity(RecipeFileMetadata metadata, CsvRawData rawData)
-    {
-        var result = Result.Ok();
+	private string ExtractBodyText(string fullText, int metadataLineCount)
+	{
+		using var stringReader = new StringReader(fullText);
 
-        if (metadata.Rows > 0 && metadata.Rows != rawData.Rows.Count)
-        {
-            _logger.LogWarning("Row count mismatch. Expected={Expected}, Actual={Actual}", metadata.Rows, rawData.Rows.Count);
-            result = result.WithReason(new CsvRowCountMismatchWarning(metadata.Rows, rawData.Rows.Count));
-        }
+		for (var i = 0; i < metadataLineCount; i++)
+		{
+			stringReader.ReadLine();
+		}
 
-        if (!string.IsNullOrWhiteSpace(metadata.BodyHashBase64))
-        {
-            var actualHash = _integrityService.CalculateHash(rawData.Rows);
-            var integrityCheck = _integrityService.VerifyIntegrity(metadata.BodyHashBase64, actualHash);
+		return stringReader.ReadToEnd() ?? string.Empty;
+	}
 
-            if (!integrityCheck.IsValid)
-            {
-                _logger.LogWarning("Hash mismatch. Expected={Expected}, Actual={Actual}", integrityCheck.ExpectedHash, integrityCheck.ActualHash);
-                result = result.WithReason(new CsvHashMismatchWarning(integrityCheck.ExpectedHash, integrityCheck.ActualHash));
-            }
-        }
+	private Result VerifyIntegrity(RecipeFileMetadata metadata, CsvRawData rawData)
+	{
+		var result = Result.Ok();
 
-        return result;
-    }
+		if (metadata.Rows > 0 && metadata.Rows != rawData.Rows.Count)
+		{
+			_logger.LogWarning("Row count mismatch. Expected={Expected}, Actual={Actual}", metadata.Rows,
+				rawData.Rows.Count);
+			result = result.WithReason(new CsvRowCountMismatchWarning(metadata.Rows, rawData.Rows.Count));
+		}
 
-    private static void ReplaceFile(string sourcePath, string targetPath)
-    {
-        if (File.Exists(targetPath))
-        {
-            File.Replace(sourcePath, targetPath, null);
-        }
-        else
-        {
-            File.Move(sourcePath, targetPath);
-        }
-    }
+		if (!string.IsNullOrWhiteSpace(metadata.BodyHashBase64))
+		{
+			var actualHash = _integrityService.CalculateHash(rawData.Rows);
+			var integrityCheck = _integrityService.VerifyIntegrity(metadata.BodyHashBase64, actualHash);
 
-    private void CleanupTempFile(string tempPath)
-    {
-        try
-        {
-            if (File.Exists(tempPath))
-            {
-                File.Delete(tempPath);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical(ex, "Failed to delete temp file: {TempPath}", tempPath);
-        }
-    }
+			if (!integrityCheck.IsValid)
+			{
+				_logger.LogWarning("Hash mismatch. Expected={Expected}, Actual={Actual}", integrityCheck.ExpectedHash,
+					integrityCheck.ActualHash);
+				result = result.WithReason(new CsvHashMismatchWarning(integrityCheck.ExpectedHash,
+					integrityCheck.ActualHash));
+			}
+		}
+
+		return result;
+	}
+
+	private static void ReplaceFile(string sourcePath, string targetPath)
+	{
+		if (File.Exists(targetPath))
+		{
+			File.Replace(sourcePath, targetPath, null);
+		}
+		else
+		{
+			File.Move(sourcePath, targetPath);
+		}
+	}
+
+	private void CleanupTempFile(string tempPath)
+	{
+		try
+		{
+			if (File.Exists(tempPath))
+			{
+				File.Delete(tempPath);
+			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical(ex, "Failed to delete temp file: {TempPath}", tempPath);
+		}
+	}
 }

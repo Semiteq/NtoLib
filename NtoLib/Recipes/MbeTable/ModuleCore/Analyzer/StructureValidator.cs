@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+
 using FluentResults;
+
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
@@ -10,35 +12,35 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// </summary>
 public sealed class StructureValidator : IStructureValidator
 {
-    public StructureResult Validate(Recipe recipe)
-    {
-        var reasons = new List<IReason>();
+	public StructureResult Validate(Recipe recipe)
+	{
+		var reasons = new List<IReason>();
 
-        if (recipe.Steps.Count == 0)
-            return new StructureResult(reasons);
+		if (recipe.Steps.Count == 0)
+			return new StructureResult(reasons);
 
-        for (int i = 0; i < recipe.Steps.Count; i++)
-        {
-            var step = recipe.Steps[i];
-            if (step == null)
-            {
-                reasons.Add(new CoreStepNullError(i));
-                continue;
-            }
+		for (int i = 0; i < recipe.Steps.Count; i++)
+		{
+			var step = recipe.Steps[i];
+			if (step == null)
+			{
+				reasons.Add(new CoreStepNullError(i));
+				continue;
+			}
 
-            if (!step.Properties.ContainsKey(MandatoryColumns.Action))
-            {
-                reasons.Add(new CoreStepMissingActionError(i));
-                continue;
-            }
+			if (!step.Properties.ContainsKey(MandatoryColumns.Action))
+			{
+				reasons.Add(new CoreStepMissingActionError(i));
+				continue;
+			}
 
-            var actionProperty = step.Properties[MandatoryColumns.Action];
-            if (actionProperty == null)
-            {
-                reasons.Add(new CoreStepActionNullError(i));
-            }
-        }
+			var actionProperty = step.Properties[MandatoryColumns.Action];
+			if (actionProperty == null)
+			{
+				reasons.Add(new CoreStepActionNullError(i));
+			}
+		}
 
-        return new StructureResult(reasons);
-    }
+		return new StructureResult(reasons);
+	}
 }

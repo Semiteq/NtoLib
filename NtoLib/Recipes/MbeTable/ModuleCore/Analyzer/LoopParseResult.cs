@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+
 using FluentResults;
+
 using NtoLib.Recipes.MbeTable.ModuleCore.Loops;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
@@ -8,5 +10,5 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// Raw loop parse output before semantic normalization.
 /// </summary>
 public sealed record LoopParseResult(
-    IReadOnlyList<LoopNode> Nodes,
-    IReadOnlyList<IReason> Reasons);
+	IReadOnlyList<LoopNode> Nodes,
+	IReadOnlyList<IReason> Reasons);

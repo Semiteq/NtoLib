@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 
 using FluentResults;
+
+using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Snapshot;
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 
@@ -12,14 +13,14 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 /// </summary>
 public interface IRecipeFacade
 {
-    RecipeAnalysisSnapshot CurrentSnapshot { get; }
-    RecipeAnalysisSnapshot? LastValidSnapshot { get; }
+	RecipeAnalysisSnapshot CurrentSnapshot { get; }
+	RecipeAnalysisSnapshot? LastValidSnapshot { get; }
 
-    Result<RecipeAnalysisSnapshot> AddStep(int index);
-    Result<RecipeAnalysisSnapshot> RemoveStep(int index);
-    Result<RecipeAnalysisSnapshot> ReplaceAction(int index, short actionId);
-    Result<RecipeAnalysisSnapshot> UpdateProperty(int index, ColumnIdentifier column, object value);
-    Result<RecipeAnalysisSnapshot> LoadRecipe(Recipe recipe);
-    Result<RecipeAnalysisSnapshot> InsertSteps(int index, IReadOnlyList<Step> steps);
-    Result<RecipeAnalysisSnapshot> DeleteSteps(IReadOnlyCollection<int> indices);
+	Result<RecipeAnalysisSnapshot> AddStep(int index);
+	Result<RecipeAnalysisSnapshot> RemoveStep(int index);
+	Result<RecipeAnalysisSnapshot> ReplaceAction(int index, short actionId);
+	Result<RecipeAnalysisSnapshot> UpdateProperty(int index, ColumnIdentifier column, object value);
+	Result<RecipeAnalysisSnapshot> LoadRecipe(Recipe recipe);
+	Result<RecipeAnalysisSnapshot> InsertSteps(int index, IReadOnlyList<Step> steps);
+	Result<RecipeAnalysisSnapshot> DeleteSteps(IReadOnlyCollection<int> indices);
 }

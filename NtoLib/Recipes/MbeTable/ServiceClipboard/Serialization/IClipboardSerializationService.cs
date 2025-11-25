@@ -9,6 +9,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceClipboard.Serialization;
 
 public interface IClipboardSerializationService
 {
-    string SerializeSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns);
-    Result<IReadOnlyList<string[]>> SplitRows(string? tsv);
+	string SerializeSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns);
+	Result<IReadOnlyList<string[]>> SplitRows(string? tsv);
 }

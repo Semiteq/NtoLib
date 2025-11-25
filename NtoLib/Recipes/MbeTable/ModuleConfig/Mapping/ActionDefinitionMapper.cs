@@ -13,43 +13,43 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Mapping;
 /// </summary>
 public sealed class ActionDefinitionMapper : IEntityMapper<YamlActionDefinition, ActionDefinition>
 {
-    public ActionDefinition Map(YamlActionDefinition source)
-    {
-        var deployDuration = Enum.TryParse<DeployDuration>(source.DeployDuration, ignoreCase: true, out var parsed)
-            ? parsed
-            : DeployDuration.Immediate;
+	public ActionDefinition Map(YamlActionDefinition source)
+	{
+		var deployDuration = Enum.TryParse<DeployDuration>(source.DeployDuration, ignoreCase: true, out var parsed)
+			? parsed
+			: DeployDuration.Immediate;
 
-        var columns = source.Columns
-            .Select(c => new PropertyConfig
-            {
-                Key = c.Key,
-                PropertyTypeId = c.PropertyTypeId,
-                DefaultValue = c.DefaultValue,
-                GroupName = c.GroupName
-            })
-            .ToList();
+		var columns = source.Columns
+			.Select(c => new PropertyConfig
+			{
+				Key = c.Key,
+				PropertyTypeId = c.PropertyTypeId,
+				DefaultValue = c.DefaultValue,
+				GroupName = c.GroupName
+			})
+			.ToList();
 
-        FormulaDefinition? formula = null;
-        if (source.Formula != null)
-        {
-            formula = new FormulaDefinition
-            {
-                Expression = source.Formula.Expression,
-                RecalcOrder = source.Formula.RecalcOrder.AsReadOnly()
-            };
-        }
+		FormulaDefinition? formula = null;
+		if (source.Formula != null)
+		{
+			formula = new FormulaDefinition
+			{
+				Expression = source.Formula.Expression,
+				RecalcOrder = source.Formula.RecalcOrder.AsReadOnly()
+			};
+		}
 
-        return new ActionDefinition(
-            Id: source.Id,
-            Name: source.Name,
-            Columns: columns,
-            DeployDuration: deployDuration,
-            Formula: formula
-        );
-    }
+		return new ActionDefinition(
+			Id: source.Id,
+			Name: source.Name,
+			Columns: columns,
+			DeployDuration: deployDuration,
+			Formula: formula
+		);
+	}
 
-    public IReadOnlyList<ActionDefinition> MapMany(IEnumerable<YamlActionDefinition> sources)
-    {
-        return sources.Select(Map).ToList();
-    }
+	public IReadOnlyList<ActionDefinition> MapMany(IEnumerable<YamlActionDefinition> sources)
+	{
+		return sources.Select(Map).ToList();
+	}
 }

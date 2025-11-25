@@ -11,57 +11,58 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
 
 public sealed class ErrorPolicyRegistry
 {
-    private readonly Dictionary<Type, ErrorPolicy> _policies = new();
+	private readonly Dictionary<Type, ErrorPolicy> _policies = new();
 
-    public ErrorPolicyRegistry()
-    {
-        RegisterModbusTcpPolicies();
-        RegisterApplicationPolicies();
-        RegisterCorePolicies();
-    }
+	public ErrorPolicyRegistry()
+	{
+		RegisterModbusTcpPolicies();
+		RegisterApplicationPolicies();
+		RegisterCorePolicies();
+	}
 
 
-    private void RegisterModbusTcpPolicies()
-    {
-        Register<ModbusTcpZeroRowsWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
-    }
+	private void RegisterModbusTcpPolicies()
+	{
+		Register<ModbusTcpZeroRowsWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+	}
 
-    private void RegisterApplicationPolicies()
-    {
-        Register<ApplicationRecipeActiveWarning>(ErrorSeverity.Warning, BlockingScope.NotSave);
-    }
+	private void RegisterApplicationPolicies()
+	{
+		Register<ApplicationRecipeActiveWarning>(ErrorSeverity.Warning, BlockingScope.NotSave);
+	}
 
-    private void RegisterCorePolicies()
-    {
-        Register<CoreForLoopUnmatchedWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
-        Register<CoreForLoopInvalidIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
-        Register<CoreForLoopMaxDepthExceededWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
-        Register<CoreEmptyRecipeWarning>(ErrorSeverity.Info, BlockingScope.SaveAndSend);
-    }
+	private void RegisterCorePolicies()
+	{
+		Register<CoreForLoopUnmatchedWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+		Register<CoreForLoopInvalidIterationCountWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+		Register<CoreForLoopMaxDepthExceededWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
+		Register<CoreEmptyRecipeWarning>(ErrorSeverity.Info, BlockingScope.SaveAndSend);
+	}
 
-    private void Register<T>(ErrorSeverity severity, BlockingScope scope) where T : IReason
-    {
-        _policies[typeof(T)] = new ErrorPolicy(severity, scope);
-    }
+	private void Register<T>(ErrorSeverity severity, BlockingScope scope) where T : IReason
+	{
+		_policies[typeof(T)] = new ErrorPolicy(severity, scope);
+	}
 
-    public ErrorPolicy GetPolicy(IReason reason)
-    {
-        if (reason == null) throw new ArgumentNullException(nameof(reason));
+	public ErrorPolicy GetPolicy(IReason reason)
+	{
+		if (reason == null)
+			throw new ArgumentNullException(nameof(reason));
 
-        var type = reason.GetType();
-        return _policies.TryGetValue(type, out var policy)
-            ? policy
-            : new ErrorPolicy(ErrorSeverity.Info, BlockingScope.None);
-    }
+		var type = reason.GetType();
+		return _policies.TryGetValue(type, out var policy)
+			? policy
+			: new ErrorPolicy(ErrorSeverity.Info, BlockingScope.None);
+	}
 
-    public bool Blocks(IReason reason, BlockingScope scope)
-    {
-        var policy = GetPolicy(reason);
-        return (policy.BlockingScope & scope) != 0;
-    }
+	public bool Blocks(IReason reason, BlockingScope scope)
+	{
+		var policy = GetPolicy(reason);
+		return (policy.BlockingScope & scope) != 0;
+	}
 
-    public ErrorSeverity GetSeverity(IReason reason)
-    {
-        return GetPolicy(reason).Severity;
-    }
+	public ErrorSeverity GetSeverity(IReason reason)
+	{
+		return GetPolicy(reason).Severity;
+	}
 }

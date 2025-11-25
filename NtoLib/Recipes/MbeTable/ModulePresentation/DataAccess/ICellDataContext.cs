@@ -7,13 +7,13 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 /// </summary>
 public interface ICellDataContext
 {
-    /// <summary>
-    /// Returns <see cref="StepViewModel"/> for the given row or <c>null</c> when index is out of range.
-    /// </summary>
-    StepViewModel? GetStepViewModel(int rowIndex);
+	/// <summary>
+	/// Returns <see cref="StepViewModel"/> for the given row or <c>null</c> when index is out of range.
+	/// </summary>
+	StepViewModel? GetStepViewModel(int rowIndex);
 
-    /// <summary>
-    /// Total row count (cheap).
-    /// </summary>
-    int RowCount { get; }
+	/// <summary>
+	/// Total row count (cheap).
+	/// </summary>
+	int RowCount { get; }
 }

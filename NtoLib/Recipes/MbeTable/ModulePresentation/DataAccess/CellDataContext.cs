@@ -8,19 +8,19 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 /// </summary>
 public sealed class CellDataContext : ICellDataContext
 {
-    private readonly RecipeViewModel _recipeViewModel;
+	private readonly RecipeViewModel _recipeViewModel;
 
-    public CellDataContext(RecipeViewModel recipeViewModel)
-    {
-        _recipeViewModel = recipeViewModel;
-    }
+	public CellDataContext(RecipeViewModel recipeViewModel)
+	{
+		_recipeViewModel = recipeViewModel;
+	}
 
-    public StepViewModel? GetStepViewModel(int rowIndex)
-    {
-        return rowIndex >= 0 && rowIndex < _recipeViewModel.ViewModels.Count
-            ? _recipeViewModel.ViewModels[rowIndex]
-            : null;
-    }
+	public StepViewModel? GetStepViewModel(int rowIndex)
+	{
+		return rowIndex >= 0 && rowIndex < _recipeViewModel.ViewModels.Count
+			? _recipeViewModel.ViewModels[rowIndex]
+			: null;
+	}
 
-    public int RowCount => _recipeViewModel.ViewModels.Count;
+	public int RowCount => _recipeViewModel.ViewModels.Count;
 }

@@ -6,5 +6,5 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers;
 
 public interface IRecipeOperationHandler<in TArgs>
 {
-    Task<Result> ExecuteAsync(TArgs args);
+	Task<Result> ExecuteAsync(TArgs args);
 }

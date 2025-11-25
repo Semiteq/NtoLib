@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using FluentResults;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;

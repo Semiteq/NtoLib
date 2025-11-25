@@ -5,10 +5,10 @@
 /// </summary>
 public static class PropertyTypeIds
 {
-    public const string Enum = "Enum";
-    public const string Time = "Time";
-    public const string Float = "Float";
-    public const string String = "String";
-    public const string Temp = "Temp";
-    public const string Percent = "Percent";
+	public const string Enum = "Enum";
+	public const string Time = "Time";
+	public const string Float = "Float";
+	public const string String = "String";
+	public const string Temp = "Temp";
+	public const string Percent = "Percent";
 }

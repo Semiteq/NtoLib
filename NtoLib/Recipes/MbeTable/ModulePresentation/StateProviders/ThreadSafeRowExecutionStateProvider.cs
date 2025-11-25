@@ -12,38 +12,46 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 /// </summary>
 public sealed class ThreadSafeRowExecutionStateProvider : IRowExecutionStateProvider
 {
-    private readonly IRecipeRuntimeState _runtimeState;
-    private int _currentStepIndex;
+	private readonly IRecipeRuntimeState _runtimeState;
+	private int _currentStepIndex;
 
-    public ThreadSafeRowExecutionStateProvider(IRecipeRuntimeState runtimeState)
-    {
-        _runtimeState = runtimeState ?? throw new ArgumentNullException(nameof(runtimeState));
-        _currentStepIndex = _runtimeState.Current.StepIndex;
-        _runtimeState.StepPhaseChanged += OnPhaseChanged;
-    }
+	public ThreadSafeRowExecutionStateProvider(IRecipeRuntimeState runtimeState)
+	{
+		_runtimeState = runtimeState ?? throw new ArgumentNullException(nameof(runtimeState));
+		_currentStepIndex = _runtimeState.Current.StepIndex;
+		_runtimeState.StepPhaseChanged += OnPhaseChanged;
+	}
 
-    public int CurrentLineIndex => Volatile.Read(ref _currentStepIndex);
+	public int CurrentLineIndex => Volatile.Read(ref _currentStepIndex);
 
-    public RowExecutionState GetState(int rowIndex)
-    {
-        var current = CurrentLineIndex;
-        if (current < 0) return RowExecutionState.Upcoming;
-        if (rowIndex < current) return RowExecutionState.Passed;
-        if (rowIndex == current) return RowExecutionState.Current;
-        return RowExecutionState.Upcoming;
-    }
+	public RowExecutionState GetState(int rowIndex)
+	{
+		var current = CurrentLineIndex;
+		if (current < 0)
+			return RowExecutionState.Upcoming;
+		if (rowIndex < current)
+			return RowExecutionState.Passed;
+		if (rowIndex == current)
+			return RowExecutionState.Current;
+		return RowExecutionState.Upcoming;
+	}
 
-    public event Action<int, int>? CurrentLineChanged;
+	public event Action<int, int>? CurrentLineChanged;
 
-    private void OnPhaseChanged(StepPhase phase)
-    {
-        var old = Interlocked.Exchange(ref _currentStepIndex, phase.StepIndex);
-        if (old != phase.StepIndex)
-            CurrentLineChanged?.Invoke(old, phase.StepIndex);
-    }
+	private void OnPhaseChanged(StepPhase phase)
+	{
+		var old = Interlocked.Exchange(ref _currentStepIndex, phase.StepIndex);
+		if (old != phase.StepIndex)
+			CurrentLineChanged?.Invoke(old, phase.StepIndex);
+	}
 
-    public void Dispose()
-    {
-        try { _runtimeState.StepPhaseChanged -= OnPhaseChanged; } catch { /* ignored */ }
-    }
+	public void Dispose()
+	{
+		try
+		{ _runtimeState.StepPhaseChanged -= OnPhaseChanged; }
+		catch
+		{
+			/* ignored */
+		}
+	}
 }

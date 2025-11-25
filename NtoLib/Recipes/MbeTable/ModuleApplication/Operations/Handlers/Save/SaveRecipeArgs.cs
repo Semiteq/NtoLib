@@ -2,10 +2,10 @@
 
 public sealed class SaveRecipeArgs
 {
-    public string FilePath { get; }
+	public string FilePath { get; }
 
-    public SaveRecipeArgs(string filePath)
-    {
-        FilePath = filePath;
-    }
+	public SaveRecipeArgs(string filePath)
+	{
+		FilePath = filePath;
+	}
 }

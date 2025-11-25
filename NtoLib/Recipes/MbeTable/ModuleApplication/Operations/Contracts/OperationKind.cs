@@ -5,8 +5,8 @@
 /// </summary>
 public enum OperationKind
 {
-    Loading,
-    Saving,
-    Transferring,
-    Other
+	Loading,
+	Saving,
+	Transferring,
+	Other
 }

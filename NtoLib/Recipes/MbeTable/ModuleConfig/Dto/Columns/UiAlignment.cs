@@ -2,16 +2,16 @@
 
 public enum UiAlignment
 {
-    Left,
-    Center,
-    Right,
-    TopLeft,
-    TopCenter,
-    TopRight,
-    MiddleLeft,
-    MiddleCenter,
-    MiddleRight,
-    BottomLeft,
-    BottomCenter,
-    BottomRight
+	Left,
+	Center,
+	Right,
+	TopLeft,
+	TopCenter,
+	TopRight,
+	MiddleLeft,
+	MiddleCenter,
+	MiddleRight,
+	BottomLeft,
+	BottomCenter,
+	BottomRight
 }

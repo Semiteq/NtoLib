@@ -7,9 +7,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 /// </summary>
 public interface INumberParser
 {
-    bool TryParseInt16(string text, out short value, NumberStyles styles = NumberStyles.Integer);
-    bool TryParseInt32(string text, out int value, NumberStyles styles = NumberStyles.Integer);
+	bool TryParseInt16(string text, out short value, NumberStyles styles = NumberStyles.Integer);
+	bool TryParseInt32(string text, out int value, NumberStyles styles = NumberStyles.Integer);
 
-    bool TryParseSingle(string text, out float value,
-        NumberStyles styles = NumberStyles.Float | NumberStyles.AllowThousands);
+	bool TryParseSingle(string text, out float value,
+		NumberStyles styles = NumberStyles.Float | NumberStyles.AllowThousands);
 }

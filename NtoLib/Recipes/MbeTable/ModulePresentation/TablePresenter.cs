@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
@@ -11,154 +10,157 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation;
 
 public sealed class TablePresenter : ITablePresenter
 {
-    private readonly ITableView _view;
-    private readonly IRecipeApplicationService _app;
-    private readonly IRowExecutionStateProvider _rowStateProvider;
+	private readonly ITableView _view;
+	private readonly IRecipeApplicationService _app;
+	private readonly IRowExecutionStateProvider _rowStateProvider;
 
-    private readonly LoadRecipeCommand _loadCmd;
-    private readonly SaveRecipeCommand _saveCmd;
-    private readonly SendRecipeCommand _sendCmd;
-    private readonly ReceiveRecipeCommand _receiveCmd;
-    private readonly RemoveStepCommand _removeStepCmd;
-    private readonly AddStepCommand _addStepCmd;
+	private readonly LoadRecipeCommand _loadCmd;
+	private readonly SaveRecipeCommand _saveCmd;
+	private readonly SendRecipeCommand _sendCmd;
+	private readonly ReceiveRecipeCommand _receiveCmd;
+	private readonly RemoveStepCommand _removeStepCmd;
+	private readonly AddStepCommand _addStepCmd;
 
-    public TablePresenter(
-        ITableView view,
-        IRecipeApplicationService app,
-        IRowExecutionStateProvider rowStateProvider,
-        LoadRecipeCommand loadCmd,
-        SaveRecipeCommand saveCmd,
-        SendRecipeCommand sendCmd,
-        ReceiveRecipeCommand receiveCmd,
-        AddStepCommand addStepCmd,
-        RemoveStepCommand removeStepCmd)
-    {
-        _view = view;
-        _app = app;
-        _rowStateProvider = rowStateProvider;
-        _loadCmd = loadCmd;
-        _saveCmd = saveCmd;
-        _sendCmd = sendCmd;
-        _receiveCmd = receiveCmd;
-        _addStepCmd = addStepCmd;
-        _removeStepCmd = removeStepCmd;
+	public TablePresenter(
+		ITableView view,
+		IRecipeApplicationService app,
+		IRowExecutionStateProvider rowStateProvider,
+		LoadRecipeCommand loadCmd,
+		SaveRecipeCommand saveCmd,
+		SendRecipeCommand sendCmd,
+		ReceiveRecipeCommand receiveCmd,
+		AddStepCommand addStepCmd,
+		RemoveStepCommand removeStepCmd)
+	{
+		_view = view;
+		_app = app;
+		_rowStateProvider = rowStateProvider;
+		_loadCmd = loadCmd;
+		_saveCmd = saveCmd;
+		_sendCmd = sendCmd;
+		_receiveCmd = receiveCmd;
+		_addStepCmd = addStepCmd;
+		_removeStepCmd = removeStepCmd;
 
-        _rowStateProvider.CurrentLineChanged += OnCurrentLineChanged;
-    }
+		_rowStateProvider.CurrentLineChanged += OnCurrentLineChanged;
+	}
 
-    public void Initialize()
-    {
-        _view.RowCount = _app.GetRowCount();
-        _view.CellValueNeeded += OnCellValueNeeded;
-        _view.CellValuePushed += OnCellValuePushed;
+	public void Initialize()
+	{
+		_view.RowCount = _app.GetRowCount();
+		_view.CellValueNeeded += OnCellValueNeeded;
+		_view.CellValuePushed += OnCellValuePushed;
 
-        _app.RecipeStructureChanged += OnRecipeStructureChanged;
-        _app.StepDataChanged += row => _view.InvalidateRow(row);
-    }
+		_app.RecipeStructureChanged += OnRecipeStructureChanged;
+		_app.StepDataChanged += row => _view.InvalidateRow(row);
+	}
 
-    public Task LoadRecipeAsync() => _loadCmd.ExecuteAsync();
-    public Task SaveRecipeAsync() => _saveCmd.ExecuteAsync();
-    public Task SendRecipeAsync() => _sendCmd.ExecuteAsync();
-    public Task ReceiveRecipeAsync() => _receiveCmd.ExecuteAsync();
+	public Task LoadRecipeAsync() => _loadCmd.ExecuteAsync();
+	public Task SaveRecipeAsync() => _saveCmd.ExecuteAsync();
+	public Task SendRecipeAsync() => _sendCmd.ExecuteAsync();
+	public Task ReceiveRecipeAsync() => _receiveCmd.ExecuteAsync();
 
-    public Task AddStepAfterCurrent()
-    {
-        var rowCount = _app.GetRowCount();
-        var current = _view.CurrentRowIndex;
-        var insert = current < 0 ? 0 : current + 1;
-        if (insert > rowCount) insert = rowCount;
-        return _addStepCmd.ExecuteAsync(insert);
-    }
+	public Task AddStepAfterCurrent()
+	{
+		var rowCount = _app.GetRowCount();
+		var current = _view.CurrentRowIndex;
+		var insert = current < 0 ? 0 : current + 1;
+		if (insert > rowCount)
+			insert = rowCount;
+		return _addStepCmd.ExecuteAsync(insert);
+	}
 
-    public Task AddStepBeforeCurrent()
-    {
-        var rowCount = _app.GetRowCount();
-        var current = _view.CurrentRowIndex;
-        var insert = current < 0 ? 0 : current;
-        if (insert > rowCount) insert = rowCount;
-        return _addStepCmd.ExecuteAsync(insert);
-    }
+	public Task AddStepBeforeCurrent()
+	{
+		var rowCount = _app.GetRowCount();
+		var current = _view.CurrentRowIndex;
+		var insert = current < 0 ? 0 : current;
+		if (insert > rowCount)
+			insert = rowCount;
+		return _addStepCmd.ExecuteAsync(insert);
+	}
 
-    public async Task RemoveCurrentStep()
-    {
-        var rowCount = _app.GetRowCount();
-        var current = _view.CurrentRowIndex;
-        if (current < 0 || current >= rowCount) return;
-        await _removeStepCmd.ExecuteAsync(current).ConfigureAwait(false);
-    }
+	public async Task RemoveCurrentStep()
+	{
+		var rowCount = _app.GetRowCount();
+		var current = _view.CurrentRowIndex;
+		if (current < 0 || current >= rowCount)
+			return;
+		await _removeStepCmd.ExecuteAsync(current).ConfigureAwait(false);
+	}
 
-    public void Dispose()
-    {
-        _view.CellValueNeeded -= OnCellValueNeeded;
-        _view.CellValuePushed -= OnCellValuePushed;
-        _app.RecipeStructureChanged -= OnRecipeStructureChanged;
-        _rowStateProvider.CurrentLineChanged -= OnCurrentLineChanged;
-    }
+	public void Dispose()
+	{
+		_view.CellValueNeeded -= OnCellValueNeeded;
+		_view.CellValuePushed -= OnCellValuePushed;
+		_app.RecipeStructureChanged -= OnRecipeStructureChanged;
+		_rowStateProvider.CurrentLineChanged -= OnCurrentLineChanged;
+	}
 
-    private void OnCellValueNeeded(object? _, CellValueEventArgs e)
-    {
-        var totalRows = _app.GetRowCount();
-        if (e.RowIndex < 0 || e.RowIndex >= totalRows)
-        {
-            e.Value = null;
-            return;
-        }
+	private void OnCellValueNeeded(object? _, CellValueEventArgs e)
+	{
+		var totalRows = _app.GetRowCount();
+		if (e.RowIndex < 0 || e.RowIndex >= totalRows)
+		{
+			e.Value = null;
+			return;
+		}
 
-        var result = _app.ViewModel.GetCellValue(e.RowIndex, e.ColumnIndex);
-        e.Value = result.IsSuccess ? result.Value : null;
-    }
+		var result = _app.ViewModel.GetCellValue(e.RowIndex, e.ColumnIndex);
+		e.Value = result.IsSuccess ? result.Value : null;
+	}
 
-    private async void OnCellValuePushed(object? sender, CellValueEventArgs e)
-    {
-        if (e.Value == null)
-            return;
+	private async void OnCellValuePushed(object? sender, CellValueEventArgs e)
+	{
+		if (e.Value == null)
+			return;
 
-        var key = _view.GetColumnKey(e.ColumnIndex);
-        if (key == null)
-            return;
+		var key = _view.GetColumnKey(e.ColumnIndex);
+		if (key == null)
+			return;
 
-        var currentValueResult = _app.ViewModel.GetCellValue(e.RowIndex, e.ColumnIndex);
-        if (currentValueResult.IsSuccess)
-        {
-            var currentValue = currentValueResult.Value;
-            if (ValuesAreEqual(currentValue, e.Value))
-                return;
-        }
+		var currentValueResult = _app.ViewModel.GetCellValue(e.RowIndex, e.ColumnIndex);
+		if (currentValueResult.IsSuccess)
+		{
+			var currentValue = currentValueResult.Value;
+			if (ValuesAreEqual(currentValue, e.Value))
+				return;
+		}
 
-        await _app.SetCellValueAsync(e.RowIndex, key, e.Value).ConfigureAwait(false);
-    }
+		await _app.SetCellValueAsync(e.RowIndex, key, e.Value).ConfigureAwait(false);
+	}
 
-    private static bool ValuesAreEqual(object? left, object? right)
-    {
-        if (ReferenceEquals(left, right))
-            return true;
+	private static bool ValuesAreEqual(object? left, object? right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
 
-        if (left == null || right == null)
-            return false;
+		if (left == null || right == null)
+			return false;
 
-        if (left.Equals(right))
-            return true;
+		if (left.Equals(right))
+			return true;
 
-        var leftString = left.ToString();
-        var rightString = right.ToString();
-        return string.Equals(leftString, rightString, StringComparison.Ordinal);
-    }
+		var leftString = left.ToString();
+		var rightString = right.ToString();
+		return string.Equals(leftString, rightString, StringComparison.Ordinal);
+	}
 
-    private void OnRecipeStructureChanged()
-    {
-        _view.RowCount = _app.GetRowCount();
-        _view.Invalidate();
-    }
+	private void OnRecipeStructureChanged()
+	{
+		_view.RowCount = _app.GetRowCount();
+		_view.Invalidate();
+	}
 
-    private void OnCurrentLineChanged(int oldIdx, int newIdx)
-    {
-        if (oldIdx >= 0 && oldIdx < _view.RowCount)
-            _view.InvalidateRow(oldIdx);
+	private void OnCurrentLineChanged(int oldIdx, int newIdx)
+	{
+		if (oldIdx >= 0 && oldIdx < _view.RowCount)
+			_view.InvalidateRow(oldIdx);
 
-        if (newIdx >= 0 && newIdx < _view.RowCount)
-            _view.InvalidateRow(newIdx);
+		if (newIdx >= 0 && newIdx < _view.RowCount)
+			_view.InvalidateRow(newIdx);
 
-        if (newIdx >= 0)
-            _view.EnsureRowVisible(newIdx);
-    }
+		if (newIdx >= 0)
+			_view.EnsureRowVisible(newIdx);
+	}
 }

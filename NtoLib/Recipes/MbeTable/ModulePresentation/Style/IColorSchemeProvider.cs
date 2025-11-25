@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
@@ -10,14 +8,14 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 /// </summary>
 public interface IColorSchemeProvider
 {
-    /// <summary>
-    /// Gets the currently active ColorScheme.
-    /// </summary>
-    ColorScheme Current { get; }
+	/// <summary>
+	/// Gets the currently active ColorScheme.
+	/// </summary>
+	ColorScheme Current { get; }
 
-    /// <summary>
-    /// Occurs when the ColorScheme is updated from design-time properties.
-    /// Subscribers should re-apply styles based on the new scheme.
-    /// </summary>
-    event Action<ColorScheme>? Changed;
+	/// <summary>
+	/// Occurs when the ColorScheme is updated from design-time properties.
+	/// Subscribers should re-apply styles based on the new scheme.
+	/// </summary>
+	event Action<ColorScheme>? Changed;
 }

@@ -8,5 +8,5 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Transform;
 
 public interface IClipboardStepsTransformer
 {
-    Result<IReadOnlyList<Step>> Transform(IReadOnlyList<PortableStepDto> dtos);
+	Result<IReadOnlyList<Step>> Transform(IReadOnlyList<PortableStepDto> dtos);
 }

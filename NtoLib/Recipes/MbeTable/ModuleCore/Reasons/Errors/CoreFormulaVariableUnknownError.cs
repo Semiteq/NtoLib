@@ -1,16 +1,16 @@
-using NtoLib.Recipes.MbeTable.ResultsExtension;
+﻿using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreFormulaVariableUnknownError : BilingualError
 {
-    public string VariableName { get; }
+	public string VariableName { get; }
 
-    public CoreFormulaVariableUnknownError(string variableName)
-        : base(
-            $"Variable '{variableName}' is not known in formula",
-            $"Переменная '{variableName}' не известна в формуле")
-    {
-        VariableName = variableName;
-    }
+	public CoreFormulaVariableUnknownError(string variableName)
+		: base(
+			$"Variable '{variableName}' is not known in formula",
+			$"Переменная '{variableName}' не известна в формуле")
+	{
+		VariableName = variableName;
+	}
 }

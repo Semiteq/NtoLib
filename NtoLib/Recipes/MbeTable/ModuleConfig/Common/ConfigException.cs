@@ -10,49 +10,49 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 /// </summary>
 public sealed class ConfigException : Exception
 {
-    public IReadOnlyList<ConfigError> Errors { get; }
+	public IReadOnlyList<ConfigError> Errors { get; }
 
-    public ConfigException(IEnumerable<ConfigError> errors)
-        : base(BuildMessage(errors))
-    {
-        Errors = errors?.ToArray() ?? Array.Empty<ConfigError>();
-    }
+	public ConfigException(IEnumerable<ConfigError> errors)
+		: base(BuildMessage(errors))
+	{
+		Errors = errors?.ToArray() ?? Array.Empty<ConfigError>();
+	}
 
-    private static string BuildMessage(IEnumerable<ConfigError> errors)
-    {
-        var list = errors?.ToArray() ?? Array.Empty<ConfigError>();
-        if (list.Length == 0)
-            return "Configuration failed with no details.";
+	private static string BuildMessage(IEnumerable<ConfigError> errors)
+	{
+		var list = errors?.ToArray() ?? Array.Empty<ConfigError>();
+		if (list.Length == 0)
+			return "Configuration failed with no details.";
 
-        var sb = new StringBuilder();
-        sb.AppendLine("Configuration loading failed with the following errors:");
+		var sb = new StringBuilder();
+		sb.AppendLine("Configuration loading failed with the following errors:");
 
-        foreach (var e in list)
-        {
-            sb.Append("- ")
-                .Append(e.Message);
+		foreach (var e in list)
+		{
+			sb.Append("- ")
+				.Append(e.Message);
 
-            if (!string.IsNullOrWhiteSpace(e.Section) || !string.IsNullOrWhiteSpace(e.Context))
-            {
-                sb.Append(" [")
-                    .Append(string.IsNullOrWhiteSpace(e.Section) ? "" : $"section={e.Section}")
-                    .Append(string.IsNullOrWhiteSpace(e.Context)
-                        ? ""
-                        : (string.IsNullOrWhiteSpace(e.Section) ? "" : ", "))
-                    .Append(string.IsNullOrWhiteSpace(e.Context) ? "" : $"context={e.Context}")
-                    .Append(']');
-            }
+			if (!string.IsNullOrWhiteSpace(e.Section) || !string.IsNullOrWhiteSpace(e.Context))
+			{
+				sb.Append(" [")
+					.Append(string.IsNullOrWhiteSpace(e.Section) ? "" : $"section={e.Section}")
+					.Append(string.IsNullOrWhiteSpace(e.Context)
+						? ""
+						: (string.IsNullOrWhiteSpace(e.Section) ? "" : ", "))
+					.Append(string.IsNullOrWhiteSpace(e.Context) ? "" : $"context={e.Context}")
+					.Append(']');
+			}
 
-            if (e.Metadata?.Any() == true)
-            {
-                sb.AppendLine();
-                sb.Append("  metadata: ");
-                sb.Append(string.Join(", ", e.Metadata.Select(kv => $"{kv.Key}={kv.Value}")));
-            }
+			if (e.Metadata?.Any() == true)
+			{
+				sb.AppendLine();
+				sb.Append("  metadata: ");
+				sb.Append(string.Join(", ", e.Metadata.Select(kv => $"{kv.Key}={kv.Value}")));
+			}
 
-            sb.AppendLine();
-        }
+			sb.AppendLine();
+		}
 
-        return sb.ToString();
-    }
+		return sb.ToString();
+	}
 }

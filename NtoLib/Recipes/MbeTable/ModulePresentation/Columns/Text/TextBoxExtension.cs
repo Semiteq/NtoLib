@@ -7,10 +7,11 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
 
 public sealed class TextBoxExtension : FactoryColumnBase
 {
-    public TextBoxExtension(IColumnAlignmentResolver alignmentResolver) 
-        : base(alignmentResolver)
-    {
-    }
-    protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition) =>
-        new DataGridViewTextBoxColumn();
+	public TextBoxExtension(IColumnAlignmentResolver alignmentResolver)
+		: base(alignmentResolver)
+	{
+	}
+
+	protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition) =>
+		new DataGridViewTextBoxColumn();
 }

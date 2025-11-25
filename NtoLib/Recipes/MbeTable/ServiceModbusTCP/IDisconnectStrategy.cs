@@ -2,5 +2,5 @@
 
 public interface IDisconnectStrategy
 {
-    bool ShouldDisconnect(string operationType);
+	bool ShouldDisconnect(string operationType);
 }

@@ -2,7 +2,7 @@
 
 public enum CompletionMessageKind
 {
-    None,
-    Info,
-    Success
+	None,
+	Info,
+	Success
 }

@@ -4,11 +4,11 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CopyStep
 
 public sealed class CopyRowsOperationDefinition : IOperationDefinition
 {
-    public OperationId Id => OperationId.CopyRows;
-    public OperationKind Kind => OperationKind.Other;
-    public string DisplayNameRu => "копирование строк";
-    public CompletionMessageKind CompletionMessage => CompletionMessageKind.Info;
-    public bool IsLongRunning => false;
-    public bool UpdatesPolicyReasons => false;
-    public ConsistencyEffect ConsistencyEffect => ConsistencyEffect.None;
+	public OperationId Id => OperationId.CopyRows;
+	public OperationKind Kind => OperationKind.Other;
+	public string DisplayNameRu => "копирование строк";
+	public CompletionMessageKind CompletionMessage => CompletionMessageKind.Info;
+	public bool IsLongRunning => false;
+	public bool UpdatesPolicyReasons => false;
+	public ConsistencyEffect ConsistencyEffect => ConsistencyEffect.None;
 }

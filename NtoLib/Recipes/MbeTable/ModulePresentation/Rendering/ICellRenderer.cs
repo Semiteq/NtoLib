@@ -5,8 +5,8 @@
 /// </summary>
 public interface ICellRenderer
 {
-    /// <summary>
-    /// Renders cell according to given context.
-    /// </summary>
-    void Render(in CellRenderContext context);
+	/// <summary>
+	/// Renders cell according to given context.
+	/// </summary>
+	void Render(in CellRenderContext context);
 }

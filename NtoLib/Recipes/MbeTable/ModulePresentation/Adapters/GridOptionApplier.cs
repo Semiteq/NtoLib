@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Windows.Forms;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
@@ -8,29 +8,29 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 /// </summary>
 internal static class GridOptionsApplier
 {
-    public static void Apply(DataGridView grid)
-    {
-        grid.VirtualMode = true;
-        grid.AutoGenerateColumns = false;
-        grid.AllowUserToAddRows = false;
-        grid.AllowUserToDeleteRows = false;
+	public static void Apply(DataGridView grid)
+	{
+		grid.VirtualMode = true;
+		grid.AutoGenerateColumns = false;
+		grid.AllowUserToAddRows = false;
+		grid.AllowUserToDeleteRows = false;
 
-        grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        grid.MultiSelect = true;
+		grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+		grid.MultiSelect = true;
 
-        grid.EditMode = DataGridViewEditMode.EditOnEnter;
-        grid.EnableHeadersVisualStyles = false;
+		grid.EditMode = DataGridViewEditMode.EditOnEnter;
+		grid.EnableHeadersVisualStyles = false;
 
-        EnableDoubleBuffering(grid);
-    }
+		EnableDoubleBuffering(grid);
+	}
 
-    private static void EnableDoubleBuffering(DataGridView grid)
-    {
-        typeof(DataGridView).InvokeMember(
-            "DoubleBuffered",
-            BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
-            null,
-            grid,
-            new object[] { true });
-    }
+	private static void EnableDoubleBuffering(DataGridView grid)
+	{
+		typeof(DataGridView).InvokeMember(
+			"DoubleBuffered",
+			BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
+			null,
+			grid,
+			new object[] { true });
+	}
 }

@@ -2,10 +2,10 @@
 
 public sealed class AddStepArgs
 {
-    public int Index { get; }
+	public int Index { get; }
 
-    public AddStepArgs(int index)
-    {
-        Index = index;
-    }
+	public AddStepArgs(int index)
+	{
+		Index = index;
+	}
 }

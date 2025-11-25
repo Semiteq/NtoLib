@@ -439,7 +439,7 @@
       property_type_id: "enum"
     - key: "comment"
       property_type_id: "string"
-      
+
 - id: 820
   name: "Set_Default_Bypass"
   deploy_duration: "Immediate"

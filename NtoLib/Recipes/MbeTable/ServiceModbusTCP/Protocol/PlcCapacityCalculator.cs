@@ -11,55 +11,55 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 
 public sealed class PlcCapacityCalculator
 {
-    private readonly RecipeColumnLayout _layout;
-    private readonly IRuntimeOptionsProvider _optionsProvider;
+	private readonly RecipeColumnLayout _layout;
+	private readonly IRuntimeOptionsProvider _optionsProvider;
 
-    public PlcCapacityCalculator(
-        RecipeColumnLayout layout,
-        IRuntimeOptionsProvider optionsProvider)
-    {
-        _layout = layout ?? throw new ArgumentNullException(nameof(layout));
-        _optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
-    }
+	public PlcCapacityCalculator(
+		RecipeColumnLayout layout,
+		IRuntimeOptionsProvider optionsProvider)
+	{
+		_layout = layout ?? throw new ArgumentNullException(nameof(layout));
+		_optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
+	}
 
-    public Result TryCheckCapacity(Recipe recipe)
-    {
-        if (recipe is null)
-            throw new ArgumentNullException(nameof(recipe));
+	public Result TryCheckCapacity(Recipe recipe)
+	{
+		if (recipe is null)
+			throw new ArgumentNullException(nameof(recipe));
 
-        var settings = _optionsProvider.GetCurrent();
-        var rows = recipe.Steps.Count;
+		var settings = _optionsProvider.GetCurrent();
+		var rows = recipe.Steps.Count;
 
-        var requiredInt = rows * _layout.IntColumnCount;
-        var requiredFloat = rows * _layout.FloatColumnCount * 2;
+		var requiredInt = rows * _layout.IntColumnCount;
+		var requiredFloat = rows * _layout.FloatColumnCount * 2;
 
-        if (requiredInt > settings.IntAreaSize)
-            return Result.Fail(new ModbusTcpCapacityExceededError("INT", requiredInt, settings.IntAreaSize));
+		if (requiredInt > settings.IntAreaSize)
+			return Result.Fail(new ModbusTcpCapacityExceededError("INT", requiredInt, settings.IntAreaSize));
 
-        if (requiredFloat > settings.FloatAreaSize)
-            return Result.Fail(new ModbusTcpCapacityExceededError("FLOAT", requiredFloat, settings.FloatAreaSize));
+		if (requiredFloat > settings.FloatAreaSize)
+			return Result.Fail(new ModbusTcpCapacityExceededError("FLOAT", requiredFloat, settings.FloatAreaSize));
 
-        return Result.Ok();
-    }
+		return Result.Ok();
+	}
 
-    public Result ValidateReadCapacity(int rowCount)
-    {
-        if (rowCount < 0)
-            return Result.Fail(new ModbusTcpInvalidResponseError("Invalid negative row count"));
-            
-        if (rowCount == 0)
-            return Result.Ok();
+	public Result ValidateReadCapacity(int rowCount)
+	{
+		if (rowCount < 0)
+			return Result.Fail(new ModbusTcpInvalidResponseError("Invalid negative row count"));
 
-        var settings = _optionsProvider.GetCurrent();
-        var requiredInt = rowCount * _layout.IntColumnCount;
-        var requiredFloat = rowCount * _layout.FloatColumnCount * 2;
+		if (rowCount == 0)
+			return Result.Ok();
 
-        if (requiredInt > settings.IntAreaSize)
-            return Result.Fail(new ModbusTcpCapacityExceededError("INT", requiredInt, settings.IntAreaSize));
+		var settings = _optionsProvider.GetCurrent();
+		var requiredInt = rowCount * _layout.IntColumnCount;
+		var requiredFloat = rowCount * _layout.FloatColumnCount * 2;
 
-        if (requiredFloat > settings.FloatAreaSize)
-            return Result.Fail(new ModbusTcpCapacityExceededError("FLOAT", requiredFloat, settings.FloatAreaSize));
+		if (requiredInt > settings.IntAreaSize)
+			return Result.Fail(new ModbusTcpCapacityExceededError("INT", requiredInt, settings.IntAreaSize));
 
-        return Result.Ok();
-    }
+		if (requiredFloat > settings.FloatAreaSize)
+			return Result.Fail(new ModbusTcpCapacityExceededError("FLOAT", requiredFloat, settings.FloatAreaSize));
+
+		return Result.Ok();
+	}
 }

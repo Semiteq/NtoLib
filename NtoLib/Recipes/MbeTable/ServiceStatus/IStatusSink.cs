@@ -5,6 +5,6 @@
 /// </summary>
 public interface IStatusSink
 {
-    void Write(string message, StatusKind kind);
-    void Clear();
+	void Write(string message, StatusKind kind);
+	void Clear();
 }

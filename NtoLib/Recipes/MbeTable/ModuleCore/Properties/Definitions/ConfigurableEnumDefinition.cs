@@ -11,46 +11,46 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
 public sealed class ConfigurableEnumDefinition : IPropertyTypeDefinition
 {
-    /// <inheritdoc/>
-    public string Units { get; }
-    
-    /// <inheritdoc/>
-    public Type SystemType => typeof(short);
+	/// <inheritdoc/>
+	public string Units { get; }
 
-    /// <inheritdoc/>
-    public FormatKind FormatKind => FormatKind.Numeric;
-    
-    /// <inheritdoc/>
-    public object DefaultValue => (short)0;
-    
-    /// <inheritdoc/>
-    public bool NonNegative => false;
+	/// <inheritdoc/>
+	public Type SystemType => typeof(short);
 
-    /// <inheritdoc/>
-    public Result<object> GetNonNegativeValue(object value) => value;
-    
-    public ConfigurableEnumDefinition(YamlPropertyDefinition dto)
-    {
-        Units = dto.Units;
-    }
+	/// <inheritdoc/>
+	public FormatKind FormatKind => FormatKind.Numeric;
 
-    /// <inheritdoc/>
-    public Result TryValidate(object value)
-        => value is short
-            ? Result.Ok()
-            : new CorePropertyValidationFailedError("value must be Int16");
+	/// <inheritdoc/>
+	public object DefaultValue => (short)0;
 
-    /// <inheritdoc/>
-    public string FormatValue(object value) => value.ToString();
+	/// <inheritdoc/>
+	public bool NonNegative => false;
 
-    /// <inheritdoc/>
-    public Result<object> TryParse(string input)
-    {
-        const NumberStyles numberStyles = NumberStyles.Integer;
-        var invariantCulture = CultureInfo.InvariantCulture;
+	/// <inheritdoc/>
+	public Result<object> GetNonNegativeValue(object value) => value;
 
-        return short.TryParse(input, numberStyles, invariantCulture, out var s)
-            ? Result.Ok<object>(s)
-            : new CorePropertyConversionFailedError(input, "Int16");
-    }
+	public ConfigurableEnumDefinition(YamlPropertyDefinition dto)
+	{
+		Units = dto.Units;
+	}
+
+	/// <inheritdoc/>
+	public Result TryValidate(object value)
+		=> value is short
+			? Result.Ok()
+			: new CorePropertyValidationFailedError("value must be Int16");
+
+	/// <inheritdoc/>
+	public string FormatValue(object value) => value.ToString();
+
+	/// <inheritdoc/>
+	public Result<object> TryParse(string input)
+	{
+		const NumberStyles numberStyles = NumberStyles.Integer;
+		var invariantCulture = CultureInfo.InvariantCulture;
+
+		return short.TryParse(input, numberStyles, invariantCulture, out var s)
+			? Result.Ok<object>(s)
+			: new CorePropertyConversionFailedError(input, "Int16");
+	}
 }

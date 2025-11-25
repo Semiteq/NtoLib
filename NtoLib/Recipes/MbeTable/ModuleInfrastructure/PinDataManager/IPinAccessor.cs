@@ -7,6 +7,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 /// </summary>
 public interface IPinAccessor
 {
-    OpcQuality GetQuality(int pinId);
-    T GetValue<T>(int pinId);
+	OpcQuality GetQuality(int pinId);
+	T GetValue<T>(int pinId);
 }
