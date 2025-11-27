@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+  <Map>
+    <Items>
+      <Pin ID="1" Name="Save" Type="Логический" DefaultValue="false"/>
+      <Pout ID="2" Name="Loaded" Type="Логический" DefaultValue="false"/>
+      <Pout ID="3" Name="Saved" Type="Логический" DefaultValue="false"/>
+      <Pout ID="4" Name="Error" Type="Строковый" DefaultValue=""/>
+    </Items>
+  </Map>
+</FBConfig>

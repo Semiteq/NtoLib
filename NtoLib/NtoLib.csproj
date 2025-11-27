@@ -208,6 +208,20 @@
   <ItemGroup>
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
     <Compile Include="Compatibilty.cs" />
+    <Compile Include="ConfigLoader\ConfigLoaderFB.cs" />
+    <Compile Include="ConfigLoader\Entities\LoaderDto.cs" />
+    <Compile Include="ConfigLoader\Entities\YamlConfigDto.cs" />
+    <Compile Include="ConfigLoader\Facade\ConfigLoaderService.cs" />
+    <Compile Include="ConfigLoader\Facade\IConfigLoaderService.cs" />
+    <Compile Include="ConfigLoader\Io\Default\DefaultConfigurationFactory.cs" />
+    <Compile Include="ConfigLoader\Io\FileLoader.cs" />
+    <Compile Include="ConfigLoader\Io\FileSaver.cs" />
+    <Compile Include="ConfigLoader\Yaml\QuotedStringEmitter.cs" />
+    <Compile Include="ConfigLoader\Yaml\YamlDeserializer.cs" />
+    <Compile Include="ConfigLoader\Yaml\YamlLoader.cs" />
+    <Compile Include="ConfigLoader\Yaml\YamlSerializer.cs" />
+    <Compile Include="ConfigLoader\Yaml\YamlValidator.cs" />
+    <Compile Include="ConfigLoader\Pins\PinGroupManager.cs" />
     <Compile Include="FocusManager.cs" />
     <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
     <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
@@ -803,6 +817,7 @@
     <Compile Include="Properties\Resources.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.xml" />
     <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatControl.resx">
       <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -892,6 +907,9 @@
     <EmbeddedResource Include="Resources\ImgWrite.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.bmp" />
+    <Content Include="ConfigLoader\ConfigLoader.png" />
+    <Content Include="ConfigLoader\readme.md" />
     <Content Include="NtoLibTableConfig\ActionsDefs.yaml" />
     <Content Include="NtoLibTableConfig\ColumnDefs.yaml" />
     <Content Include="NtoLibTableConfig\PinGroupDefs.yaml" />
