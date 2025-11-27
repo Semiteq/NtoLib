@@ -16,21 +16,21 @@ class Build : NukeBuild
 	public static int Main() => Execute<Build>(x => x.BuildDebug);
 
 	[Parameter("Configuration to build - Default is 'Release'")]
-	readonly Configuration _configuration = Configuration.Release;
+	public Configuration Configuration { get; set; } = Configuration.Debug;
 
 	[Parameter("Destination directory for local development deployment")]
-	readonly AbsolutePath _destinationDirectory = @"C:\Program Files (x86)\MPSSoft\MasterSCADA";
+	public AbsolutePath DestinationDirectory { get; set; } = @"C:\Program Files (x86)\MPSSoft\MasterSCADA";
 
 	[Parameter("Test category filter: All (default), Integration, Unit")]
-	readonly string _testCategory = "All";
+	public string TestCategory { get; set; } = "All";
 
 	[Parameter("Test component filter: All (default), ConfigLoader, FormulaPrecompiler")]
-	readonly string _testComponent = "All";
+	public string TestComponent { get; set; } = "All";
 
 	[Solution]
 	public Solution Solution { get; set; }
 
-	BuildContext Ctx => _ctx ??= new BuildContext(this, Solution, _configuration, _destinationDirectory);
+	BuildContext Ctx => _ctx ??= new BuildContext(this, Solution, Configuration, DestinationDirectory);
 	BuildContext? _ctx;
 
 	MsBuildService MsBuild => _ms ??= new MsBuildService(Ctx);
@@ -52,7 +52,7 @@ class Build : NukeBuild
 		.Before(Restore)
 		.Executes(() =>
 		{
-			Log.Information("Cleaning (Configuration: {Configuration})", _configuration);
+			Log.Information("Cleaning (Configuration: {Configuration})", Configuration);
 
 			var dirs = Ctx.SolutionDirectory.GlobDirectories("**/bin", "**/obj")
 				.Where(d => !d.ToString().Contains("packages"))
@@ -106,7 +106,7 @@ class Build : NukeBuild
 
 	Target CopyToLocal => _ => _
 		.DependsOn(ILRepack)
-		.OnlyWhenDynamic(() => _configuration == Configuration.Debug)
+		.OnlyWhenDynamic(() => Configuration == Configuration.Debug)
 		.Executes(() =>
 		{
 			Log.Information("Copying files to local deployment directory: {Dest}", Ctx.DestinationDirectory);
@@ -120,7 +120,7 @@ class Build : NukeBuild
 
 	Target PackageArchive => _ => _
 		.DependsOn(ILRepack)
-		.OnlyWhenDynamic(() => _configuration == Configuration.Release)
+		.OnlyWhenDynamic(() => Configuration == Configuration.Release)
 		.Executes(() =>
 		{
 			Log.Information("Creating release archive");
@@ -131,16 +131,16 @@ class Build : NukeBuild
 		.DependsOn(Compile)
 		.Executes(() =>
 		{
-			Log.Information("Running tests (Category: {Category}, Component: {Component})", _testCategory,
-				_testComponent);
-			Tests.RunTests(_testCategory, _testComponent, Verbosity == Verbosity.Verbose);
+			Log.Information("Running tests (Category: {Category}, Component: {Component})", TestCategory,
+				TestComponent);
+			Tests.RunTests(TestCategory, TestComponent, Verbosity == Verbosity.Verbose);
 		});
 
 	Target TestWithCoverage => _ => _
 		.DependsOn(Compile)
 		.Executes(() =>
 		{
-			Tests.RunWithCoverage(_testCategory, _testComponent);
+			Tests.RunWithCoverage(TestCategory, TestComponent);
 		});
 
 	Target BuildDebug => _ => _
