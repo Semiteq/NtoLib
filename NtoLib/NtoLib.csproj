@@ -68,6 +68,9 @@
     <Reference Include="HonkSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=384cc7619dfb9a7d, processorArchitecture=MSIL">
       <HintPath>..\packages\HonkSharp.1.0.1\lib\net472\HonkSharp.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.Core.Presentation">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\ICSharpCode.Core.Presentation.dll</HintPath>
+    </Reference>
     <Reference Include="IndexRange, Version=1.0.0.0, Culture=neutral, PublicKeyToken=35e6a3c4212514c6, processorArchitecture=MSIL">
       <HintPath>..\packages\IndexRange.1.0.0\lib\net471\IndexRange.dll</HintPath>
     </Reference>
@@ -79,6 +82,15 @@
     </Reference>
     <Reference Include="MasterSCADA.Common">
       <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADA.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="MasterSCADA.Graph">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Graph.dll</HintPath>
+    </Reference>
+    <Reference Include="MasterSCADA.Script">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Script.dll</HintPath>
+    </Reference>
+    <Reference Include="MasterSCADA.Trend">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Trend.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADALib">
       <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADALib.dll</HintPath>
@@ -123,6 +135,8 @@
     <Reference Include="Polly.Core, Version=8.0.0.0, Culture=neutral, PublicKeyToken=c8a3ffc3f8f825cc, processorArchitecture=MSIL">
       <HintPath>..\packages\Polly.Core.8.6.4\lib\net472\Polly.Core.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="Serilog, Version=4.3.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>..\packages\Serilog.4.3.0\lib\net471\Serilog.dll</HintPath>
     </Reference>
@@ -201,11 +215,19 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
     <Reference Include="YamlDotNet, Version=16.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
       <HintPath>..\packages\YamlDotNet.16.3.0\lib\net47\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BrokenLinksObserver\BrokenLinksObserverFB.cs" />
+    <Compile Include="PinConnector\PinConnectorFB.cs" />
+    <Compile Include="PinConnector\Facade\IPinConnectorService.cs" />
+    <Compile Include="PinConnector\Facade\PinConnectorService.cs" />
+    <Compile Include="BrokenLinksObserver\Entities\BrokenLinkInfo.cs" />
+    <Compile Include="BrokenLinksObserver\Entities\BrokenLinkKind.cs" />
+    <Compile Include="BrokenLinksObserver\Facade\BrokenLinksService.cs" />
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
     <Compile Include="Compatibilty.cs" />
     <Compile Include="ConfigLoader\ConfigLoaderFB.cs" />
@@ -222,6 +244,7 @@
     <Compile Include="ConfigLoader\Yaml\YamlSerializer.cs" />
     <Compile Include="ConfigLoader\Yaml\YamlValidator.cs" />
     <Compile Include="ConfigLoader\Pins\PinGroupManager.cs" />
+    <Compile Include="FBNtoLibCategory\NtoLibCatIDs.cs" />
     <Compile Include="FocusManager.cs" />
     <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
     <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
@@ -740,6 +763,9 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Spectrometer\SpectrometerFB.cs" />
+    <Compile Include="TrendPensManager\Facade\ITrendPensService.cs" />
+    <Compile Include="TrendPensManager\Facade\TrendPensService.cs" />
+    <Compile Include="TrendPensManager\TrendPensManagerFB.cs" />
     <Compile Include="Utils\ButtonOrientation.cs" />
     <Compile Include="Utils\ReadResult.cs" />
     <Compile Include="Render\BaseRenderer.cs" />
@@ -817,6 +843,8 @@
     <Compile Include="Properties\Resources.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="BrokenLinksObserver\BrokenLinksObserverFB.bmp" />
+    <EmbeddedResource Include="BrokenLinksObserver\BrokenLinksObserverFB.xml" />
     <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.xml" />
     <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatControl.resx">
       <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
@@ -837,6 +865,8 @@
     <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntControl.resx">
       <DependentUpon>TextBoxIntControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="TrendPensManager\TrendPensManagerFB.bmp" />
+    <EmbeddedResource Include="TrendPensManager\TrendPensManagerFB.xml" />
     <EmbeddedResource Include="Utils\LabeledValue.resx">
       <DependentUpon>LabeledValue.cs</DependentUpon>
     </EmbeddedResource>
@@ -914,6 +944,8 @@
     <Content Include="NtoLibTableConfig\ColumnDefs.yaml" />
     <Content Include="NtoLibTableConfig\PinGroupDefs.yaml" />
     <Content Include="NtoLibTableConfig\PropertyDefs.yaml" />
+    <EmbeddedResource Include="PinConnector\PinConnectorFB.bmp" />
+    <EmbeddedResource Include="PinConnector\PinConnectorFB.xml" />
     <Content Include="Recipes\MbeTable\MbeTableFB.png" />
     <Content Include="Recipes\MbeTable\ModuleConfig\readme.md" />
     <Content Include="Recipes\MbeTable\ModuleInfrastructure\readme.md" />

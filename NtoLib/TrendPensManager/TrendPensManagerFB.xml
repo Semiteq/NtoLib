@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+  <Map>
+    <Items>
+      <Pin ID="1" Name="Добавить пин в тренд" Type="Логический" DefaultValue="false"/>
+      <Pin ID="2" Name="Путь до тренда" Type="Строковый" DefaultValue="A.X.Y"/>
+      <Pin ID="3" Name="Путь до пина" Type="Строковый" DefaultValue="A.X.W"/>
+
+      <Pout ID="4" Name="Error" Type="Строковый" DefaultValue=""/>
+    </Items>
+  </Map>
+</FBConfig>

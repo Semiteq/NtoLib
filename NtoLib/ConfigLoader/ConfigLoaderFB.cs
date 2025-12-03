@@ -8,6 +8,7 @@ using InSAT.Library.Interop;
 
 using NtoLib.ConfigLoader.Facade;
 using NtoLib.ConfigLoader.Pins;
+using NtoLib.FBNtoLibCategory;
 
 namespace NtoLib.ConfigLoader;
 
