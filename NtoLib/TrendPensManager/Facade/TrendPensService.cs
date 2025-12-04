@@ -120,7 +120,7 @@ public class TrendPensService : ITrendPensService
 					trendRootPath,
 					string.Join("; ", sequenceResult.Errors.Select(e => e.Message)));
 
-			 return Result.Fail(sequenceResult.Errors);
+				return Result.Fail(sequenceResult.Errors);
 			}
 
 			var sequenceData = sequenceResult.Value;
@@ -217,7 +217,7 @@ public class TrendPensService : ITrendPensService
 				"TrendService or its Dispatcher is not available when applying pen sequence. TrendRootPath='{TrendRootPath}'",
 				trendRootPath);
 
-		 return Result.Fail("Trend service is not available");
+			return Result.Fail("Trend service is not available");
 		}
 
 		var pensAdded = 0;

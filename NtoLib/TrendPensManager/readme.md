@@ -1,5 +1,7 @@
 # TrendPensManager — Управление перьями графиков
 
+![TrendPensManagerFB.png](TrendPensManagerFB.png)
+
 Функциональный блок автоматически формирует последовательность перьев и добавляет их в окно трендов на основе структуры дерева MasterSCADA и данных из ConfigLoader.
 
 ---
