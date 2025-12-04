@@ -763,8 +763,19 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Spectrometer\SpectrometerFB.cs" />
+    <Compile Include="TrendPensManager\Entities\AutoConfigResult.cs" />
+    <Compile Include="TrendPensManager\Entities\ChannelInfo.cs" />
+    <Compile Include="TrendPensManager\Entities\ParameterInfo.cs" />
+    <Compile Include="TrendPensManager\Entities\PenSequenceData.cs" />
+    <Compile Include="TrendPensManager\Entities\PenSequenceItem.cs" />
+    <Compile Include="TrendPensManager\Entities\ServiceType.cs" />
+    <Compile Include="TrendPensManager\Entities\TraversalData.cs" />
     <Compile Include="TrendPensManager\Facade\ITrendPensService.cs" />
     <Compile Include="TrendPensManager\Facade\TrendPensService.cs" />
+    <Compile Include="TrendPensManager\Logging\StringBuilderSink.cs" />
+    <Compile Include="TrendPensManager\Services\ConfigLoaderReader.cs" />
+    <Compile Include="TrendPensManager\Services\PenSequenceBuilder.cs" />
+    <Compile Include="TrendPensManager\Services\TreeTraversalService.cs" />
     <Compile Include="TrendPensManager\TrendPensManagerFB.cs" />
     <Compile Include="Utils\ButtonOrientation.cs" />
     <Compile Include="Utils\ReadResult.cs" />

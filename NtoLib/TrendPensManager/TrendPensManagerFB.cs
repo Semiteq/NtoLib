@@ -1,12 +1,20 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Text;
 
 using FB;
 
 using InSAT.Library.Interop;
 
+using Microsoft.Extensions.Logging;
+
 using NtoLib.TrendPensManager.Facade;
+using NtoLib.TrendPensManager.Logging;
+using NtoLib.TrendPensManager.Services;
+
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace NtoLib.TrendPensManager;
 
@@ -17,19 +25,30 @@ namespace NtoLib.TrendPensManager;
 [DisplayName("Менеджер перьев окна трендов")]
 public class TrendPensManagerFB : StaticFBBase
 {
-	private const int AddPinId = 1;
-	private const int PathToTrendId = 2;
-	private const int PathToPinId = 3;
-	private const int ErrorPinId = 4;
+	private const int ExecutePinId = 1;
+	private const int DumpTreePinId = 2;
 
-	private bool _previousAddCommand;
+	private const int DonePinId = 10;
+	private const int LogsPinId = 11;
+	private const int ErrorsPinId = 12;
 
-	private static readonly TimeSpan _savedFlagDuration = TimeSpan.FromSeconds(1);
+	private static readonly TimeSpan _doneFlagDuration = TimeSpan.FromSeconds(1);
 
-	private DateTime _savedFlagResetTimeUtc;
+	private bool _previousExecuteCommand;
+	private bool _previousDumpTreeCommand;
+	private DateTime _doneFlagResetTimeUtc;
 	private bool _isRuntimeInitialized;
 
+	[DisplayName("01. Путь в дереве к корню трендов")]
+	public string TrendRootPath { get; set; } = "PLZ_Inject.Графики";
+
+	[DisplayName("02. Путь в дереве к загрузчику конфигурации")]
+	public string ConfigLoaderRootPath { get; set; } = "PLZ_Inject.Config.Загрузчик конфигурации";
+
 	[NonSerialized] private ITrendPensService? _trendPensService;
+	[NonSerialized] private SerilogLoggerFactory? _loggerFactory;
+	[NonSerialized] private StringBuilder? _logBuffer;
+	[NonSerialized] private StringBuilderSink? _logSink;
 
 	protected override void ToRuntime()
 	{
@@ -52,7 +71,8 @@ public class TrendPensManagerFB : StaticFBBase
 			return;
 		}
 
-		ProcessAddCommand();
+		UpdateDoneFlagTimeout();
+		ProcessExecuteCommand();
 	}
 
 	private void InitializeRuntime()
@@ -69,13 +89,35 @@ public class TrendPensManagerFB : StaticFBBase
 				throw new InvalidOperationException("TreeItemHlp.Project is null.");
 			}
 
-			_trendPensService = new TrendPensService(TreeItemHlp.Project);
+			_logBuffer = new StringBuilder();
+			_logSink = new StringBuilderSink(_logBuffer);
+
+			var serilogLogger = new LoggerConfiguration()
+				.MinimumLevel.Debug()
+				.WriteTo.Sink(_logSink)
+				.CreateLogger();
+
+			_loggerFactory = new SerilogLoggerFactory(serilogLogger);
+
+			var trendPensLogger = _loggerFactory.CreateLogger<TrendPensService>();
+
+			var treeTraversal = new TreeTraversalService(TreeItemHlp.Project, _loggerFactory);
+			var configLoaderReader = new ConfigLoaderReader(TreeItemHlp.Project, _loggerFactory);
+			var penSequenceBuilder = new PenSequenceBuilder(_loggerFactory);
+
+			_trendPensService = new TrendPensService(
+				TreeItemHlp.Project,
+				treeTraversal,
+				configLoaderReader,
+				penSequenceBuilder,
+				trendPensLogger);
+
 			_isRuntimeInitialized = true;
 		}
 		catch (Exception ex)
 		{
 			_isRuntimeInitialized = false;
-			SetPinValue(ErrorPinId, $"Initialization failed: {ex.Message}");
+			SetPinValue(ErrorsPinId, $"Initialization failed: {ex.Message}");
 		}
 	}
 
@@ -83,30 +125,78 @@ public class TrendPensManagerFB : StaticFBBase
 	{
 		_isRuntimeInitialized = false;
 		_trendPensService = null;
+
+		_loggerFactory?.Dispose();
+		_loggerFactory = null;
+		_logBuffer = null;
+		_logSink = null;
 	}
 
-	private void ProcessAddCommand()
+	private void ProcessExecuteCommand()
 	{
 		if (_trendPensService == null)
 		{
 			return;
 		}
 
-		var currentSaveCommand = GetPinValue<bool>(AddPinId);
-		var isRisingEdge = currentSaveCommand && !_previousAddCommand;
-		_previousAddCommand = currentSaveCommand;
+		var currentExecuteCommand = GetPinValue<bool>(ExecutePinId);
+		var isRisingEdge = currentExecuteCommand && !_previousExecuteCommand;
+		_previousExecuteCommand = currentExecuteCommand;
 
 		if (!isRisingEdge)
 		{
 			return;
 		}
 
-		var trendPath = GetPinValue<string>(PathToTrendId);
-		var pinPath = GetPinValue<string>(PathToPinId);
-		var result = _trendPensService.Refresh(trendPath, pinPath);
+		ExecuteAutoConfig();
+	}
+
+	private void ExecuteAutoConfig()
+	{
+		_logSink?.Clear();
+		SetPinValue(LogsPinId, string.Empty);
+		SetPinValue(ErrorsPinId, string.Empty);
+
+		var result = _trendPensService!.AutoConfigurePens(TrendRootPath, ConfigLoaderRootPath);
+
+		FlushLogsToPin();
+
 		if (result.IsFailed)
 		{
-			SetPinValue(ErrorPinId, string.Join("|", result.Errors));
+			SetPinValue(DonePinId, false);
+			SetPinValue(ErrorsPinId, string.Join("|", result.Errors));
+			return;
+		}
+
+		var autoConfigResult = result.Value;
+
+		SetPinValue(DonePinId, true);
+		_doneFlagResetTimeUtc = DateTime.UtcNow.Add(_doneFlagDuration);
+
+		if (autoConfigResult.Warnings.Count > 0)
+		{
+			SetPinValue(ErrorsPinId, string.Join("|", autoConfigResult.Warnings));
+		}
+	}
+
+	private void FlushLogsToPin()
+	{
+		var logs = _logSink?.GetLogs() ?? string.Empty;
+		SetPinValue(LogsPinId, logs);
+	}
+
+	private void UpdateDoneFlagTimeout()
+	{
+		var isDone = GetPinValue<bool>(DonePinId);
+
+		if (!isDone)
+		{
+			return;
+		}
+
+		if (DateTime.UtcNow >= _doneFlagResetTimeUtc)
+		{
+			SetPinValue(DonePinId, false);
 		}
 	}
 }

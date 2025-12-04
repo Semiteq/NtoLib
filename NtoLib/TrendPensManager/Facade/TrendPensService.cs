@@ -1,175 +1,385 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-
 using FluentResults;
 
 using MasterSCADA;
 using MasterSCADA.Common;
+using MasterSCADA.Graph.Objects;
 using MasterSCADA.Hlp;
+using MasterSCADA.Hlp.Events;
 using MasterSCADA.Trend.Controls;
 using MasterSCADA.Trend.Helpers;
 using MasterSCADA.Trend.Services;
 
 using MasterSCADALib;
 
+using Microsoft.Extensions.Logging;
+using NtoLib.TrendPensManager.Entities;
+using NtoLib.TrendPensManager.Services;
+
 namespace NtoLib.TrendPensManager.Facade;
 
 public class TrendPensService : ITrendPensService
 {
 	private readonly IProjectHlp _project;
+	private readonly TreeTraversalService _treeTraversal;
+	private readonly ConfigLoaderReader _configReader;
+	private readonly PenSequenceBuilder _planBuilder;
+	private readonly ILogger<TrendPensService> _logger;
 
-	public TrendPensService(IProjectHlp project)
+	private sealed record ApplySequenceResult(int PensAdded, List<string> Errors);
+
+	public TrendPensService(
+		IProjectHlp project,
+		ILogger<TrendPensService> logger)
 	{
 		_project = project ?? throw new ArgumentNullException(nameof(project));
+		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+		_treeTraversal = new TreeTraversalService(project, loggerFactory: null);
+		_configReader = new ConfigLoaderReader(project, loggerFactory: null);
+		_planBuilder = new PenSequenceBuilder(loggerFactory: null);
 	}
 
-	public Result Refresh(string trendPath, string pinPath)
+	// Overload to allow injecting specialized loggers for sub-services if you wish
+	public TrendPensService(
+		IProjectHlp project,
+		TreeTraversalService treeTraversal,
+		ConfigLoaderReader configReader,
+		PenSequenceBuilder planBuilder,
+		ILogger<TrendPensService> logger)
 	{
+		_project = project ?? throw new ArgumentNullException(nameof(project));
+		_treeTraversal = treeTraversal ?? throw new ArgumentNullException(nameof(treeTraversal));
+		_configReader = configReader ?? throw new ArgumentNullException(nameof(configReader));
+		_planBuilder = planBuilder ?? throw new ArgumentNullException(nameof(planBuilder));
+		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+	}
+
+	public Result<AutoConfigResult> AutoConfigurePens(string trendRootPath, string configLoaderPath)
+	{
+		_logger.LogInformation(
+			"Starting AutoConfigurePens. TrendRootPath='{TrendRootPath}', ConfigLoaderPath='{ConfigLoaderPath}'",
+			trendRootPath,
+			configLoaderPath);
+
 		try
 		{
-			return AddPenToTrendByPath(_project, trendPath, pinPath);
+			var allWarnings = new List<string>();
+
+			_logger.LogDebug("Traversing services under trend root path '{TrendRootPath}'", trendRootPath);
+			var traversalResult = GetChannels(trendRootPath);
+			if (traversalResult.IsFailed)
+			{
+				_logger.LogError(
+					"Service traversal failed for trend root '{TrendRootPath}'. Errors: {Errors}",
+					trendRootPath,
+					string.Join("; ", traversalResult.Errors.Select(e => e.Message)));
+
+				return Result.Fail(traversalResult.Errors);
+			}
+
+			var traversalData = traversalResult.Value;
+			allWarnings.AddRange(traversalData.Warnings);
+			var channels = traversalData.Channels;
+
+			_logger.LogInformation(
+				"Service traversal completed. ChannelsFound={ChannelsCount}, Warnings={WarningsCount}",
+				channels.Count,
+				traversalData.Warnings.Count);
+
+			_logger.LogDebug("Reading ConfigLoader outputs from path '{ConfigLoaderPath}'", configLoaderPath);
+			var configResult = GetConfigLoaderNames(configLoaderPath);
+			if (configResult.IsFailed)
+			{
+				_logger.LogError(
+					"ConfigLoader reading failed for path '{ConfigLoaderPath}'. Errors: {Errors}",
+					configLoaderPath,
+					string.Join("; ", configResult.Errors.Select(e => e.Message)));
+
+				return Result.Fail(configResult.Errors);
+			}
+
+			var configNames = configResult.Value;
+			_logger.LogInformation(
+				"ConfigLoader outputs read successfully. ServiceTypes={ServiceTypes}",
+				string.Join(", ", configNames.Keys));
+
+			_logger.LogDebug(
+				"Building pen sequence. Channels={ChannelsCount}, TrendPath='{TrendRootPath}'",
+				channels.Count,
+				trendRootPath);
+
+			var sequenceResult = BuildPenSequence(channels, configNames, trendRootPath);
+			if (sequenceResult.IsFailed)
+			{
+				_logger.LogError(
+					"Pen sequence building failed for trend root '{TrendRootPath}'. Errors: {Errors}",
+					trendRootPath,
+					string.Join("; ", sequenceResult.Errors.Select(e => e.Message)));
+
+				return Result.Fail(sequenceResult.Errors);
+			}
+
+			var sequenceData = sequenceResult.Value;
+			allWarnings.AddRange(sequenceData.Warnings);
+
+			_logger.LogInformation(
+				"Pen sequence built. Pens to update={PensPlanned}, Warnings={WarningsCount}",
+				sequenceData.Plan.Count,
+				sequenceData.Warnings.Count);
+
+			_logger.LogDebug(
+				"Applying pen sequence to trend '{TrendRootPath}'. PlanCount={PlanCount}",
+				trendRootPath,
+				sequenceData.Plan.Count);
+
+			var applyResult = ApplySequenceToTrend(trendRootPath, sequenceData.Plan);
+			if (applyResult.IsFailed)
+			{
+				_logger.LogError(
+					"Applying pen sequence to trend failed for '{TrendRootPath}'. Errors: {Errors}",
+					trendRootPath,
+					string.Join("; ", applyResult.Errors.Select(e => e.Message)));
+
+				return Result.Fail(applyResult.Errors);
+			}
+
+			var applyPlan = applyResult.Value;
+			var pensAdded = applyPlan.PensAdded;
+			allWarnings.AddRange(applyPlan.Errors);
+
+			_logger.LogInformation(
+				"Pen sequence applied. PensAdded={PensAdded}, Errors={ErrorsCount}",
+				pensAdded,
+				applyPlan.Errors.Count);
+
+			if (applyPlan.Errors.Count > 0 && pensAdded == 0)
+			{
+				_logger.LogWarning(
+					"Pen application finished with errors and no pens added. Errors: {Errors}",
+					string.Join("; ", applyPlan.Errors));
+
+				return Result.Fail(applyPlan.Errors);
+			}
+
+			var usedChannelsCount = channels.Count(c => c.Used);
+			var result = new AutoConfigResult(usedChannelsCount, pensAdded, allWarnings);
+
+			_logger.LogInformation(
+				"AutoConfigurePens completed successfully. UsedChannels={UsedChannels}, PensAdded={PensAdded}, Warnings={WarningsCount}",
+				usedChannelsCount,
+				pensAdded,
+				allWarnings.Count);
+
+			return Result.Ok(result);
 		}
-		catch (Exception e)
+		catch (Exception ex)
 		{
-			return Result.Fail(e.Message);
+			_logger.LogError(ex, "Unhandled exception during AutoConfigurePens.");
+			return Result.Fail($"AutoConfig error: {ex.Message}");
 		}
 	}
 
-	private static Result AddPenToTrendByPath(
-		IProjectHlp project,
-		string trendPath,
-		string pinPath,
-		string? displayNameOverride = null)
+	private Result<TraversalData> GetChannels(string trendRootPath)
 	{
-		if (project == null)
-		{
-			throw new ArgumentNullException(nameof(project));
-		}
+		return _treeTraversal.TraverseServices(trendRootPath);
+	}
 
-		if (string.IsNullOrWhiteSpace(trendPath))
-		{
-			return Result.Fail("Путь к тренду пуст");
-		}
+	private Result<Dictionary<ServiceType, string[]>> GetConfigLoaderNames(string configLoaderPath)
+	{
+		return _configReader.ReadOutputs(configLoaderPath);
+	}
 
-		if (string.IsNullOrWhiteSpace(pinPath))
-		{
-			return Result.Fail("Путь к пину пуст");
-		}
+	private Result<PenSequenceData> BuildPenSequence(
+		List<ChannelInfo> channels,
+		Dictionary<ServiceType, string[]> configNames,
+		string trendRootPath)
+	{
+		return _planBuilder.BuildSequence(channels, configNames, trendPath: trendRootPath);
+	}
 
-		var trendItem = project.SafeItem<ITreeItemHlp>(trendPath);
+	private Result<ApplySequenceResult> ApplySequenceToTrend(
+		string trendRootPath,
+		IReadOnlyCollection<PenSequenceItem> plan)
+	{
+		var trendItem = _project.SafeItem<ITreeItemHlp>(trendRootPath);
 		if (trendItem == null)
 		{
-			return Result.Fail("Тренд не найден в дереве проекта");
+			_logger.LogWarning(
+				"Trend item not found for path '{TrendRootPath}' while applying pen sequence.",
+				trendRootPath);
+
+			return Result.Fail($"Trend object not found: {trendRootPath}");
 		}
 
-		var pin = project.SafeItem<ITreePinHlp>(pinPath);
-		if (pin == null)
-		{
-			return Result.Fail("Пин не найден в дереве проекта");
-		}
-
-		var trendService = project.GetService<TrendService>();
+		var trendService = _project.GetService<TrendService>();
 		if (trendService == null || TrendService.Dispatcher == null)
 		{
-			return Result.Fail("Сервис трендов недоступен");
+			_logger.LogError(
+				"TrendService or its Dispatcher is not available when applying pen sequence. TrendRootPath='{TrendRootPath}'",
+				trendRootPath);
+
+			return Result.Fail("Trend service is not available");
 		}
 
-		var result = Result.Fail("Не удалось добавить перо в тренд");
+		var pensAdded = 0;
+		var errors = new List<string>();
+
 		TrendService.Dispatcher.Invoke(() =>
 		{
-			result = AddPenToTrend(project, trendItem, pin);
+			_logger.LogDebug(
+				"Dispatcher invoked to apply pen sequence. TrendRootPath='{TrendRootPath}', PlanCount={PlanCount}",
+				trendRootPath,
+				plan.Count);
+
+			var trend = FindOpenTrendForItem(trendService, trendItem.FullName);
+			if (trend == null)
+			{
+				_logger.LogWarning(
+					"Trend window for item '{TrendItemFullName}' is not open.",
+					trendItem.FullName);
+
+				errors.Add("Trend window is closed");
+				return;
+			}
+
+			SetMaxTrendItems(trend, 1000);
+
+			foreach (var item in plan)
+			{
+				var addResult = AddPenToTrend(trend, item.SourcePinPath, item.PenDisplayName);
+				if (addResult.IsSuccess)
+				{
+					pensAdded++;
+					_logger.LogDebug(
+						"Pen added successfully. SourcePinPath='{SourcePinPath}', DisplayName='{DisplayName}'",
+						item.SourcePinPath,
+						item.PenDisplayName);
+				}
+				else
+				{
+					var errorText = string.Join(", ", addResult.Errors.Select(e => e.Message));
+					errors.Add($"{item.SourcePinPath}: {errorText}");
+
+					_logger.LogWarning(
+						"Failed to add pen. SourcePinPath='{SourcePinPath}', Errors='{Errors}'",
+						item.SourcePinPath,
+						errorText);
+				}
+			}
 		});
 
-		return result;
+		return Result.Ok(new ApplySequenceResult(pensAdded, errors));
 	}
 
-	private static Result AddPenToTrend(
-		IProjectHlp project,
-		ITreeItemHlp trendItem,
-		ITreePinHlp pin)
+	private Result AddPenToTrend(Trend trend, string pinPath, string displayName)
 	{
-		var trend = FindOpenTrendForItem(project, trendItem);
-		if (trend == null)
+		_logger.LogDebug("Adding pen to trend. PinPath='{PinPath}', DisplayName='{DisplayName}'", pinPath, displayName);
+
+		var pin = _project.SafeItem<ITreePinHlp>(pinPath);
+		if (pin == null)
 		{
-			// the window isn't opened
-			return Result.Fail("Окно тренда закрыто");
+			_logger.LogWarning("Pin not found for path '{PinPath}'", pinPath);
+			return Result.Fail($"Pin not found: {pinPath}");
 		}
 
-		SetMaxTrendItems(trend);
-		_ = trend.Settings.MaxParameters;
-
-		// check rights
-		if (!trend.AddParamsRights ||
-			(trend.RuntimeMode && trend.Inited &&
-			 !trend.CheckPermissionTrend(Rights.Trends.AddParams, "Добавление пера")))
+		if (!HasRightsToAddPen(trend))
 		{
-			return Result.Fail("Нет прав на добавление пера в тренд");
+			_logger.LogWarning("No rights to add pen to trend. PinPath='{PinPath}'", pinPath);
+			return Result.Fail("No rights to add pen to trend");
 		}
 
 		var graph = trend.AddParametr(pin);
 		if (graph == null)
 		{
-			return Result.Fail("Не удалось добавить перо в тренд");
+			_logger.LogError("Trend.AddParametr returned null for pin '{PinPath}'", pinPath);
+			return Result.Fail("Failed to add pen to trend");
 		}
 
-		var displayNameOverride = pin.Name + "123";
-
-		return SetPenUserName(trend, pin, displayNameOverride);
+		return SetPenUserName(trend, pin, displayName);
 	}
 
-	private static Trend? FindOpenTrendForItem(IProjectHlp project, ITreeItemHlp trendItem)
+	private static bool HasRightsToAddPen(Trend trend)
 	{
-		var trendService = project.GetService<TrendService>();
-		return trendService != null
-			? GetTrendByFullName(trendService, trendItem.FullName)
-			: null;
-	}
-
-	private static Trend? GetTrendByFullName(TrendService trendService, string trendFullName)
-	{
-		foreach (var trends in trendService.Opened)
+		if (!trend.AddParamsRights)
 		{
-			if (trends.Attribute?.TreeItem != null &&
-				string.Equals(trends.Attribute.TreeItem.FullName, trendFullName, StringComparison.OrdinalIgnoreCase))
+			return false;
+		}
+
+		if (!trend.RuntimeMode || !trend.Inited)
+		{
+			return true;
+		}
+
+		return trend.CheckPermissionTrend(Rights.Trends.AddParams, "Добавление пера");
+	}
+
+	private static Trend? FindOpenTrendForItem(TrendService trendService, string trendFullName)
+	{
+		foreach (var trend in trendService.Opened)
+		{
+			if (trend.Attribute?.TreeItem == null)
 			{
-				return trends;
+				continue;
+			}
+
+			if (string.Equals(trend.Attribute.TreeItem.FullName, trendFullName, StringComparison.OrdinalIgnoreCase))
+			{
+				return trend;
 			}
 		}
-		return null;
 
+		return null;
 	}
+
+	// private static OpenTrendParameters CreateParameters(IAttributeHlp attribute, List<ITreePinHlp> list,)
+	// {
+	// 	var parameters = new OpenTrendParameters
+	// 	{
+	// 		Item = attribute.TreeItem,
+	// 		Parameters = list,
+	// 		View = "6F665323-E320-477B-94A3-440010AF0943",
+	// 		DocType = EDocType.dtJournal,
+	// 		From = (DateTime.Now.AddHours(-1)),
+	// 		Till = (DateTime.Now)
+	// 	};
+	//
+	// 	parameters.TopMost = true;
+	// 	parameters.EventsEnabled = true;
+	// 	parameters.EventFilters = new FilterCollection()
+	// 	{
+	// 		new EventFilterData
+	// 		{
+	// 			SourceList = sources,
+	// 			AlwaysIncludeCurrentObject = false,
+	// 			Checked = true
+	// 		}
+	// 	};
+	// }
 
 	private static Result SetPenUserName(Trend trend, ITreePinHlp pin, string userName)
 	{
-		if (trend == null)
-		{
-			return Result.Fail("Окно тренда не задано");
-		}
-
-		if (pin == null)
-		{
-			return Result.Fail("Пин не задан");
-		}
-
 		var pinId = trend.Attribute.GetPinId(pin);
 		if (string.IsNullOrWhiteSpace(pinId))
 		{
-			return Result.Fail("Не удалось определить идентификатор пина");
+			return Result.Fail("Failed to get pin ID");
 		}
 
-		// Поиск ScadaPenSettings по PinId среди всех графиков, а не только видимых источников
 		var penSettings = trend.Settings.Objects
-			.OfType<MasterSCADA.Graph.Objects.BaseGraph2D>()
+			.OfType<BaseGraph2D>()
 			.Select(g => g.CustomSettings as ScadaPenSettings)
-			.FirstOrDefault(s => s != null && string.Equals(s.PinId, pinId, StringComparison.OrdinalIgnoreCase));
+			.FirstOrDefault(s => s != null &&
+			                     string.Equals(s.PinId, pinId, StringComparison.OrdinalIgnoreCase));
 
 		if (penSettings == null)
 		{
-			return Result.Fail("Не удалось найти перо в тренде");
+			return Result.Fail("Pen not found in trend");
 		}
 
 		penSettings.UserName = userName;
-		penSettings.SavedDT = false; // mark like changed in RT
+		penSettings.SavedDT = false;
 		trend.UpdateVisibleSources();
 
 		return Result.Ok();

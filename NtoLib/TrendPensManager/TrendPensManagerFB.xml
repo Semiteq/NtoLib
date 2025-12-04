@@ -2,11 +2,12 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="1" Name="Добавить пин в тренд" Type="Логический" DefaultValue="false"/>
-      <Pin ID="2" Name="Путь до тренда" Type="Строковый" DefaultValue="A.X.Y"/>
-      <Pin ID="3" Name="Путь до пина" Type="Строковый" DefaultValue="A.X.W"/>
+      <Pin ID="1" Name="Execute" Type="Логический" DefaultValue="false"/>
 
-      <Pout ID="4" Name="Error" Type="Строковый" DefaultValue=""/>
+      <Pout ID="10" Name="Done" Type="Логический" DefaultValue="false"/>
+      <Pout ID="11" Name="Logs" Type="Строковый" DefaultValue=""/>
+      <Pout ID="12" Name="Errors" Type="Строковый" DefaultValue=""/>
     </Items>
   </Map>
 </FBConfig>
+
