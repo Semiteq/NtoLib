@@ -4,10 +4,10 @@
     <Items>
       <Pin ID="1" Name="Execute" Type="Логический" DefaultValue="false"/>
 
-      <Pout ID="10" Name="Done" Type="Логический" DefaultValue="false"/>
+      <Pout ID="10" Name="Success" Type="Логический" DefaultValue="false"/>
       <Pout ID="11" Name="Logs" Type="Строковый" DefaultValue=""/>
       <Pout ID="12" Name="Errors" Type="Строковый" DefaultValue=""/>
+      <Pout ID="13" Name="Executing" Type="Логический" DefaultValue="false"/>
     </Items>
   </Map>
 </FBConfig>
-

@@ -948,6 +948,8 @@
     <EmbeddedResource Include="Resources\ImgWrite.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="TrendPensManager\readme.md" />
+    <Content Include="TrendPensManager\TrendPensManagerFB.png" />
     <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.bmp" />
     <Content Include="ConfigLoader\ConfigLoader.png" />
     <Content Include="ConfigLoader\readme.md" />

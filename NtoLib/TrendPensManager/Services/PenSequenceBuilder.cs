@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using FluentResults;
+
 using Microsoft.Extensions.Logging;
+
 using NtoLib.TrendPensManager.Entities;
 
 namespace NtoLib.TrendPensManager.Services;
@@ -46,7 +49,7 @@ public class PenSequenceBuilder
 
 		if (channels.Count == 0)
 		{
-			_logger?.LogInformation("No channels provided for pen sequence. Returning empty plan.");
+			_logger?.LogInformation("No channels provided for pen sequence. Returning empty sequence.");
 			return Result.Ok(new PenSequenceData(sequenceItems, warnings));
 		}
 
@@ -62,11 +65,13 @@ public class PenSequenceBuilder
 				continue;
 			}
 
-			var configName = TryGetConfigName(channel, configNames, warnings);
-			if (configName == null && channel.ServiceType != ServiceType.Other)
+			var configNameResult = ResolveConfigName(channel, configNames);
+			if (configNameResult.IsFailed)
 			{
-				continue;
+				return Result.Fail<PenSequenceData>(configNameResult.Errors);
 			}
+
+			var configName = configNameResult.Value;
 
 			foreach (var parameter in channel.Parameters)
 			{
@@ -74,7 +79,7 @@ public class PenSequenceBuilder
 				sequenceItems.Add(new PenSequenceItem(parameter.FullPath, trendPath, displayName));
 
 				_logger?.LogDebug(
-					"Pen planned. Service='{ServiceName}', ChannelNumber={ChannelNumber}, Param='{ParamName}', DisplayName='{DisplayName}'",
+					"Pen added to sequence. Service='{ServiceName}', ChannelNumber={ChannelNumber}, Param='{ParamName}', DisplayName='{DisplayName}'",
 					channel.ServiceName,
 					channel.ChannelNumber,
 					parameter.Name,
@@ -83,47 +88,49 @@ public class PenSequenceBuilder
 		}
 
 		_logger?.LogInformation(
-			"Pen sequence built. PensToUpdate={PensPlanned}, Warnings={WarningsCount}",
+			"Pen sequence built. PensInSequence={PensCount}, Warnings={WarningsCount}",
 			sequenceItems.Count,
 			warnings.Count);
 
 		return Result.Ok(new PenSequenceData(sequenceItems, warnings));
 	}
 
-	private string? TryGetConfigName(
+	private Result<string?> ResolveConfigName(
 		ChannelInfo channel,
-		Dictionary<ServiceType, string[]> configNames,
-		List<string> warnings)
+		Dictionary<ServiceType, string[]> configNames)
 	{
 		if (channel.ServiceType == ServiceType.Other)
 		{
-			return null;
+			_logger?.LogDebug(
+				"Service type '{ServiceType}' does not use ConfigLoader names. Service='{ServiceName}', ChannelNumber={ChannelNumber}",
+				channel.ServiceType,
+				channel.ServiceName,
+				channel.ChannelNumber);
+
+			return Result.Ok<string?>(null);
 		}
 
 		if (!configNames.TryGetValue(channel.ServiceType, out var names))
 		{
 			var message = $"No ConfigLoader data for service type {channel.ServiceType}";
-			warnings.Add(message);
-			_logger?.LogWarning(
-				"No ConfigLoader data for service type '{ServiceType}'",
+			_logger?.LogError(
+				"No ConfigLoader data for service type '{ServiceType}'.",
 				channel.ServiceType);
 
-			return null;
+			return Result.Fail<string?>(message);
 		}
 
 		var index = channel.ChannelNumber - 1;
 		if (index < 0 || index >= names.Length)
 		{
-			var message = $"Channel index {channel.ChannelNumber} out of bounds for {channel.ServiceType}";
-			warnings.Add(message);
-
-			_logger?.LogWarning(
+			var message = $"Channel index {channel.ChannelNumber} is out of bounds for service type {channel.ServiceType}";
+			_logger?.LogError(
 				"Channel index {ChannelNumber} is out of bounds for service type '{ServiceType}'. ArrayLength={Length}",
 				channel.ChannelNumber,
 				channel.ServiceType,
 				names.Length);
 
-			return null;
+			return Result.Fail<string?>(message);
 		}
 
 		var name = names[index];
@@ -133,7 +140,7 @@ public class PenSequenceBuilder
 			channel.ChannelNumber,
 			name);
 
-		return name;
+		return Result.Ok<string?>(name);
 	}
 
 	private static string FormatPenName(string paramName, string? configName)

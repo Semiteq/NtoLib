@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Text;
+
 using Serilog.Core;
 using Serilog.Events;
 

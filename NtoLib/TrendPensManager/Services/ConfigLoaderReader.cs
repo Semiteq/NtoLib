@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using FluentResults;
+
 using MasterSCADA.Hlp;
+
 using Microsoft.Extensions.Logging;
+
 using NtoLib.TrendPensManager.Entities;
 
 namespace NtoLib.TrendPensManager.Services;
@@ -47,13 +51,13 @@ public class ConfigLoaderReader
 
 		var result = new Dictionary<ServiceType, string[]>();
 
-		var heatersResult = ReadPinGroup(configLoader, SourcesOutGroupName, SourcesCount);
-		if (heatersResult.IsFailed)
+		var sourcesResult = ReadPinGroup(configLoader, SourcesOutGroupName, SourcesCount);
+		if (sourcesResult.IsFailed)
 		{
 			_logger?.LogError("Failed to read pin group '{GroupName}' for heaters.", SourcesOutGroupName);
-			return Result.Fail(heatersResult.Errors);
+			return Result.Fail(sourcesResult.Errors);
 		}
-		result[ServiceType.Heaters] = heatersResult.Value;
+		result[ServiceType.Heaters] = sourcesResult.Value;
 
 		var chamberHeatersResult = ReadPinGroup(configLoader, ChamberHeatersOutGroupName, ChamberHeatersCount);
 		if (chamberHeatersResult.IsFailed)
@@ -95,15 +99,36 @@ public class ConfigLoaderReader
 		}
 
 		var values = new string[count];
+		var hasAnyValue = false;
 
 		for (var index = 0; index < count; index++)
 		{
 			var pinName = (index + 1).ToString();
 			var pin = FindChildPin(group, pinName);
 
-			values[index] = pin != null
-				? GetPinStringValueOrEmpty(pin)
-				: string.Empty;
+			if (pin == null)
+			{
+				_logger?.LogError(
+					"Pin '{PinName}' not found in group '{GroupName}' of ConfigLoader.",
+					pinName,
+					groupName);
+
+				return Result.Fail<string[]>($"Pin {pinName} not found in group {groupName}");
+			}
+
+			var value = GetPinStringValueOrEmpty(pin);
+			values[index] = value;
+
+			if (!string.IsNullOrEmpty(value))
+			{
+				hasAnyValue = true;
+			}
+		}
+
+		if (!hasAnyValue)
+		{
+			_logger?.LogError("Pin group '{GroupName}' is empty in ConfigLoader.", groupName);
+			return Result.Fail<string[]>($"Group {groupName} is empty in ConfigLoader");
 		}
 
 		return Result.Ok(values);

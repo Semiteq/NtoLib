@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using FluentResults;
+
 using MasterSCADA.Hlp;
+
 using Microsoft.Extensions.Logging;
+
 using NtoLib.TrendPensManager.Entities;
 
 namespace NtoLib.TrendPensManager.Services;
@@ -49,7 +53,11 @@ public class TreeTraversalService
 				continue;
 			}
 
-			ProcessServiceItem(service, channels, warnings);
+			var serviceResult = ProcessServiceItem(service, channels, warnings);
+			if (serviceResult.IsFailed)
+			{
+				return Result.Fail<TraversalData>(serviceResult.Errors);
+			}
 		}
 
 		_logger?.LogInformation(
@@ -60,7 +68,7 @@ public class TreeTraversalService
 		return Result.Ok(new TraversalData(channels, warnings));
 	}
 
-	private void ProcessServiceItem(
+	private Result ProcessServiceItem(
 		ITreeItemHlp service,
 		List<ChannelInfo> channels,
 		List<string> warnings)
@@ -85,11 +93,13 @@ public class TreeTraversalService
 				continue;
 			}
 
-			if (!TryReadUsedFlag(channel, out var used, warnings))
+			var usedResult = ReadUsedFlag(channel);
+			if (usedResult.IsFailed)
 			{
-				continue;
+				return usedResult.ToResult();
 			}
 
+			var used = usedResult.Value;
 			var parameters = CollectChannelParameters(channel);
 			channels.Add(new ChannelInfo(serviceName, serviceType, channelNumber, used, parameters));
 
@@ -100,6 +110,8 @@ public class TreeTraversalService
 				used,
 				parameters.Count);
 		}
+
+		return Result.Ok();
 	}
 
 	private static bool TryParseChannelNumber(string channelName, out int channelNumber)
@@ -111,50 +123,41 @@ public class TreeTraversalService
 			return false;
 		}
 
-		// Find trailing digits
-		var i = channelName.Length - 1;
-		while (i >= 0 && char.IsDigit(channelName[i]))
+		var index = channelName.Length - 1;
+		while (index >= 0 && char.IsDigit(channelName[index]))
 		{
-			i--;
+			index--;
 		}
 
-		// No digits at the end
-		if (i == channelName.Length - 1)
+		if (index == channelName.Length - 1)
 		{
 			return false;
 		}
 
-		var suffix = channelName.Substring(i + 1);
+		var suffix = channelName.Substring(index + 1);
 		return int.TryParse(suffix, out channelNumber) && channelNumber > 0;
 	}
 
-	private bool TryReadUsedFlag(
-		ITreeItemHlp channel,
-		out bool used,
-		List<string> warnings)
+	private Result<bool> ReadUsedFlag(ITreeItemHlp channel)
 	{
-		used = false;
-
 		var usedPin = FindPin(channel, UsedPinName);
 		if (usedPin == null)
 		{
-			var message = $"Channel {channel.FullName} has no 'Used' pin, skipped";
-			warnings.Add(message);
-			_logger?.LogWarning(message);
-			return false;
+			var message = $"Channel {channel.FullName} has no '{UsedPinName}' pin.";
+			_logger?.LogError(message);
+			return Result.Fail<bool>(message);
 		}
 
 		try
 		{
-			used = GetPinBoolValue(usedPin);
-			return true;
+			var used = GetPinBoolValue(usedPin);
+			return Result.Ok(used);
 		}
 		catch (Exception ex)
 		{
-			var message = $"Failed to read 'Used' for {channel.FullName}, skipped";
-			warnings.Add(message);
+			var message = $"Failed to read '{UsedPinName}' for {channel.FullName}.";
 			_logger?.LogError(ex, "Failed to read 'Used' pin value for channel '{ChannelFullName}'", channel.FullName);
-			return false;
+			return Result.Fail<bool>(message);
 		}
 	}
 
@@ -165,7 +168,7 @@ public class TreeTraversalService
 		foreach (var child in channel.Childs)
 		{
 			if (child is ITreePinHlp pin &&
-			    !string.Equals(pin.Name, UsedPinName, StringComparison.OrdinalIgnoreCase))
+				!string.Equals(pin.Name, UsedPinName, StringComparison.OrdinalIgnoreCase))
 			{
 				parameters.Add(new ParameterInfo(pin.Name, pin.FullName));
 			}
@@ -190,7 +193,7 @@ public class TreeTraversalService
 		foreach (var child in parent.Childs)
 		{
 			if (child is ITreePinHlp pin &&
-			    string.Equals(pin.Name, pinName, StringComparison.OrdinalIgnoreCase))
+				string.Equals(pin.Name, pinName, StringComparison.OrdinalIgnoreCase))
 			{
 				return pin;
 			}

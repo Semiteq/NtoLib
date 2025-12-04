@@ -26,17 +26,16 @@ namespace NtoLib.TrendPensManager;
 public class TrendPensManagerFB : StaticFBBase
 {
 	private const int ExecutePinId = 1;
-	private const int DumpTreePinId = 2;
 
-	private const int DonePinId = 10;
+	private const int SuccessPinId = 10;
 	private const int LogsPinId = 11;
 	private const int ErrorsPinId = 12;
+	private const int ExecutingPinId = 13;
 
-	private static readonly TimeSpan _doneFlagDuration = TimeSpan.FromSeconds(1);
+	private static readonly TimeSpan _successFlagDuration = TimeSpan.FromSeconds(1);
 
 	private bool _previousExecuteCommand;
-	private bool _previousDumpTreeCommand;
-	private DateTime _doneFlagResetTimeUtc;
+	private DateTime _successFlagResetTimeUtc;
 	private bool _isRuntimeInitialized;
 
 	[DisplayName("01. Путь в дереве к корню трендов")]
@@ -71,7 +70,7 @@ public class TrendPensManagerFB : StaticFBBase
 			return;
 		}
 
-		UpdateDoneFlagTimeout();
+		UpdateSuccessFlagTimeout();
 		ProcessExecuteCommand();
 	}
 
@@ -156,27 +155,24 @@ public class TrendPensManagerFB : StaticFBBase
 		_logSink?.Clear();
 		SetPinValue(LogsPinId, string.Empty);
 		SetPinValue(ErrorsPinId, string.Empty);
+		SetPinValue(SuccessPinId, false);
+		SetPinValue(ExecutingPinId, true);
 
 		var result = _trendPensService!.AutoConfigurePens(TrendRootPath, ConfigLoaderRootPath);
 
 		FlushLogsToPin();
 
+		SetPinValue(ExecutingPinId, false);
+
 		if (result.IsFailed)
 		{
-			SetPinValue(DonePinId, false);
+			SetPinValue(SuccessPinId, false);
 			SetPinValue(ErrorsPinId, string.Join("|", result.Errors));
 			return;
 		}
 
-		var autoConfigResult = result.Value;
-
-		SetPinValue(DonePinId, true);
-		_doneFlagResetTimeUtc = DateTime.UtcNow.Add(_doneFlagDuration);
-
-		if (autoConfigResult.Warnings.Count > 0)
-		{
-			SetPinValue(ErrorsPinId, string.Join("|", autoConfigResult.Warnings));
-		}
+		SetPinValue(SuccessPinId, true);
+		_successFlagResetTimeUtc = DateTime.UtcNow.Add(_successFlagDuration);
 	}
 
 	private void FlushLogsToPin()
@@ -185,18 +181,18 @@ public class TrendPensManagerFB : StaticFBBase
 		SetPinValue(LogsPinId, logs);
 	}
 
-	private void UpdateDoneFlagTimeout()
+	private void UpdateSuccessFlagTimeout()
 	{
-		var isDone = GetPinValue<bool>(DonePinId);
+		var isSuccess = GetPinValue<bool>(SuccessPinId);
 
-		if (!isDone)
+		if (!isSuccess)
 		{
 			return;
 		}
 
-		if (DateTime.UtcNow >= _doneFlagResetTimeUtc)
+		if (DateTime.UtcNow >= _successFlagResetTimeUtc)
 		{
-			SetPinValue(DonePinId, false);
+			SetPinValue(SuccessPinId, false);
 		}
 	}
 }
