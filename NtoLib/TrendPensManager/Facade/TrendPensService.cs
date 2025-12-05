@@ -36,10 +36,21 @@ public class TrendPensService : ITrendPensService
 		IProjectHlp project,
 		ILogger<TrendPensService> logger)
 	{
-		_project = project ?? throw new ArgumentNullException(nameof(project));
-		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+		if (project == null)
+		{
+			throw new ArgumentNullException(nameof(project));
+		}
 
-		_treeTraversal = new TreeTraversalService(project, loggerFactory: null);
+		if (logger == null)
+		{
+			throw new ArgumentNullException(nameof(logger));
+		}
+
+		_project = project;
+		_logger = logger;
+
+		var serviceFilter = new ServiceFilter();
+		_treeTraversal = new TreeTraversalService(project, serviceFilter, loggerFactory: null);
 		_configReader = new ConfigLoaderReader(project, loggerFactory: null);
 		_sequenceBuilder = new PenSequenceBuilder(loggerFactory: null);
 	}
@@ -58,24 +69,36 @@ public class TrendPensService : ITrendPensService
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public Result<AutoConfigResult> AutoConfigurePens(string trendRootPath, string configLoaderPath)
+	public Result<AutoConfigResult> AutoConfigurePens(
+		string trendRootPath,
+		string configLoaderRootPath,
+		string dataRootPath,
+		ServiceSelectionOptions serviceSelectionOptions)
 	{
+		if (serviceSelectionOptions == null)
+		{
+			throw new ArgumentNullException(nameof(serviceSelectionOptions));
+		}
+
 		_logger.LogInformation(
-			"Starting AutoConfigurePens. TrendRootPath='{TrendRootPath}', ConfigLoaderPath='{ConfigLoaderPath}'",
+			"Starting AutoConfigurePens. TrendRootPath='{TrendRootPath}', ConfigLoaderRootPath='{ConfigLoaderRootPath}', DataRootPath='{DataRootPath}'",
 			trendRootPath,
-			configLoaderPath);
+			configLoaderRootPath,
+			dataRootPath);
 
 		try
 		{
 			var allWarnings = new List<string>();
 
-			_logger.LogDebug("Traversing services under trend root path '{TrendRootPath}'", trendRootPath);
-			var traversalResult = GetChannels(trendRootPath);
+			_logger.LogDebug(
+				"Traversing services under data root path '{DataRootPath}'",
+				dataRootPath);
+			var traversalResult = GetChannels(dataRootPath, serviceSelectionOptions);
 			if (traversalResult.IsFailed)
 			{
 				_logger.LogError(
-					"Service traversal failed for trend root '{TrendRootPath}'. Errors: {Errors}",
-					trendRootPath,
+					"Service traversal failed for data root '{DataRootPath}'. Errors: {Errors}",
+					dataRootPath,
 					string.Join("; ", traversalResult.Errors.Select(e => e.Message)));
 
 				return Result.Fail(traversalResult.Errors);
@@ -90,13 +113,15 @@ public class TrendPensService : ITrendPensService
 				channels.Count,
 				traversalData.Warnings.Count);
 
-			_logger.LogDebug("Reading ConfigLoader outputs from path '{ConfigLoaderPath}'", configLoaderPath);
-			var configResult = GetConfigLoaderNames(configLoaderPath);
+			_logger.LogDebug(
+				"Reading ConfigLoader outputs from path '{ConfigLoaderRootPath}'",
+				configLoaderRootPath);
+			var configResult = GetConfigLoaderNames(configLoaderRootPath);
 			if (configResult.IsFailed)
 			{
 				_logger.LogError(
-					"ConfigLoader reading failed for path '{ConfigLoaderPath}'. Errors: {Errors}",
-					configLoaderPath,
+					"ConfigLoader reading failed for path '{ConfigLoaderRootPath}'. Errors: {Errors}",
+					configLoaderRootPath,
 					string.Join("; ", configResult.Errors.Select(e => e.Message)));
 
 				return Result.Fail(configResult.Errors);
@@ -108,7 +133,7 @@ public class TrendPensService : ITrendPensService
 				string.Join(", ", configNames.Keys));
 
 			_logger.LogDebug(
-				"Building pen sequence. Channels={ChannelsCount}, TrendPath='{TrendRootPath}'",
+				"Building pen sequence. Channels={ChannelsCount}, TrendRootPath='{TrendRootPath}'",
 				channels.Count,
 				trendRootPath);
 
@@ -178,14 +203,16 @@ public class TrendPensService : ITrendPensService
 		}
 	}
 
-	private Result<TraversalData> GetChannels(string trendRootPath)
+	private Result<TraversalData> GetChannels(
+		string dataRootPath,
+		ServiceSelectionOptions serviceSelectionOptions)
 	{
-		return _treeTraversal.TraverseServices(trendRootPath);
+		return _treeTraversal.TraverseServices(dataRootPath, serviceSelectionOptions);
 	}
 
-	private Result<Dictionary<ServiceType, string[]>> GetConfigLoaderNames(string configLoaderPath)
+	private Result<Dictionary<ServiceType, string[]>> GetConfigLoaderNames(string configLoaderRootPath)
 	{
-		return _configReader.ReadOutputs(configLoaderPath);
+		return _configReader.ReadOutputs(configLoaderRootPath);
 	}
 
 	private Result<PenSequenceData> BuildPenSequence(
@@ -193,7 +220,7 @@ public class TrendPensService : ITrendPensService
 		Dictionary<ServiceType, string[]> configNames,
 		string trendRootPath)
 	{
-		return _sequenceBuilder.BuildSequence(channels, configNames, trendPath: trendRootPath);
+		return _sequenceBuilder.BuildSequence(channels, configNames, trendRootPath);
 	}
 
 	private Result<ApplySequenceResult> ApplySequenceToTrend(
@@ -272,7 +299,10 @@ public class TrendPensService : ITrendPensService
 
 	private Result AddPenToTrend(Trend trend, string pinPath, string displayName)
 	{
-		_logger.LogDebug("Adding pen to trend. PinPath='{PinPath}', DisplayName='{DisplayName}'", pinPath, displayName);
+		_logger.LogDebug(
+			"Adding pen to trend. PinPath='{PinPath}', DisplayName='{DisplayName}'",
+			pinPath,
+			displayName);
 
 		var pin = _project.SafeItem<ITreePinHlp>(pinPath);
 		if (pin == null)
@@ -321,7 +351,10 @@ public class TrendPensService : ITrendPensService
 				continue;
 			}
 
-			if (string.Equals(trend.Attribute.TreeItem.FullName, trendFullName, StringComparison.OrdinalIgnoreCase))
+			if (string.Equals(
+					trend.Attribute.TreeItem.FullName,
+					trendFullName,
+					StringComparison.OrdinalIgnoreCase))
 			{
 				return trend;
 			}
@@ -342,7 +375,10 @@ public class TrendPensService : ITrendPensService
 			.OfType<BaseGraph2D>()
 			.Select(g => g.CustomSettings as ScadaPenSettings)
 			.FirstOrDefault(s => s != null &&
-								 string.Equals(s.PinId, pinId, StringComparison.OrdinalIgnoreCase));
+								 string.Equals(
+									 s.PinId,
+									 pinId,
+									 StringComparison.OrdinalIgnoreCase));
 
 		if (penSettings == null)
 		{

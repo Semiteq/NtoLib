@@ -32,21 +32,25 @@ public class ConfigLoaderReader
 		_logger = loggerFactory?.CreateLogger<ConfigLoaderReader>();
 	}
 
-	public Result<Dictionary<ServiceType, string[]>> ReadOutputs(string configLoaderPath)
+	public Result<Dictionary<ServiceType, string[]>> ReadOutputs(string configLoaderRootPath)
 	{
-		_logger?.LogInformation("Reading ConfigLoader outputs from path '{ConfigLoaderPath}'", configLoaderPath);
+		_logger?.LogInformation(
+			"Reading ConfigLoader outputs from path '{ConfigLoaderRootPath}'",
+			configLoaderRootPath);
 
-		if (string.IsNullOrWhiteSpace(configLoaderPath))
+		if (string.IsNullOrWhiteSpace(configLoaderRootPath))
 		{
-			_logger?.LogWarning("ConfigLoader path is empty.");
-			return Result.Fail("ConfigLoader path is empty");
+			_logger?.LogWarning("ConfigLoader root path is empty.");
+			return Result.Fail("ConfigLoader root path is empty");
 		}
 
-		var configLoader = _project.SafeItem<ITreeItemHlp>(configLoaderPath);
+		var configLoader = _project.SafeItem<ITreeItemHlp>(configLoaderRootPath);
 		if (configLoader == null)
 		{
-			_logger?.LogWarning("ConfigLoader not found at path '{ConfigLoaderPath}'", configLoaderPath);
-			return Result.Fail($"ConfigLoader not found: {configLoaderPath}");
+			_logger?.LogWarning(
+				"ConfigLoader not found at path '{ConfigLoaderRootPath}'",
+				configLoaderRootPath);
+			return Result.Fail($"ConfigLoader not found: {configLoaderRootPath}");
 		}
 
 		var result = new Dictionary<ServiceType, string[]>();
@@ -54,7 +58,9 @@ public class ConfigLoaderReader
 		var sourcesResult = ReadPinGroup(configLoader, SourcesOutGroupName, SourcesCount);
 		if (sourcesResult.IsFailed)
 		{
-			_logger?.LogError("Failed to read pin group '{GroupName}' for heaters.", SourcesOutGroupName);
+			_logger?.LogError(
+				"Failed to read pin group '{GroupName}' for heaters.",
+				SourcesOutGroupName);
 			return Result.Fail(sourcesResult.Errors);
 		}
 		result[ServiceType.Heaters] = sourcesResult.Value;
@@ -62,7 +68,9 @@ public class ConfigLoaderReader
 		var chamberHeatersResult = ReadPinGroup(configLoader, ChamberHeatersOutGroupName, ChamberHeatersCount);
 		if (chamberHeatersResult.IsFailed)
 		{
-			_logger?.LogError("Failed to read pin group '{GroupName}' for chamber heaters.", ChamberHeatersOutGroupName);
+			_logger?.LogError(
+				"Failed to read pin group '{GroupName}' for chamber heaters.",
+				ChamberHeatersOutGroupName);
 			return Result.Fail(chamberHeatersResult.Errors);
 		}
 		result[ServiceType.ChamberHeaters] = chamberHeatersResult.Value;
@@ -70,7 +78,9 @@ public class ConfigLoaderReader
 		var shuttersResult = ReadPinGroup(configLoader, ShuttersOutGroupName, ShuttersCount);
 		if (shuttersResult.IsFailed)
 		{
-			_logger?.LogError("Failed to read pin group '{GroupName}' for shutters.", ShuttersOutGroupName);
+			_logger?.LogError(
+				"Failed to read pin group '{GroupName}' for shutters.",
+				ShuttersOutGroupName);
 			return Result.Fail(shuttersResult.Errors);
 		}
 		result[ServiceType.Shutters] = shuttersResult.Value;
@@ -94,7 +104,9 @@ public class ConfigLoaderReader
 		var group = FindChildItem(configLoader, groupName);
 		if (group == null)
 		{
-			_logger?.LogWarning("Pin group '{GroupName}' not found in ConfigLoader.", groupName);
+			_logger?.LogWarning(
+				"Pin group '{GroupName}' not found in ConfigLoader.",
+				groupName);
 			return Result.Fail<string[]>($"Group {groupName} not found in ConfigLoader");
 		}
 
@@ -127,7 +139,9 @@ public class ConfigLoaderReader
 
 		if (!hasAnyValue)
 		{
-			_logger?.LogError("Pin group '{GroupName}' is empty in ConfigLoader.", groupName);
+			_logger?.LogError(
+				"Pin group '{GroupName}' is empty in ConfigLoader.",
+				groupName);
 			return Result.Fail<string[]>($"Group {groupName} is empty in ConfigLoader");
 		}
 

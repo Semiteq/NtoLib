@@ -1,0 +1,10 @@
+﻿{
+  "ConfigLoaderPath": "Test.ConfigLoader",
+  "Groups": {
+    "Sources_OUT": [
+      "Source1"
+    ],
+    "ChamberHeaters_OUT": [],
+    "Shutters_OUT": []
+  }
+}

@@ -1,0 +1,975 @@
+{
+  "TrendRootPath": "PLZ_Inject.Графики",
+  "Services": [
+    {
+      "Name": "БКТ",
+      "Channels": [
+        {
+          "Name": "CH1",
+          "ChannelNumber": 1,
+          "HasUsedPin": true,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH1",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH1.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH1.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH2",
+          "ChannelNumber": 2,
+          "HasUsedPin": true,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH2",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH2.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH2.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH3",
+          "ChannelNumber": 3,
+          "HasUsedPin": true,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH3",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH3.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH3.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH4",
+          "ChannelNumber": 4,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH4",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH4.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH4.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH5",
+          "ChannelNumber": 5,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH5",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH5.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH5.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH6",
+          "ChannelNumber": 6,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH6",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH6.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH6.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH7",
+          "ChannelNumber": 7,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH7",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH7.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH7.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH8",
+          "ChannelNumber": 8,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH8",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH8.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH8.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH9",
+          "ChannelNumber": 9,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH9",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH9.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH9.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH10",
+          "ChannelNumber": 10,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH10",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH10.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH10.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH11",
+          "ChannelNumber": 11,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH11",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH11.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH11.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH12",
+          "ChannelNumber": 12,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH12",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH12.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH12.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH13",
+          "ChannelNumber": 13,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH13",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH13.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH13.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH14",
+          "ChannelNumber": 14,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH14",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH14.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH14.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH15",
+          "ChannelNumber": 15,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH15",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH15.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH15.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH16",
+          "ChannelNumber": 16,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH16",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH16.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH16.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH17",
+          "ChannelNumber": 17,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH17",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH17.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH17.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH18",
+          "ChannelNumber": 18,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH18",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH18.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH18.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH19",
+          "ChannelNumber": 19,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH19",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH19.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH19.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH20",
+          "ChannelNumber": 20,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH20",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH20.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH20.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH21",
+          "ChannelNumber": 21,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH21",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH21.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH21.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH22",
+          "ChannelNumber": 22,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH22",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH22.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH22.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH23",
+          "ChannelNumber": 23,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH23",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH23.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH23.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH24",
+          "ChannelNumber": 24,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БКТ.CH24",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH24.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БКТ.CH24.ActualPower"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "БП",
+      "Channels": [
+        {
+          "Name": "CH1",
+          "ChannelNumber": 1,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH1",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH1.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH1.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH2",
+          "ChannelNumber": 2,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH2",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH2.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH2.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH3",
+          "ChannelNumber": 3,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH3",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH3.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH3.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH4",
+          "ChannelNumber": 4,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH4",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH4.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH4.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH5",
+          "ChannelNumber": 5,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH5",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH5.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH5.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH6",
+          "ChannelNumber": 6,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH6",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH6.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH6.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH7",
+          "ChannelNumber": 7,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH7",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH7.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH7.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH8",
+          "ChannelNumber": 8,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH8",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH8.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH8.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH9",
+          "ChannelNumber": 9,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH9",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH9.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH9.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH10",
+          "ChannelNumber": 10,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH10",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH10.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH10.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH11",
+          "ChannelNumber": 11,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH11",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH11.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH11.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH12",
+          "ChannelNumber": 12,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH12",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH12.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH12.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH13",
+          "ChannelNumber": 13,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH13",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH13.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH13.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH14",
+          "ChannelNumber": 14,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH14",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH14.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH14.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH15",
+          "ChannelNumber": 15,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH15",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH15.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH15.ActualPower"
+            }
+          ]
+        },
+        {
+          "Name": "CH16",
+          "ChannelNumber": 16,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БП.CH16",
+          "Parameters": [
+            {
+              "Name": "ActualTemperature",
+              "FullPath": "PLZ_Inject.Графики.БП.CH16.ActualTemperature"
+            },
+            {
+              "Name": "ActualPower",
+              "FullPath": "PLZ_Inject.Графики.БП.CH16.ActualPower"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "БУЗ",
+      "Channels": [
+        {
+          "Name": "Канал 1",
+          "ChannelNumber": 1,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 1",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 1.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 1.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 2",
+          "ChannelNumber": 2,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 2",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 2.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 2.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 3",
+          "ChannelNumber": 3,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 3",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 3.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 3.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 4",
+          "ChannelNumber": 4,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 4",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 4.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 4.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 5",
+          "ChannelNumber": 5,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 5",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 5.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 5.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 6",
+          "ChannelNumber": 6,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 6",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 6.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 6.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 7",
+          "ChannelNumber": 7,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 7",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 7.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 7.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 8",
+          "ChannelNumber": 8,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 8",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 8.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 8.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 9",
+          "ChannelNumber": 9,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 9",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 9.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 9.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 10",
+          "ChannelNumber": 10,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 10",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 10.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 10.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 11",
+          "ChannelNumber": 11,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 11",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 11.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 11.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 12",
+          "ChannelNumber": 12,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 12",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 12.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 12.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 13",
+          "ChannelNumber": 13,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 13",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 13.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 13.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 14",
+          "ChannelNumber": 14,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 14",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 14.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 14.Closed"
+            }
+          ]
+        },
+        {
+          "Name": "Канал 15",
+          "ChannelNumber": 15,
+          "HasUsedPin": false,
+          "Used": false,
+          "FullName": "PLZ_Inject.Графики.БУЗ.Канал 15",
+          "Parameters": [
+            {
+              "Name": "Opened",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 15.Opened"
+            },
+            {
+              "Name": "Closed",
+              "FullPath": "PLZ_Inject.Графики.БУЗ.Канал 15.Closed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "Вакуумметры",
+      "Channels": []
+    },
+    {
+      "Name": "Пирометр",
+      "Channels": []
+    },
+    {
+      "Name": "Турбины",
+      "Channels": []
+    },
+    {
+      "Name": "Крио",
+      "Channels": []
+    },
+    {
+      "Name": "Ионные",
+      "Channels": []
+    }
+  ]
+}

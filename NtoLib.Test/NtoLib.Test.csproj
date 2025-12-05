@@ -40,6 +40,12 @@
         <Reference Include="MasterSCADA.Common">
             <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Common.dll</HintPath>
         </Reference>
+        <Reference Include="MasterSCADA.Trend">
+          <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Trend.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Text.Json">
+          <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\System.Text.Json.dll</HintPath>
+        </Reference>
         <Reference Include="System.Windows.Forms"/>
     </ItemGroup>
 

@@ -9,6 +9,7 @@ using InSAT.Library.Interop;
 
 using Microsoft.Extensions.Logging;
 
+using NtoLib.TrendPensManager.Entities;
 using NtoLib.TrendPensManager.Facade;
 using NtoLib.TrendPensManager.Logging;
 using NtoLib.TrendPensManager.Services;
@@ -27,10 +28,10 @@ public class TrendPensManagerFB : StaticFBBase
 {
 	private const int ExecutePinId = 1;
 
-	private const int SuccessPinId = 10;
-	private const int LogsPinId = 11;
-	private const int ErrorsPinId = 12;
-	private const int ExecutingPinId = 13;
+	private const int ExecutingPinId = 10;
+	private const int SuccessPinId = 11;
+	private const int LogsPinId = 12;
+	private const int ErrorsPinId = 13;
 
 	private static readonly TimeSpan _successFlagDuration = TimeSpan.FromSeconds(1);
 
@@ -43,6 +44,36 @@ public class TrendPensManagerFB : StaticFBBase
 
 	[DisplayName("02. Путь в дереве к загрузчику конфигурации")]
 	public string ConfigLoaderRootPath { get; set; } = "PLZ_Inject.Config.Загрузчик конфигурации";
+
+	[DisplayName("03. Путь в дереве к корню сервисов (источник данных)")]
+	public string DataRootPath { get; set; } = "PLZ_Inject.Графики";
+
+	[DisplayName("04. Добавлять БКТ")]
+	public bool AddHeaters { get; set; } = true;
+
+	[DisplayName("05. Добавлять БП")]
+	public bool AddChamberHeaters { get; set; } = true;
+
+	[DisplayName("06. Добавлять БУЗ")]
+	public bool AddShutters { get; set; } = true;
+
+	[DisplayName("07. Добавлять Вакуумметры")]
+	public bool AddVacuumMeters { get; set; } = true;
+
+	[DisplayName("08. Добавлять Пирометр")]
+	public bool AddPyrometer { get; set; } = true;
+
+	[DisplayName("09. Добавлять Турбины")]
+	public bool AddTurbines { get; set; } = true;
+
+	[DisplayName("10. Добавлять Крио")]
+	public bool AddCryo { get; set; } = true;
+
+	[DisplayName("11. Добавлять Ионные")]
+	public bool AddIon { get; set; } = true;
+
+	[DisplayName("12. Добавлять Интерферометр")]
+	public bool AddInterferometer { get; set; } = true;
 
 	[NonSerialized] private ITrendPensService? _trendPensService;
 	[NonSerialized] private SerilogLoggerFactory? _loggerFactory;
@@ -98,11 +129,12 @@ public class TrendPensManagerFB : StaticFBBase
 
 			_loggerFactory = new SerilogLoggerFactory(serilogLogger);
 
-			var trendPensLogger = _loggerFactory.CreateLogger<TrendPensService>();
-
-			var treeTraversal = new TreeTraversalService(TreeItemHlp.Project, _loggerFactory);
+			var serviceFilter = new ServiceFilter();
+			var treeTraversal = new TreeTraversalService(TreeItemHlp.Project, serviceFilter, _loggerFactory);
 			var configLoaderReader = new ConfigLoaderReader(TreeItemHlp.Project, _loggerFactory);
 			var penSequenceBuilder = new PenSequenceBuilder(_loggerFactory);
+
+			var trendPensLogger = _loggerFactory.CreateLogger<TrendPensService>();
 
 			_trendPensService = new TrendPensService(
 				TreeItemHlp.Project,
@@ -158,7 +190,12 @@ public class TrendPensManagerFB : StaticFBBase
 		SetPinValue(SuccessPinId, false);
 		SetPinValue(ExecutingPinId, true);
 
-		var result = _trendPensService!.AutoConfigurePens(TrendRootPath, ConfigLoaderRootPath);
+		var options = CreateServiceSelectionOptions();
+		var result = _trendPensService!.AutoConfigurePens(
+			TrendRootPath,
+			ConfigLoaderRootPath,
+			DataRootPath,
+			options);
 
 		FlushLogsToPin();
 
@@ -173,6 +210,22 @@ public class TrendPensManagerFB : StaticFBBase
 
 		SetPinValue(SuccessPinId, true);
 		_successFlagResetTimeUtc = DateTime.UtcNow.Add(_successFlagDuration);
+	}
+
+	private ServiceSelectionOptions CreateServiceSelectionOptions()
+	{
+		return new ServiceSelectionOptions
+		{
+			AddHeaters = AddHeaters,
+			AddChamberHeaters = AddChamberHeaters,
+			AddShutters = AddShutters,
+			AddVacuumMeters = AddVacuumMeters,
+			AddPyrometer = AddPyrometer,
+			AddTurbines = AddTurbines,
+			AddCryo = AddCryo,
+			AddIon = AddIon,
+			AddInterferometer = AddInterferometer
+		};
 	}
 
 	private void FlushLogsToPin()

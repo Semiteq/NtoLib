@@ -17,43 +17,75 @@ public class TreeTraversalService
 
 	private readonly IProjectHlp _project;
 	private readonly ILogger<TreeTraversalService>? _logger;
+	private readonly ServiceFilter _serviceFilter;
 
 	public TreeTraversalService(
 		IProjectHlp project,
+		ServiceFilter serviceFilter,
 		ILoggerFactory? loggerFactory = null)
 	{
 		_project = project ?? throw new ArgumentNullException(nameof(project));
+		_serviceFilter = serviceFilter ?? throw new ArgumentNullException(nameof(serviceFilter));
 		_logger = loggerFactory?.CreateLogger<TreeTraversalService>();
 	}
 
-	public Result<TraversalData> TraverseServices(string trendRootPath)
+	public Result<TraversalData> TraverseServices(
+		string dataRootPath,
+		ServiceSelectionOptions serviceSelectionOptions)
 	{
-		_logger?.LogInformation("Traversing services under trend root path '{TrendRootPath}'", trendRootPath);
-
-		if (string.IsNullOrWhiteSpace(trendRootPath))
+		if (serviceSelectionOptions == null)
 		{
-			_logger?.LogWarning("Trend root path is empty while traversing services.");
-			return Result.Fail("Trend root path is empty");
+			throw new ArgumentNullException(nameof(serviceSelectionOptions));
 		}
 
-		var trendRoot = _project.SafeItem<ITreeItemHlp>(trendRootPath);
-		if (trendRoot == null)
+		_logger?.LogInformation(
+			"Traversing services under data root path '{DataRootPath}'",
+			dataRootPath);
+
+		if (string.IsNullOrWhiteSpace(dataRootPath))
 		{
-			_logger?.LogWarning("Trend root item not found for path '{TrendRootPath}'", trendRootPath);
-			return Result.Fail($"Trend object not found: {trendRootPath}");
+			_logger?.LogWarning("Data root path is empty while traversing services.");
+			return Result.Fail("Data root path is empty");
+		}
+
+		var dataRoot = _project.SafeItem<ITreeItemHlp>(dataRootPath);
+		if (dataRoot == null)
+		{
+			_logger?.LogWarning("Data root item not found for path '{DataRootPath}'", dataRootPath);
+			return Result.Fail($"Data root object not found: {dataRootPath}");
+		}
+
+		if (!serviceSelectionOptions.IsAnyServiceEnabled())
+		{
+			_logger?.LogInformation(
+				"No services enabled in selection options. DataRootPath='{DataRootPath}'",
+				dataRootPath);
+
+			return Result.Ok(new TraversalData(new List<ChannelInfo>(), new List<string>()));
 		}
 
 		var channels = new List<ChannelInfo>();
 		var warnings = new List<string>();
 
-		foreach (var serviceItem in trendRoot.Childs)
+		foreach (var serviceItem in dataRoot.Childs)
 		{
-			if (serviceItem is not ITreeItemHlp service)
+			if (serviceItem is not ITreeItemHlp serviceNode)
 			{
 				continue;
 			}
 
-			var serviceResult = ProcessServiceItem(service, channels, warnings);
+			var serviceName = serviceNode.Name;
+			if (!_serviceFilter.IsServiceEnabled(serviceName, serviceSelectionOptions))
+			{
+				_logger?.LogDebug(
+					"Service '{ServiceName}' is disabled by selection options. Skipping.",
+					serviceName);
+				continue;
+			}
+
+			var serviceType = _serviceFilter.GetServiceType(serviceName);
+
+			var serviceResult = ProcessServiceItem(serviceNode, serviceName, serviceType, channels, warnings);
 			if (serviceResult.IsFailed)
 			{
 				return Result.Fail<TraversalData>(serviceResult.Errors);
@@ -70,12 +102,11 @@ public class TreeTraversalService
 
 	private Result ProcessServiceItem(
 		ITreeItemHlp service,
+		string serviceName,
+		ServiceType serviceType,
 		List<ChannelInfo> channels,
 		List<string> warnings)
 	{
-		var serviceName = service.Name;
-		var serviceType = ParseServiceType(serviceName);
-
 		_logger?.LogDebug(
 			"Processing service item. Name='{ServiceName}', Type={ServiceType}",
 			serviceName,
@@ -156,7 +187,10 @@ public class TreeTraversalService
 		catch (Exception ex)
 		{
 			var message = $"Failed to read '{UsedPinName}' for {channel.FullName}.";
-			_logger?.LogError(ex, "Failed to read 'Used' pin value for channel '{ChannelFullName}'", channel.FullName);
+			_logger?.LogError(
+				ex,
+				"Failed to read 'Used' pin value for channel '{ChannelFullName}'",
+				channel.FullName);
 			return Result.Fail<bool>(message);
 		}
 	}
@@ -175,17 +209,6 @@ public class TreeTraversalService
 		}
 
 		return parameters;
-	}
-
-	private static ServiceType ParseServiceType(string serviceName)
-	{
-		return serviceName switch
-		{
-			"БКТ" => ServiceType.Heaters,
-			"БП" => ServiceType.ChamberHeaters,
-			"БУЗ" => ServiceType.Shutters,
-			_ => ServiceType.Other
-		};
 	}
 
 	private static ITreePinHlp? FindPin(ITreeItemHlp parent, string pinName)

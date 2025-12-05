@@ -1,0 +1,27 @@
+﻿{
+  "TrendRootPath": "Test.TrendRoot",
+  "Services": [
+    {
+      "Name": "БКТ",
+      "Channels": [
+        {
+          "Name": "CH1",
+          "ChannelNumber": 1,
+          "HasUsedPin": true,
+          "Used": true,
+          "FullName": "Test.TrendRoot.БКТ.CH1",
+          "Parameters": [
+            {
+              "Name": "T1",
+              "FullPath": "Test.TrendRoot.БКТ.CH1.T1"
+            },
+            {
+              "Name": "P1",
+              "FullPath": "Test.TrendRoot.БКТ.CH1.P1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

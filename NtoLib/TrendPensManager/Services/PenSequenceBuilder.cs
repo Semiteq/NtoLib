@@ -21,12 +21,12 @@ public class PenSequenceBuilder
 	public Result<PenSequenceData> BuildSequence(
 		List<ChannelInfo> channels,
 		Dictionary<ServiceType, string[]> configNames,
-		string trendPath)
+		string trendRootPath)
 	{
 		_logger?.LogInformation(
-			"Building pen sequence. Channels={ChannelsCount}, TrendPath='{TrendPath}'",
+			"Building pen sequence. Channels={ChannelsCount}, TrendRootPath='{TrendRootPath}'",
 			channels?.Count ?? 0,
-			trendPath);
+			trendRootPath);
 
 		if (channels == null)
 		{
@@ -38,10 +38,10 @@ public class PenSequenceBuilder
 			throw new ArgumentNullException(nameof(configNames));
 		}
 
-		if (string.IsNullOrWhiteSpace(trendPath))
+		if (string.IsNullOrWhiteSpace(trendRootPath))
 		{
-			_logger?.LogWarning("Trend path is empty while building pen sequence.");
-			return Result.Fail("Trend path is empty");
+			_logger?.LogWarning("Trend root path is empty while building pen sequence.");
+			return Result.Fail("Trend root path is empty");
 		}
 
 		var sequenceItems = new List<PenSequenceItem>();
@@ -49,7 +49,8 @@ public class PenSequenceBuilder
 
 		if (channels.Count == 0)
 		{
-			_logger?.LogInformation("No channels provided for pen sequence. Returning empty sequence.");
+			_logger?.LogInformation(
+				"No channels provided for pen sequence. Returning empty sequence.");
 			return Result.Ok(new PenSequenceData(sequenceItems, warnings));
 		}
 
@@ -76,7 +77,7 @@ public class PenSequenceBuilder
 			foreach (var parameter in channel.Parameters)
 			{
 				var displayName = FormatPenName(parameter.Name, configName);
-				sequenceItems.Add(new PenSequenceItem(parameter.FullPath, trendPath, displayName));
+				sequenceItems.Add(new PenSequenceItem(parameter.FullPath, trendRootPath, displayName));
 
 				_logger?.LogDebug(
 					"Pen added to sequence. Service='{ServiceName}', ChannelNumber={ChannelNumber}, Param='{ParamName}', DisplayName='{DisplayName}'",
