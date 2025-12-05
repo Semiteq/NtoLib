@@ -2,8 +2,8 @@
 
 using FluentAssertions;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.MbeTable.ModuleCore.Entities;
 using NtoLib.Test.MbeTable.Core.Helpers;
 
 using Xunit;

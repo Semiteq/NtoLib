@@ -1,4 +1,4 @@
-﻿using NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
+﻿using NtoLib.MbeTable.ModuleInfrastructure.PinDataManager;
 
 namespace NtoLib.Test.MbeTable.Core.Helpers;
 

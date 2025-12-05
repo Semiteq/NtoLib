@@ -1,6 +1,6 @@
-﻿using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
+﻿using NtoLib.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.MbeTable.ModuleCore.Entities;
+using NtoLib.MbeTable.ModuleCore.Facade;
 
 namespace NtoLib.Test.MbeTable.Core.Helpers;
 

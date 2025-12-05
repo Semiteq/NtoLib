@@ -6,7 +6,7 @@ using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.MbeTable.ModuleCore.Services;
 using NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 
 using Xunit;

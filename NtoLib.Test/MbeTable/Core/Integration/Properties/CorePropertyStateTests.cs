@@ -4,9 +4,9 @@ using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.MbeTable.ModuleCore.Entities;
+using NtoLib.MbeTable.ModuleCore.Services;
 using NtoLib.Test.MbeTable.Core.Helpers;
 
 using Xunit;

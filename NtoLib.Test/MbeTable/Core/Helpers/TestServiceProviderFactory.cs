@@ -5,15 +5,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
-using NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
-using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
-using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
-using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
-using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
-using NtoLib.Recipes.MbeTable.ModuleCore.State;
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
+using NtoLib.MbeTable.ModuleConfig.Domain;
+using NtoLib.MbeTable.ModuleCore.Analyzer;
+using NtoLib.MbeTable.ModuleCore.Facade;
+using NtoLib.MbeTable.ModuleCore.Formulas;
+using NtoLib.MbeTable.ModuleCore.Properties;
+using NtoLib.MbeTable.ModuleCore.Runtime;
+using NtoLib.MbeTable.ModuleCore.Services;
+using NtoLib.MbeTable.ModuleCore.State;
+using NtoLib.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Test.MbeTable.Core.Helpers;
 

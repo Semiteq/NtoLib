@@ -2,7 +2,7 @@
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.ModuleCore.Services;
+using NtoLib.MbeTable.ModuleCore.Services;
 
 namespace NtoLib.Test.MbeTable.Core.Helpers;
 

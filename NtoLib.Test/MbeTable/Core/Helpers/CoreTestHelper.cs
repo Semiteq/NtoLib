@@ -2,7 +2,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
+using NtoLib.MbeTable.ModuleCore.Facade;
 
 namespace NtoLib.Test.MbeTable.Core.Helpers;
 

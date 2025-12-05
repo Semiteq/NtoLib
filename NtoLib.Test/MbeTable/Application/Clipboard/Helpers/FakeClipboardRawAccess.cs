@@ -1,6 +1,6 @@
 ﻿using FluentResults;
 
-using NtoLib.Recipes.MbeTable.ServiceClipboard;
+using NtoLib.MbeTable.ServiceClipboard;
 
 namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 

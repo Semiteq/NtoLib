@@ -2,7 +2,7 @@
 
 using FluentAssertions;
 
-using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+using NtoLib.MbeTable.ModuleCore.Entities;
 using NtoLib.Test.MbeTable.Core.Helpers;
 
 using Xunit;

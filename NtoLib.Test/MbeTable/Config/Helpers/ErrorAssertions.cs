@@ -3,7 +3,7 @@ using System.Linq;
 
 using FluentAssertions;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig.Common;
+using NtoLib.MbeTable.ModuleConfig.Common;
 
 namespace NtoLib.Test.MbeTable.Config.Helpers;
 

@@ -1,5 +1,5 @@
-﻿using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
+﻿using NtoLib.MbeTable.ModuleApplication;
+using NtoLib.MbeTable.ModuleCore.Entities;
 
 namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 

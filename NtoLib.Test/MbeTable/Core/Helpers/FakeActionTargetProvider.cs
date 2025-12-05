@@ -2,7 +2,7 @@
 
 using FluentResults;
 
-using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
+using NtoLib.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Test.MbeTable.Core.Helpers;
 

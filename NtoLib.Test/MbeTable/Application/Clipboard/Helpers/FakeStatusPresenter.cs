@@ -1,4 +1,4 @@
-﻿using NtoLib.Recipes.MbeTable.ModuleApplication.Status;
+﻿using NtoLib.MbeTable.ModuleApplication.Status;
 
 namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 

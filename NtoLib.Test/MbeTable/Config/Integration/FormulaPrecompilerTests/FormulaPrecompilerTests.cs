@@ -2,7 +2,7 @@
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
+using NtoLib.MbeTable.ModuleConfig.Formulas;
 using NtoLib.Test.MbeTable.Config.Helpers;
 
 using Xunit;

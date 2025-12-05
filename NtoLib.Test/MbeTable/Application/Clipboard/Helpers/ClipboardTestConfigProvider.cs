@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-using NtoLib.Recipes.MbeTable.ModuleConfig;
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
-using NtoLib.Recipes.MbeTable.ModuleConfig.Formulas;
-using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
+using NtoLib.MbeTable.ModuleConfig;
+using NtoLib.MbeTable.ModuleConfig.Domain;
+using NtoLib.MbeTable.ModuleConfig.Formulas;
+using NtoLib.MbeTable.ModuleCore.Formulas;
 
 namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 

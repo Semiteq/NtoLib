@@ -2,8 +2,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ServiceClipboard;
+using NtoLib.MbeTable.ModuleApplication;
+using NtoLib.MbeTable.ServiceClipboard;
 
 namespace NtoLib.Test.MbeTable.Application.Clipboard.Helpers;
 

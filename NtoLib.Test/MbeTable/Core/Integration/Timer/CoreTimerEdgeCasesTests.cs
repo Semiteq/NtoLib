@@ -4,7 +4,7 @@ using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
+using NtoLib.MbeTable.ModuleCore.Runtime;
 using NtoLib.Test.MbeTable.Core.Helpers;
 
 using Xunit;
