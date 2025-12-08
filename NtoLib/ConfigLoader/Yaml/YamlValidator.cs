@@ -16,7 +16,7 @@ public class YamlValidator
 	private readonly uint _waterCapacity;
 
 	private static readonly Regex _allowedNamePattern = new(
-		@"^[A-Za-zА-Яа-яЁё0-9 ._\-]*$",
+		@"^[A-Za-zА-Яа-яЁё0-9 ._\-+]*$",
 		RegexOptions.Compiled);
 
 	private const int MaxNameLength = 255;
