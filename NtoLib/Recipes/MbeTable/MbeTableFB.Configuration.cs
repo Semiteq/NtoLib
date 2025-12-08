@@ -47,13 +47,18 @@ public partial class MbeTableFB
 
 	private AppConfiguration LoadConfigurationInternal()
 	{
-		var configurationDirectory = Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
+		// Backwords compatibility:
+		if (_configDirPath is null)
+		{
+			_configDirPath = Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
+		}
+
 		IConfigurationLoader loader = new ConfigurationLoader();
 
 		try
 		{
 			var config = loader.LoadConfiguration(
-				configurationDirectory,
+				_configDirPath,
 				DefaultPropertyDefsFileName,
 				DefaultColumnDefsFileName,
 				DefaultPinGroupDefsFileName,

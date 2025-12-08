@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 
@@ -26,7 +27,8 @@ public partial class MbeTableFB
 	private uint _boolAreaSize = 50;
 	private float _epsilon = 1e-4f;
 	private bool _logToFile = false;
-	private string _logDirPath = "%AppData%/NtoLibLogs";
+	private string _logDirPath = "C:\\DISTR\\Logs";
+	private string _configDirPath = "C:\\DISTR\\Config\\NtoLibTableConfig";
 
 	[DisplayName("01. IP адрес контроллера байт 1")]
 	public uint UControllerIp1
@@ -174,5 +176,13 @@ public partial class MbeTableFB
 	{
 		get => _logDirPath;
 		set => _logDirPath = value;
+	}
+
+	[DisplayName("20. Путь к конфигурационному каталогу")]
+	[Description("Каталог, где хранятся файлы конфигурации таблицы рецептов. Изменения вступят в силу при следующей загрузке блока.")]
+	public string ConfigDirPath
+	{
+		get => _configDirPath;
+		set => _configDirPath = value;
 	}
 }
