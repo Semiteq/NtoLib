@@ -32,7 +32,9 @@ public class ConfigLoaderReader
 		_logger = loggerFactory?.CreateLogger<ConfigLoaderReader>();
 	}
 
-	public Result<Dictionary<ServiceType, string[]>> ReadOutputs(string configLoaderRootPath)
+	public Result<Dictionary<ServiceType, string[]>> ReadOutputs(
+		string configLoaderRootPath,
+		ServiceSelectionOptions? serviceSelectionOptions = null)
 	{
 		_logger?.LogInformation(
 			"Reading ConfigLoader outputs from path '{ConfigLoaderRootPath}'",
@@ -55,35 +57,56 @@ public class ConfigLoaderReader
 
 		var result = new Dictionary<ServiceType, string[]>();
 
-		var sourcesResult = ReadPinGroup(configLoader, SourcesOutGroupName, SourcesCount);
-		if (sourcesResult.IsFailed)
+		if (serviceSelectionOptions == null || serviceSelectionOptions.AddHeaters)
 		{
-			_logger?.LogError(
-				"Failed to read pin group '{GroupName}' for heaters.",
-				SourcesOutGroupName);
-			return Result.Fail(sourcesResult.Errors);
+			var sourcesResult = ReadPinGroup(configLoader, SourcesOutGroupName, SourcesCount);
+			if (sourcesResult.IsFailed)
+			{
+				_logger?.LogError(
+					"Failed to read pin group '{GroupName}' for heaters.",
+					SourcesOutGroupName);
+				return Result.Fail(sourcesResult.Errors);
+			}
+			result[ServiceType.Heaters] = sourcesResult.Value;
 		}
-		result[ServiceType.Heaters] = sourcesResult.Value;
+		else
+		{
+			_logger?.LogDebug("Heaters disabled, skipping {GroupName}", SourcesOutGroupName);
+		}
 
-		var chamberHeatersResult = ReadPinGroup(configLoader, ChamberHeatersOutGroupName, ChamberHeatersCount);
-		if (chamberHeatersResult.IsFailed)
+		if (serviceSelectionOptions == null || serviceSelectionOptions.AddChamberHeaters)
 		{
-			_logger?.LogError(
-				"Failed to read pin group '{GroupName}' for chamber heaters.",
-				ChamberHeatersOutGroupName);
-			return Result.Fail(chamberHeatersResult.Errors);
+			var chamberHeatersResult = ReadPinGroup(configLoader, ChamberHeatersOutGroupName, ChamberHeatersCount);
+			if (chamberHeatersResult.IsFailed)
+			{
+				_logger?.LogError(
+					"Failed to read pin group '{GroupName}' for chamber heaters.",
+					ChamberHeatersOutGroupName);
+				return Result.Fail(chamberHeatersResult.Errors);
+			}
+			result[ServiceType.ChamberHeaters] = chamberHeatersResult.Value;
 		}
-		result[ServiceType.ChamberHeaters] = chamberHeatersResult.Value;
+		else
+		{
+			_logger?.LogDebug("Chamber heaters disabled, skipping {GroupName}", ChamberHeatersOutGroupName);
+		}
 
-		var shuttersResult = ReadPinGroup(configLoader, ShuttersOutGroupName, ShuttersCount);
-		if (shuttersResult.IsFailed)
+		if (serviceSelectionOptions == null || serviceSelectionOptions.AddShutters)
 		{
-			_logger?.LogError(
-				"Failed to read pin group '{GroupName}' for shutters.",
-				ShuttersOutGroupName);
-			return Result.Fail(shuttersResult.Errors);
+			var shuttersResult = ReadPinGroup(configLoader, ShuttersOutGroupName, ShuttersCount);
+			if (shuttersResult.IsFailed)
+			{
+				_logger?.LogError(
+					"Failed to read pin group '{GroupName}' for shutters.",
+					ShuttersOutGroupName);
+				return Result.Fail(shuttersResult.Errors);
+			}
+			result[ServiceType.Shutters] = shuttersResult.Value;
 		}
-		result[ServiceType.Shutters] = shuttersResult.Value;
+		else
+		{
+			_logger?.LogDebug("Shutters disabled, skipping {GroupName}", ShuttersOutGroupName);
+		}
 
 		_logger?.LogInformation(
 			"ConfigLoader outputs read successfully. Heaters={HeatersCount}, ChamberHeaters={ChamberHeatersCount}, Shutters={ShuttersCount}",

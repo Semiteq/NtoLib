@@ -104,7 +104,7 @@ public class TrendPensService : ITrendPensService
 			_logger.LogDebug(
 				"Reading ConfigLoader outputs from path '{ConfigLoaderRootPath}'",
 				configLoaderRootPath);
-			var configResult = GetConfigLoaderNames(configLoaderRootPath);
+			var configResult = GetConfigLoaderNames(configLoaderRootPath, serviceSelectionOptions);
 			if (configResult.IsFailed)
 			{
 				LogErrors("ConfigLoader reading failed for path '{ConfigLoaderRootPath}'", configResult.Errors, configLoaderRootPath);
@@ -186,9 +186,11 @@ public class TrendPensService : ITrendPensService
 		return _treeTraversal.TraverseServices(dataRootPath, serviceSelectionOptions);
 	}
 
-	private Result<Dictionary<ServiceType, string[]>> GetConfigLoaderNames(string configLoaderRootPath)
+	private Result<Dictionary<ServiceType, string[]>> GetConfigLoaderNames(
+		string configLoaderRootPath,
+		ServiceSelectionOptions serviceSelectionOptions)
 	{
-		return _configReader.ReadOutputs(configLoaderRootPath);
+		return _configReader.ReadOutputs(configLoaderRootPath, serviceSelectionOptions);
 	}
 
 	private Result<PenSequenceData> BuildPenSequence(
