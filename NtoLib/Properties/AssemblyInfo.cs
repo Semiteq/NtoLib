@@ -18,5 +18,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.9.3")]
 
 // beta marking below
-[assembly: AssemblyProduct("NtoLib SDK 1.9.3-beta3")]
-[assembly: AssemblyInformationalVersion("1.9.3-beta3")]
+[assembly: AssemblyProduct("NtoLib SDK 1.9.3")]
+[assembly: AssemblyInformationalVersion("1.9.3")]
