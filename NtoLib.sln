@@ -5,9 +5,9 @@ VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NtoLib", "NtoLib\NtoLib.csproj", "{AB49B767-7843-42AE-B6D2-443AFBFF7699}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NtoLib.Test", "NtoLib.Test\NtoLib.Test.csproj", "{D684E7B1-E891-4620-86D3-375409EA0A95}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{D684E7B1-E891-4620-86D3-375409EA0A95}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{6254B94F-948B-4EC4-A989-E1A6F4AE506E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Build", "build\Build.csproj", "{6254B94F-948B-4EC4-A989-E1A6F4AE506E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
