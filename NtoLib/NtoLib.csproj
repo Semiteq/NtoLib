@@ -766,6 +766,8 @@
     <Compile Include="TrendPensManager\Services\PenSequenceBuilder.cs" />
     <Compile Include="TrendPensManager\Services\ServiceFilter.cs" />
     <Compile Include="TrendPensManager\Services\TreeTraversalService.cs" />
+    <Compile Include="TrendPensManager\Services\TrendOperations.cs" />
+    <Compile Include="TrendPensManager\Services\TrendPenApplicator.cs" />
     <Compile Include="TrendPensManager\TrendPensManagerFB.cs" />
     <Compile Include="Utils\ButtonOrientation.cs" />
     <Compile Include="Utils\ReadResult.cs" />

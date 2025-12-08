@@ -53,4 +53,4 @@
 
 ![compile](./img/compile.jpg)
 
-Возможно произошла ошибка сборки и не все зависимые dll были запакованы в NtoLib.dll в процессе работы Nuke. Можно проверить открыв NtoLib.dll с помощью [dotPeek](https://www.jetbrains.com/decompiler/) прямо в папке MasterScada и посмотреть есть ли битые References.
+Возможно произошла ошибка сборки и не все зависимые dll были запакованы в NtoLib.dll в процессе работы Nuke. Можно проверить открыв NtoLib.dll с помощью [dotPeek](https://www.jetbrains.com/decompiler/) прямо в папке MasterScada и посмотреть есть ли битые References. Если показывается код ошибки - ошибка выброшена не SCADA, т.е. по ней можно найти информацию.

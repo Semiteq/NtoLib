@@ -134,6 +134,9 @@ public class TrendPensManagerFB : StaticFBBase
 			var configLoaderReader = new ConfigLoaderReader(TreeItemHlp.Project, _loggerFactory);
 			var penSequenceBuilder = new PenSequenceBuilder(_loggerFactory);
 
+			var trendOperations = new TrendOperations(TreeItemHlp.Project, _loggerFactory.CreateLogger<TrendOperations>());
+			var trendPenApplicator = new TrendPenApplicator(TreeItemHlp.Project, trendOperations, _loggerFactory.CreateLogger<TrendPenApplicator>());
+
 			var trendPensLogger = _loggerFactory.CreateLogger<TrendPensService>();
 
 			_trendPensService = new TrendPensService(
@@ -141,6 +144,7 @@ public class TrendPensManagerFB : StaticFBBase
 				treeTraversal,
 				configLoaderReader,
 				penSequenceBuilder,
+				trendPenApplicator,
 				trendPensLogger);
 
 			_isRuntimeInitialized = true;

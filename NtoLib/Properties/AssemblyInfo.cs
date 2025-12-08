@@ -15,9 +15,9 @@ using System.Runtime.InteropServices;
 
 [assembly: Guid("ab49b767-7843-42ae-b6d2-443afbff7699")]
 
-[assembly: AssemblyVersion("1.10.0.0")]
-[assembly: AssemblyFileVersion("1.10.0.0")]
+[assembly: AssemblyVersion("1.9.3.0")]
+[assembly: AssemblyFileVersion("1.9.3")]
 
 // beta marking below
-[assembly: AssemblyProduct("NtoLib SDK 1.10.0")]
-[assembly: AssemblyInformationalVersion("1.10.0")]
+[assembly: AssemblyProduct("NtoLib SDK 1.9.3-beta2")]
+[assembly: AssemblyInformationalVersion("1.9.3-beta2")]

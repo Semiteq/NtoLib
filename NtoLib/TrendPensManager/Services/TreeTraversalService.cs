@@ -33,10 +33,7 @@ public class TreeTraversalService
 		string dataRootPath,
 		ServiceSelectionOptions serviceSelectionOptions)
 	{
-		if (serviceSelectionOptions == null)
-		{
-			throw new ArgumentNullException(nameof(serviceSelectionOptions));
-		}
+		_ = serviceSelectionOptions ?? throw new ArgumentNullException(nameof(serviceSelectionOptions));
 
 		_logger?.LogInformation(
 			"Traversing services under data root path '{DataRootPath}'",
