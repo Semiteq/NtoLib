@@ -4,7 +4,7 @@
 ![Target](https://img.shields.io/badge/target-.NET%20Framework%204.8-lightgrey)
 ![MasterSCADA](https://img.shields.io/badge/MasterSCADA-3.12-informational)
 
-![logo](./img/logo.png)
+<p align="center"><img src=./img/logo.png/></p>
 
 Библиотека пользовательских функциональных блоков и инфраструктуры для **MasterSCADA 3.12** (.NET Framework 4.8),
 ориентированная на поддержку сложных технологических установок (эпитаксия плазмохимия и смежные системы).
