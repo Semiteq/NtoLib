@@ -14,7 +14,7 @@ public struct Status
 	public bool Message2;
 	public bool Message3;
 	public bool SafeMode;
-	public bool Units;
+	public bool Units; // no longer used
 	public bool ForceStop;
 	public bool BlockStart;
 	public bool BlockStop;

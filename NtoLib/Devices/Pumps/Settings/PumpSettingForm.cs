@@ -71,8 +71,7 @@ public partial class PumpSettingForm : Form
 			}
 			case PumpType.Turbine:
 			{
-				var units = status.Units ? "%" : "об/мин";
-				speedLabel.ValueText = $"{status.Speed:F1} {units}";
+				speedLabel.ValueText = $"{status.Speed:F1} %";
 
 				break;
 			}
