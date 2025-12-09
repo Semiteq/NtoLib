@@ -32,20 +32,19 @@ namespace NtoLib.Devices.Pumps.Settings
         {
             this.stateLabel = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.blockStartLamp = new LabeledLamp();
-            this.blockStopLamp = new LabeledLamp();
-            this.forceStopLamp = new LabeledLamp();
-            this.safeModeLamp = new LabeledLamp();
-            this.noConnectionLamp = new LabeledLamp();
-            this.errorLamp = new LabeledLamp();
-            this.warningLamp = new LabeledLamp();
-            this.temperatureLabel = new LabeledValue();
-            this.speedLabel = new LabeledValue();
-            this.voltageLabel = new LabeledValue();
-            this.currentLabel = new LabeledValue();
-            this.powerLabel = new LabeledValue();
-            this.temperatureInLabel = new LabeledValue();
-            this.temperatureOutLabel = new LabeledValue();
+            this.blockStartLamp = new NtoLib.Devices.Render.Common.LabeledLamp();
+            this.blockStopLamp = new NtoLib.Devices.Render.Common.LabeledLamp();
+            this.forceStopLamp = new NtoLib.Devices.Render.Common.LabeledLamp();
+            this.safeModeLamp = new NtoLib.Devices.Render.Common.LabeledLamp();
+            this.noConnectionLamp = new NtoLib.Devices.Render.Common.LabeledLamp();
+            this.errorLamp = new NtoLib.Devices.Render.Common.LabeledLamp();
+            this.warningLamp = new NtoLib.Devices.Render.Common.LabeledLamp();
+            this.temperatureLabel = new NtoLib.Devices.Render.Common.LabeledValue();
+            this.speedLabel = new NtoLib.Devices.Render.Common.LabeledValue();
+            this.voltageLabel = new NtoLib.Devices.Render.Common.LabeledValue();
+            this.currentLabel = new NtoLib.Devices.Render.Common.LabeledValue();
+            this.temperatureInLabel = new NtoLib.Devices.Render.Common.LabeledValue();
+            this.temperatureOutLabel = new NtoLib.Devices.Render.Common.LabeledValue();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -76,7 +75,6 @@ namespace NtoLib.Devices.Pumps.Settings
             this.flowLayoutPanel1.Controls.Add(this.speedLabel);
             this.flowLayoutPanel1.Controls.Add(this.voltageLabel);
             this.flowLayoutPanel1.Controls.Add(this.currentLabel);
-            this.flowLayoutPanel1.Controls.Add(this.powerLabel);
             this.flowLayoutPanel1.Controls.Add(this.temperatureInLabel);
             this.flowLayoutPanel1.Controls.Add(this.temperatureOutLabel);
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
@@ -84,7 +82,7 @@ namespace NtoLib.Devices.Pumps.Settings
             this.flowLayoutPanel1.Location = new System.Drawing.Point(8, 8);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(384, 531);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(384, 498);
             this.flowLayoutPanel1.TabIndex = 49;
             // 
             // blockStartLamp
@@ -233,24 +231,12 @@ namespace NtoLib.Devices.Pumps.Settings
             this.currentLabel.TabIndex = 60;
             this.currentLabel.ValueText = "А";
             // 
-            // powerLabel
-            // 
-            this.powerLabel.AutoSize = true;
-            this.powerLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.powerLabel.LabelText = "Мощность:";
-            this.powerLabel.Location = new System.Drawing.Point(9, 431);
-            this.powerLabel.Margin = new System.Windows.Forms.Padding(4);
-            this.powerLabel.Name = "powerLabel";
-            this.powerLabel.Size = new System.Drawing.Size(366, 25);
-            this.powerLabel.TabIndex = 61;
-            this.powerLabel.ValueText = "Вт";
-            // 
             // temperatureInLabel
             // 
             this.temperatureInLabel.AutoSize = true;
             this.temperatureInLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.temperatureInLabel.LabelText = "Т1:";
-            this.temperatureInLabel.Location = new System.Drawing.Point(9, 464);
+            this.temperatureInLabel.Location = new System.Drawing.Point(9, 431);
             this.temperatureInLabel.Margin = new System.Windows.Forms.Padding(4);
             this.temperatureInLabel.Name = "temperatureInLabel";
             this.temperatureInLabel.Size = new System.Drawing.Size(366, 25);
@@ -262,7 +248,7 @@ namespace NtoLib.Devices.Pumps.Settings
             this.temperatureOutLabel.AutoSize = true;
             this.temperatureOutLabel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.temperatureOutLabel.LabelText = "Т2:";
-            this.temperatureOutLabel.Location = new System.Drawing.Point(9, 497);
+            this.temperatureOutLabel.Location = new System.Drawing.Point(9, 464);
             this.temperatureOutLabel.Margin = new System.Windows.Forms.Padding(4);
             this.temperatureOutLabel.Name = "temperatureOutLabel";
             this.temperatureOutLabel.Size = new System.Drawing.Size(366, 25);
@@ -304,7 +290,6 @@ namespace NtoLib.Devices.Pumps.Settings
         private LabeledValue speedLabel;
         private LabeledValue voltageLabel;
         private LabeledValue currentLabel;
-        private LabeledValue powerLabel;
         private LabeledValue temperatureInLabel;
         private LabeledValue temperatureOutLabel;
         private LabeledLamp warningLamp;

@@ -232,19 +232,27 @@
     <Compile Include="Devices\Render\Common\Bounds.cs" />
     <Compile Include="Devices\Render\Common\ButtonOrientation.cs" />
     <Compile Include="Devices\Render\Common\DeviceLayout.cs" />
-    <Compile Include="Devices\Render\Common\LabeledValue.cs" />
+    <Compile Include="Devices\Render\Common\LabeledValue.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Devices\Render\Common\LabeledValue.Designer.cs">
       <DependentUpon>LabeledValue.cs</DependentUpon>
     </Compile>
-    <Compile Include="Devices\Render\Common\LabeledButton.cs" />
+    <Compile Include="Devices\Render\Common\LabeledButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Devices\Render\Common\LabeledButton.Designer.cs">
       <DependentUpon>LabeledButton.cs</DependentUpon>
     </Compile>
-    <Compile Include="Devices\Render\Common\LabeledLamp.cs" />
+    <Compile Include="Devices\Render\Common\LabeledLamp.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Devices\Render\Common\LabeledLamp.Designer.cs">
       <DependentUpon>LabeledLamp.cs</DependentUpon>
     </Compile>
-    <Compile Include="Devices\Render\Common\Lamp.cs" />
+    <Compile Include="Devices\Render\Common\Lamp.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Devices\Render\Common\Lamp.Designer.cs">
       <DependentUpon>Lamp.cs</DependentUpon>
     </Compile>
@@ -257,11 +265,15 @@
     <Compile Include="Devices\Render\Valves\ValveBaseRenderer.cs" />
     <Compile Include="InputFields\Helpers\FocusManager.cs" />
     <Compile Include="InputFields\Helpers\ReadResult.cs" />
-    <Compile Include="InputFields\Helpers\TextBoxFloat.cs" />
+    <Compile Include="InputFields\Helpers\TextBoxFloat.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="InputFields\Helpers\TextBoxFloat.Designer.cs">
       <DependentUpon>TextBoxFloat.cs</DependentUpon>
     </Compile>
-    <Compile Include="InputFields\Helpers\TextBoxInt.cs" />
+    <Compile Include="InputFields\Helpers\TextBoxInt.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="InputFields\Helpers\TextBoxInt.Designer.cs">
       <DependentUpon>TextBoxInt.cs</DependentUpon>
     </Compile>
@@ -733,14 +745,24 @@
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusFormatter.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusKind.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusService.cs" />
-    <Compile Include="Recipes\MbeTable\TableControl.Buttons.cs" />
-    <Compile Include="Recipes\MbeTable\TableControl.cs" />
+    <Compile Include="Recipes\MbeTable\TableControl.Buttons.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Recipes\MbeTable\TableControl.Designer.cs">
       <DependentUpon>TableControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Recipes\MbeTable\TableControl.DesignTime.cs" />
-    <Compile Include="Recipes\MbeTable\TableControl.Helpers.cs" />
-    <Compile Include="Recipes\MbeTable\TableControl.Lifecycle.cs" />
+    <Compile Include="Recipes\MbeTable\TableControl.DesignTime.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableControl.Helpers.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Recipes\MbeTable\TableControl.Lifecycle.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="PinConnector\PinConnectorFB.cs" />
     <Compile Include="PinConnector\Facade\IPinConnectorService.cs" />
     <Compile Include="PinConnector\Facade\PinConnectorService.cs" />

@@ -44,7 +44,6 @@ public partial class PumpSettingForm : Form
 
 			flowLayoutPanel1.Controls.Remove(voltageLabel);
 			flowLayoutPanel1.Controls.Remove(currentLabel);
-			flowLayoutPanel1.Controls.Remove(powerLabel);
 		}
 
 		if (_pumpType != PumpType.Cryogen)
@@ -81,7 +80,6 @@ public partial class PumpSettingForm : Form
 
 				voltageLabel.ValueText = $"{status.Voltage:F2} В";
 				currentLabel.ValueText = $"{status.Current:F2} А";
-				powerLabel.ValueText = $"{status.Power:F2} Вт";
 				break;
 			}
 			case PumpType.Cryogen:

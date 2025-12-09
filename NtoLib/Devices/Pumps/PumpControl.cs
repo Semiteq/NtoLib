@@ -201,13 +201,17 @@ public partial class PumpControl : VisualControlBase
 	{
 		Orientation buttonsOrientation;
 		if (!IsHorizontal())
+		{
 			buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop
 				? Orientation.Top
 				: Orientation.Bottom;
+		}
 		else
+		{
 			buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop
 				? Orientation.Left
 				: Orientation.Right;
+		}
 
 		var buttons = new Button[] { buttonStart, buttonStop };
 
@@ -350,7 +354,6 @@ public partial class PumpControl : VisualControlBase
 			}
 			case PumpType.Turbine:
 			{
-				Status.Units = GetPinValue<bool>(PumpFB.CustomId);
 				Status.Speed = GetPinValue<float>(PumpFB.TurbineSpeedId);
 
 				Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
@@ -358,7 +361,7 @@ public partial class PumpControl : VisualControlBase
 			}
 			case PumpType.Ion:
 			{
-				Status.SafeMode = GetPinValue<bool>(PumpFB.CustomId);
+				Status.SafeMode = GetPinValue<bool>(PumpFB.Message1Id);
 
 				Status.Voltage = GetPinValue<float>(PumpFB.IonPumpVoltage);
 				Status.Current = GetPinValue<float>(PumpFB.IonPumpCurrent);
