@@ -1,4 +1,6 @@
-﻿namespace NtoLib.Devices.Valves.Settings
+﻿using NtoLib.Devices.Render.Common;
+
+namespace NtoLib.Devices.Valves.Settings
 {
     partial class SettingsForm
     {
@@ -29,16 +31,16 @@
         private void InitializeComponent()
         {
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.openedLamp = new NtoLib.Utils.LabledLamp();
-            this.closedLamp = new NtoLib.Utils.LabledLamp();
-            this.blockOpeningLamp = new NtoLib.Utils.LabledLamp();
-            this.blockClosingLamp = new NtoLib.Utils.LabledLamp();
-            this.forceCloseLamp = new NtoLib.Utils.LabledLamp();
-            this.noConnectionLamp = new NtoLib.Utils.LabledLamp();
-            this.notOpenedLamp = new NtoLib.Utils.LabledLamp();
-            this.notClosedLamp = new NtoLib.Utils.LabledLamp();
-            this.unknownStateLamp = new NtoLib.Utils.LabledLamp();
-            this.collisionLamp = new NtoLib.Utils.LabledLamp();
+            this.openedLamp = new LabeledLamp();
+            this.closedLamp = new LabeledLamp();
+            this.blockOpeningLamp = new LabeledLamp();
+            this.blockClosingLamp = new LabeledLamp();
+            this.forceCloseLamp = new LabeledLamp();
+            this.noConnectionLamp = new LabeledLamp();
+            this.notOpenedLamp = new LabeledLamp();
+            this.notClosedLamp = new LabeledLamp();
+            this.unknownStateLamp = new LabeledLamp();
+            this.collisionLamp = new LabeledLamp();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -222,15 +224,15 @@
 
         #endregion
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private Utils.LabledLamp openedLamp;
-        private Utils.LabledLamp closedLamp;
-        private Utils.LabledLamp blockOpeningLamp;
-        private Utils.LabledLamp blockClosingLamp;
-        private Utils.LabledLamp forceCloseLamp;
-        private Utils.LabledLamp noConnectionLamp;
-        private Utils.LabledLamp notOpenedLamp;
-        private Utils.LabledLamp notClosedLamp;
-        private Utils.LabledLamp collisionLamp;
-        private Utils.LabledLamp unknownStateLamp;
+        private LabeledLamp openedLamp;
+        private LabeledLamp closedLamp;
+        private LabeledLamp blockOpeningLamp;
+        private LabeledLamp blockClosingLamp;
+        private LabeledLamp forceCloseLamp;
+        private LabeledLamp noConnectionLamp;
+        private LabeledLamp notOpenedLamp;
+        private LabeledLamp notClosedLamp;
+        private LabeledLamp collisionLamp;
+        private LabeledLamp unknownStateLamp;
     }
 }

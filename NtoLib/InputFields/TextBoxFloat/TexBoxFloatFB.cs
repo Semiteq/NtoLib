@@ -7,82 +7,80 @@ using FB.VisualFB;
 
 using InSAT.Library.Interop;
 
-namespace NtoLib.InputFields.TextBoxFloat
+namespace NtoLib.InputFields.TextBoxFloat;
+
+[Serializable]
+[ComVisible(true)]
+[Guid("47B598E0-BE96-4E09-BEE6-CFD835BE4B9A")]
+[CatID(CatIDs.CATID_OTHER)]
+[DisplayName("Дробное поле")]
+[VisualControls(typeof(TextBoxFloatControl))]
+public class TextBoxFloatFB : VisualFBBase
 {
-	[Serializable]
-	[ComVisible(true)]
-	[Guid("47B598E0-BE96-4E09-BEE6-CFD835BE4B9A")]
-	[CatID(CatIDs.CATID_OTHER)]
-	[DisplayName("Дробное поле")]
-	[VisualControls(typeof(TextBoxFloatControl))]
-	public class TextBoxFloatFB : VisualFBBase
+	private const int InputFromScadaId = 10;
+	private const int OutputToScadaId = 50;
+
+	private const int LockFromScadaId = 15;
+
+	private const int MaxValueId = 20;
+	private const int MinValueId = 25;
+
+	public const int OutputToControlId = 110;
+	public const int InputFromControlId = 150;
+
+	public const int LockToControl = 115;
+
+	public const int MaxValueToControlId = 120;
+	public const int MinValueToControlId = 125;
+
+	private float _lastInput;
+	private float _lastOutput;
+
+
+	protected override void ToRuntime()
 	{
-		private const int InputFromScadaId = 10;
-		private const int OutputToScadaId = 50;
+		base.ToRuntime();
 
-		private const int LockFromScadaId = 15;
+		var input = GetPinValue<int>(InputFromScadaId);
+		VisualPins.SetPinValue(OutputToControlId, input);
 
-		private const int MaxValueId = 20;
-		private const int MinValueId = 25;
+		SetPinValue(OutputToScadaId, input);
+	}
 
-		public const int OutputToControlId = 110;
-		public const int InputFromControlId = 150;
+	protected override void UpdateData()
+	{
+		base.UpdateData();
 
-		public const int LockToControl = 115;
-
-		public const int MaxValueToControlId = 120;
-		public const int MinValueToControlId = 125;
-
-		private float _lastInput;
-		private float _lastOutput;
-
-
-
-		protected override void ToRuntime()
+		var input = GetPinValue<float>(InputFromScadaId);
+		var inputChanged = false;
+		if (input != _lastInput)
 		{
-			base.ToRuntime();
+			_lastInput = input;
+			inputChanged = true;
 
-			int input = GetPinValue<int>(InputFromScadaId);
 			VisualPins.SetPinValue(OutputToControlId, input);
-
-			SetPinValue(OutputToScadaId, input);
 		}
 
-		protected override void UpdateData()
+		var output = VisualPins.GetPinValue<float>(InputFromControlId);
+		var outputChanged = false;
+		if (output != _lastOutput)
 		{
-			base.UpdateData();
-
-			float input = GetPinValue<float>(InputFromScadaId);
-			bool inputChanged = false;
-			if (input != _lastInput)
-			{
-				_lastInput = input;
-				inputChanged = true;
-
-				VisualPins.SetPinValue(OutputToControlId, input);
-			}
-
-			float output = VisualPins.GetPinValue<float>(InputFromControlId);
-			bool outputChanged = false;
-			if (output != _lastOutput)
-			{
-				_lastOutput = output;
-				outputChanged = true;
-			}
-
-			if (inputChanged)
-				SetPinValue(OutputToScadaId, input);
-			else if (outputChanged)
-				SetPinValue(OutputToScadaId, output);
-
-			bool locked = GetPinValue<bool>(LockFromScadaId);
-			VisualPins.SetPinValue(LockToControl, locked);
-
-			float max = GetPinValue<float>(MaxValueId);
-			VisualPins.SetPinValue(MaxValueToControlId, max);
-
-			float min = GetPinValue<float>(MinValueId);
-			VisualPins.SetPinValue(MinValueToControlId, min);
+			_lastOutput = output;
+			outputChanged = true;
 		}
+
+		if (inputChanged)
+			SetPinValue(OutputToScadaId, input);
+		else if (outputChanged)
+			SetPinValue(OutputToScadaId, output);
+
+		var locked = GetPinValue<bool>(LockFromScadaId);
+		VisualPins.SetPinValue(LockToControl, locked);
+
+		var max = GetPinValue<float>(MaxValueId);
+		VisualPins.SetPinValue(MaxValueToControlId, max);
+
+		var min = GetPinValue<float>(MinValueId);
+		VisualPins.SetPinValue(MinValueToControlId, min);
 	}
 }

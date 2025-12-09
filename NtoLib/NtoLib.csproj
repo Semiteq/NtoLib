@@ -222,6 +222,49 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BrokenLinksObserver\BrokenLinksObserverFB.cs" />
+    <Compile Include="Devices\Helpers\Colors.cs" />
+    <Compile Include="Devices\Helpers\EventTrigger.cs" />
+    <Compile Include="Devices\Helpers\Int32Extension.cs" />
+    <Compile Include="Devices\Helpers\Shape.cs" />
+    <Compile Include="Devices\Helpers\SymbolType.cs" />
+    <Compile Include="Devices\Helpers\VisualFBBaseExtended.cs" />
+    <Compile Include="Devices\Render\Common\BaseRenderer.cs" />
+    <Compile Include="Devices\Render\Common\Bounds.cs" />
+    <Compile Include="Devices\Render\Common\ButtonOrientation.cs" />
+    <Compile Include="Devices\Render\Common\DeviceLayout.cs" />
+    <Compile Include="Devices\Render\Common\LabeledValue.cs" />
+    <Compile Include="Devices\Render\Common\LabeledValue.Designer.cs">
+      <DependentUpon>LabeledValue.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Devices\Render\Common\LabeledButton.cs" />
+    <Compile Include="Devices\Render\Common\LabeledButton.Designer.cs">
+      <DependentUpon>LabeledButton.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Devices\Render\Common\LabeledLamp.cs" />
+    <Compile Include="Devices\Render\Common\LabeledLamp.Designer.cs">
+      <DependentUpon>LabeledLamp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Devices\Render\Common\Lamp.cs" />
+    <Compile Include="Devices\Render\Common\Lamp.Designer.cs">
+      <DependentUpon>Lamp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Devices\Render\Common\LayoutBuilder.cs" />
+    <Compile Include="Devices\Render\Common\Orientation.cs" />
+    <Compile Include="Devices\Render\Pumps\PumpRenderer.cs" />
+    <Compile Include="Devices\Render\Valves\CommonValveRenderer.cs" />
+    <Compile Include="Devices\Render\Valves\SlideGateRenderer.cs" />
+    <Compile Include="Devices\Render\Valves\SmoothValveRenderer.cs" />
+    <Compile Include="Devices\Render\Valves\ValveBaseRenderer.cs" />
+    <Compile Include="InputFields\Helpers\FocusManager.cs" />
+    <Compile Include="InputFields\Helpers\ReadResult.cs" />
+    <Compile Include="InputFields\Helpers\TextBoxFloat.cs" />
+    <Compile Include="InputFields\Helpers\TextBoxFloat.Designer.cs">
+      <DependentUpon>TextBoxFloat.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InputFields\Helpers\TextBoxInt.cs" />
+    <Compile Include="InputFields\Helpers\TextBoxInt.Designer.cs">
+      <DependentUpon>TextBoxInt.cs</DependentUpon>
+    </Compile>
     <Compile Include="Recipes\MbeTable\MbeTableFB.Communication.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.Configuration.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs" />
@@ -720,7 +763,6 @@
     <Compile Include="ConfigLoader\Yaml\YamlSerializer.cs" />
     <Compile Include="ConfigLoader\Yaml\YamlValidator.cs" />
     <Compile Include="ConfigLoader\Pins\PinGroupManager.cs" />
-    <Compile Include="FocusManager.cs" />
     <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
     <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
       <SubType>UserControl</SubType>
@@ -729,7 +771,6 @@
       <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Colors.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -769,12 +810,6 @@
     <Compile Include="TrendPensManager\Services\TrendOperations.cs" />
     <Compile Include="TrendPensManager\Services\TrendPenApplicator.cs" />
     <Compile Include="TrendPensManager\TrendPensManagerFB.cs" />
-    <Compile Include="Utils\ButtonOrientation.cs" />
-    <Compile Include="Utils\ReadResult.cs" />
-    <Compile Include="Render\BaseRenderer.cs" />
-    <Compile Include="Render\Bounds.cs" />
-    <Compile Include="Render\Orientation.cs" />
-    <Compile Include="Render\Pumps\PumpRenderer.cs" />
     <Compile Include="InputFields\TextBoxInt\TextBoxIntControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -782,53 +817,7 @@
       <DependentUpon>TextBoxIntControl.cs</DependentUpon>
     </Compile>
     <Compile Include="InputFields\TextBoxInt\TextBoxIntFB.cs" />
-    <Compile Include="Utils\DeviceLayout.cs" />
-    <Compile Include="Utils\EventTrigger.cs" />
-    <Compile Include="Utils\Int32Extension.cs" />
-    <Compile Include="Utils\LabeledValue.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Utils\LabeledValue.Designer.cs">
-      <DependentUpon>LabeledValue.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Utils\LabledButton.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Utils\LabledButton.Designer.cs">
-      <DependentUpon>LabledButton.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Utils\LabledLamp.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Utils\LabledLamp.Designer.cs">
-      <DependentUpon>LabledLamp.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Utils\Lamp.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Utils\Lamp.Designer.cs">
-      <DependentUpon>Lamp.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Utils\LayoutBuilder.cs" />
-    <Compile Include="Utils\Shape.cs" />
-    <Compile Include="Render\Valves\ValveBaseRenderer.cs" />
-    <Compile Include="Render\Valves\SlideGateRenderer.cs" />
-    <Compile Include="Render\Valves\SmoothValveRenderer.cs" />
-    <Compile Include="Utils\SymbolType.cs" />
-    <Compile Include="Utils\TextBoxFloat.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Utils\TextBoxFloat.Designer.cs">
-      <DependentUpon>TextBoxFloat.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Utils\TextBoxInt.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Utils\TextBoxInt.Designer.cs">
-      <DependentUpon>TextBoxInt.cs</DependentUpon>
-    </Compile>
     <Compile Include="Devices\Valves\Status.cs" />
-    <Compile Include="Render\Valves\CommonValveRenderer.cs" />
     <Compile Include="Devices\Valves\Settings\SettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -842,13 +831,24 @@
     <Compile Include="Devices\Valves\ValveControl.Designer.cs">
       <DependentUpon>ValveControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="VisualFBBaseExtended.cs" />
     <Compile Include="Properties\Resources.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BrokenLinksObserver\BrokenLinksObserverFB.bmp" />
     <EmbeddedResource Include="BrokenLinksObserver\BrokenLinksObserverFB.xml" />
     <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.xml" />
+    <EmbeddedResource Include="Devices\Render\Common\LabeledValue.resx">
+      <DependentUpon>LabeledValue.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Devices\Render\Common\LabeledButton.resx">
+      <DependentUpon>LabeledButton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Devices\Render\Common\LabeledLamp.resx">
+      <DependentUpon>LabeledLamp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Devices\Render\Common\Lamp.resx">
+      <DependentUpon>Lamp.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatControl.resx">
       <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -872,18 +872,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="TrendPensManager\TrendPensManagerFB.bmp" />
     <EmbeddedResource Include="TrendPensManager\TrendPensManagerFB.xml" />
-    <EmbeddedResource Include="Utils\LabeledValue.resx">
-      <DependentUpon>LabeledValue.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Utils\LabledButton.resx">
-      <DependentUpon>LabledButton.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Utils\LabledLamp.resx">
-      <DependentUpon>LabledLamp.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Utils\Lamp.resx">
-      <DependentUpon>Lamp.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Devices\Valves\Settings\SettingsForm.resx">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>

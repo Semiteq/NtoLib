@@ -1,10 +1,9 @@
-﻿namespace NtoLib.Devices.Pumps
+﻿namespace NtoLib.Devices.Pumps;
+
+public enum PumpType
 {
-	public enum PumpType
-	{
-		Forvacuum,
-		Turbine,
-		Ion,
-		Cryogen
-	}
+	Forvacuum,
+	Turbine,
+	Ion,
+	Cryogen
 }

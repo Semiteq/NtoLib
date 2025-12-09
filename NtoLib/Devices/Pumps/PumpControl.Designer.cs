@@ -1,4 +1,7 @@
-﻿namespace NtoLib.Devices.Pumps
+﻿using NtoLib.Devices.Helpers;
+using NtoLib.Devices.Render.Common;
+
+namespace NtoLib.Devices.Pumps
 {
     partial class PumpControl
     {
@@ -29,8 +32,8 @@
         private void InitializeComponent()
         {
             this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
-            this.buttonStart = new NtoLib.Utils.LabledButton();
-            this.buttonStop = new NtoLib.Utils.LabledButton();
+            this.buttonStart = new LabeledButton();
+            this.buttonStop = new LabeledButton();
             this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
@@ -63,7 +66,7 @@
             this.buttonStart.Margin = new System.Windows.Forms.Padding(1);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(49, 49);
-            this.buttonStart.SymbolOnButton = NtoLib.Utils.SymbolType.On;
+            this.buttonStart.SymbolOnButton = SymbolType.On;
             this.buttonStart.TabIndex = 2;
             this.buttonStart.UseVisualStyleBackColor = false;
             this.buttonStart.Click += new System.EventHandler(this.HandleStartClick);
@@ -79,7 +82,7 @@
             this.buttonStop.Margin = new System.Windows.Forms.Padding(1);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(50, 50);
-            this.buttonStop.SymbolOnButton = NtoLib.Utils.SymbolType.Off;
+            this.buttonStop.SymbolOnButton = SymbolType.Off;
             this.buttonStop.TabIndex = 2;
             this.buttonStop.UseVisualStyleBackColor = false;
             this.buttonStop.Click += new System.EventHandler(this.HandleStopClick);
@@ -114,8 +117,8 @@
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel buttonTable;
-        private Utils.LabledButton buttonStart;
-        private Utils.LabledButton buttonStop;
+        private LabeledButton buttonStart;
+        private LabeledButton buttonStop;
         private System.Windows.Forms.PictureBox spriteBox;
     }
 }

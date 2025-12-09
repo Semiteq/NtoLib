@@ -1,4 +1,6 @@
-﻿namespace NtoLib.Devices.Pumps.Settings
+﻿using NtoLib.Devices.Render.Common;
+
+namespace NtoLib.Devices.Pumps.Settings
 {
     partial class PumpSettingForm
     {
@@ -30,20 +32,20 @@
         {
             this.stateLabel = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.blockStartLamp = new NtoLib.Utils.LabledLamp();
-            this.blockStopLamp = new NtoLib.Utils.LabledLamp();
-            this.forceStopLamp = new NtoLib.Utils.LabledLamp();
-            this.safeModeLamp = new NtoLib.Utils.LabledLamp();
-            this.noConnectionLamp = new NtoLib.Utils.LabledLamp();
-            this.errorLamp = new NtoLib.Utils.LabledLamp();
-            this.warningLamp = new NtoLib.Utils.LabledLamp();
-            this.temperatureLabel = new NtoLib.Utils.LabeledValue();
-            this.speedLabel = new NtoLib.Utils.LabeledValue();
-            this.voltageLabel = new NtoLib.Utils.LabeledValue();
-            this.currentLabel = new NtoLib.Utils.LabeledValue();
-            this.powerLabel = new NtoLib.Utils.LabeledValue();
-            this.temperatureInLabel = new NtoLib.Utils.LabeledValue();
-            this.temperatureOutLabel = new NtoLib.Utils.LabeledValue();
+            this.blockStartLamp = new LabeledLamp();
+            this.blockStopLamp = new LabeledLamp();
+            this.forceStopLamp = new LabeledLamp();
+            this.safeModeLamp = new LabeledLamp();
+            this.noConnectionLamp = new LabeledLamp();
+            this.errorLamp = new LabeledLamp();
+            this.warningLamp = new LabeledLamp();
+            this.temperatureLabel = new LabeledValue();
+            this.speedLabel = new LabeledValue();
+            this.voltageLabel = new LabeledValue();
+            this.currentLabel = new LabeledValue();
+            this.powerLabel = new LabeledValue();
+            this.temperatureInLabel = new LabeledValue();
+            this.temperatureOutLabel = new LabeledValue();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -291,20 +293,20 @@
 
         #endregion
         private System.Windows.Forms.Label stateLabel;
-        private Utils.LabledLamp blockStartLamp;
+        private LabeledLamp blockStartLamp;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private Utils.LabledLamp blockStopLamp;
-        private Utils.LabledLamp forceStopLamp;
-        private Utils.LabledLamp noConnectionLamp;
-        private Utils.LabledLamp errorLamp;
-        private Utils.LabledLamp safeModeLamp;
-        private Utils.LabeledValue temperatureLabel;
-        private Utils.LabeledValue speedLabel;
-        private Utils.LabeledValue voltageLabel;
-        private Utils.LabeledValue currentLabel;
-        private Utils.LabeledValue powerLabel;
-        private Utils.LabeledValue temperatureInLabel;
-        private Utils.LabeledValue temperatureOutLabel;
-        private Utils.LabledLamp warningLamp;
+        private LabeledLamp blockStopLamp;
+        private LabeledLamp forceStopLamp;
+        private LabeledLamp noConnectionLamp;
+        private LabeledLamp errorLamp;
+        private LabeledLamp safeModeLamp;
+        private LabeledValue temperatureLabel;
+        private LabeledValue speedLabel;
+        private LabeledValue voltageLabel;
+        private LabeledValue currentLabel;
+        private LabeledValue powerLabel;
+        private LabeledValue temperatureInLabel;
+        private LabeledValue temperatureOutLabel;
+        private LabeledLamp warningLamp;
     }
 }

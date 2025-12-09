@@ -30,7 +30,7 @@
         {
             this.pictureBox = new System.Windows.Forms.PictureBox();
             this.label = new System.Windows.Forms.Label();
-            this.textBox = new NtoLib.Utils.TextBoxInt();
+            this.textBox = new Helpers.TextBoxInt();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -104,7 +104,7 @@
 
         #endregion
         private System.Windows.Forms.PictureBox pictureBox;
-        private Utils.TextBoxInt textBox;
+        private Helpers.TextBoxInt textBox;
         private System.Windows.Forms.Label label;
     }
 }

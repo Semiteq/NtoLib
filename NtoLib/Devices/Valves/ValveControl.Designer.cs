@@ -1,4 +1,7 @@
-﻿namespace NtoLib.Devices.Valves
+﻿using NtoLib.Devices.Helpers;
+using NtoLib.Devices.Render.Common;
+
+namespace NtoLib.Devices.Valves
 {
     partial class ValveControl
     {
@@ -30,9 +33,9 @@
         {
             this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
-            this.buttonOpenSmoothly = new NtoLib.Utils.LabledButton();
-            this.buttonClose = new NtoLib.Utils.LabledButton();
-            this.buttonOpen = new NtoLib.Utils.LabledButton();
+            this.buttonOpenSmoothly = new LabeledButton();
+            this.buttonClose = new LabeledButton();
+            this.buttonOpen = new LabeledButton();
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
             this.buttonTable.SuspendLayout();
             this.SuspendLayout();
@@ -78,7 +81,7 @@
             this.buttonOpenSmoothly.Margin = new System.Windows.Forms.Padding(1);
             this.buttonOpenSmoothly.Name = "buttonOpenSmoothly";
             this.buttonOpenSmoothly.Size = new System.Drawing.Size(32, 32);
-            this.buttonOpenSmoothly.SymbolOnButton = NtoLib.Utils.SymbolType.SmoothOpen;
+            this.buttonOpenSmoothly.SymbolOnButton = SymbolType.SmoothOpen;
             this.buttonOpenSmoothly.TabIndex = 2;
             this.buttonOpenSmoothly.UseVisualStyleBackColor = false;
             this.buttonOpenSmoothly.Click += new System.EventHandler(this.HandleOpenSmoothlyClick);
@@ -94,7 +97,7 @@
             this.buttonClose.Margin = new System.Windows.Forms.Padding(1);
             this.buttonClose.Name = "buttonClose";
             this.buttonClose.Size = new System.Drawing.Size(33, 33);
-            this.buttonClose.SymbolOnButton = NtoLib.Utils.SymbolType.Off;
+            this.buttonClose.SymbolOnButton = SymbolType.Off;
             this.buttonClose.TabIndex = 2;
             this.buttonClose.UseVisualStyleBackColor = false;
             this.buttonClose.Click += new System.EventHandler(this.HandleCloseClick);
@@ -110,7 +113,7 @@
             this.buttonOpen.Margin = new System.Windows.Forms.Padding(1);
             this.buttonOpen.Name = "buttonOpen";
             this.buttonOpen.Size = new System.Drawing.Size(32, 32);
-            this.buttonOpen.SymbolOnButton = NtoLib.Utils.SymbolType.On;
+            this.buttonOpen.SymbolOnButton = SymbolType.On;
             this.buttonOpen.TabIndex = 2;
             this.buttonOpen.UseVisualStyleBackColor = false;
             this.buttonOpen.Click += new System.EventHandler(this.HandleOpenClick);
@@ -137,8 +140,8 @@
 
         private System.Windows.Forms.PictureBox spriteBox;
         private System.Windows.Forms.TableLayoutPanel buttonTable;
-        private Utils.LabledButton buttonOpen;
-        private Utils.LabledButton buttonClose;
-        private Utils.LabledButton buttonOpenSmoothly;
+        private LabeledButton buttonOpen;
+        private LabeledButton buttonClose;
+        private LabeledButton buttonOpenSmoothly;
     }
 }
