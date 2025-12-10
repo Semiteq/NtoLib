@@ -23,7 +23,6 @@ public class ValveFB : VisualFBBaseExtended
 	public const int StatusWordId = 1;
 	public const int CommandWordId = 5;
 
-
 	public const int ConnectionOkId = 0;
 	public const int NotOpenedId = 1;
 	public const int NotClosedId = 2;
@@ -39,11 +38,9 @@ public class ValveFB : VisualFBBaseExtended
 	public const int BlockOpeningId = 14;
 	public const int IsSmoothValveId = 15;
 
-
 	public const int OpenCmdId = 100;
 	public const int CloseCmdId = 101;
 	public const int OpenSmoothlyCmdId = 102;
-
 
 	public const int CollistionEventId = 5000;
 	private EventTrigger _collisionEvent;
@@ -54,7 +51,6 @@ public class ValveFB : VisualFBBaseExtended
 	public const int NotClosedEventId = 5002;
 	private EventTrigger _notClosedEvent;
 
-
 	public const int OpenedEventId = 5010;
 	private EventTrigger _openedEvent;
 
@@ -64,6 +60,13 @@ public class ValveFB : VisualFBBaseExtended
 	public const int ClosedEventId = 5012;
 	private EventTrigger _closedEvent;
 
+	public const int UserOpenEventId = 5020;
+	public const int UserOpenSmoothlyEventId = 5021;
+	public const int UserCloseEventId = 5022;
+
+	private bool _prevOpenCmd;
+	private bool _prevOpenSmoothlyCmd;
+	private bool _prevCloseCmd;
 
 	protected override void ToRuntime()
 	{
@@ -99,7 +102,9 @@ public class ValveFB : VisualFBBaseExtended
 
 		var statusWord = 0;
 		if (GetPinQuality(StatusWordId) == OpcQuality.Ok)
+		{
 			statusWord = GetPinValue<int>(StatusWordId);
+		}
 
 		var connectionOk = statusWord.GetBit(ConnectionOkId);
 		SetVisualAndUiPin(ConnectionOkId, connectionOk);
@@ -125,10 +130,32 @@ public class ValveFB : VisualFBBaseExtended
 
 
 		var commandWord = 0;
-		commandWord.SetBit(0, GetVisualPin<bool>(OpenCmdId));
-		commandWord.SetBit(1, GetVisualPin<bool>(OpenSmoothlyCmdId));
-		commandWord.SetBit(2, GetVisualPin<bool>(CloseCmdId));
+		var openCmd = GetVisualPin<bool>(OpenCmdId);
+		var openSmoothlyCmd = GetVisualPin<bool>(OpenSmoothlyCmdId);
+		var closeCmd = GetVisualPin<bool>(CloseCmdId);
+		commandWord.SetBit(0, openCmd);
+		commandWord.SetBit(1, openSmoothlyCmd);
+		commandWord.SetBit(2, closeCmd);
 		SetPinValue(CommandWordId, commandWord);
+
+		if (openCmd && !_prevOpenCmd)
+		{
+			FireUserOpenEvent();
+		}
+
+		if (openSmoothlyCmd && !_prevOpenSmoothlyCmd)
+		{
+			FireUserOpenSmoothlyEvent();
+		}
+
+		if (closeCmd && !_prevCloseCmd)
+		{
+			FireUserCloseEvent();
+		}
+
+		_prevOpenCmd = openCmd;
+		_prevOpenSmoothlyCmd = openSmoothlyCmd;
+		_prevCloseCmd = closeCmd;
 
 
 		_collisionEvent.Update(collision);
@@ -140,9 +167,32 @@ public class ValveFB : VisualFBBaseExtended
 		_closedEvent.Update(closed);
 	}
 
-
 	protected override OpcQuality GetConnectionQuality()
 	{
 		return GetPinQuality(StatusWordId);
+	}
+
+	public void FireUserOpenEvent()
+	{
+		var splittedString = FullName.Split('.');
+		var name = splittedString[^1];
+		var message = $"Клапан {name}: оператор нажал кнопку Открыть";
+		FireEvent(UserOpenEventId, message);
+	}
+
+	public void FireUserOpenSmoothlyEvent()
+	{
+		var splittedString = FullName.Split('.');
+		var name = splittedString[^1];
+		var message = $"Клапан {name}: оператор нажал кнопку Плавно открыть";
+		FireEvent(UserOpenSmoothlyEventId, message);
+	}
+
+	public void FireUserCloseEvent()
+	{
+		var splittedString = FullName.Split('.');
+		var name = splittedString[^1];
+		var message = $"Клапан {name}: оператор нажал кнопку Закрыть";
+		FireEvent(UserCloseEventId, message);
 	}
 }

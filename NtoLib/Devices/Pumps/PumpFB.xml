@@ -74,5 +74,8 @@
     <Event ID="5011" Name="Торможение начато" Category="Information" Flags="DisableAck"/>
     <Event ID="5012" Name="Вышел на номинальную скорость" Category="Information" Flags="DisableAck"/>
     <Event ID="5013" Name="Остановился" Category="Information" Flags="DisableAck"/>
+
+    <Event ID="5020" Name="Пользователь запустил" Category="Information" Flags="DisableAck"/>
+    <Event ID="5021" Name="Пользователь остановил" Category="Information" Flags="DisableAck"/>
   </Events>
 </FBConfig>

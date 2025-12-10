@@ -106,18 +106,8 @@ internal class SlideGateRenderer : ValveBaseRenderer
 		var rightTriangleCenter = new PointF(valveBounds.CenterX + offsetFromCenter, valveBounds.CenterY);
 
 		var points = new PointF[2][];
-		points[0] = new[]
-		{
-			valveBounds.LeftTop,
-			leftTriangleCenter,
-			valveBounds.LeftBottom
-		};
-		points[1] = new[]
-		{
-			valveBounds.RightTop,
-			rightTriangleCenter,
-			valveBounds.RightBottom
-		};
+		points[0] = new[] { valveBounds.LeftTop, leftTriangleCenter, valveBounds.LeftBottom };
+		points[1] = new[] { valveBounds.RightTop, rightTriangleCenter, valveBounds.RightBottom };
 
 		return points;
 	}

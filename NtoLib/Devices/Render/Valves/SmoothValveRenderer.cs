@@ -67,11 +67,7 @@ internal class SmoothValveRenderer : CommonValveRenderer
 	/// </summary>
 	private static PointF[] GetCircleLegPoints(Bounds valveBounds, Bounds circleBounds)
 	{
-		return new[]
-		{
-			valveBounds.Center,
-			circleBounds.CenterBottom
-		};
+		return new[] { valveBounds.Center, circleBounds.CenterBottom };
 	}
 
 	/// <summary>

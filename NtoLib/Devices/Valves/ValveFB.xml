@@ -55,5 +55,9 @@
     <Event ID="5010" Name="Открылся" Category="Information" Flags="DisableAck"/>
     <Event ID="5011" Name="Плавно открылся" Category="Information" Flags="DisableAck"/>
     <Event ID="5012" Name="Закрылся" Category="Information" Flags="DisableAck"/>
+
+    <Event ID="5020" Name="Пользователь открыл" Category="Information" Flags="DisableAck"/>
+    <Event ID="5021" Name="Пользователь плавно открыл" Category="Information" Flags="DisableAck"/>
+    <Event ID="5022" Name="Пользователь закрыл" Category="Information" Flags="DisableAck"/>
   </Events>
 </FBConfig>

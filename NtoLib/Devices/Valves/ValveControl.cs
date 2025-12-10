@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -134,56 +133,40 @@ public partial class ValveControl : VisualControlBase
 
 	protected override void ToRuntime()
 	{
-		try
-		{
-			base.ToRuntime();
-			UpdateLayout();
+		base.ToRuntime();
+		UpdateLayout();
 
-			_impulseTimer = new Timer();
-			_impulseTimer.Interval = 500;
-			_impulseTimer.Tick += DisableCommandImpulse;
+		_impulseTimer = new Timer();
+		_impulseTimer.Interval = 500;
+		_impulseTimer.Tick += DisableCommandImpulse;
 
-			_animationTimer = new Timer();
-			_animationTimer.Interval = 500;
-			_animationTimer.Tick += UpdateAnimation;
+		_animationTimer = new Timer();
+		_animationTimer.Interval = 500;
+		_animationTimer.Tick += UpdateAnimation;
 
-			_mouseHoldTimer = new Timer();
-			_mouseHoldTimer.Interval = 200;
-			_mouseHoldTimer.Tick += HandleMouseHoldDown;
+		_mouseHoldTimer = new Timer();
+		_mouseHoldTimer.Interval = 200;
+		_mouseHoldTimer.Tick += HandleMouseHoldDown;
 
-			// Windows may suppress OnPaint event if the control is not visible
-			// or not in focus. This timer will force the control to redraw.
-			_redrawTimer = new Timer();
-			_redrawTimer.Interval = 50;
-			_redrawTimer.Tick += (s, e) => Invalidate();
-			_redrawTimer.Start();
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine(ex.Message);
-			throw;
-		}
+		// Windows may suppress OnPaint event if the control is not visible
+		// or not in focus. This timer will force the control to redraw.
+		_redrawTimer = new Timer();
+		_redrawTimer.Interval = 50;
+		_redrawTimer.Tick += (s, e) => Invalidate();
+		_redrawTimer.Start();
 	}
 
 	protected override void ToDesign()
 	{
-		try
-		{
-			base.ToDesign();
-			UpdateLayout();
+		base.ToDesign();
+		UpdateLayout();
 
-			_settingsForm?.Close();
+		_settingsForm?.Close();
 
-			_impulseTimer?.Dispose();
-			_animationTimer?.Dispose();
-			_mouseHoldTimer?.Dispose();
-			_redrawTimer?.Dispose();
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine(ex.Message);
-			throw;
-		}
+		_impulseTimer?.Dispose();
+		_animationTimer?.Dispose();
+		_mouseHoldTimer?.Dispose();
+		_redrawTimer?.Dispose();
 	}
 
 	private void HandleResize(object sender, EventArgs e)
@@ -194,21 +177,26 @@ public partial class ValveControl : VisualControlBase
 	private void HandleOpenClick(object sender, EventArgs e)
 	{
 		if (!Status.UsedByAutoMode && !Status.BlockOpening)
+		{
 			SendCommand(ValveFB.OpenCmdId);
+		}
 	}
 
 	private void HandleOpenSmoothlyClick(object sender, EventArgs e)
 	{
 		if (!Status.UsedByAutoMode && !Status.BlockOpening)
+		{
 			SendCommand(ValveFB.OpenSmoothlyCmdId);
+		}
 	}
 
 	private void HandleCloseClick(object sender, EventArgs e)
 	{
 		if (!Status.UsedByAutoMode && !Status.BlockClosing)
+		{
 			SendCommand(ValveFB.CloseCmdId);
+		}
 	}
-
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
@@ -237,13 +225,17 @@ public partial class ValveControl : VisualControlBase
 	{
 		Orientation buttonsOrientation;
 		if (IsHorizontal())
+		{
 			buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop
 				? Orientation.Top
 				: Orientation.Bottom;
+		}
 		else
+		{
 			buttonsOrientation = ButtonOrientation == ButtonOrientation.LeftTop
 				? Orientation.Left
 				: Orientation.Right;
+		}
 
 		Button[] buttons;
 		if (NoButtons)
@@ -294,7 +286,6 @@ public partial class ValveControl : VisualControlBase
 		return Orientation == Orientation.Right || Orientation == Orientation.Left;
 	}
 
-
 	private void HandleMouseDown(object sender, MouseEventArgs e)
 	{
 		if (e.Button != MouseButtons.Right)
@@ -340,7 +331,6 @@ public partial class ValveControl : VisualControlBase
 		SetPinValue(_currentCommand, false);
 	}
 
-
 	private void SendCommand(int commandId)
 	{
 		if (_impulseTimer != null && _impulseTimer.Enabled)
@@ -375,7 +365,6 @@ public partial class ValveControl : VisualControlBase
 		form.FormClosed -= RemoveSettingsFormReference;
 		_settingsForm = null;
 	}
-
 
 	private void UpdateStatus()
 	{

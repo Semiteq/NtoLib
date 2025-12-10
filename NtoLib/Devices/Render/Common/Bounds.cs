@@ -113,13 +113,7 @@ public struct Bounds
 	/// </summary>
 	public PointF[] GetPoints()
 	{
-		return new[]
-		{
-			LeftTop,
-			LeftBottom,
-			RightBottom,
-			RightTop
-		};
+		return new[] { LeftTop, LeftBottom, RightBottom, RightTop };
 	}
 
 	/// <summary>
@@ -134,10 +128,8 @@ public struct Bounds
 	{
 		return new PointF[]
 		{
-			new(Left - offset, Top - offset),
-			new(Left - offset, Bottom + offset),
-			new(Right + offset, Bottom + offset),
-			new(Right + offset, Top - offset)
+			new(Left - offset, Top - offset), new(Left - offset, Bottom + offset),
+			new(Right + offset, Bottom + offset), new(Right + offset, Top - offset)
 		};
 	}
 
@@ -147,13 +139,7 @@ public struct Bounds
 	/// <returns></returns>
 	public RectangleF ToRectangleF()
 	{
-		var rectangle = new RectangleF
-		{
-			X = Left,
-			Y = Top,
-			Width = Width,
-			Height = Height
-		};
+		var rectangle = new RectangleF { X = Left, Y = Top, Width = Width, Height = Height };
 		return rectangle;
 	}
 }

@@ -99,12 +99,7 @@ public class PumpRenderer : BaseRenderer
 	/// </summary>
 	private static PointF[] GetMainTrianglePoints(Bounds mainTiangleBounds)
 	{
-		return new[]
-		{
-			mainTiangleBounds.LeftTop,
-			mainTiangleBounds.RightCenter,
-			mainTiangleBounds.LeftBottom
-		};
+		return new[] { mainTiangleBounds.LeftTop, mainTiangleBounds.RightCenter, mainTiangleBounds.LeftBottom };
 	}
 
 	/// <summary>
@@ -113,18 +108,8 @@ public class PumpRenderer : BaseRenderer
 	private static PointF[][] GetPumpTrianglePoints(Bounds mainTiangleBounds)
 	{
 		var points = new PointF[2][];
-		points[0] = new[]
-		{
-			mainTiangleBounds.LeftTop,
-			mainTiangleBounds.RightCenter,
-			mainTiangleBounds.LeftCenter
-		};
-		points[1] = new[]
-		{
-			mainTiangleBounds.LeftBottom,
-			mainTiangleBounds.RightCenter,
-			mainTiangleBounds.LeftCenter
-		};
+		points[0] = new[] { mainTiangleBounds.LeftTop, mainTiangleBounds.RightCenter, mainTiangleBounds.LeftCenter };
+		points[1] = new[] { mainTiangleBounds.LeftBottom, mainTiangleBounds.RightCenter, mainTiangleBounds.LeftCenter };
 
 		return points;
 	}

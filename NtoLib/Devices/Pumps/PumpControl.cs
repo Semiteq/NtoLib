@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -34,7 +33,9 @@ public partial class PumpControl : VisualControlBase
 			var updateRequired = _noButtons != value;
 			_noButtons = value;
 			if (updateRequired)
+			{
 				UpdateLayout();
+			}
 		}
 	}
 
@@ -49,7 +50,9 @@ public partial class PumpControl : VisualControlBase
 			var updateRequired = _orientation != value;
 			_orientation = value;
 			if (updateRequired)
+			{
 				UpdateLayout();
+			}
 		}
 	}
 
@@ -64,7 +67,9 @@ public partial class PumpControl : VisualControlBase
 			var updateRequired = _buttonOrientation != value;
 			_buttonOrientation = value;
 			if (updateRequired)
+			{
 				UpdateLayout();
+			}
 		}
 	}
 
@@ -100,56 +105,40 @@ public partial class PumpControl : VisualControlBase
 
 	protected override void ToRuntime()
 	{
-		try
-		{
-			base.ToRuntime();
-			UpdateLayout();
+		base.ToRuntime();
+		UpdateLayout();
 
-			_impulseTimer = new Timer();
-			_impulseTimer.Interval = 500;
-			_impulseTimer.Tick += DisableCommandImpulse;
+		_impulseTimer = new Timer();
+		_impulseTimer.Interval = 500;
+		_impulseTimer.Tick += DisableCommandImpulse;
 
-			_animationTimer = new Timer();
-			_animationTimer.Interval = 500;
-			_animationTimer.Tick += UpdateAnimation;
+		_animationTimer = new Timer();
+		_animationTimer.Interval = 500;
+		_animationTimer.Tick += UpdateAnimation;
 
-			_mouseHoldTimer = new Timer();
-			_mouseHoldTimer.Interval = 200;
-			_mouseHoldTimer.Tick += HandleMouseHoldDown;
+		_mouseHoldTimer = new Timer();
+		_mouseHoldTimer.Interval = 200;
+		_mouseHoldTimer.Tick += HandleMouseHoldDown;
 
-			// Windows may suppress OnPaint event if the control is not visible
-			// or not in focus. This timer will force the control to redraw.
-			_redrawTimer = new Timer();
-			_redrawTimer.Interval = 50;
-			_redrawTimer.Tick += (s, e) => Invalidate();
-			_redrawTimer.Start();
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine(ex.Message);
-			throw;
-		}
+		// Windows may suppress OnPaint event if the control is not visible
+		// or not in focus. This timer will force the control to redraw.
+		_redrawTimer = new Timer();
+		_redrawTimer.Interval = 50;
+		_redrawTimer.Tick += (s, e) => Invalidate();
+		_redrawTimer.Start();
 	}
 
 	protected override void ToDesign()
 	{
-		try
-		{
-			base.ToDesign();
-			UpdateLayout();
+		base.ToDesign();
+		UpdateLayout();
 
-			_settingsForm?.Close();
+		_settingsForm?.Close();
 
-			_impulseTimer?.Dispose();
-			_animationTimer?.Dispose();
-			_mouseHoldTimer?.Dispose();
-			_redrawTimer?.Dispose();
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine(ex.Message);
-			throw;
-		}
+		_impulseTimer?.Dispose();
+		_animationTimer?.Dispose();
+		_mouseHoldTimer?.Dispose();
+		_redrawTimer?.Dispose();
 	}
 
 	private void HandleResize(object sender, EventArgs e)
@@ -161,13 +150,17 @@ public partial class PumpControl : VisualControlBase
 	private void HandleStartClick(object sender, EventArgs e)
 	{
 		if (!Status.UsedByAutoMode && !Status.BlockStart)
+		{
 			SendCommand(PumpFB.StartCmdId);
+		}
 	}
 
 	private void HandleStopClick(object sender, EventArgs e)
 	{
 		if (!Status.UsedByAutoMode && !Status.BlockStop)
+		{
 			SendCommand(PumpFB.StopCmdId);
+		}
 	}
 
 
@@ -365,7 +358,6 @@ public partial class PumpControl : VisualControlBase
 
 				Status.Voltage = GetPinValue<float>(PumpFB.IonPumpVoltage);
 				Status.Current = GetPinValue<float>(PumpFB.IonPumpCurrent);
-				Status.Power = GetPinValue<float>(PumpFB.IonPumpPower);
 				break;
 			}
 			case PumpType.Cryogen:

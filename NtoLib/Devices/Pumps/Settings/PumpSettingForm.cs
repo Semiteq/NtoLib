@@ -90,7 +90,6 @@ public partial class PumpSettingForm : Form
 			}
 		}
 
-
 		forceStopLamp.Active = status.ForceStop;
 		blockStartLamp.Active = status.BlockStart;
 		blockStopLamp.Active = status.BlockStop;

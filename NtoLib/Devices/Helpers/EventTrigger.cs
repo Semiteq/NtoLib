@@ -7,62 +7,85 @@ namespace NtoLib.Devices.Helpers;
 [Serializable]
 public class EventTrigger
 {
-	private FBDesignBase _owner;
+	private readonly FBDesignBase _owner;
+	private readonly int _eventId;
+	private readonly string _eventMessage;
+	private readonly bool _autoDeactivate;
+	private readonly TimeSpan _initialInactivityInterval;
+	private readonly DateTime _startTime;
 
-	private int _id;
-	private string _message;
-
-	private bool _autoDeactivate;
-	private bool _previousValue;
-
-	private bool _initialInactivity = true;
-	private DateTime _initialDataTime;
-	private TimeSpan _initialInactivityInterval;
+	private bool _isInitialInactivityPeriod = true;
+	private bool _previousState;
 
 
-	public EventTrigger(FBDesignBase owner, int id, string message, bool autoDeactivate = false)
-		: this(owner, id, message, TimeSpan.Zero, autoDeactivate)
+	public EventTrigger(FBDesignBase owner, int eventId, string eventMessage, bool autoDeactivate = false)
+		: this(owner, eventId, eventMessage, TimeSpan.Zero, autoDeactivate)
 	{
 	}
 
-	public EventTrigger(FBDesignBase owner, int id, string message, TimeSpan initialInactivity,
+	public EventTrigger(FBDesignBase owner, int eventId, string eventMessage, TimeSpan initialInactivity,
 		bool autoDeactivate = false)
 	{
 		_owner = owner;
-
-		_id = id;
-		_message = message;
-
+		_eventId = eventId;
+		_eventMessage = eventMessage;
 		_autoDeactivate = autoDeactivate;
-
-		_initialDataTime = DateTime.Now;
+		_startTime = DateTime.Now;
 		_initialInactivityInterval = initialInactivity;
 	}
 
 
-	public void Update(bool value)
+	public void Update(bool currentState)
 	{
-		if (_initialInactivity)
+		if (IsInInitialInactivityPeriod())
 		{
-			if (DateTime.Now.Subtract(_initialDataTime) > _initialInactivityInterval)
-				_initialInactivity = false;
-			else
-				return;
+			return;
 		}
 
+		ProcessStateChange(currentState);
+		_previousState = currentState;
+	}
 
-		if (value && !_previousValue)
+	private bool IsInInitialInactivityPeriod()
+	{
+		if (!_isInitialInactivityPeriod)
 		{
-			_owner.SetEventState(_id, true, _message);
-
-			if (_autoDeactivate)
-				_owner.SetEventState(_id, false);
-		}
-		else if (!value && _previousValue)
-		{
-			_owner.SetEventState(_id, false);
+			return false;
 		}
 
-		_previousValue = value;
+		if (DateTime.Now.Subtract(_startTime) <= _initialInactivityInterval)
+		{
+			return true;
+		}
+
+		_isInitialInactivityPeriod = false;
+		return false;
+	}
+
+	private void ProcessStateChange(bool currentState)
+	{
+		if (currentState && !_previousState)
+		{
+			ActivateEvent();
+		}
+		else if (!currentState && _previousState)
+		{
+			DeactivateEvent();
+		}
+	}
+
+	private void ActivateEvent()
+	{
+		_owner.SetEventState(_eventId, true, _eventMessage);
+
+		if (_autoDeactivate)
+		{
+			DeactivateEvent();
+		}
+	}
+
+	private void DeactivateEvent()
+	{
+		_owner.SetEventState(_eventId, false);
 	}
 }

@@ -87,18 +87,8 @@ internal class CommonValveRenderer : ValveBaseRenderer
 		valveBounds.Height -= LineWidth * 1.154f;
 
 		var points = new PointF[2][];
-		points[0] = new[]
-		{
-			valveBounds.LeftTop,
-			valveBounds.Center,
-			valveBounds.LeftBottom
-		};
-		points[1] = new[]
-		{
-			valveBounds.RightTop,
-			valveBounds.Center,
-			valveBounds.RightBottom
-		};
+		points[0] = new[] { valveBounds.LeftTop, valveBounds.Center, valveBounds.LeftBottom };
+		points[1] = new[] { valveBounds.RightTop, valveBounds.Center, valveBounds.RightBottom };
 
 		return points;
 	}

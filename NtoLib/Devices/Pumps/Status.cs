@@ -33,7 +33,6 @@ public struct Status
 
 	public float Voltage;
 	public float Current;
-	public float Power;
 
 	public float TemperatureIn;
 	public float TemperatureOut;

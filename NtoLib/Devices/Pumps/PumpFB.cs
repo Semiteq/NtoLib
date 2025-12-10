@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using FB;
@@ -66,7 +65,6 @@ public class PumpFB : VisualFBBaseExtended
 
 	public const int TemperatureId = 20;
 
-
 	public const int DynamicGroupId = 50;
 
 	public const int TurbineSpeedId = 60;
@@ -96,73 +94,69 @@ public class PumpFB : VisualFBBaseExtended
 	public const int StopEventId = 5013;
 	private EventTrigger _stopEvent;
 
+	public const int UserStartEventId = 5020;
+	public const int UserStopEventId = 5021;
+
+	private bool _prevStartCmd;
+	private bool _prevStopCmd;
 
 	protected override void ToRuntime()
 	{
-		try
+		base.ToRuntime();
+
+		var splittedString = FullName.Split('.');
+		var name = splittedString[^1];
+
+		var initialInactivity = TimeSpan.FromSeconds(10);
+		var type = new string[3];
+		switch (PumpType)
 		{
-			base.ToRuntime();
-
-			var splittedString = FullName.Split('.');
-			var name = splittedString[^1];
-
-			var initialInactivity = TimeSpan.FromSeconds(10);
-			var type = new string[3];
-			switch (PumpType)
+			case PumpType.Forvacuum:
 			{
-				case PumpType.Forvacuum:
-				{
-					type[0] = "Форнасосом";
-					type[1] = "Форнасоса";
-					type[2] = "Форнасос";
-					break;
-				}
-				case PumpType.Turbine:
-				{
-					type[0] = "Турбиной";
-					type[1] = "Турбины";
-					type[2] = "Турбина";
-					break;
-				}
-				case PumpType.Ion:
-				{
-					type[0] = "Ионным насосом";
-					type[1] = "Ионного насоса";
-					type[2] = "Ионный насос";
-					break;
-				}
-				case PumpType.Cryogen:
-				{
-					type[0] = "Криогенным насосом";
-					type[1] = "Криогенного насоса";
-					type[2] = "Криогенный насос";
-					break;
-				}
+				type[0] = "Форнасосом";
+				type[1] = "Форнасоса";
+				type[2] = "Форнасос";
+				break;
 			}
-
-
-			var message = $"Нет соединения с {type[0].ToLower()} {name}";
-			_connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message, initialInactivity);
-
-			message = $"Начало разгона {type[1].ToLower()} {name}";
-			_accelerationEvent = new EventTrigger(this, AccelerationStartEventId, message, initialInactivity);
-
-			message = $"Начало торможения {type[1].ToLower()} {name}";
-			_decelerationEvent = new EventTrigger(this, DecelerationStartEventId, message, initialInactivity);
-
-			var action = PumpType == PumpType.Turbine ? "вышла" : "вышел";
-			message = $"{type[2]} {name} {action} на номинальную скорость";
-			_nominalSpeedEvent = new EventTrigger(this, ReachNominalSpeedEventId, message, initialInactivity);
-
-			action = PumpType == PumpType.Turbine ? "остановилась" : "остановился";
-			message = $"{type[2]} {name} {action}";
-			_stopEvent = new EventTrigger(this, StopEventId, message, initialInactivity, true);
+			case PumpType.Turbine:
+			{
+				type[0] = "Турбиной";
+				type[1] = "Турбины";
+				type[2] = "Турбина";
+				break;
+			}
+			case PumpType.Ion:
+			{
+				type[0] = "Ионным насосом";
+				type[1] = "Ионного насоса";
+				type[2] = "Ионный насос";
+				break;
+			}
+			case PumpType.Cryogen:
+			{
+				type[0] = "Криогенным насосом";
+				type[1] = "Криогенного насоса";
+				type[2] = "Криогенный насос";
+				break;
+			}
 		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine(ex.Message);
-			throw;
-		}
+
+		var message = $"Нет соединения с {type[0].ToLower()} {name}";
+		_connectionDisabledEvent = new EventTrigger(this, ConnectionDisabledEventId, message, initialInactivity);
+
+		message = $"Начало разгона {type[1].ToLower()} {name}";
+		_accelerationEvent = new EventTrigger(this, AccelerationStartEventId, message, initialInactivity);
+
+		message = $"Начало торможения {type[1].ToLower()} {name}";
+		_decelerationEvent = new EventTrigger(this, DecelerationStartEventId, message, initialInactivity);
+
+		var action = PumpType == PumpType.Turbine ? "вышла" : "вышел";
+		message = $"{type[2]} {name} {action} на номинальную скорость";
+		_nominalSpeedEvent = new EventTrigger(this, ReachNominalSpeedEventId, message, initialInactivity);
+
+		action = PumpType == PumpType.Turbine ? "остановилась" : "остановился";
+		message = $"{type[2]} {name} {action}";
+		_stopEvent = new EventTrigger(this, StopEventId, message, initialInactivity, true);
 	}
 
 	protected override void UpdateData()
@@ -196,7 +190,6 @@ public class PumpFB : VisualFBBaseExtended
 		var used = statusWord.GetBit(UsedId);
 		SetVisualAndUiPin(UsedId, used);
 
-
 		SetVisualPin(TemperatureId, GetPinValue<float>(TemperatureId));
 
 		switch (PumpType)
@@ -225,12 +218,25 @@ public class PumpFB : VisualFBBaseExtended
 			}
 		}
 
-
 		var commandWord = 0;
-		commandWord.SetBit(0, GetVisualPin<bool>(StartCmdId));
-		commandWord.SetBit(1, GetVisualPin<bool>(StopCmdId));
+		var startCmd = GetVisualPin<bool>(StartCmdId);
+		var stopCmd = GetVisualPin<bool>(StopCmdId);
+		commandWord.SetBit(0, startCmd);
+		commandWord.SetBit(1, stopCmd);
 		SetPinValue(CommandWordId, commandWord);
 
+		if (startCmd && !_prevStartCmd)
+		{
+			FireUserStartEvent();
+		}
+
+		if (stopCmd && !_prevStopCmd)
+		{
+			FireUserStopEvent();
+		}
+
+		_prevStartCmd = startCmd;
+		_prevStopCmd = stopCmd;
 
 		if (used)
 		{
@@ -243,51 +249,58 @@ public class PumpFB : VisualFBBaseExtended
 		}
 	}
 
-
 	protected override void CreatePinMap(bool newObject)
 	{
-		try
-		{
-			base.CreatePinMap(newObject);
+		base.CreatePinMap(newObject);
 
-			var group = (FBGroup)_mapIDtoItem[DynamicGroupId];
-			switch (PumpType)
+		var group = (FBGroup)_mapIDtoItem[DynamicGroupId];
+		switch (PumpType)
+		{
+			case PumpType.Forvacuum:
 			{
-				case PumpType.Forvacuum:
-				{
-					break;
-				}
-				case PumpType.Turbine:
-				{
-					group.AddPinWithID(TurbineSpeedId, "Speed", PinType.Pin, typeof(float), 0d);
-					break;
-				}
-				case PumpType.Ion:
-				{
-					group.AddPinWithID(IonPumpVoltage, "Voltage", PinType.Pin, typeof(float), 0d);
-					group.AddPinWithID(IonPumpCurrent, "Current", PinType.Pin, typeof(float), 0d);
-					group.AddPinWithID(IonPumpPower, "Power", PinType.Pin, typeof(float), 0d);
-					break;
-				}
-				case PumpType.Cryogen:
-				{
-					group.AddPinWithID(CryoInTemperature, "TemperatureIn", PinType.Pin, typeof(float), 0d);
-					group.AddPinWithID(CryoOutTemperature, "TemperatureOut", PinType.Pin, typeof(float), 0d);
-					break;
-				}
+				break;
 			}
+			case PumpType.Turbine:
+			{
+				group.AddPinWithID(TurbineSpeedId, "Speed", PinType.Pin, typeof(float), 0d);
+				break;
+			}
+			case PumpType.Ion:
+			{
+				group.AddPinWithID(IonPumpVoltage, "Voltage", PinType.Pin, typeof(float), 0d);
+				group.AddPinWithID(IonPumpCurrent, "Current", PinType.Pin, typeof(float), 0d);
+				group.AddPinWithID(IonPumpPower, "Power", PinType.Pin, typeof(float), 0d);
+				break;
+			}
+			case PumpType.Cryogen:
+			{
+				group.AddPinWithID(CryoInTemperature, "TemperatureIn", PinType.Pin, typeof(float), 0d);
+				group.AddPinWithID(CryoOutTemperature, "TemperatureOut", PinType.Pin, typeof(float), 0d);
+				break;
+			}
+		}
 
-			FirePinSpaceChanged();
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine(ex.Message);
-			throw;
-		}
+		FirePinSpaceChanged();
 	}
 
 	protected override OpcQuality GetConnectionQuality()
 	{
 		return GetPinQuality(StatusWordId);
+	}
+
+	public void FireUserStartEvent()
+	{
+		var splittedString = FullName.Split('.');
+		var name = splittedString[^1];
+		var message = $"Насос {name}: оператор нажал кнопку Пуск";
+		FireEvent(UserStartEventId, message);
+	}
+
+	public void FireUserStopEvent()
+	{
+		var splittedString = FullName.Split('.');
+		var name = splittedString[^1];
+		var message = $"Насос {name}: оператор нажал кнопку Стоп";
+		FireEvent(UserStopEventId, message);
 	}
 }
