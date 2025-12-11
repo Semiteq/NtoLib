@@ -24,6 +24,7 @@ public partial class ValveControl : VisualControlBase
 {
 	private bool _noButtons;
 
+	[Browsable(false)]
 	[DisplayName("Скрыть кнопки")]
 	public bool NoButtons
 	{
@@ -385,6 +386,7 @@ public partial class ValveControl : VisualControlBase
 		Status.Collision = GetPinValue<bool>(ValveFB.CollisionId);
 		Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
 		Status.Used = GetPinValue<bool>(ValveFB.UsedId);
+		Status.Manual = GetPinValue<bool>(ValveFB.ManualId);
 		Status.Opened = GetPinValue<bool>(ValveFB.OpenedId);
 		Status.OpenedSmoothly = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
 		Status.Closed = GetPinValue<bool>(ValveFB.ClosedId);
@@ -398,7 +400,7 @@ public partial class ValveControl : VisualControlBase
 		buttonClose.Enabled = !Status.UsedByAutoMode && !Status.BlockClosing;
 
 		spriteBox.Visible = Status.Used;
-		buttonTable.Visible = Status.Used && !NoButtons;
+		buttonTable.Visible = Status.Used && !Status.Manual && !NoButtons;
 
 		_isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
 		UpdateRenderer();

@@ -9,6 +9,7 @@ public struct Status
 	public bool Collision;
 	public bool UsedByAutoMode;
 	public bool Used;
+	public bool Manual;
 	public bool Opened;
 	public bool OpenedSmoothly;
 	public bool Closed;

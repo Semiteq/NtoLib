@@ -33,6 +33,7 @@ public class ValveFB : VisualFBBaseExtended
 	public const int ClosedId = 7;
 	public const int OpeningClosingId = 8;
 	public const int UsedId = 9;
+	public const int ManualId = 10;
 
 	public const int ForceCloseId = 12;
 	public const int BlockClosingId = 13;
@@ -125,6 +126,8 @@ public class ValveFB : VisualFBBaseExtended
 		SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(OpeningClosingId));
 		var used = statusWord.GetBit(UsedId);
 		SetVisualAndUiPin(UsedId, used);
+		var manual = statusWord.GetBit(ManualId);
+		SetVisualAndUiPin(ManualId, manual);
 
 		SetVisualAndUiPin(ForceCloseId, statusWord.GetBit(ForceCloseId));
 		SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(BlockClosingId));
