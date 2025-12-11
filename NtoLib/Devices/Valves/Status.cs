@@ -10,6 +10,7 @@ public struct Status
 	public bool UsedByAutoMode;
 	public bool Used;
 	public bool Manual;
+	public bool WithoutSensors;
 	public bool Opened;
 	public bool OpenedSmoothly;
 	public bool Closed;
@@ -19,7 +20,7 @@ public struct Status
 	public bool BlockClosing;
 	public bool BlockOpening;
 
-	public bool AnyError => !ConnectionOk || NotOpened || NotClosed || Collision || UnknownState;
+	public bool AnyError => !ConnectionOk || (!(Manual && WithoutSensors) && (NotOpened || NotClosed || Collision || UnknownState));
 
 	public bool AnimationNeeded => OpeningClosing || (Collision && !OpenedSmoothly) || AnyError;
 }

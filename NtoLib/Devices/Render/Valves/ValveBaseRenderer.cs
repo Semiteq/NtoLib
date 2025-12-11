@@ -28,6 +28,11 @@ internal abstract class ValveBaseRenderer : BaseRenderer
 			colors[0] = Colors.NoData;
 			colors[1] = Colors.NoData;
 		}
+		else if (status.Manual && status.WithoutSensors)
+		{
+			colors[0] = Colors.NoData;
+			colors[1] = Colors.NoData;
+		}
 		else if (status.Opened && !status.Collision && !status.UnknownState)
 		{
 			colors[0] = Colors.Opened;

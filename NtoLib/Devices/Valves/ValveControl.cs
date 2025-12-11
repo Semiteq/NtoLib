@@ -387,6 +387,7 @@ public partial class ValveControl : VisualControlBase
 		Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
 		Status.Used = GetPinValue<bool>(ValveFB.UsedId);
 		Status.Manual = GetPinValue<bool>(ValveFB.ManualId);
+		Status.WithoutSensors = GetPinValue<bool>(ValveFB.WithoutSensorsId);
 		Status.Opened = GetPinValue<bool>(ValveFB.OpenedId);
 		Status.OpenedSmoothly = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
 		Status.Closed = GetPinValue<bool>(ValveFB.ClosedId);
