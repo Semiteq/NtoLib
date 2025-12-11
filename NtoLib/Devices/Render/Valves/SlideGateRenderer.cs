@@ -74,10 +74,14 @@ internal class SlideGateRenderer : ValveBaseRenderer
 		using (var pen = new Pen(Colors.Lines, LineWidth))
 			graphics.DrawClosedCurve(pen, groovePoints, 0, FillMode.Alternate);
 
-		var gateBounds = GetGateBounds(grooveBounds, status, isLight);
+		// Для клапанов без датчиков в ручном режиме не показываем положение задвижки
+		if (!(status.Manual && status.WithoutSensors))
+		{
+			var gateBounds = GetGateBounds(grooveBounds, status, isLight);
 
-		using (Brush brush = new SolidBrush(Colors.Lines))
-			graphics.FillRectangle(brush, gateBounds.ToRectangleF());
+			using (Brush brush = new SolidBrush(Colors.Lines))
+				graphics.FillRectangle(brush, gateBounds.ToRectangleF());
+		}
 	}
 
 	/// <summary>

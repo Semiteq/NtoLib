@@ -34,6 +34,7 @@ public class ValveFB : VisualFBBaseExtended
 	public const int OpeningClosingId = 8;
 	public const int UsedId = 9;
 	public const int ManualId = 10;
+	public const int WithoutSensorsId = 11;
 
 	public const int ForceCloseId = 12;
 	public const int BlockClosingId = 13;
@@ -128,6 +129,8 @@ public class ValveFB : VisualFBBaseExtended
 		SetVisualAndUiPin(UsedId, used);
 		var manual = statusWord.GetBit(ManualId);
 		SetVisualAndUiPin(ManualId, manual);
+		var withoutSensors = statusWord.GetBit(WithoutSensorsId);
+		SetVisualAndUiPin(WithoutSensorsId, withoutSensors);
 
 		SetVisualAndUiPin(ForceCloseId, statusWord.GetBit(ForceCloseId));
 		SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(BlockClosingId));
@@ -164,9 +167,10 @@ public class ValveFB : VisualFBBaseExtended
 		_prevCloseCmd = closeCmd;
 
 
-		_collisionEvent.Update(collision && used);
-		_notOpenedEvent.Update(notOpened && used);
-		_notClosedEvent.Update(notClosed && used);
+		var canRaisePositionErrors = used && !(manual && withoutSensors);
+		_collisionEvent.Update(collision && canRaisePositionErrors);
+		_notOpenedEvent.Update(notOpened && canRaisePositionErrors);
+		_notClosedEvent.Update(notClosed && canRaisePositionErrors);
 
 		_openedEvent.Update(opened && used);
 		_openedSmoothlyEvent.Update(openedSmoothly && used);
