@@ -3,8 +3,14 @@ using System.Collections.Generic;
 
 namespace NtoLib.TrendPensManager.Entities;
 
-public sealed record TraversalData(List<ChannelInfo> Channels, List<string> Warnings)
+public sealed record TraversalData
 {
-	public List<ChannelInfo> Channels { get; } = Channels ?? throw new ArgumentNullException(nameof(Channels));
-	public List<string> Warnings { get; } = Warnings ?? throw new ArgumentNullException(nameof(Warnings));
+	public IReadOnlyList<ChannelInfo> Channels { get; init; }
+	public IReadOnlyList<string> Warnings { get; init; }
+
+	public TraversalData(IReadOnlyList<ChannelInfo> channels, IReadOnlyList<string> warnings)
+	{
+		Channels = channels ?? throw new ArgumentNullException(nameof(channels));
+		Warnings = warnings ?? throw new ArgumentNullException(nameof(warnings));
+	}
 }

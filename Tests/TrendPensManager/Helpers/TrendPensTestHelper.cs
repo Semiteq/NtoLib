@@ -24,6 +24,7 @@ public static class TrendPensTestHelper
 				"БКТ" => ServiceType.Heaters,
 				"БП" => ServiceType.ChamberHeaters,
 				"БУЗ" => ServiceType.Shutters,
+				"Газы" => ServiceType.Gases,
 				_ => ServiceType.Other
 			};
 
@@ -67,6 +68,11 @@ public static class TrendPensTestHelper
 		if (dump.Groups.TryGetValue("Shutters_OUT", out var shutters))
 		{
 			dict[ServiceType.Shutters] = shutters;
+		}
+
+		if (dump.Groups.TryGetValue("Gases_OUT", out var gases))
+		{
+			dict[ServiceType.Gases] = gases;
 		}
 
 		return Result.Ok(dict);

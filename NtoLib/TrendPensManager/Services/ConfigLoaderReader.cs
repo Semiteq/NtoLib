@@ -16,10 +16,12 @@ public class ConfigLoaderReader
 	private const int SourcesCount = 32;
 	private const int ChamberHeatersCount = 16;
 	private const int ShuttersCount = 16;
+	private const int GasesCount = 16;
 
 	private const string SourcesOutGroupName = "Sources_OUT";
 	private const string ChamberHeatersOutGroupName = "ChamberHeaters_OUT";
 	private const string ShuttersOutGroupName = "Shutters_OUT";
+	private const string GasesOutGroupName = "Gases_OUT";
 
 	private readonly IProjectHlp _project;
 	private readonly ILogger<ConfigLoaderReader>? _logger;
@@ -106,6 +108,23 @@ public class ConfigLoaderReader
 		else
 		{
 			_logger?.LogDebug("Shutters disabled, skipping {GroupName}", ShuttersOutGroupName);
+		}
+
+		if (serviceSelectionOptions == null || serviceSelectionOptions.AddGases)
+		{
+			var gasesResult = ReadPinGroup(configLoader, GasesOutGroupName, GasesCount);
+			if (gasesResult.IsFailed)
+			{
+				_logger?.LogError(
+					"Failed to read pin group '{GroupName}' for gases.",
+					GasesOutGroupName);
+				return Result.Fail(gasesResult.Errors);
+			}
+			result[ServiceType.Gases] = gasesResult.Value;
+		}
+		else
+		{
+			_logger?.LogDebug("Gases disabled, skipping {GroupName}", GasesOutGroupName);
 		}
 
 		_logger?.LogInformation(

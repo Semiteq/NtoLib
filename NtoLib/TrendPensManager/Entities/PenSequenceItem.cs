@@ -2,17 +2,31 @@
 
 namespace NtoLib.TrendPensManager.Entities;
 
-public sealed record PenSequenceItem(string SourcePinPath, string TrendPath, string PenDisplayName)
+public sealed record PenSequenceItem
 {
-	public string SourcePinPath { get; init; } = !string.IsNullOrWhiteSpace(SourcePinPath)
-		? SourcePinPath
-		: throw new ArgumentException(@"Source pin path must not be empty.", nameof(SourcePinPath));
+	public string SourcePinPath { get; init; }
+	public string TrendPath { get; init; }
+	public string PenDisplayName { get; init; }
 
-	public string TrendPath { get; init; } = !string.IsNullOrWhiteSpace(TrendPath)
-		? TrendPath
-		: throw new ArgumentException(@"Trend path must not be empty.", nameof(TrendPath));
+	public PenSequenceItem(string sourcePinPath, string trendPath, string penDisplayName)
+	{
+		if (string.IsNullOrWhiteSpace(sourcePinPath))
+		{
+			throw new ArgumentException(@"Source pin path must not be empty.", nameof(sourcePinPath));
+		}
 
-	public string PenDisplayName { get; init; } = !string.IsNullOrWhiteSpace(PenDisplayName)
-		? PenDisplayName
-		: throw new ArgumentException(@"Pen display name must not be empty.", nameof(PenDisplayName));
+		if (string.IsNullOrWhiteSpace(trendPath))
+		{
+			throw new ArgumentException(@"Trend path must not be empty.", nameof(trendPath));
+		}
+
+		if (string.IsNullOrWhiteSpace(penDisplayName))
+		{
+			throw new ArgumentException(@"Pen display name must not be empty.", nameof(penDisplayName));
+		}
+
+		SourcePinPath = sourcePinPath;
+		TrendPath = trendPath;
+		PenDisplayName = penDisplayName;
+	}
 }

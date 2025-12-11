@@ -13,57 +13,23 @@ public class ConfigLoaderService : IConfigLoaderService
 {
 	private readonly FileLoader _fileLoader;
 	private readonly FileSaver _fileSaver;
-
-	private readonly uint _shutterQuantity;
-	private readonly uint _sourcesQuantity;
-	private readonly uint _chamberHeaterQuantity;
-	private readonly uint _waterQuantity;
+	private readonly ConfigLoaderGroups _groups;
 
 	public LoaderDto CurrentConfiguration { get; private set; }
 	public bool IsLoaded { get; private set; }
 	public string LastError { get; private set; }
 
 	public ConfigLoaderService(
-		uint shutterQuantity,
-		uint sourcesQuantity,
-		uint chamberHeaterQuantity,
-		uint waterQuantity)
-		: this(new object(), shutterQuantity, sourcesQuantity, chamberHeaterQuantity, waterQuantity)
-	{
-	}
-
-	public ConfigLoaderService(
 		object fileLock,
-		uint shutterQuantity,
-		uint sourcesQuantity,
-		uint chamberHeaterQuantity,
-		uint waterQuantity)
+		ConfigLoaderGroups groups)
 	{
 		var fileLock1 = fileLock ?? throw new ArgumentNullException(nameof(fileLock));
-		_shutterQuantity = shutterQuantity;
-		_sourcesQuantity = sourcesQuantity;
-		_chamberHeaterQuantity = chamberHeaterQuantity;
-		_waterQuantity = waterQuantity;
+		_groups = groups ?? throw new ArgumentNullException(nameof(groups));
 
-		_fileLoader = new FileLoader(
-			fileLock1,
-			shutterQuantity,
-			sourcesQuantity,
-			chamberHeaterQuantity,
-			waterQuantity);
+		_fileLoader = new FileLoader(fileLock1, _groups);
+		_fileSaver = new FileSaver(fileLock1, _groups);
 
-		_fileSaver = new FileSaver(
-			fileLock1,
-			shutterQuantity,
-			sourcesQuantity,
-			chamberHeaterQuantity,
-			waterQuantity);
-
-		CurrentConfiguration = DefaultConfigurationFactory.Create(
-			shutterQuantity,
-			sourcesQuantity,
-			chamberHeaterQuantity,
-			waterQuantity);
+		CurrentConfiguration = DefaultConfigurationFactory.Create(_groups);
 
 		IsLoaded = false;
 		LastError = string.Empty;
@@ -107,12 +73,6 @@ public class ConfigLoaderService : IConfigLoaderService
 			return Result.Fail(LastError);
 		}
 
-		if (dto == null)
-		{
-			LastError = "Configuration data cannot be null.";
-			return Result.Fail(LastError);
-		}
-
 		var saveResult = _fileSaver.Save(filePath, dto);
 
 		if (saveResult.IsFailed)
@@ -145,20 +105,12 @@ public class ConfigLoaderService : IConfigLoaderService
 
 	public LoaderDto CreateEmptyConfiguration()
 	{
-		return DefaultConfigurationFactory.Create(
-			_shutterQuantity,
-			_sourcesQuantity,
-			_chamberHeaterQuantity,
-			_waterQuantity);
+		return DefaultConfigurationFactory.Create(_groups);
 	}
 
 	private Result CreateDefaultFile(string filePath)
 	{
-		var defaultDto = DefaultConfigurationFactory.Create(
-			_shutterQuantity,
-			_sourcesQuantity,
-			_chamberHeaterQuantity,
-			_waterQuantity);
+		var defaultDto = DefaultConfigurationFactory.Create(_groups);
 
 		return _fileSaver.Save(filePath, defaultDto);
 	}

@@ -194,7 +194,7 @@ public class TrendPensService : ITrendPensService
 	}
 
 	private Result<PenSequenceData> BuildPenSequence(
-		List<ChannelInfo> channels,
+		IReadOnlyList<ChannelInfo> channels,
 		Dictionary<ServiceType, string[]> configNames,
 		string trendRootPath)
 	{

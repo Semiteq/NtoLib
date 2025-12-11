@@ -46,6 +46,11 @@ public sealed class ServiceFilter
 		"Интерферометр"
 	};
 
+	private static readonly HashSet<string> _gasNames = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"Газы"
+	};
+
 	public ServiceType GetServiceType(string serviceName)
 	{
 		if (string.IsNullOrWhiteSpace(serviceName))
@@ -56,6 +61,11 @@ public sealed class ServiceFilter
 		if (_serviceTypeByName.TryGetValue(serviceName, out var knownType))
 		{
 			return knownType;
+		}
+
+		if (_gasNames.Contains(serviceName))
+		{
+			return ServiceType.Gases;
 		}
 
 		return ServiceType.Other;
@@ -108,6 +118,11 @@ public sealed class ServiceFilter
 			return options.AddInterferometer;
 		}
 
+		if (_gasNames.Contains(serviceName))
+		{
+			return options.AddGases;
+		}
+
 		return false;
 	}
 
@@ -121,6 +136,8 @@ public sealed class ServiceFilter
 				return options.AddChamberHeaters;
 			case ServiceType.Shutters:
 				return options.AddShutters;
+			case ServiceType.Gases:
+				return options.AddGases;
 			case ServiceType.Other:
 				return options.AddVacuumMeters
 					   || options.AddPyrometer

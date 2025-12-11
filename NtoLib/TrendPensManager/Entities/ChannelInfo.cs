@@ -3,20 +3,35 @@ using System.Collections.Generic;
 
 namespace NtoLib.TrendPensManager.Entities;
 
-public sealed record ChannelInfo(
-	string ServiceName,
-	ServiceType ServiceType,
-	int ChannelNumber,
-	bool Used,
-	List<ParameterInfo> Parameters)
+public sealed record ChannelInfo
 {
-	public string ServiceName { get; init; } = !string.IsNullOrWhiteSpace(ServiceName)
-		? ServiceName
-		: throw new ArgumentException(@"Service name must not be empty.", nameof(ServiceName));
+	public string ServiceName { get; init; }
+	public ServiceType ServiceType { get; init; }
+	public int ChannelNumber { get; init; }
+	public bool Used { get; init; }
+	public IReadOnlyList<ParameterInfo> Parameters { get; init; }
 
-	public int ChannelNumber { get; init; } = ChannelNumber >= 0
-		? ChannelNumber
-		: throw new ArgumentOutOfRangeException(nameof(ChannelNumber), @"Channel number must be greater than zero.");
+	public ChannelInfo(
+		string serviceName,
+		ServiceType serviceType,
+		int channelNumber,
+		bool used,
+		IReadOnlyList<ParameterInfo> parameters)
+	{
+		if (string.IsNullOrWhiteSpace(serviceName))
+		{
+			throw new ArgumentException(@"Service name must not be empty.", nameof(serviceName));
+		}
 
-	public List<ParameterInfo> Parameters { get; } = Parameters ?? throw new ArgumentNullException(nameof(Parameters));
+		if (channelNumber < 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(channelNumber), @"Channel number must be greater than zero.");
+		}
+
+		ServiceName = serviceName;
+		ServiceType = serviceType;
+		ChannelNumber = channelNumber;
+		Used = used;
+		Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+	}
 }

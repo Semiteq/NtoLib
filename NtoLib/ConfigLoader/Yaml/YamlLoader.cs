@@ -36,12 +36,12 @@ public static class YamlLoader
 
 	private static Result<string> ValidateFileExists(string path)
 	{
-		if (!File.Exists(path))
+		if (File.Exists(path))
 		{
-			return Result.Fail($"Configuration file not found at: '{path}'");
+			return Result.Ok(path);
 		}
 
-		return Result.Ok(path);
+		return Result.Fail($"Configuration file not found at: '{path}'");
 	}
 
 	private static Result<string> ReadFileContent(string path)

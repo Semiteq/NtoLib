@@ -44,16 +44,17 @@ public sealed class SaveTests
 	}
 
 	[Fact]
-	public void Save_NullDto_ReturnsError()
+	public void Save_EmptyDto_ReturnsError()
 	{
 		using var tempDir = ConfigLoaderTestHelper.CreateEmptyTempDirectory();
 		var service = ConfigLoaderTestHelper.CreateService();
 		var filePath = ConfigLoaderTestHelper.GetConfigFilePath(tempDir);
 
-		var result = service.Save(filePath, null);
+		var emptyDto = new LoaderDto([], [], [], [], []);
+		var result = service.Save(filePath, emptyDto);
 
 		result.IsFailed.Should().BeTrue();
-		service.LastError.Should().Contain("null");
+		service.LastError.Should().Contain("missing");
 	}
 
 	[Fact]
@@ -78,6 +79,7 @@ public sealed class SaveTests
 		var dto = new LoaderDto(
 			new[] { "TestShutter", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" },
 			new string[32],
+			new string[16],
 			new string[16],
 			new string[16]);
 

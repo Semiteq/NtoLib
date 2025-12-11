@@ -27,8 +27,9 @@ public class YamlSerializer
 		var source = BuildDictionary(dto.Sources);
 		var chamberHeater = BuildDictionary(dto.ChamberHeaters);
 		var water = BuildDictionary(dto.WaterChannels);
+		var gases = BuildDictionary(dto.Gases);
 
-		var yamlConfig = new YamlConfigDto(shutter, source, chamberHeater, water);
+		var yamlConfig = new YamlConfigDto(shutter, source, chamberHeater, water, gases);
 
 		var yaml = _serializer.Serialize(yamlConfig);
 		return Result.Ok(yaml);
@@ -41,7 +42,7 @@ public class YamlSerializer
 		for (var index = 0; index < values.Length; index++)
 		{
 			var key = (index + 1).ToString();
-			result[key] = values[index] ?? string.Empty;
+			result[key] = values[index];
 		}
 
 		return result;

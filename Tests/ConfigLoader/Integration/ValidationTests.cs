@@ -27,6 +27,7 @@ public sealed class ValidationTests
 			shutters,
 			CreateEmptyArray(32),
 			CreateEmptyArray(16),
+			CreateEmptyArray(16),
 			CreateEmptyArray(16));
 
 		var result = service.Save(filePath, dto);
@@ -48,6 +49,7 @@ public sealed class ValidationTests
 		var dto = new LoaderDto(
 			shutters,
 			CreateEmptyArray(32),
+			CreateEmptyArray(16),
 			CreateEmptyArray(16),
 			CreateEmptyArray(16));
 
@@ -77,6 +79,7 @@ public sealed class ValidationTests
 		var dto = new LoaderDto(
 			shutters,
 			CreateEmptyArray(32),
+			CreateEmptyArray(16),
 			CreateEmptyArray(16),
 			CreateEmptyArray(16));
 

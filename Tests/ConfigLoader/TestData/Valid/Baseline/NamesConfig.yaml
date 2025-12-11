@@ -1,4 +1,4 @@
-﻿Shutter:
+﻿Shutters:
   1: "Shutter1"
   2: "Shutter2"
   3: ""
@@ -48,7 +48,7 @@ Sources:
   30: ""
   31: ""
   32: ""
-ChamberHeater:
+ChamberHeaters:
   1: "Heater1"
   2: ""
   3: ""
@@ -65,8 +65,25 @@ ChamberHeater:
   14: ""
   15: ""
   16: ""
-Water:
+Waters:
   1: "Water1"
+  2: ""
+  3: ""
+  4: ""
+  5: ""
+  6: ""
+  7: ""
+  8: ""
+  9: ""
+  10: ""
+  11: ""
+  12: ""
+  13: ""
+  14: ""
+  15: ""
+  16: ""
+Gases:
+  1: "Gas1"
   2: ""
   3: ""
   4: ""

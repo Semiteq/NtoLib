@@ -14,6 +14,7 @@ public class YamlValidator
 	private readonly uint _sourceCapacity;
 	private readonly uint _chamberHeaterCapacity;
 	private readonly uint _waterCapacity;
+	private readonly uint _gasesCapacity;
 
 	private static readonly Regex _allowedNamePattern = new(
 		@"^[A-Za-zА-Яа-яЁё0-9 ._\-+]*$",
@@ -25,26 +26,30 @@ public class YamlValidator
 		uint shutterCapacity,
 		uint sourceCapacity,
 		uint chamberHeaterCapacity,
-		uint waterCapacity)
+		uint waterCapacity,
+		uint gasesCapacity)
 	{
 		_shutterCapacity = shutterCapacity;
 		_sourceCapacity = sourceCapacity;
 		_chamberHeaterCapacity = chamberHeaterCapacity;
 		_waterCapacity = waterCapacity;
+		_gasesCapacity = gasesCapacity;
 	}
 
 	public Result<LoaderDto> ValidateAndMap(YamlConfigDto yamlDto)
 	{
-		var shutterResult = ValidateAndBuildArray(yamlDto.Shutter, _shutterCapacity, "Shutter");
-		var sourcesResult = ValidateAndBuildArray(yamlDto.Sources, _sourceCapacity, "Source");
-		var chamberHeaterResult = ValidateAndBuildArray(yamlDto.ChamberHeater, _chamberHeaterCapacity, "ChamberHeater");
-		var waterResult = ValidateAndBuildArray(yamlDto.Water, _waterCapacity, "Water");
+		var shutterResult = ValidateAndBuildArray(yamlDto.Shutters, _shutterCapacity, "Shutters");
+		var sourcesResult = ValidateAndBuildArray(yamlDto.Sources, _sourceCapacity, "Sources");
+		var chamberHeaterResult = ValidateAndBuildArray(yamlDto.ChamberHeaters, _chamberHeaterCapacity, "ChamberHeaters");
+		var waterResult = ValidateAndBuildArray(yamlDto.Waters, _waterCapacity, "Waters");
+		var gasesResult = ValidateAndBuildArray(yamlDto.Gases, _gasesCapacity, "Gases");
 
 		var combinedResult = Result.Merge(
 			shutterResult,
 			sourcesResult,
 			chamberHeaterResult,
-			waterResult);
+			waterResult,
+			gasesResult);
 
 		if (combinedResult.IsFailed)
 		{
@@ -55,12 +60,13 @@ public class YamlValidator
 			shutterResult.Value,
 			sourcesResult.Value,
 			chamberHeaterResult.Value,
-			waterResult.Value);
+			waterResult.Value,
+			gasesResult.Value);
 
 		return Result.Ok(dto);
 	}
 
-	private Result<string[]> ValidateAndBuildArray(
+	private static Result<string[]> ValidateAndBuildArray(
 		Dictionary<string, string> groupValues,
 		uint capacity,
 		string groupName)
@@ -129,7 +135,7 @@ public class YamlValidator
 		return Result.Ok(result);
 	}
 
-	private Result ValidateName(string value, string groupName, int index)
+	private static Result ValidateName(string value, string groupName, int index)
 	{
 		if (value.Length >= MaxNameLength)
 		{

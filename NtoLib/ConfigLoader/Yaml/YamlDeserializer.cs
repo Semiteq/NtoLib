@@ -12,15 +12,10 @@ namespace NtoLib.ConfigLoader.Yaml;
 
 public class YamlDeserializer
 {
-	private readonly IDeserializer _deserializer;
-
-	public YamlDeserializer()
-	{
-		_deserializer = new DeserializerBuilder()
-			.WithNamingConvention(NullNamingConvention.Instance)
-			.IgnoreUnmatchedProperties()
-			.Build();
-	}
+	private readonly IDeserializer _deserializer = new DeserializerBuilder()
+		.WithNamingConvention(NullNamingConvention.Instance)
+		.IgnoreUnmatchedProperties()
+		.Build();
 
 	public Result<YamlConfigDto> Deserialize(string yaml)
 	{
@@ -33,17 +28,14 @@ public class YamlDeserializer
 		{
 			var raw = _deserializer.Deserialize<YamlConfigDto>(yaml);
 
-			if (raw == null)
-			{
-				return Result.Fail("YAML content could not be deserialized to configuration.");
-			}
+			var yamlConfigDto = new YamlConfigDto(
+				raw.Shutters,
+				raw.Sources,
+				raw.ChamberHeaters,
+				raw.Waters,
+				raw.Gases);
 
-			var shutter = raw.Shutter ?? new Dictionary<string, string>();
-			var source = raw.Sources ?? new Dictionary<string, string>();
-			var chamberHeater = raw.ChamberHeater ?? new Dictionary<string, string>();
-			var water = raw.Water ?? new Dictionary<string, string>();
-
-			return Result.Ok(new YamlConfigDto(shutter, source, chamberHeater, water));
+			return Result.Ok(yamlConfigDto);
 		}
 		catch (Exception ex)
 		{

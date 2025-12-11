@@ -75,6 +75,9 @@ public class TrendPensManagerFB : StaticFBBase
 	[DisplayName("12. Добавлять Интерферометр")]
 	public bool AddInterferometer { get; set; } = true;
 
+	[DisplayName("13. Добавлять Газовые линии")]
+	public bool AddGases { get; set; } = true;
+
 	[NonSerialized] private ITrendPensService? _trendPensService;
 	[NonSerialized] private SerilogLoggerFactory? _loggerFactory;
 	[NonSerialized] private StringBuilder? _logBuffer;
@@ -228,7 +231,8 @@ public class TrendPensManagerFB : StaticFBBase
 			AddTurbines = AddTurbines,
 			AddCryo = AddCryo,
 			AddIon = AddIon,
-			AddInterferometer = AddInterferometer
+			AddInterferometer = AddInterferometer,
+			AddGases = AddGases
 		};
 	}
 

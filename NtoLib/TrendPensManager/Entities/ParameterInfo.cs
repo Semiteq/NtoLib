@@ -2,13 +2,24 @@
 
 namespace NtoLib.TrendPensManager.Entities;
 
-public sealed record ParameterInfo(string Name, string FullPath)
+public sealed record ParameterInfo
 {
-	public string Name { get; init; } = !string.IsNullOrWhiteSpace(Name)
-		? Name
-		: throw new ArgumentException(@"Parameter name must not be empty.", nameof(Name));
+	public string Name { get; init; }
+	public string FullPath { get; init; }
 
-	public string FullPath { get; init; } = !string.IsNullOrWhiteSpace(FullPath)
-		? FullPath
-		: throw new ArgumentException(@"Parameter full path must not be empty.", nameof(FullPath));
+	public ParameterInfo(string name, string fullPath)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+		{
+			throw new ArgumentException(@"Parameter name must not be empty.", nameof(name));
+		}
+
+		if (string.IsNullOrWhiteSpace(fullPath))
+		{
+			throw new ArgumentException(@"Parameter full path must not be empty.", nameof(fullPath));
+		}
+
+		Name = name;
+		FullPath = fullPath;
+	}
 }

@@ -13,18 +13,21 @@ public class FileLoader
 	private readonly YamlDeserializer _yamlDeserializer = new();
 	private readonly YamlValidator _validator;
 
-	public FileLoader(object fileLock,
-		uint shuttersQuantity,
-		uint sourcesQuantity,
-		uint chamberHeatersQuantity,
-		uint waterChannelsQuantity)
+	public FileLoader(object fileLock, ConfigLoaderGroups groups)
 	{
 		_fileLock = fileLock ?? throw new ArgumentNullException(nameof(fileLock));
+
+		if (groups == null)
+		{
+			throw new ArgumentNullException(nameof(groups));
+		}
+
 		_validator = new YamlValidator(
-			shuttersQuantity,
-			sourcesQuantity,
-			chamberHeatersQuantity,
-			waterChannelsQuantity);
+			groups.Shutters.Capacity,
+			groups.Sources.Capacity,
+			groups.ChamberHeaters.Capacity,
+			groups.Water.Capacity,
+			groups.Gases.Capacity);
 	}
 
 	public Result<LoaderDto> Load(string filePath)

@@ -109,8 +109,9 @@ public sealed class EdgeCaseTests
 		var sources = CreateArrayWithPrefix(32, "Source");
 		var heaters = CreateArrayWithPrefix(16, "Heater");
 		var water = CreateArrayWithPrefix(16, "Water");
+		var gases = CreateArrayWithPrefix(16, "Gas");
 
-		var dto = new LoaderDto(shutters, sources, heaters, water);
+		var dto = new LoaderDto(shutters, sources, heaters, water, gases);
 
 		var result = service.SaveAndReload(filePath, dto);
 
@@ -165,6 +166,7 @@ public sealed class EdgeCaseTests
 		var dto = new LoaderDto(
 			shutters,
 			CreateEmptyArray(32),
+			CreateEmptyArray(16),
 			CreateEmptyArray(16),
 			CreateEmptyArray(16));
 

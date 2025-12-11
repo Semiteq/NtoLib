@@ -5,5 +5,6 @@ public enum ServiceType
 	Heaters,
 	ChamberHeaters,
 	Shutters,
+	Gases,
 	Other
 }

@@ -4,17 +4,14 @@ namespace NtoLib.ConfigLoader.Io.Default;
 
 public static class DefaultConfigurationFactory
 {
-	public static LoaderDto Create(
-		uint shutterQuantity,
-		uint sourcesQuantity,
-		uint chamberHeaterQuantity,
-		uint waterQuantity)
+	public static LoaderDto Create(ConfigLoaderGroups groups)
 	{
 		return new LoaderDto(
-			CreateEmptyArray(shutterQuantity),
-			CreateEmptyArray(sourcesQuantity),
-			CreateEmptyArray(chamberHeaterQuantity),
-			CreateEmptyArray(waterQuantity));
+			CreateEmptyArray(groups.Shutters.Capacity),
+			CreateEmptyArray(groups.Sources.Capacity),
+			CreateEmptyArray(groups.ChamberHeaters.Capacity),
+			CreateEmptyArray(groups.Water.Capacity),
+			CreateEmptyArray(groups.Gases.Capacity));
 	}
 
 	private static string[] CreateEmptyArray(uint size)

@@ -1,4 +1,5 @@
-﻿using NtoLib.ConfigLoader.Facade;
+﻿using NtoLib.ConfigLoader.Entities;
+using NtoLib.ConfigLoader.Facade;
 
 namespace Tests.ConfigLoader.Helpers;
 
@@ -8,18 +9,11 @@ public static class ConfigLoaderTestHelper
 	private const string InvalidSubfolder = "Invalid";
 	private const string ConfigFileName = "NamesConfig.yaml";
 
-	private const uint ShutterQuantity = 16;
-	private const uint SourcesQuantity = 32;
-	private const uint ChamberHeaterQuantity = 16;
-	private const uint WaterQuantity = 16;
+	private static readonly object _fileLock = new();
 
 	public static IConfigLoaderService CreateService()
 	{
-		return new ConfigLoaderService(
-			ShutterQuantity,
-			SourcesQuantity,
-			ChamberHeaterQuantity,
-			WaterQuantity);
+		return new ConfigLoaderService(_fileLock, ConfigLoaderGroups.Default);
 	}
 
 	public static (IConfigLoaderService Service, TempTestDirectory TempDir) PrepareValidCase(string caseName)

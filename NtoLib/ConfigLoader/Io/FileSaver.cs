@@ -17,18 +17,22 @@ public class FileSaver
 
 	public FileSaver(
 		object fileLock,
-		uint shutterQuantity,
-		uint sourcesQuantity,
-		uint chamberHeaterQuantity,
-		uint waterQuantity)
+		ConfigLoaderGroups groups)
 	{
 		_fileLock = fileLock ?? throw new ArgumentNullException(nameof(fileLock));
+
+		if (groups == null)
+		{
+			throw new ArgumentNullException(nameof(groups));
+		}
+
 		_yamlSerializer = new YamlSerializer();
 		_validator = new YamlValidator(
-			shutterQuantity,
-			sourcesQuantity,
-			chamberHeaterQuantity,
-			waterQuantity);
+			groups.Shutters.Capacity,
+			groups.Sources.Capacity,
+			groups.ChamberHeaters.Capacity,
+			groups.Water.Capacity,
+			groups.Gases.Capacity);
 	}
 
 	public Result Save(string filePath, LoaderDto dto)
@@ -54,7 +58,8 @@ public class FileSaver
 			BuildDictionary(dto.Shutters),
 			BuildDictionary(dto.Sources),
 			BuildDictionary(dto.ChamberHeaters),
-			BuildDictionary(dto.WaterChannels));
+			BuildDictionary(dto.WaterChannels),
+			BuildDictionary(dto.Gases));
 
 		var validateResult = _validator.ValidateAndMap(yamlConfig);
 		if (validateResult.IsFailed)
@@ -95,7 +100,7 @@ public class FileSaver
 		for (var i = 0; i < values.Length; i++)
 		{
 			var key = (i + 1).ToString();
-			result[key] = values[i] ?? string.Empty;
+			result[key] = values[i];
 		}
 
 		return result;

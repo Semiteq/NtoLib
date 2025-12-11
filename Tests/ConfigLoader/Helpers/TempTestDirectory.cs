@@ -8,7 +8,7 @@ public sealed class TempTestDirectory : IDisposable
 	{
 		Path = System.IO.Path.Combine(
 			System.IO.Path.GetTempPath(),
-			"NtoLib. ConfigLoaderTests",
+			"NtoLib.ConfigLoaderTests",
 			Guid.NewGuid().ToString("N"));
 
 		Directory.CreateDirectory(Path);

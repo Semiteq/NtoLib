@@ -13,15 +13,7 @@ namespace NtoLib.ConfigLoader.Pins;
 public class PinGroupManager
 {
 	private readonly StaticFBBase _fb;
-
-	private const int IdShutterInGroup = 1000;
-	private const int IdShutterOutGroup = 2000;
-	private const int IdSourcesInGroup = 3000;
-	private const int IdSourcesOutGroup = 4000;
-	private const int IdChamberHeaterInGroup = 5000;
-	private const int IdChamberHeaterOutGroup = 6000;
-	private const int IdWaterInGroup = 7000;
-	private const int IdWaterOutGroup = 8000;
+	private readonly ConfigLoaderGroups _groups;
 
 	private const int PinOffsetInsideGroup = 1;
 
@@ -33,67 +25,72 @@ public class PinGroupManager
 	private int _firstChamberHeaterOutPinId;
 	private int _firstWaterInPinId;
 	private int _firstWaterOutPinId;
+	private int _firstGasesInPinId;
+	private int _firstGasesOutPinId;
 
-	public PinGroupManager(StaticFBBase fb)
+	public PinGroupManager(StaticFBBase fb, ConfigLoaderGroups groups)
 	{
 		_fb = fb ?? throw new ArgumentNullException(nameof(fb));
+		_groups = groups ?? throw new ArgumentNullException(nameof(groups));
 	}
 
-	public void CreateAllGroups(
-		uint shutterQuantity,
-		uint sourcesQuantity,
-		uint chamberHeaterQuantity,
-		uint waterQuantity)
+	public void CreateAllGroups()
 	{
 		CreatePinGroup(
-			"Shutters_IN",
-			"Shutters_OUT",
-			IdShutterInGroup,
-			IdShutterOutGroup,
-			shutterQuantity,
+			_groups.Shutters.Name,
+			_groups.Shutters.YamlSection,
+			_groups.Shutters.InBaseId,
+			_groups.Shutters.OutBaseId,
+			_groups.Shutters.Capacity,
 			out _firstShutterInPinId,
 			out _firstShutterOutPinId);
 
 		CreatePinGroup(
-			"Sources_IN",
-			"Sources_OUT",
-			IdSourcesInGroup,
-			IdSourcesOutGroup,
-			sourcesQuantity,
+			_groups.Sources.Name,
+			_groups.Sources.YamlSection,
+			_groups.Sources.InBaseId,
+			_groups.Sources.OutBaseId,
+			_groups.Sources.Capacity,
 			out _firstSourcesInPinId,
 			out _firstSourcesOutPinId);
 
 		CreatePinGroup(
-			"ChamberHeaters_IN",
-			"ChamberHeaters_OUT",
-			IdChamberHeaterInGroup,
-			IdChamberHeaterOutGroup,
-			chamberHeaterQuantity,
+			_groups.ChamberHeaters.Name,
+			_groups.ChamberHeaters.YamlSection,
+			_groups.ChamberHeaters.InBaseId,
+			_groups.ChamberHeaters.OutBaseId,
+			_groups.ChamberHeaters.Capacity,
 			out _firstChamberHeaterInPinId,
 			out _firstChamberHeaterOutPinId);
 
 		CreatePinGroup(
-			"Water_IN",
-			"Water_OUT",
-			IdWaterInGroup,
-			IdWaterOutGroup,
-			waterQuantity,
+			_groups.Water.Name,
+			_groups.Water.YamlSection,
+			_groups.Water.InBaseId,
+			_groups.Water.OutBaseId,
+			_groups.Water.Capacity,
 			out _firstWaterInPinId,
 			out _firstWaterOutPinId);
+
+		CreatePinGroup(
+			_groups.Gases.Name,
+			_groups.Gases.YamlSection,
+			_groups.Gases.InBaseId,
+			_groups.Gases.OutBaseId,
+			_groups.Gases.Capacity,
+			out _firstGasesInPinId,
+			out _firstGasesOutPinId);
 	}
 
-	public LoaderDto ReadInputPins(
-		uint shutterQuantity,
-		uint sourcesQuantity,
-		uint chamberHeaterQuantity,
-		uint waterQuantity)
+	public LoaderDto ReadInputPins()
 	{
-		var shutters = ReadPinGroupValues(_firstShutterInPinId, shutterQuantity);
-		var sources = ReadPinGroupValues(_firstSourcesInPinId, sourcesQuantity);
-		var chamberHeaters = ReadPinGroupValues(_firstChamberHeaterInPinId, chamberHeaterQuantity);
-		var waterChannels = ReadPinGroupValues(_firstWaterInPinId, waterQuantity);
+		var shutters = ReadPinGroupValues(_firstShutterInPinId, _groups.Shutters.Capacity);
+		var sources = ReadPinGroupValues(_firstSourcesInPinId, _groups.Sources.Capacity);
+		var chamberHeaters = ReadPinGroupValues(_firstChamberHeaterInPinId, _groups.ChamberHeaters.Capacity);
+		var waters = ReadPinGroupValues(_firstWaterInPinId, _groups.Water.Capacity);
+		var gases = ReadPinGroupValues(_firstGasesInPinId, _groups.Gases.Capacity);
 
-		return new LoaderDto(shutters, sources, chamberHeaters, waterChannels);
+		return new LoaderDto(shutters, sources, chamberHeaters, waters, gases);
 	}
 
 	public void WriteOutputPins(LoaderDto dto)
@@ -102,6 +99,7 @@ public class PinGroupManager
 		WritePinGroupValues(_firstSourcesOutPinId, dto.Sources);
 		WritePinGroupValues(_firstChamberHeaterOutPinId, dto.ChamberHeaters);
 		WritePinGroupValues(_firstWaterOutPinId, dto.WaterChannels);
+		WritePinGroupValues(_firstGasesOutPinId, dto.Gases);
 	}
 
 	private void CreatePinGroup(
@@ -160,7 +158,7 @@ public class PinGroupManager
 
 	private void WritePinGroupValues(int firstPinId, string[] values)
 	{
-		if (values == null || values.Length == 0)
+		if (values.Length == 0)
 		{
 			return;
 		}
@@ -168,7 +166,7 @@ public class PinGroupManager
 		for (var offset = 0; offset < values.Length; offset++)
 		{
 			var pinId = firstPinId + offset;
-			var value = values[offset] ?? string.Empty;
+			var value = values[offset];
 			_fb.SetPinValue(pinId, value);
 		}
 	}

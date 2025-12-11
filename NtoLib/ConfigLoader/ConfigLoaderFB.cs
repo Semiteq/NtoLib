@@ -6,6 +6,7 @@ using FB;
 
 using InSAT.Library.Interop;
 
+using NtoLib.ConfigLoader.Entities;
 using NtoLib.ConfigLoader.Facade;
 using NtoLib.ConfigLoader.Pins;
 
@@ -23,10 +24,7 @@ public class ConfigLoaderFB : StaticFBBase
 	private const int SavedPinId = 3;
 	private const int ErrorPinId = 4;
 
-	private const uint ShutterQuantity = 16;
-	private const uint SourcesQuantity = 32;
-	private const uint ChamberHeaterQuantity = 16;
-	private const uint WaterQuantity = 16;
+	private static readonly ConfigLoaderGroups _groups = ConfigLoaderGroups.Default;
 
 	private static readonly TimeSpan _savedFlagDuration = TimeSpan.FromSeconds(1);
 
@@ -37,9 +35,10 @@ public class ConfigLoaderFB : StaticFBBase
 	private DateTime _savedFlagResetTimeUtc;
 	private bool _isRuntimeInitialized;
 
-	[NonSerialized] private PinGroupManager _pinGroupManager;
+	private object _fileLock = new();
 
-	[NonSerialized] private IConfigLoaderService _service;
+	[NonSerialized] private PinGroupManager? _pinGroupManager;
+	[NonSerialized] private IConfigLoaderService? _service;
 
 	protected override void ToRuntime()
 	{
@@ -57,12 +56,8 @@ public class ConfigLoaderFB : StaticFBBase
 	{
 		base.CreatePinMap(newObject);
 
-		_pinGroupManager = new PinGroupManager(this);
-		_pinGroupManager.CreateAllGroups(
-			ShutterQuantity,
-			SourcesQuantity,
-			ChamberHeaterQuantity,
-			WaterQuantity);
+		_pinGroupManager = new PinGroupManager(this, _groups);
+		_pinGroupManager.CreateAllGroups();
 
 		FirePinSpaceChanged();
 	}
@@ -89,11 +84,7 @@ public class ConfigLoaderFB : StaticFBBase
 
 		try
 		{
-			_service = new ConfigLoaderService(
-				ShutterQuantity,
-				SourcesQuantity,
-				ChamberHeaterQuantity,
-				WaterQuantity);
+			_service = new ConfigLoaderService(_fileLock, _groups);
 
 			_previousSaveCommand = false;
 			_isRuntimeInitialized = true;
@@ -169,11 +160,7 @@ public class ConfigLoaderFB : StaticFBBase
 			return;
 		}
 
-		var inputDto = _pinGroupManager.ReadInputPins(
-			ShutterQuantity,
-			SourcesQuantity,
-			ChamberHeaterQuantity,
-			WaterQuantity);
+		var inputDto = _pinGroupManager.ReadInputPins();
 
 		var result = _service.SaveAndReload(FilePath, inputDto);
 

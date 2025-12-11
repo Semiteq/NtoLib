@@ -68,6 +68,7 @@ public sealed class RoundTripTests
 			shutters,
 			CreateEmptyArray(32),
 			CreateEmptyArray(16),
+			CreateEmptyArray(16),
 			CreateEmptyArray(16));
 
 		var result = service.SaveAndReload(filePath, dto);
@@ -114,7 +115,10 @@ public sealed class RoundTripTests
 		var water = CreateEmptyArray(16);
 		water[0] = "Water_Pump";
 
-		return new LoaderDto(shutters, sources, heaters, water);
+		var gases = CreateEmptyArray(16);
+		gases[0] = "Gas+1";
+
+		return new LoaderDto(shutters, sources, heaters, water, gases);
 	}
 
 	private static string[] CreateEmptyArray(int size)

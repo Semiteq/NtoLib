@@ -47,7 +47,7 @@ public sealed class PenSequenceIntegrationTests
 		var firstHeater = channels.First(c => c.ServiceType == ServiceType.Heaters);
 		var patchedChannels = channels
 			.Select(c => c == firstHeater
-				? new ChannelInfo(c.ServiceName, c.ServiceType, c.ChannelNumber, Used: true, c.Parameters)
+				? new ChannelInfo(c.ServiceName, c.ServiceType, c.ChannelNumber, c.Used, c.Parameters)
 				: c)
 			.ToList();
 

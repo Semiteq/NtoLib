@@ -222,6 +222,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BrokenLinksObserver\BrokenLinksObserverFB.cs" />
+    <Compile Include="ConfigLoader\Entities\ConfigLoaderGroups.cs" />
     <Compile Include="Devices\Helpers\Colors.cs" />
     <Compile Include="Devices\Helpers\EventTrigger.cs" />
     <Compile Include="Devices\Helpers\Int32Extension.cs" />

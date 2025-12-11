@@ -3,8 +3,14 @@ using System.Collections.Generic;
 
 namespace NtoLib.TrendPensManager.Entities;
 
-public sealed record PenSequenceData(List<PenSequenceItem> Sequence, List<string> Warnings)
+public sealed record PenSequenceData
 {
-	public List<PenSequenceItem> Sequence { get; } = Sequence ?? throw new ArgumentNullException(nameof(Sequence));
-	public List<string> Warnings { get; } = Warnings ?? throw new ArgumentNullException(nameof(Warnings));
+	public IReadOnlyList<PenSequenceItem> Sequence { get; init; }
+	public IReadOnlyList<string> Warnings { get; init; }
+
+	public PenSequenceData(IReadOnlyList<PenSequenceItem> sequence, IReadOnlyList<string> warnings)
+	{
+		Sequence = sequence ?? throw new ArgumentNullException(nameof(sequence));
+		Warnings = warnings ?? throw new ArgumentNullException(nameof(warnings));
+	}
 }

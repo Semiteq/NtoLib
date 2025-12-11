@@ -34,7 +34,7 @@ public class StringBuilderSink : ILogEventSink
 
 			if (logEvent.Exception != null)
 			{
-				_buffer.Append($"  Exception: {logEvent.Exception.Message}");
+				_buffer.Append($"Exception: {logEvent.Exception.Message}");
 				_buffer.Append('\n');
 			}
 		}

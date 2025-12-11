@@ -19,13 +19,13 @@ public class PenSequenceBuilder
 	}
 
 	public Result<PenSequenceData> BuildSequence(
-		List<ChannelInfo> channels,
+		IReadOnlyList<ChannelInfo> channels,
 		Dictionary<ServiceType, string[]> configNames,
 		string trendRootPath)
 	{
 		_logger?.LogInformation(
 			"Building pen sequence. Channels={ChannelsCount}, TrendRootPath='{TrendRootPath}'",
-			channels?.Count ?? 0,
+			channels.Count,
 			trendRootPath);
 
 		if (channels == null)
