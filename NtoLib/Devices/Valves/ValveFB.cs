@@ -32,6 +32,7 @@ public class ValveFB : VisualFBBaseExtended
 	public const int SmoothlyOpenedId = 6;
 	public const int ClosedId = 7;
 	public const int OpeningClosingId = 8;
+	public const int UsedId = 9;
 
 	public const int ForceCloseId = 12;
 	public const int BlockClosingId = 13;
@@ -122,6 +123,8 @@ public class ValveFB : VisualFBBaseExtended
 		var closed = statusWord.GetBit(ClosedId);
 		SetVisualAndUiPin(ClosedId, closed);
 		SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(OpeningClosingId));
+		var used = statusWord.GetBit(UsedId);
+		SetVisualAndUiPin(UsedId, used);
 
 		SetVisualAndUiPin(ForceCloseId, statusWord.GetBit(ForceCloseId));
 		SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(BlockClosingId));
@@ -158,13 +161,13 @@ public class ValveFB : VisualFBBaseExtended
 		_prevCloseCmd = closeCmd;
 
 
-		_collisionEvent.Update(collision);
-		_notOpenedEvent.Update(notOpened);
-		_notClosedEvent.Update(notClosed);
+		_collisionEvent.Update(collision && used);
+		_notOpenedEvent.Update(notOpened && used);
+		_notClosedEvent.Update(notClosed && used);
 
-		_openedEvent.Update(opened);
-		_openedSmoothlyEvent.Update(openedSmoothly);
-		_closedEvent.Update(closed);
+		_openedEvent.Update(opened && used);
+		_openedSmoothlyEvent.Update(openedSmoothly && used);
+		_closedEvent.Update(closed && used);
 	}
 
 	protected override OpcQuality GetConnectionQuality()
@@ -174,6 +177,11 @@ public class ValveFB : VisualFBBaseExtended
 
 	public void FireUserOpenEvent()
 	{
+		if (!IsUsed())
+		{
+			return;
+		}
+
 		var splittedString = FullName.Split('.');
 		var name = splittedString[^1];
 		var message = $"Клапан {name}: оператор нажал кнопку Открыть";
@@ -182,6 +190,11 @@ public class ValveFB : VisualFBBaseExtended
 
 	public void FireUserOpenSmoothlyEvent()
 	{
+		if (!IsUsed())
+		{
+			return;
+		}
+
 		var splittedString = FullName.Split('.');
 		var name = splittedString[^1];
 		var message = $"Клапан {name}: оператор нажал кнопку Плавно открыть";
@@ -190,9 +203,25 @@ public class ValveFB : VisualFBBaseExtended
 
 	public void FireUserCloseEvent()
 	{
+		if (!IsUsed())
+		{
+			return;
+		}
+
 		var splittedString = FullName.Split('.');
 		var name = splittedString[^1];
 		var message = $"Клапан {name}: оператор нажал кнопку Закрыть";
 		FireEvent(UserCloseEventId, message);
+	}
+
+	private bool IsUsed()
+	{
+		var statusWord = 0;
+		if (GetPinQuality(StatusWordId) == OpcQuality.Ok)
+		{
+			statusWord = GetPinValue<int>(StatusWordId);
+		}
+
+		return statusWord.GetBit(UsedId);
 	}
 }

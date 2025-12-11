@@ -16,6 +16,7 @@
           <Pout ID="106" Name="SmoothlyOpened" Type="Логический"/>
           <Pout ID="107" Name="Closed" Type="Логический"/>
           <Pout ID="108" Name="OpeningClosing" Type="Логический"/>
+          <Pout ID="109" Name="Used" Type="Логический"/>
 
           <Pout ID="112" Name="ForceClose" Type="Логический"/>
           <Pout ID="113" Name="BlockClosing" Type="Логический"/>
@@ -36,6 +37,7 @@
       <Pout ID="1006" Name="SmoothlyOpened" Type="Логический"/>
       <Pout ID="1007" Name="Closed" Type="Логический"/>
       <Pout ID="1008" Name="OpeningClosing" Type="Логический"/>
+      <Pout ID="1009" Name="Used" Type="Логический"/>
 
       <Pout ID="1012" Name="ForceClose" Type="Логический"/>
       <Pout ID="1013" Name="BlockClosing" Type="Логический"/>
