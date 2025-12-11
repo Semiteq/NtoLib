@@ -384,6 +384,7 @@ public partial class ValveControl : VisualControlBase
 
 		Status.Collision = GetPinValue<bool>(ValveFB.CollisionId);
 		Status.UsedByAutoMode = GetPinValue<bool>(ValveFB.UsedByAutoModeId);
+		Status.Used = GetPinValue<bool>(ValveFB.UsedId);
 		Status.Opened = GetPinValue<bool>(ValveFB.OpenedId);
 		Status.OpenedSmoothly = GetPinValue<bool>(ValveFB.SmoothlyOpenedId);
 		Status.Closed = GetPinValue<bool>(ValveFB.ClosedId);
@@ -396,6 +397,8 @@ public partial class ValveControl : VisualControlBase
 		buttonOpenSmoothly.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening && !Status.ForceClose;
 		buttonClose.Enabled = !Status.UsedByAutoMode && !Status.BlockClosing;
 
+		spriteBox.Visible = Status.Used;
+		buttonTable.Visible = Status.Used && !NoButtons;
 
 		_isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
 		UpdateRenderer();
