@@ -261,6 +261,7 @@
     <Compile Include="Devices\Render\Common\Orientation.cs" />
     <Compile Include="Devices\Render\Pumps\PumpRenderer.cs" />
     <Compile Include="Devices\Render\Valves\CommonValveRenderer.cs" />
+    <Compile Include="Devices\Render\Valves\ManualValveRenderer.cs" />
     <Compile Include="Devices\Render\Valves\SlideGateRenderer.cs" />
     <Compile Include="Devices\Render\Valves\SmoothValveRenderer.cs" />
     <Compile Include="Devices\Render\Valves\ValveBaseRenderer.cs" />

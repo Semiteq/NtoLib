@@ -39,8 +39,6 @@ internal class SlideGateRenderer : ValveBaseRenderer
 		if (status.AnyError)
 			DrawErrorRectangle(graphics, graphicsBounds, isLight);
 
-		DrawManualIndicator(graphics, graphicsBounds);
-
 		return graphicsBounds;
 	}
 
