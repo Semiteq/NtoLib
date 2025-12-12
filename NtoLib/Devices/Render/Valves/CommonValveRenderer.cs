@@ -33,8 +33,6 @@ internal class CommonValveRenderer : ValveBaseRenderer
 		if (status.AnyError)
 			DrawErrorRectangle(graphics, errorBounds, isLight);
 
-		DrawManualIndicator(graphics, graphicsBounds);
-
 		return graphicsBounds;
 	}
 

@@ -434,6 +434,11 @@ public partial class ValveControl : VisualControlBase
 			if (_renderer?.GetType() != typeof(SmoothValveRenderer))
 				_renderer = new SmoothValveRenderer(this);
 		}
+		else if (Status.Manual)
+		{
+			if (_renderer?.GetType() != typeof(ManualValveRenderer))
+				_renderer = new ManualValveRenderer(this);
+		}
 		else
 		{
 			if (_renderer?.GetType() != typeof(CommonValveRenderer))
