@@ -111,8 +111,8 @@ public class PinGroupManager
 		out int firstInPinId,
 		out int firstOutPinId)
 	{
-		var inGroup = _fb.Root.AddGroup(inGroupId, inGroupName);
-		var outGroup = _fb.Root.AddGroup(outGroupId, outGroupName);
+		var inGroup = _fb.Root.AddGroup(inGroupId, inGroupName + "_IN");
+		var outGroup = _fb.Root.AddGroup(outGroupId, outGroupName + "_OUT");
 
 		firstInPinId = inGroupId + PinOffsetInsideGroup;
 		firstOutPinId = outGroupId + PinOffsetInsideGroup;
