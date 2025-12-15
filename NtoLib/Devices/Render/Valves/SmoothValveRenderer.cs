@@ -55,7 +55,7 @@ internal class SmoothValveRenderer : CommonValveRenderer
 		var circleBounds = valveBounds;
 
 		var circleDiameter = valveBounds.Height * RelativeCircleDiameter;
-		circleBounds.Y += (valveBounds.Height - circleDiameter) / 2f;
+		circleBounds.Y -= (valveBounds.Height - circleDiameter) / 2f;
 		circleBounds.Width = circleDiameter;
 		circleBounds.Height = circleDiameter;
 
@@ -67,7 +67,7 @@ internal class SmoothValveRenderer : CommonValveRenderer
 	/// </summary>
 	private static PointF[] GetCircleLegPoints(Bounds valveBounds, Bounds circleBounds)
 	{
-		return new[] { valveBounds.Center, circleBounds.CenterTop };
+		return new[] { valveBounds.Center, circleBounds.CenterBottom };
 	}
 
 	/// <summary>

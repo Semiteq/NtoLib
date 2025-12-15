@@ -35,7 +35,7 @@ public class ConfigLoaderFB : StaticFBBase
 	private DateTime _savedFlagResetTimeUtc;
 	private bool _isRuntimeInitialized;
 
-	private object _fileLock = new();
+	[NonSerialized] private object _fileLock = new();
 
 	[NonSerialized] private PinGroupManager? _pinGroupManager;
 	[NonSerialized] private IConfigLoaderService? _service;

@@ -54,14 +54,14 @@ internal class ManualValveRenderer : CommonValveRenderer
 		// Вертикальная часть T
 		var verticalRect = new RectangleF(
 			center.X - barThickness / 2f,
-			center.Y + tHeight / 2f,
+			center.Y - tHeight / 2f,
 			barThickness,
 			tHeight);
 
 		// Горизонтальная перекладина T той же толщины, что и вертикальная
 		var horizontalRect = new RectangleF(
 			center.X - tHeight / 2f,
-			verticalRect.Bottom,
+			verticalRect.Top,
 			tHeight,
 			barThickness);
 
