@@ -424,7 +424,12 @@ public partial class ValveControl : VisualControlBase
 
 	private void UpdateRenderer()
 	{
-		if (IsSlideGate)
+		if (IsSlideGate && Status.Manual && Status.WithoutSensors)
+		{
+			if (_renderer?.GetType() != typeof(ManualSlideGateRenderer))
+				_renderer = new ManualSlideGateRenderer(this);
+		}
+		else if (IsSlideGate)
 		{
 			if (_renderer?.GetType() != typeof(SlideGateRenderer))
 				_renderer = new SlideGateRenderer(this);
