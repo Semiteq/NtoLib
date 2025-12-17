@@ -1,219 +1,147 @@
-﻿# NtoLib — сборка с помощью NUKE
+# Build and deployment (Windows)
 
-## TL;DR: команды
+Проект: **.NET Framework 4.8** (`net48`).
 
-```bash
-nuke BuildDebug --configuration Debug                     # Debug + копирование для локальной отладки
-nuke BuildRelease --configuration Release                 # Release (тестовая/оптимизированная сборка)
-nuke Package --configuration Release                      # Release + создание ZIP архива в Releases/
-nuke Clean                                                # Очистка артефактов (для чистой сборки)
-nuke Test                                                 # Все тесты (по умолчанию Release)
-nuke Test --test-category Integration                     # Только интеграционные
-nuke TestWithCoverage                                     # Тесты + HTML-отчёт о покрытии
+Сборка и развёртывание выполняются PowerShell-скриптами из каталога `Build\`. Скрипты **не вычисляют пути автоматически**: все ключевые пути и конфигурация **задаются переменными окружения**. Это сделано для воспроизводимости и исключения зависимости от текущей директории/IDE.
+
+## Требования
+
+На машине разработчика должны быть установлены:
+
+- **.NET SDK** (`dotnet`)
+- **Visual Studio Build Tools** с MSBuild для сборки `net48` (или полноценная Visual Studio)
+
+## Переменные окружения
+
+Скрипты используют следующие переменные:
+
+### Обязательные (для сборки/тестов/упаковки)
+- `REPO_ROOT`  
+  Путь к корню репозитория, где расположен файл решения `NtoLib.sln`.  
+  Пример: `C:\Users\admin\Projects\git\NtoLib`
+
+- `BUILD_CONFIGURATION`  
+  Конфигурация сборки: `Debug` или `Release`.
+
+### Обязательные для развёртывания (Deploy)
+- `NTOLIB_DEST_DIR`  
+  Каталог назначения для копирования `NtoLib.dll` (и `NtoLib.pdb`, если он существует).  
+  Это должна быть папка, из которой целевое приложение загружает библиотеку.
+
+- `NTOLIB_CONFIG_DIR`  
+  Каталог назначения для `DefaultConfig`.  
+  Важно: при развёртывании каталог назначения **удаляется рекурсивно** и затем создаётся заново путём копирования `DefaultConfig`.
+
+## Скрипты и назначение
+
+### 1) Сборка (Build)
+
+Скрипт: `Build\tools\Build.ps1`  
+Назначение: сборка решения `NtoLib.sln` в заданной конфигурации.
+
+Запуск:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\tools\Build.ps1
 ```
 
----
+Ожидаемый результат:
+- артефакты сборки появляются в `NtoLib\bin\<BUILD_CONFIGURATION>\`
+- ключевой файл: `NtoLib\bin\<BUILD_CONFIGURATION>\NtoLib.dll`
 
-## Назначение
+### 2) Тесты (Test)
 
-NUKE-скрипт автоматизирует:
+Скрипт: `Build\tools\Test.ps1`  
+Назначение: запуск тестов `Tests\Tests.csproj` в заданной конфигурации.
 
-* очистку (`Clean`),
-* восстановление пакетов (`Restore`),
-* компиляцию (`Compile`),
-* объединение зависимостей в один DLL (`ILRepack`),
-* локальное копирование артефактов для отладки (`CopyToLocal` — только для Debug),
-* запуск тестов (`Test`),
-* создание релизного архива (`Package` — только для Release).
-
-Скрипт ориентирован на .NET Framework 4.8 (C#10) и использует классическую папку `packages/` (packages.config-style).
-ILRepack интегрирован как внешний исполняемый файл в `packages\ILRepack.<ver>\tools\ILRepack.exe`.
-`System.Resources.Extensions.dll` всегда копируется отдельно (не встраивается), это необходимо для корректной загрузки
-картинок для кнопок. При попытке встроить в общий DLL - рантайм не может найти зависимость, поэтому оставлено отдельно.
-
----
-
-## Требования (обязательное)
-
-* .NET SDK 9.x (должен быть установлен `dotnet`).
-* MSBuild (Visual Studio 2022 или эквивалентный MSBuild в PATH).
-* NUKE Global Tool (см. установка ниже).
-* Наличие каталога `packages/` (в проекте используются пакеты в формате packages.config).
-* Права записи в `Releases/` и (для Debug-деплоя) в `DestinationDirectory` (по умолчанию
-  `C:\Program Files (x86)\MPSSoft\MasterSCADA`).
-* ILRepack в `packages\ILRepack.<ver>\tools\ILRepack.exe` (скрипт не обновляет версию автоматически).
-
----
-
-## Установка NUKE (первый запуск)
-
-Установить глобальный инструмент [NUKE](https://nuke.build/).
-
----
-
-## Как запускать (главные команды)
-
-> Обратите внимание: **всегда** указывайте `--configuration` при запуске таргетов, чтобы значения `Configuration`
-> использовались корректно в зависимости/условиях таргетов.
-
-```bash
-# Debug: сборка + копирование в локальный каталог (для отладки)
-nuke BuildDebug --configuration Debug
-
-# Release: сборка в Release (без архива)
-nuke BuildRelease --configuration Release
-
-# Полный релиз: сборка Release + создание zip-архива в Releases/
-nuke Package --configuration Release
-
-# Все тесты
-nuke Test 
-
-# Только Category=Integration
-nuke Test --test-category Integration
- 
-# Только Component=ConfigLoader
-nuke Test --test-component ConfigLoader
-
-# Комбинация фильтров
-nuke Test --test-category Integration --test-component FormulaPrecompiler 
-
-# Тесты с coverage (генерирует отчёт в temp, выводит summary в консоль, генерирует HTML)
-nuke TestWithCoverage 
-
-# Coverage для Debug-сборки
-nuke TestWithCoverage --configuration Debug 
-
-# Очистка (удаление артефактов, bin/obj, создание пустого Releases/)
-nuke Clean
+Запуск:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\tools\Test.ps1
 ```
 
----
+Примечание: используется `dotnet test` без отключения restore/build (приоритет — стабильность для legacy-проекта).
 
-## Поведение таргетов — детально
+### 3) Упаковка релиза (Package)
 
-### Clean
+Скрипт: `Build\Package.ps1`  
+Назначение: сборка и формирование zip-архива в каталоге `Releases\` в корне репозитория.
 
-* Удаляет `bin/` и `obj/` по всему решению (исключая папки `packages` и `build`), очищает `Releases/`.
-* Обрабатывает ошибки удаления (файл/папка заняты) — не падает, логирует предупреждение.
-
-### Restore
-
-* Запускает `msbuild /t:Restore` для решения (восстановление пакетов NuGet / классических packages).
-
-### Compile
-
-* Запускает `msbuild /t:Build` с конфигурацией, соответствующей `--configuration`.
-* Для Release включаются оптимизации, для Debug — подробный PDB (`DebugType=full`).
-* MSBuildverbosity отображается в логах в соответствии с параметром `Verbosity` в NUKE (по умолчанию `Minimal`/
-  `Normal`).
-
-### ILRepack
-
-* Собирает список входных сборок: основной `NtoLib.dll` + перечень NuGet-зависимостей (список перечислен в скрипте).
-* Если в NtoLib были изменения (timestamp) или изменились входные зависимости — выполняет слияние.
-* В конфигурации исключены системные `System.*` из GAC и крупные внешние библиотеки MasterSCADA (они не мержатся).
-
-### Test
-
-* Запускает `dotnet test` для проекта `Tests`.
-* Использует `--no-build --no-restore` (предполагается, что Compile уже выполнен).
-* Поддерживает фильтрацию по Trait-атрибутам (`--test-category`, `--test-component`).
-
-### TestWithCoverage
-
-* Запускает тесты с включённым сбором Code Coverage (coverlet).
-* Генерирует HTML-отчёт в `TemporaryDirectory/coverage/html/` (автоочищается).
-* Выводит краткую сводку (line coverage %) в консоль из `Summary.txt`.
-
-### CopyToLocal (локальный деплой)
-
-* Выполняется только в Debug (условие `OnlyWhenDynamic(() => Configuration == Configuration.Debug)`).
-* Сравнивает timestamps/наличие файлов перед копированием (инкрементность).
-* Копирует только `FilesToDeploy` (например, `NtoLib.dll`, `NtoLib.pdb`, `System.Resources.Extensions.dll`) и папку
-  `NtoLibTableConfig/`.
-* При отсутствии или устаревании — копирует; в противном случае пропускает.
-
-### Package
-
-* Работает только для Release.
-* Берёт версию из `AssemblyInformationalVersion` в `Properties/AssemblyInfo.cs`.
-* Создаёт временную папку, копирует необходимые файлы + `NtoLib_reg.bat` + `NtoLibTableConfig/`, запаковывает в
-  `Releases/NtoLib_v<версия>.zip`.
-* `System.Resources.Extensions.dll` добавляется отдельно (не встраивается в merged DLL).
-
----
-
-## Файлы/зависимости: что включается в объединённый DLL (ILRepack) и что не включается
-
-**Включаются (из NuGet / backport-пакетов):**
-
-См. `string[] AssembliesToMerge`. Список может меняться.
-
-**НЕ включаются:**
-
-* System.Resources.Extensions.dll, см выше почему.
-* Внутренние/платформенные библиотеки MasterSCADA (MasterSCADA.Common, MasterSCADALib, InSAT.Library, Insat.Opc, FB) —
-  предполагается, что они присутствуют на целевых машинах и не подлежат слиянию.
-
----
-
-## Инкрементальность и оптимизация
-
-* MSBuild обеспечивает инкрементальную компиляцию по умолчанию — не пытайтесь дублировать этот механизм на уровне
-  скрипта.
-* Скрипт реализует инкрементальные проверки **для ILRepack** (timestamp сравнение) и **для CopyToLocal** (
-  timestamp/наличие). Это снижает лишние пересборки/копирования.
-* Для максимальной корректности рекомендуем:
-
-    * не менять `Configuration` внутри выполнения таргетов — передавайте `--configuration`.
-    * избегать ручного удаления `packages/` между запусками, если версии пакетов не менялись.
-
----
-
-## Тесты
-
-* Проект `Tests` содержит интеграционные тесты.
-* В CI/CD и перед релизом тесты запускаются через NUKE (`nuke Test`).
-* Проект `Tests` содержит интеграционные тесты для модуля конфигурации (`ModuleConfig`).
-* Тесты используют реальные YAML-файлы из `TestData/Valid` и `TestData/Invalid`.
-* Для локальной разработки тесты запускаются через IDE (быстрый прогон/отладка).
-* В CI/CD и перед релизом тесты запускаются через NUKE (`nuke Test` / `nuke TestWithCoverage`).
-
-### Фильтрация тестов
-
-Используйте параметры `--test-category` и `--test-component` для запуска подмножества тестов:
-
-```bash
-nuke Test                                                                 # all tests
-nuke Test --test-category Integration                                     # Category=Integration
-nuke Test --test-component ConfigLoader                                   # Component=ConfigLoader
-nuke Test --test-category Integration --test-component FormulaPrecompiler # Only Integrations for FormulaPrecompiler
+Запуск:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Package.ps1
 ```
 
-### Code Coverage
+Выходной артефакт:
+- `Releases\NtoLib_v<version>.zip`
+- `<version>` берётся из `NtoLib\Properties\AssemblyInfo.cs` из атрибута `AssemblyInformationalVersion`.
 
-* Target TestWithCoverage собирает метрики покрытия кода (coverlet).
-* HTML-отчёт генерируется во временной папке (не сохраняется в репозиторий).
-* Краткая сводка выводится в консоль:
+Содержимое архива включает:
+- `NtoLib.dll`
+- `DefaultConfig\` (если каталог существует)
+- `NtoLib_reg.bat` (если файл существует)
 
-```
-[INF] Coverage Summary: 
-[INF]   Coverage: 85.3% (1234 of 1447 lines)
-```
+### 4) Развёртывание (Deploy)
 
-* Coverage запускается автоматически при nuke Package (релиз-сборка).
+Скрипт: `Build\Deploy.ps1`  
+Назначение: сборка и копирование артефактов в папки установки/использования на локальной машине.
 
----
-
-## Логирование и диагностика
-
-* NUKE использует Serilog (скрипт настроен на использование уровней `Information`, `Debug`, `Warning`, `Error`).
-* Для подробного вывода работы MSBuild используйте флаг verbosity NUKE/MSBuild:
-
-```bash
-nuke BuildDebug --configuration Debug --verbosity verbose
+Запуск:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Deploy.ps1
 ```
 
-* При нормальной работе (`Minimal`/`Normal`) вывод показывает ключевые этапы, при `Verbose` — детальный вывод
-  ILRepack/MSBuild.
+Что делает Deploy:
+1. Выполняет сборку решения `NtoLib.sln` в конфигурации `BUILD_CONFIGURATION`.
+2. Копирует:
+    - `NtoLib\bin\<BUILD_CONFIGURATION>\NtoLib.dll` → `%NTOLIB_DEST_DIR%\NtoLib.dll`
+    - `NtoLib\bin\<BUILD_CONFIGURATION>\NtoLib.pdb` → `%NTOLIB_DEST_DIR%\NtoLib.pdb` (если существует)
+3. Если в репозитории есть каталог `DefaultConfig`, то:
+    - удаляет `%NTOLIB_CONFIG_DIR%` рекурсивно (если существует)
+    - копирует `DefaultConfig` в `%NTOLIB_CONFIG_DIR%`
+
+## Порядок работы (рекомендуемый)
+
+### Debug-развёртывание на своей машине (локальная отладка)
+1. Установите переменные:
+    - `REPO_ROOT` = путь к репозиторию
+    - `BUILD_CONFIGURATION=Debug`
+    - `NTOLIB_DEST_DIR` = папка, откуда целевое приложение загружает `NtoLib.dll`
+    - `NTOLIB_CONFIG_DIR` = папка для конфигов (будет перезаписана)
+
+2. Запустите:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Deploy.ps1
+```
+
+3. Перезапустите целевое приложение/службу, чтобы новая библиотека была загружена.
+
+### Release-сборка для передачи/установки
+1. Установите:
+    - `REPO_ROOT`
+    - `BUILD_CONFIGURATION=Release`
+
+2. Запустите упаковку:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Package.ps1
+```
+
+3. Полученный файл `Releases\NtoLib_v<version>.zip` используйте для установки на целевой машине:
+    - распакуйте `NtoLib.dll` в каталог, откуда приложение загружает библиотеку;
+    - распакуйте `DefaultConfig` в требуемый каталог конфигурации (или используйте стандартный механизм конфигов вашей системы);
+    - при необходимости выполните действия из `NtoLib_reg.bat` (если он включён и требуется вашей средой).
+
+## Прямые команды dotnet (при необходимости)
+
+Restore (packages.config):
+```powershell
+dotnet msbuild .\NtoLib.sln /t:Restore /p:RestorePackagesConfig=true
+```
+
+Build:
+```powershell
+dotnet build .\NtoLib.sln -c Release
+```
+
+Test:
+```powershell
+dotnet test .\Tests\Tests.csproj -c Release
+```
