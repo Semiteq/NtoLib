@@ -24,6 +24,18 @@ public partial class PumpControl : VisualControlBase
 {
 	private bool _noButtons;
 
+	// See the https://github.com/Semiteq/NtoLib/issues/80
+	public override Color BackColor
+	{
+		get => base.BackColor;
+		set
+		{
+			if (value == Color.Transparent)
+				return;
+			base.BackColor = value;
+		}
+	}
+
 	[DisplayName("Скрыть кнопки")]
 	public bool NoButtons
 	{
@@ -172,6 +184,28 @@ public partial class PumpControl : VisualControlBase
 			UpdateStatus();
 
 		UpdateSprite();
+	}
+
+	protected override void OnPinReceive(int pinID, bool valueChanged)
+	{
+		base.OnPinReceive(pinID, valueChanged);
+
+		if (pinID != PumpFB.UsedId + 1000)
+			return;
+
+		void Apply()
+		{
+			var used = FBConnector.GetPinValue<bool>(pinID);
+			if (Visible != used)
+				Visible = used;
+			if (used)
+				Invalidate();
+		}
+
+		if (InvokeRequired)
+			BeginInvoke((Action)Apply);
+		else
+			Apply();
 	}
 
 	private void UpdateAnimation(object sender, EventArgs e)

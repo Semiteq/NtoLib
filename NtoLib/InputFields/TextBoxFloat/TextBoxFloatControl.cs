@@ -18,7 +18,17 @@ public partial class TextBoxFloatControl : VisualControlBase
 	[DispId(10)]
 	[Category("Внешний вид")]
 	[DisplayName("Цвет границы")]
-	public override Color BackColor { get; set; } = Color.Black;
+	// See the https://github.com/Semiteq/NtoLib/issues/80
+	public override Color BackColor
+	{
+		get => base.BackColor;
+		set
+		{
+			if (value == Color.Transparent)
+				return;
+			base.BackColor = value;
+		}
+	}
 
 	private int _borderWidth = 1;
 

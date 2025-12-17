@@ -34,6 +34,18 @@ public partial class TableControl
 
 	[NonSerialized] private readonly List<Func<ColorScheme, ColorScheme>> _pendingColorMutations = new();
 
+	// See the https://github.com/Semiteq/NtoLib/issues/80
+	public override Color BackColor
+	{
+		get => base.BackColor;
+		set
+		{
+			if (value == Color.Transparent)
+				return;
+			base.BackColor = value;
+		}
+	}
+
 	[DisplayName("Высота строки")]
 	public int RowLineHeight
 	{

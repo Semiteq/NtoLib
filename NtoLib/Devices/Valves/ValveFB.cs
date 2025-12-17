@@ -111,24 +111,37 @@ public class ValveFB : VisualFBBaseExtended
 
 		var connectionOk = statusWord.GetBit(ConnectionOkId);
 		SetVisualAndUiPin(ConnectionOkId, connectionOk);
+
 		var notOpened = statusWord.GetBit(NotOpenedId);
 		SetVisualAndUiPin(NotOpenedId, notOpened);
+
 		var notClosed = statusWord.GetBit(NotClosedId);
 		SetVisualAndUiPin(NotClosedId, notClosed);
+
 		var collision = statusWord.GetBit(CollisionId);
 		SetVisualAndUiPin(CollisionId, collision);
-		SetVisualAndUiPin(UsedByAutoModeId, statusWord.GetBit(UsedByAutoModeId));
+
+		var usedByAutoMode = statusWord.GetBit(UsedByAutoModeId);
+		SetVisualAndUiPin(UsedByAutoModeId, usedByAutoMode);
+
 		var opened = statusWord.GetBit(OpenedId);
 		SetVisualAndUiPin(OpenedId, opened);
+
 		var openedSmoothly = statusWord.GetBit(SmoothlyOpenedId);
 		SetVisualAndUiPin(SmoothlyOpenedId, openedSmoothly);
+
 		var closed = statusWord.GetBit(ClosedId);
 		SetVisualAndUiPin(ClosedId, closed);
-		SetVisualAndUiPin(OpeningClosingId, statusWord.GetBit(OpeningClosingId));
+
+		var openingClosing = statusWord.GetBit(OpeningClosingId);
+		SetVisualAndUiPin(OpeningClosingId, openingClosing);
+
 		var used = statusWord.GetBit(UsedId);
 		SetVisualAndUiPin(UsedId, used);
+
 		var manual = statusWord.GetBit(ManualId);
 		SetVisualAndUiPin(ManualId, manual);
+
 		var withoutSensors = statusWord.GetBit(WithoutSensorsId);
 		SetVisualAndUiPin(WithoutSensorsId, withoutSensors);
 
@@ -136,7 +149,6 @@ public class ValveFB : VisualFBBaseExtended
 		SetVisualAndUiPin(BlockClosingId, statusWord.GetBit(BlockClosingId));
 		SetVisualAndUiPin(BlockOpeningId, statusWord.GetBit(BlockOpeningId));
 		SetVisualAndUiPin(IsSmoothValveId, statusWord.GetBit(IsSmoothValveId));
-
 
 		var commandWord = 0;
 		var openCmd = GetVisualPin<bool>(OpenCmdId);
@@ -165,7 +177,6 @@ public class ValveFB : VisualFBBaseExtended
 		_prevOpenCmd = openCmd;
 		_prevOpenSmoothlyCmd = openSmoothlyCmd;
 		_prevCloseCmd = closeCmd;
-
 
 		var canRaisePositionErrors = used && !(manual && withoutSensors);
 		_collisionEvent.Update(collision && canRaisePositionErrors);

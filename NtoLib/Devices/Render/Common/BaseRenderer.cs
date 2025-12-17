@@ -24,7 +24,7 @@ public abstract class BaseRenderer
 	/// <summary>
 	/// Применяет к объекту Graphics нужный поворот и возвращает границы отрисовки, развёрнутые нужным образом
 	/// </summary>
-	protected Bounds ConfigureGraphics(Graphics graphics, RectangleF boundsRect, Orientation orientation)
+	protected static Bounds ConfigureGraphics(Graphics graphics, RectangleF boundsRect, Orientation orientation)
 	{
 		graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
