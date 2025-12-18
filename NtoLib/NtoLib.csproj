@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Costura.Fody.6.0.0\build\Costura.Fody.props" Condition="Exists('..\packages\Costura.Fody.6.0.0\build\Costura.Fody.props')" />
+  <Import Project="..\packages\ILRepack.2.0.44\build\ILRepack.props" Condition="Exists('..\packages\ILRepack.2.0.44\build\ILRepack.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -50,9 +50,6 @@
     <Reference Include="COMDeviceSDK">
       <HintPath>..\resources\COMDeviceSDK.dll</HintPath>
     </Reference>
-    <Reference Include="Costura, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
-      <HintPath>..\packages\Costura.Fody.6.0.0\lib\netstandard2.0\Costura.dll</HintPath>
-    </Reference>
     <Reference Include="CsvHelper, Version=33.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
       <HintPath>..\packages\CsvHelper.33.1.0\lib\net48\CsvHelper.dll</HintPath>
     </Reference>
@@ -60,8 +57,7 @@
       <HintPath>..\packages\EasyModbusTCP.5.6.0\lib\net40\EasyModbus.dll</HintPath>
     </Reference>
     <Reference Include="FB">
-      <HintPath>..\resources\MasterScadaDep-3.12\FB.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\FB.dll</HintPath>
     </Reference>
     <Reference Include="FluentResults, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentResults.4.0.0\lib\netstandard2.0\FluentResults.dll</HintPath>
@@ -73,39 +69,31 @@
       <HintPath>..\packages\HonkSharp.1.0.1\lib\net472\HonkSharp.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.Core.Presentation">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\ICSharpCode.Core.Presentation.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\ICSharpCode.Core.Presentation.dll</HintPath>
     </Reference>
     <Reference Include="IndexRange, Version=1.0.0.0, Culture=neutral, PublicKeyToken=35e6a3c4212514c6, processorArchitecture=MSIL">
       <HintPath>..\packages\IndexRange.1.0.0\lib\net471\IndexRange.dll</HintPath>
     </Reference>
     <Reference Include="InSAT.Library">
-      <HintPath>..\resources\MasterScadaDep-3.12\InSAT.Library.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\InSAT.Library.dll</HintPath>
     </Reference>
     <Reference Include="Insat.Opc">
-      <HintPath>..\resources\MasterScadaDep-3.12\Insat.Opc.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\Insat.Opc.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Common">
-      <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADA.Common.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\MasterSCADA.Common.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Graph">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Graph.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\MasterSCADA.Graph.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Script">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Script.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\MasterSCADA.Script.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Trend">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Trend.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\MasterSCADA.Trend.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADALib">
-      <HintPath>..\resources\MasterScadaDep-3.12\MasterSCADALib.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\Resources\MasterSCADALib.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.8\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -965,7 +953,6 @@
     <EmbeddedResource Include="Resources\ImgWrite.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="FodyWeavers.xml" />
     <Content Include="Properties\Resources.resources" />
     <Content Include="Recipes\MbeTable\MbeTableFB.png" />
     <Content Include="Recipes\MbeTable\ModuleConfig\readme.md" />
@@ -990,11 +977,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Serilog.4.3.0\build\Serilog.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Serilog.4.3.0\build\Serilog.targets'))" />
-    <Error Condition="!Exists('..\packages\Fody.6.9.3\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.6.9.3\build\Fody.targets'))" />
-    <Error Condition="!Exists('..\packages\Costura.Fody.6.0.0\build\Costura.Fody.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.6.0.0\build\Costura.Fody.props'))" />
-    <Error Condition="!Exists('..\packages\Costura.Fody.6.0.0\build\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.6.0.0\build\Costura.Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\ILRepack.2.0.44\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.44\build\ILRepack.props'))" />
   </Target>
   <Import Project="..\packages\Serilog.4.3.0\build\Serilog.targets" Condition="Exists('..\packages\Serilog.4.3.0\build\Serilog.targets')" />
-  <Import Project="..\packages\Fody.6.9.3\build\Fody.targets" Condition="Exists('..\packages\Fody.6.9.3\build\Fody.targets')" />
-  <Import Project="..\packages\Costura.Fody.6.0.0\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.6.0.0\build\Costura.Fody.targets')" />
 </Project>

@@ -4,7 +4,7 @@
 ![Target](https://img.shields.io/badge/target-.NET%20Framework%204.8-lightgrey)
 ![MasterSCADA](https://img.shields.io/badge/MasterSCADA-3.12-informational)
 
-<p align="center"><img src=./Resources/img/logo.png/></p>
+<p align="center"><img src=./img/logo.png/></p>
 
 Библиотека пользовательских функциональных блоков и инфраструктуры для **MasterSCADA 3.12** (.NET Framework 4.8),
 ориентированная на поддержку сложных технологических установок (эпитаксия плазмохимия и смежные системы).
@@ -24,7 +24,7 @@
 ### Сборка
 
 - Каталог: `Build/`
- - Сборка происходит средствами dotnet и shell скриптами. См. [документацию](./build/readme.md) по сборке.
+ - Сборка происходит средствами dotnet, ilrepack и shell скриптами. См. [документацию](./build/readme.md) по сборке.
 
 
 ## Развёртывание в MasterSCADA
@@ -40,18 +40,18 @@
 
 Нужно проверить что Windows разрешил запуск всех dll, распакованных из архива, см скриншот ниже:
 
-![unlock](./Resources/img/unlock.jpg)
+![unlock](./img/unlock.jpg)
 
 Необходимо разблокировать файлы.
 
 ### При выполнении регистрации COM-объекта с NetReg (запуск NtoLib_reg.bat) возникает ошибка как ниже: 
 
-![netreg](./Resources/img/netreg.jpg)
+![netreg](./img/netreg.jpg)
 
 Причина та же, смотри пункт про разблокировку файла.
 
 ### При переходе на экран с блоком или при старте проекта возникает ошибка перехода (с не SCADA ошибкой), как на скриншоте:
 
-![compile](./Resources/img/compile.jpg)
+![compile](./img/compile.jpg)
 
 Возможно произошла ошибка сборки и не все зависимые dll были запакованы в NtoLib.dll. Если показывается код ошибки - ошибка выброшена не SCADA, т.е. по ней можно найти информацию.

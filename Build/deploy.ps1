@@ -16,4 +16,5 @@ if ([string]::IsNullOrWhiteSpace($DestinationDirectory)) { throw 'NTOLIB_DEST_DI
 if ([string]::IsNullOrWhiteSpace($ConfigurationDirectory)) { throw 'NTOLIB_CONFIG_DIR is required.' }
 
 & (Join-Path $ToolsDir 'Build.ps1') -Configuration $Configuration -RepoRoot $RepoRoot
+& (Join-Path $ToolsDir 'Merge.ps1') -Configuration $Configuration -RepoRoot $RepoRoot
 & (Join-Path $ToolsDir 'Copy.ps1') -Configuration $Configuration -RepoRoot $RepoRoot -DestinationDirectory $DestinationDirectory -ConfigurationDirectory $ConfigurationDirectory

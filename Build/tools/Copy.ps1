@@ -22,6 +22,11 @@ New-Item -ItemType Directory -Force -Path $DestinationDirectory | Out-Null
 Copy-Item (Join-Path $binDir 'NtoLib.dll') (Join-Path $DestinationDirectory 'NtoLib.dll') -Force
 Copy-Item (Join-Path $binDir 'NtoLib.pdb') (Join-Path $DestinationDirectory 'NtoLib.pdb') -Force -ErrorAction SilentlyContinue
 
+$resourcesExt = Join-Path $binDir 'System.Resources.Extensions.dll'
+if (Test-Path $resourcesExt) {
+  Copy-Item $resourcesExt (Join-Path $DestinationDirectory 'System.Resources.Extensions.dll') -Force
+}
+
 $cfgSrc = Join-Path $RepoRoot 'DefaultConfig'
 if (Test-Path $cfgSrc) {
   if (Test-Path $ConfigurationDirectory) { Remove-Item $ConfigurationDirectory -Recurse -Force }

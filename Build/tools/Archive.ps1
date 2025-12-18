@@ -28,6 +28,11 @@ New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 
 Copy-Item (Join-Path $binDir 'NtoLib.dll') (Join-Path $tempDir 'NtoLib.dll') -Force
 
+$resourcesExt = Join-Path $binDir 'System.Resources.Extensions.dll'
+if (Test-Path $resourcesExt) {
+  Copy-Item $resourcesExt (Join-Path $tempDir 'System.Resources.Extensions.dll') -Force
+}
+
 $cfgSrc = Join-Path $RepoRoot 'DefaultConfig'
 if (Test-Path $cfgSrc) {
   Copy-Item $cfgSrc (Join-Path $tempDir 'DefaultConfig') -Recurse -Force
