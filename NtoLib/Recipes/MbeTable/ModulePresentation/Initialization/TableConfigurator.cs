@@ -45,6 +45,8 @@ public sealed class TableConfigurator
 
 	private void BuildColumns()
 	{
+		_grid.RowHeadersWidth = 40;
+
 		_grid.Columns.Clear();
 
 		foreach (var def in _columnDefinitions)

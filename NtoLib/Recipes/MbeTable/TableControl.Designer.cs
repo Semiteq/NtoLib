@@ -42,10 +42,8 @@ namespace NtoLib.Recipes.MbeTable
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this._table.DefaultCellStyle = dataGridViewCellStyle1;
             this._table.Location = new System.Drawing.Point(3, 3);
-            this._table.MultiSelect = false;
             this._table.Name = "_table";
             this._table.RowHeadersWidth = 20;
-            this._table.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this._table.Size = new System.Drawing.Size(962, 482);
             this._table.TabIndex = 1;
             //

@@ -46,6 +46,7 @@ public sealed class TableBehaviorManager : IDisposable
 		_table.RowPostPaint += OnRowPostPaint;
 		_table.EditingControlShowing += OnEditingControlShowing;
 		_table.CellValidating += OnCellValidating;
+		_table.CellMouseDown += OnCellMouseDown;
 
 		_attached = true;
 	}
@@ -53,13 +54,16 @@ public sealed class TableBehaviorManager : IDisposable
 	public void Detach()
 	{
 		if (!_attached)
+		{
 			return;
+		}
 
 		_table.CellPainting -= OnCellPainting;
 		_table.DataError -= OnDataError;
 		_table.RowPostPaint -= OnRowPostPaint;
 		_table.EditingControlShowing -= OnEditingControlShowing;
 		_table.CellValidating -= OnCellValidating;
+		_table.CellMouseDown -= OnCellMouseDown;
 		_attached = false;
 	}
 
@@ -133,6 +137,29 @@ public sealed class TableBehaviorManager : IDisposable
 		catch
 		{
 			// ignored
+		}
+	}
+
+	private void OnCellMouseDown(object? sender, DataGridViewCellMouseEventArgs e)
+	{
+		if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)
+		{
+			return;
+		}
+
+		if (e.RowIndex < 0)
+		{
+			return;
+		}
+
+		switch (e.ColumnIndex)
+		{
+			case -1:
+				_table.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
+				return;
+			case >= 0:
+				_table.EditMode = DataGridViewEditMode.EditOnEnter;
+				break;
 		}
 	}
 

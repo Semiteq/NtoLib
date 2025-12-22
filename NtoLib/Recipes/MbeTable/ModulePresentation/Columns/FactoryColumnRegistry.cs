@@ -39,7 +39,9 @@ public sealed class FactoryColumnRegistry
 	public DataGridViewColumn CreateColumn(ColumnDefinition definition)
 	{
 		if (!_mapping.TryGetValue(definition.ColumnType, out var factoryType))
+		{
 			throw new InvalidOperationException($"Unknown column_type '{definition.ColumnType}'.");
+		}
 
 		var factory = (IFactoryColumn)_serviceProvider.GetRequiredService(factoryType);
 		var scheme = _serviceProvider.GetRequiredService<IColorSchemeProvider>().Current;
