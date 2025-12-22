@@ -6,11 +6,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-if ( [string]::IsNullOrWhiteSpace($Configuration))
+if ([string]::IsNullOrWhiteSpace($Configuration))
 {
     throw 'BUILD_CONFIGURATION is required.'
 }
-if ( [string]::IsNullOrWhiteSpace($RepoRoot))
+if ([string]::IsNullOrWhiteSpace($RepoRoot))
 {
     throw 'RepoRoot is required.'
 }
@@ -85,41 +85,53 @@ if ($mergeOthers.Count -eq 0)
 }
 
 $backupDll = Join-Path $binDir 'NtoLib.ilrepack.input.dll'
+$backupPdb = Join-Path $binDir 'NtoLib.ilrepack.input.pdb'
+$originalPdb = Join-Path $binDir 'NtoLib.pdb'
+
 if (Test-Path $backupDll)
 {
     Remove-Item $backupDll -Force
 }
+if (Test-Path $backupPdb)
+{
+    Remove-Item $backupPdb -Force
+}
 
 Move-Item -Path $finalDll -Destination $backupDll -Force
 
-$args = @(
+if (Test-Path $originalPdb)
+{
+    Move-Item -Path $originalPdb -Destination $backupPdb -Force
+}
+
+$ilRepackArgs = @(
     '/target:library',
     "/out:$finalDll",
-    '/skipconfig'
+    '/skipconfig',
+    '/internalize'
 )
 
 foreach ($d in $probeDirs)
 {
-    if (-not (Test-Path $d))
+    if (Test-Path $d)
     {
-        throw "ILRepack probe directory not found: $d"
+        $ilRepackArgs += "/lib:$d"
     }
-    $args += "/lib:$d"
 }
 
 if ($env:NTOLIB_ILREPACK_LOG -eq '1')
 {
-    $args += '/verbose'
-    $args += "/log:$( $binDir )\ilrepack.log"
+    $ilRepackArgs += '/verbose'
+    $ilRepackArgs += "/log:$(Join-Path $binDir 'ilrepack.log')"
 }
 
-$args += $backupDll
-$args += $mergeOthers
+$ilRepackArgs += $backupDll
+$ilRepackArgs += $mergeOthers
 
 Push-Location $binDir
 try
 {
-    & $ilRepackExe @args
+    & $ilRepackExe @ilRepackArgs
     if ($LASTEXITCODE -ne 0)
     {
         throw "ILRepack failed with exit code $LASTEXITCODE."
@@ -132,6 +144,10 @@ catch
         Remove-Item $finalDll -Force
     }
     Move-Item -Path $backupDll -Destination $finalDll -Force
+    if (Test-Path $backupPdb)
+    {
+        Move-Item -Path $backupPdb -Destination $originalPdb -Force
+    }
     throw
 }
 finally
@@ -139,4 +155,5 @@ finally
     Pop-Location
 }
 
-Remove-Item $backupDll -Force
+Remove-Item $backupDll -Force -ErrorAction SilentlyContinue
+Remove-Item $backupPdb -Force -ErrorAction SilentlyContinue
