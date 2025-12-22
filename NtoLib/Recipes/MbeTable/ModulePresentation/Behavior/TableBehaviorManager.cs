@@ -37,7 +37,9 @@ public sealed class TableBehaviorManager : IDisposable
 	public void Attach()
 	{
 		if (_disposed || _attached)
+		{
 			return;
+		}
 
 		_table.CellPainting += OnCellPainting;
 		_table.DataError += OnDataError;
@@ -58,7 +60,6 @@ public sealed class TableBehaviorManager : IDisposable
 		_table.RowPostPaint -= OnRowPostPaint;
 		_table.EditingControlShowing -= OnEditingControlShowing;
 		_table.CellValidating -= OnCellValidating;
-
 		_attached = false;
 	}
 
@@ -71,38 +72,58 @@ public sealed class TableBehaviorManager : IDisposable
 	private void Dispose(bool disposing)
 	{
 		if (_disposed)
+		{
 			return;
+		}
+
 		_disposed = true;
 
 		if (disposing)
 		{
 			try
 			{ Detach(); }
-			catch { }
+			catch
+			{
+				// ignored
+			}
 
 			try
 			{ _table.Disposed -= OnTableDisposed; }
-			catch { }
+			catch
+			{
+				// ignored
+			}
 		}
 	}
 
 	private void OnTableDisposed(object? sender, EventArgs e)
 	{
 		try
-		{ Detach(); }
-		catch { }
+		{
+			Detach();
+		}
+		catch
+		{
+			// ignored
+		}
 	}
 
 	private void OnCellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
 	{
 		if (e.RowIndex < 0 || e.ColumnIndex < 0)
+		{
 			return;
+		}
 
 		if (!_table.IsCurrentCellInEditMode)
+		{
 			return;
+		}
 
 		if (!_table.IsCurrentCellDirty)
+		{
 			return;
+		}
 
 		try
 		{
@@ -118,12 +139,16 @@ public sealed class TableBehaviorManager : IDisposable
 	private void OnCellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
 	{
 		if (e.RowIndex < 0 || e.ColumnIndex < 0)
+		{
 			return;
+		}
 
 		var cell = _table.Rows[e.RowIndex].Cells[e.ColumnIndex];
 
 		if (cell is RecipeComboBoxCell)
+		{
 			return;
+		}
 
 		e.Paint(e.ClipBounds, e.PaintParts);
 		DrawFocusOutlineIfCurrent(_table, e);
@@ -134,7 +159,9 @@ public sealed class TableBehaviorManager : IDisposable
 	{
 		var currentCell = grid.CurrentCell;
 		if (currentCell == null || currentCell.RowIndex != e.RowIndex || currentCell.ColumnIndex != e.ColumnIndex)
+		{
 			return;
+		}
 
 		using var pen = new Pen(_colorScheme.SelectedOutlineColor, Math.Max(1, _colorScheme.SelectedOutlineThickness));
 		var rect = Rectangle.Inflate(e.CellBounds, -1, -1);
@@ -144,35 +171,44 @@ public sealed class TableBehaviorManager : IDisposable
 	private void OnEditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
 	{
 		if (_table.CurrentCell is null)
-			return;
-
-		if (e.Control is DataGridViewTextBoxEditingControl textBox)
 		{
-			var style = _table.CurrentCell.InheritedStyle;
-			try
-			{
-				textBox.BackColor = style.BackColor;
-				textBox.ForeColor = style.ForeColor;
-				textBox.Font = style.Font;
-			}
-			catch { }
+			return;
 		}
 
-		if (e.Control is ComboBox comboBox)
+		switch (e.Control)
 		{
-			comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+			case DataGridViewTextBoxEditingControl textBox:
+			{
+				var style = _table.CurrentCell.InheritedStyle;
+				try
+				{
+					textBox.BackColor = style.BackColor;
+					textBox.ForeColor = style.ForeColor;
+					textBox.Font = style.Font;
+				}
+				catch
+				{
+					// ignored
+				}
 
-			comboBox.DropDown -= OnComboBoxDropDownAdjustSize;
-			comboBox.DropDown += OnComboBoxDropDownAdjustSize;
+				break;
+			}
+			case ComboBox comboBox:
+				comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
-			comboBox.SelectionChangeCommitted -= OnComboBoxSelectionChangeCommitted;
+				comboBox.DropDown -= OnComboBoxDropDownAdjustSize;
+				comboBox.DropDown += OnComboBoxDropDownAdjustSize;
+
+				break;
 		}
 	}
 
 	private void OnComboBoxDropDownAdjustSize(object? sender, EventArgs e)
 	{
 		if (sender is not ComboBox comboBox)
+		{
 			return;
+		}
 
 		var desired = comboBox.MaxDropDownItems;
 		try
@@ -184,21 +220,22 @@ public sealed class TableBehaviorManager : IDisposable
 				desired = col.MaxDropDownItems;
 			}
 		}
-		catch { }
+		catch
+		{
+			// ignored
+		}
 
 		var visible = Math.Max(1, Math.Min(desired, comboBox.Items.Count));
 		comboBox.IntegralHeight = true;
 		comboBox.MaxDropDownItems = visible;
 	}
 
-	private void OnComboBoxSelectionChangeCommitted(object? sender, EventArgs e)
-	{
-	}
-
 	private void OnDataError(object? sender, DataGridViewDataErrorEventArgs e)
 	{
 		if (e.RowIndex < 0 || e.ColumnIndex < 0)
+		{
 			return;
+		}
 
 		var grid = (DataGridView)sender!;
 
@@ -229,7 +266,10 @@ public sealed class TableBehaviorManager : IDisposable
 				grid.EndEdit();
 				grid.InvalidateCell(e.ColumnIndex, e.RowIndex);
 			}
-			catch { }
+			catch
+			{
+				// ignored
+			}
 		}
 		else
 		{
@@ -238,7 +278,7 @@ public sealed class TableBehaviorManager : IDisposable
 		}
 	}
 
-	private void OnRowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
+	private static void OnRowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
 	{
 		var grid = (DataGridView)sender!;
 		var text = (e.RowIndex + 1).ToString();

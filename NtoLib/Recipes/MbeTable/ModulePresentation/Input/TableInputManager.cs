@@ -48,7 +48,9 @@ public sealed class TableInputManager : IDisposable
 	public void Attach()
 	{
 		if (_attached)
+		{
 			return;
+		}
 
 		_table.KeyDown += OnTableKeyDown;
 		_table.RowHeaderMouseClick += OnRowHeaderMouseClick;
@@ -61,17 +63,16 @@ public sealed class TableInputManager : IDisposable
 	public void Detach()
 	{
 		if (!_attached)
-			return;
-
-		try
-		{ _table.KeyDown -= OnTableKeyDown; }
-		catch
 		{
-			/* ignored */
+			return;
 		}
 
 		try
-		{ _table.RowHeaderMouseClick -= OnRowHeaderMouseClick; }
+		{
+			_table.KeyDown -= OnTableKeyDown;
+			_table.RowHeaderMouseClick -= OnRowHeaderMouseClick;
+
+		}
 		catch
 		{
 			/* ignored */
@@ -80,7 +81,9 @@ public sealed class TableInputManager : IDisposable
 		if (_rowHeaderMenu != null)
 		{
 			try
-			{ _rowHeaderMenu.Dispose(); }
+			{
+				_rowHeaderMenu.Dispose();
+			}
 			catch
 			{
 				/* ignored */
@@ -133,10 +136,14 @@ public sealed class TableInputManager : IDisposable
 	{
 		var indices = GetSelectedRowIndices();
 		if (indices.Count == 0)
+		{
 			return;
+		}
 
 		if (!_copyCommand.CanExecute())
+		{
 			return;
+		}
 
 		e.Handled = true;
 		await _copyCommand.ExecuteAsync(indices).ConfigureAwait(false);
@@ -146,10 +153,14 @@ public sealed class TableInputManager : IDisposable
 	{
 		var indices = GetSelectedRowIndices();
 		if (indices.Count == 0)
+		{
 			return;
+		}
 
 		if (!_cutCommand.CanExecute())
+		{
 			return;
+		}
 
 		e.Handled = true;
 		await _cutCommand.ExecuteAsync(indices).ConfigureAwait(false);
@@ -159,10 +170,14 @@ public sealed class TableInputManager : IDisposable
 	{
 		var indices = GetSelectedRowIndices();
 		if (indices.Count == 0)
+		{
 			return;
+		}
 
 		if (!_deleteCommand.CanExecute())
+		{
 			return;
+		}
 
 		e.Handled = true;
 		await _deleteCommand.ExecuteAsync(indices).ConfigureAwait(false);
@@ -171,10 +186,14 @@ public sealed class TableInputManager : IDisposable
 	private async Task HandlePasteAsync(KeyEventArgs e)
 	{
 		if (_table.IsCurrentCellInEditMode)
+		{
 			return;
+		}
 
 		if (!_pasteCommand.CanExecute())
+		{
 			return;
+		}
 
 		var rowCount = _applicationService.GetRowCount();
 		var targetIndex = GetInsertionIndexAfterSelection(rowCount);
@@ -186,7 +205,9 @@ public sealed class TableInputManager : IDisposable
 	private async Task HandleInsertAsync(KeyEventArgs e)
 	{
 		if (!_insertCommand.CanExecute())
+		{
 			return;
+		}
 
 		var rowCount = _applicationService.GetRowCount();
 		var insertIndex = GetInsertionIndexAfterSelection(rowCount);
@@ -198,11 +219,14 @@ public sealed class TableInputManager : IDisposable
 	private void OnRowHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
 	{
 		if (e.RowIndex < 0)
+		{
 			return;
+		}
 
 		if (e.Button == MouseButtons.Right)
 		{
-			ShowRowHeaderContextMenu(e.RowIndex, e.Location);
+			var currentPosition = new Point(Cursor.Position.X, Cursor.Position.Y);
+			_rowHeaderMenu?.Show(currentPosition);
 		}
 	}
 
@@ -214,26 +238,36 @@ public sealed class TableInputManager : IDisposable
 		{
 			var indices = GetSelectedRowIndices();
 			if (indices.Count == 0)
+			{
 				return;
+			}
 
 			if (_copyCommand.CanExecute())
+			{
 				await _copyCommand.ExecuteAsync(indices).ConfigureAwait(false);
+			}
 		});
 
 		var cutItem = new ToolStripMenuItem("Cut rows", null, async (_, _) =>
 		{
 			var indices = GetSelectedRowIndices();
 			if (indices.Count == 0)
+			{
 				return;
+			}
 
 			if (_cutCommand.CanExecute())
+			{
 				await _cutCommand.ExecuteAsync(indices).ConfigureAwait(false);
+			}
 		});
 
 		var pasteItem = new ToolStripMenuItem("Paste rows", null, async (_, _) =>
 		{
 			if (!_pasteCommand.CanExecute())
+			{
 				return;
+			}
 
 			var rowCount = _applicationService.GetRowCount();
 			var targetIndex = GetInsertionIndexAfterSelection(rowCount);
@@ -244,16 +278,22 @@ public sealed class TableInputManager : IDisposable
 		{
 			var indices = GetSelectedRowIndices();
 			if (indices.Count == 0)
+			{
 				return;
+			}
 
 			if (_deleteCommand.CanExecute())
+			{
 				await _deleteCommand.ExecuteAsync(indices).ConfigureAwait(false);
+			}
 		});
 
 		var newItem = new ToolStripMenuItem("New row", null, async (_, _) =>
 		{
 			if (!_insertCommand.CanExecute())
+			{
 				return;
+			}
 
 			var rowCount = _applicationService.GetRowCount();
 			var insertIndex = GetInsertionIndexAfterSelection(rowCount);
@@ -262,35 +302,16 @@ public sealed class TableInputManager : IDisposable
 
 		_rowHeaderMenu.Items.AddRange(new ToolStripItem[]
 		{
-			copyItem,
-			cutItem,
-			pasteItem,
-			new ToolStripSeparator(),
-			deleteItem,
-			new ToolStripSeparator(),
-			newItem
+			copyItem, cutItem, pasteItem, new ToolStripSeparator(), deleteItem, new ToolStripSeparator(), newItem
 		});
-	}
-
-	private void ShowRowHeaderContextMenu(int rowIndex, Point location)
-	{
-		if (_rowHeaderMenu == null)
-			return;
-
-		if (!_table.Rows[rowIndex].Selected)
-		{
-			_table.ClearSelection();
-			_table.Rows[rowIndex].Selected = true;
-		}
-
-		var screenLocation = _table.PointToScreen(location);
-		_rowHeaderMenu.Show(screenLocation);
 	}
 
 	private List<int> GetSelectedRowIndices()
 	{
 		if (_table.IsDisposed || _table.RowCount == 0)
+		{
 			return new List<int>();
+		}
 
 		var indices = _table.SelectedRows
 			.Cast<DataGridViewRow>()
@@ -306,16 +327,25 @@ public sealed class TableInputManager : IDisposable
 	private int GetInsertionIndexAfterSelection(int rowCount)
 	{
 		if (rowCount < 0)
+		{
 			rowCount = 0;
+		}
 
 		var selected = GetSelectedRowIndices();
 		if (selected.Count > 0)
 		{
-			var index = selected[selected.Count - 1] + 1;
+			var index = selected[^1] + 1;
+
 			if (index < 0)
+			{
 				index = 0;
+			}
+
 			if (index > rowCount)
+			{
 				index = rowCount;
+			}
+
 			return index;
 		}
 
@@ -324,9 +354,15 @@ public sealed class TableInputManager : IDisposable
 		{
 			var index = current + 1;
 			if (index < 0)
+			{
 				index = 0;
+			}
+
 			if (index > rowCount)
+			{
 				index = rowCount;
+			}
+
 			return index;
 		}
 
