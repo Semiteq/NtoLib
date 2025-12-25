@@ -14,20 +14,20 @@
 
 Функциональный блок автоматизации настройки трендов: добавляет перья на графики на основе структуры сервисов под `DataRootPath` и имён из ConfigLoader, с автоматическим применением стиля отображения "ступенькой".
 
-- Документация: [`TrendPensManager`](./TrendPensManager/readme.md)
+- Документация: [`TrendPensManager`](./Recipes/TrendPensManager/readme.md)
 
 ### Таблица рецептов MBE (MbeTable)
 
 Функциональный блок для конфигурации, редактирования и исполнения технологических рецептов в MasterSCADA.
 
-- Документация на блок: [`MbeTable`](./MbeTable/readme.md)
+- Документация на блок: [`MbeTable`](./Recipes/MbeTable/readme.md)
 - Модули блоков:
-    - Конфигурация через YAML: [`ModuleConfig`](./MbeTable/ModuleConfig/readme.md)
-    - Работа с пинами SCADA: [`ModuleInfrastructure`](./MbeTable/ModuleInfrastructure/readme.md)
-    - UI/UX и взаимодействие: [`ModulePresentation`](./MbeTable/ModulePresentation/readme.md)
+    - Конфигурация через YAML: [`ModuleConfig`](./Recipes/MbeTable/ModuleConfig/readme.md)
+    - Работа с пинами SCADA: [`ModuleInfrastructure`](./Recipes/MbeTable/ModuleInfrastructure/readme.md)
+    - UI/UX и взаимодействие: [`ModulePresentation`](./Recipes/MbeTable/ModulePresentation/readme.md)
     - Импорт/экспорт CSV: [`ServiceCsv`](./MbeTable/ServiceCsv/readme.md)
-    - Взаимодействие с ПЛК по Modbus TCP: [`ServiceModbusTCP`](./MbeTable/ServiceModbusTCP/readme.md)
-    - Диагностика и логирование: [`ServiceLogger`](./MbeTable/ServiceLogger/readme.md)
+    - Взаимодействие с ПЛК по Modbus TCP: [`ServiceModbusTCP`](./Recipes/MbeTable/ServiceModbusTCP/readme.md)
+    - Диагностика и логирование: [`ServiceLogger`](./Recipes/MbeTable/ServiceLogger/readme.md)
 
 ### BrokenLinksObserver
 
