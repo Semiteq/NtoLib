@@ -10,6 +10,11 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 	private readonly TableInputActions _actions;
 
 	private ContextMenuStrip? _rowHeaderMenu;
+	private ToolStripMenuItem? _copyItem;
+	private ToolStripMenuItem? _cutItem;
+	private ToolStripMenuItem? _pasteItem;
+	private ToolStripMenuItem? _deleteItem;
+	private ToolStripMenuItem? _newItem;
 	private bool _attached;
 
 	public TableRowHeaderContextMenuService(DataGridView table, TableInputActions actions)
@@ -50,6 +55,15 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 		{
 			try
 			{
+				_rowHeaderMenu.Opening -= OnRowHeaderMenuOpening;
+			}
+			catch
+			{
+				// ignored
+			}
+
+			try
+			{
 				_rowHeaderMenu.Dispose();
 			}
 			catch
@@ -58,6 +72,11 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 
 			_rowHeaderMenu = null;
+			_copyItem = null;
+			_cutItem = null;
+			_pasteItem = null;
+			_deleteItem = null;
+			_newItem = null;
 		}
 
 		_attached = false;
@@ -85,8 +104,9 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 	private void InitializeRowHeaderContextMenu()
 	{
 		_rowHeaderMenu = new ContextMenuStrip();
+		_rowHeaderMenu.Opening += OnRowHeaderMenuOpening;
 
-		var copyItem = new ToolStripMenuItem("Copy rows", null, async (_, _) =>
+		_copyItem = new ToolStripMenuItem("Копировать", null, async (_, _) =>
 		{
 			try
 			{
@@ -98,7 +118,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		var cutItem = new ToolStripMenuItem("Cut rows", null, async (_, _) =>
+		_cutItem = new ToolStripMenuItem("Вырезать", null, async (_, _) =>
 		{
 			try
 			{
@@ -110,7 +130,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		var pasteItem = new ToolStripMenuItem("Paste rows", null, async (_, _) =>
+		_pasteItem = new ToolStripMenuItem("Вставить", null, async (_, _) =>
 		{
 			try
 			{
@@ -122,7 +142,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		var deleteItem = new ToolStripMenuItem("Delete rows", null, async (_, _) =>
+		_deleteItem = new ToolStripMenuItem("Удалить", null, async (_, _) =>
 		{
 			try
 			{
@@ -134,7 +154,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		var newItem = new ToolStripMenuItem("New row", null, async (_, _) =>
+		_newItem = new ToolStripMenuItem("Создать новую", null, async (_, _) =>
 		{
 			try
 			{
@@ -148,13 +168,29 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 
 		_rowHeaderMenu.Items.AddRange(new ToolStripItem[]
 		{
-			copyItem,
-			cutItem,
-			pasteItem,
+			_copyItem,
+			_cutItem,
+			_pasteItem,
 			new ToolStripSeparator(),
-			deleteItem,
+			_deleteItem,
 			new ToolStripSeparator(),
-			newItem
+			_newItem
 		});
+	}
+
+	private void OnRowHeaderMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+	{
+		try
+		{
+			_copyItem!.Enabled = _actions.CanCopy();
+			_cutItem!.Enabled = _actions.CanCut();
+			_pasteItem!.Enabled = _actions.CanPaste();
+			_deleteItem!.Enabled = _actions.CanDelete();
+			_newItem!.Enabled = _actions.CanInsert();
+		}
+		catch
+		{
+			// ignored
+		}
 	}
 }

@@ -55,6 +55,17 @@ internal sealed class TableInputActions
 		return true;
 	}
 
+	public bool CanCopy()
+	{
+		var indices = _selectionService.GetSelectedRowIndices();
+		if (indices.Count == 0)
+		{
+			return false;
+		}
+
+		return _copyCommand.CanExecute();
+	}
+
 	public async Task<bool> TryCutAsync()
 	{
 		var indices = _selectionService.GetSelectedRowIndices();
@@ -70,6 +81,17 @@ internal sealed class TableInputActions
 
 		await _cutCommand.ExecuteAsync(indices).ConfigureAwait(true);
 		return true;
+	}
+
+	public bool CanCut()
+	{
+		var indices = _selectionService.GetSelectedRowIndices();
+		if (indices.Count == 0)
+		{
+			return false;
+		}
+
+		return _cutCommand.CanExecute();
 	}
 
 	public async Task<bool> TryPasteAsync()
@@ -91,6 +113,16 @@ internal sealed class TableInputActions
 		return true;
 	}
 
+	public bool CanPaste()
+	{
+		if (_table.IsCurrentCellInEditMode)
+		{
+			return false;
+		}
+
+		return _pasteCommand.CanExecute();
+	}
+
 	public async Task<bool> TryDeleteAsync()
 	{
 		var indices = _selectionService.GetSelectedRowIndices();
@@ -108,6 +140,17 @@ internal sealed class TableInputActions
 		return true;
 	}
 
+	public bool CanDelete()
+	{
+		var indices = _selectionService.GetSelectedRowIndices();
+		if (indices.Count == 0)
+		{
+			return false;
+		}
+
+		return _deleteCommand.CanExecute();
+	}
+
 	public async Task<bool> TryInsertAsync()
 	{
 		if (!_insertCommand.CanExecute())
@@ -120,5 +163,10 @@ internal sealed class TableInputActions
 
 		await _insertCommand.ExecuteAsync(insertIndex).ConfigureAwait(true);
 		return true;
+	}
+
+	public bool CanInsert()
+	{
+		return _insertCommand.CanExecute();
 	}
 }
