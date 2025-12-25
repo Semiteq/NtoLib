@@ -124,21 +124,7 @@ public partial class TableControl
 		if (_serviceProvider == null || _table == null || _table.IsDisposed)
 			return;
 
-		var app = _serviceProvider.GetRequiredService<IRecipeApplicationService>();
-		var copy = _serviceProvider.GetRequiredService<CopyRowsCommand>();
-		var cut = _serviceProvider.GetRequiredService<CutRowsCommand>();
-		var paste = _serviceProvider.GetRequiredService<PasteRowsCommand>();
-		var delete = _serviceProvider.GetRequiredService<DeleteRowsCommand>();
-		var insert = _serviceProvider.GetRequiredService<InsertRowCommand>();
-
-		_inputManager = new TableInputManager(
-			_table,
-			app,
-			copy,
-			cut,
-			paste,
-			delete,
-			insert);
+		_inputManager = ActivatorUtilities.CreateInstance<TableInputManager>(_serviceProvider, _table);
 
 		_inputManager.Attach();
 	}

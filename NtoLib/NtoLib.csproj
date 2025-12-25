@@ -569,7 +569,14 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\Abstractions\ITableView.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Adapters\DataGridViewAdapter.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Adapters\GridOptionApplier.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\ITableGridBehavior.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableBehaviorManager.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableCellPaintingBehavior.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableCellValidationBehavior.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableDataErrorBehavior.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableEditingControlBehavior.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableEditModeBehavior.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Behavior\TableRowNumberingBehavior.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Cells\RecipeComboBoxCell.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ComboBox\ActionComboBox.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Columns\ComboBox\TargetComboBox.cs" />
@@ -603,7 +610,11 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\Errors\PresentationUnexpectedError.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Initialization\TableConfigurator.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableInputManager.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableInputActions.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Input\CtrlNHotkeyHook.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableRowHeaderContextMenuService.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableSelectionService.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableShortcutHandler.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\ITablePresenters.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\AlignmentMapper.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\ColumnAlignmentResolver.cs" />
@@ -980,6 +991,9 @@
     <Content Include="ConfigLoader\readme.md" />
     <EmbeddedResource Include="PinConnector\PinConnectorFB.bmp" />
     <EmbeddedResource Include="PinConnector\PinConnectorFB.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Recipes\MbeTable\ModulePresentation\Behavior\Contract\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
