@@ -603,6 +603,7 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\Errors\PresentationUnexpectedError.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Initialization\TableConfigurator.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableInputManager.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Input\CtrlNHotkeyHook.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\ITablePresenters.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\AlignmentMapper.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\ColumnAlignmentResolver.cs" />

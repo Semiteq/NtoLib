@@ -24,6 +24,8 @@ public sealed class TableInputManager : IDisposable
 	private readonly DeleteRowsCommand _deleteCommand;
 	private readonly InsertRowCommand _insertCommand;
 
+	private CtrlNHotkeyHook? _ctrlNHotkeyHook;
+
 	private ContextMenuStrip? _rowHeaderMenu;
 	private bool _attached;
 
@@ -53,7 +55,9 @@ public sealed class TableInputManager : IDisposable
 		}
 
 		_table.KeyDown += OnTableKeyDown;
+		_table.Disposed += OnTableDisposed;
 		_table.RowHeaderMouseClick += OnRowHeaderMouseClick;
+		EnsureCtrlNHotkeyHookInstalled();
 
 		InitializeRowHeaderContextMenu();
 
@@ -70,13 +74,15 @@ public sealed class TableInputManager : IDisposable
 		try
 		{
 			_table.KeyDown -= OnTableKeyDown;
+			_table.Disposed -= OnTableDisposed;
 			_table.RowHeaderMouseClick -= OnRowHeaderMouseClick;
-
 		}
 		catch
 		{
 			/* ignored */
 		}
+
+		RemoveCtrlNHotkeyHook();
 
 		if (_rowHeaderMenu != null)
 		{
@@ -95,12 +101,29 @@ public sealed class TableInputManager : IDisposable
 		_attached = false;
 	}
 
+	private void OnTableDisposed(object? sender, EventArgs e)
+	{
+		try
+		{
+			RemoveCtrlNHotkeyHook();
+		}
+		catch
+		{
+			/* ignored */
+		}
+	}
+
 	public void Dispose()
 	{
 		Detach();
 	}
 
 	private async void OnTableKeyDown(object? sender, KeyEventArgs e)
+	{
+		await ProcessShortcutAsync(e).ConfigureAwait(false);
+	}
+
+	private async Task ProcessShortcutAsync(KeyEventArgs e)
 	{
 		if (e.Control && e.KeyCode == Keys.C)
 		{
@@ -129,6 +152,62 @@ public sealed class TableInputManager : IDisposable
 		if (!e.Control && e.KeyCode == Keys.Delete)
 		{
 			await HandleDeleteAsync(e).ConfigureAwait(false);
+		}
+	}
+
+	private void EnsureCtrlNHotkeyHookInstalled()
+	{
+		if (_ctrlNHotkeyHook != null)
+		{
+			return;
+		}
+
+		_ctrlNHotkeyHook = new CtrlNHotkeyHook(_table, OnCtrlNFromHotkeyHook);
+	}
+
+	private void RemoveCtrlNHotkeyHook()
+	{
+		if (_ctrlNHotkeyHook == null)
+		{
+			return;
+		}
+
+		try
+		{
+			_ctrlNHotkeyHook.Dispose();
+		}
+		catch
+		{
+			/* ignored */
+		}
+
+		_ctrlNHotkeyHook = null;
+	}
+
+	private void OnCtrlNFromHotkeyHook()
+	{
+		try
+		{
+			if (_table.IsDisposed)
+			{
+				return;
+			}
+
+			_table.BeginInvoke(new Action(async () =>
+			{
+				try
+				{
+					await HandleInsertAsync(new KeyEventArgs(Keys.Control | Keys.N)).ConfigureAwait(true);
+				}
+				catch
+				{
+					/* ignored */
+				}
+			}));
+		}
+		catch
+		{
+			/* ignored */
 		}
 	}
 
