@@ -53,7 +53,7 @@ public class TrendPenApplicator
 				trendRootPath,
 				sequence.Count);
 
-			var trendResult = _trendWindowAccessor.GetOrOpenTrend(context);
+			var trendResult = _trendWindowAccessor.GetTrend(context);
 			if (trendResult.IsFailed)
 			{
 				errors.AddRange(trendResult.Errors.Select(e => e.Message));

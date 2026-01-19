@@ -73,6 +73,20 @@ public class TrendWindowAccessor
 		return Result.Ok(new TrendContext(trendService, dispatcher, treeItem, attribute));
 	}
 
+	public Result<Trend> GetTrend(TrendContext trendContext)
+	{
+		var trend = _trendOperations.FindOpenTrend(trendContext.TrendService, trendContext.TreeItem.FullName);
+		if (trend == null)
+		{
+			_logger?.LogError("Trend window is not open. TrendFullName='{TrendFullName}'", trendContext.TreeItem.FullName);
+			return Result.Fail("Trend window is not open");
+		}
+
+		_logger?.LogDebug("Trend window found. TrendFullName='{TrendFullName}'", trendContext.TreeItem.FullName);
+		return Result.Ok(trend);
+	}
+
+	[Obsolete("Method directly uses project tree. Behavior is untested. Use GetTrend instead.")]
 	public Result<Trend> GetOrOpenTrend(TrendContext context)
 	{
 		var trend = _trendOperations.FindOpenTrend(context.TrendService, context.TreeItem.FullName);
@@ -122,10 +136,4 @@ public class TrendWindowAccessor
 		_logger?.LogDebug("Existing graphs cleared in trend.");
 		return Result.Ok();
 	}
-
-	public sealed record TrendContext(
-		TrendService TrendService,
-		Dispatcher Dispatcher,
-		ITreeItemHlp TreeItem,
-		IAttributeHlp Attribute);
 }
