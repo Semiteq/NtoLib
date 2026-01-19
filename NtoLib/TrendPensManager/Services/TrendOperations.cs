@@ -3,16 +3,13 @@ using System.Linq;
 
 using FluentResults;
 
-using MasterSCADA;
 using MasterSCADA.Common;
 using MasterSCADA.Graph.Objects;
-using MasterSCADA.Graph.Styles;
 using MasterSCADA.Hlp;
 using MasterSCADA.Trend.Controls;
 using MasterSCADA.Trend.Helpers;
 using MasterSCADA.Trend.Services;
 
-using MasterSCADALib;
 
 using Microsoft.Extensions.Logging;
 
@@ -65,6 +62,28 @@ public class TrendOperations
 		return Result.Ok();
 	}
 
+	public Result ClearTrendData(Trend trend)
+	{
+		_logger?.LogDebug("Clearing trend data");
+
+		try
+		{
+			var pens = trend.Settings.Objects.OfType<BaseGraph2D>().ToList();
+			trend.DeleteGroupParameters(pens);
+			foreach (var pen in pens)
+			{
+				trend.DeleteParameter(pen);
+			}
+
+			return Result.Ok();
+		}
+		catch (Exception ex)
+		{
+			_logger?.LogError(ex, "Error clearing trend data");
+			return Result.Fail("Error clearing trend data: " + ex.Message);
+		}
+	}
+
 	public Trend? FindOpenTrend(TrendService trendService, string trendFullName)
 	{
 		foreach (var trend in trendService.Opened)
@@ -84,11 +103,6 @@ public class TrendOperations
 		}
 
 		return null;
-	}
-
-	public void ConfigureTrendCapacity(Trend trend, int maxParameters)
-	{
-		trend.Settings.MaxParameters = maxParameters;
 	}
 
 	private static bool HasRightsToAddPen(Trend trend)
@@ -140,8 +154,7 @@ public class TrendOperations
 
 	private static void SetPenUserName(BaseGraph2D graph, string userName)
 	{
-		var penSettings = graph.CustomSettings as ScadaPenSettings;
-		if (penSettings != null)
+		if (graph.CustomSettings is ScadaPenSettings penSettings)
 		{
 			penSettings.UserName = userName;
 			penSettings.SavedDT = false;

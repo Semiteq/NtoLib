@@ -153,7 +153,6 @@ public class ConfigLoaderReader
 		}
 
 		var values = new string[count];
-		var hasAnyValue = false;
 
 		for (var index = 0; index < count; index++)
 		{
@@ -172,19 +171,6 @@ public class ConfigLoaderReader
 
 			var value = GetPinStringValueOrEmpty(pin);
 			values[index] = value;
-
-			if (!string.IsNullOrEmpty(value))
-			{
-				hasAnyValue = true;
-			}
-		}
-
-		if (!hasAnyValue)
-		{
-			_logger?.LogError(
-				"Pin group '{GroupName}' is empty in ConfigLoader.",
-				groupName);
-			return Result.Fail<string[]>($"Group {groupName} is empty in ConfigLoader");
 		}
 
 		return Result.Ok(values);

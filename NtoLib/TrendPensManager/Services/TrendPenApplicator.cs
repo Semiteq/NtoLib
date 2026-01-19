@@ -16,20 +16,18 @@ namespace NtoLib.TrendPensManager.Services;
 
 public class TrendPenApplicator
 {
-	private readonly IProjectHlp _project;
+	private readonly TrendWindowAccessor _trendWindowAccessor;
 	private readonly TrendOperations _trendOperations;
 	private readonly ILogger<TrendPenApplicator>? _logger;
-
-	private const int DefaultMaxTrendParameters = 1000;
 
 	public sealed record ApplyResult(int PensAdded, List<string> Errors);
 
 	public TrendPenApplicator(
-		IProjectHlp project,
+		TrendWindowAccessor trendWindowAccessor,
 		TrendOperations trendOperations,
 		ILogger<TrendPenApplicator>? logger = null)
 	{
-		_project = project ?? throw new ArgumentNullException(nameof(project));
+		_trendWindowAccessor = trendWindowAccessor ?? throw new ArgumentNullException(nameof(trendWindowAccessor));
 		_trendOperations = trendOperations ?? throw new ArgumentNullException(nameof(trendOperations));
 		_logger = logger;
 	}
@@ -38,48 +36,40 @@ public class TrendPenApplicator
 		string trendRootPath,
 		IReadOnlyCollection<PenSequenceItem> sequence)
 	{
-		var trendItem = _project.SafeItem<ITreeItemHlp>(trendRootPath);
-		if (trendItem == null)
+		var contextResult = _trendWindowAccessor.ResolveContext(trendRootPath);
+		if (contextResult.IsFailed)
 		{
-			_logger?.LogWarning(
-				"Trend item not found for path '{TrendRootPath}' while applying pen sequence.",
-				trendRootPath);
-
-			return Result.Fail($"Trend object not found: {trendRootPath}");
+			return Result.Fail(contextResult.Errors);
 		}
 
-		var trendService = _project.GetService<TrendService>();
-		if (trendService == null || TrendService.Dispatcher == null)
-		{
-			_logger?.LogError(
-				"TrendService or its Dispatcher is not available when applying pen sequence. TrendRootPath='{TrendRootPath}'",
-				trendRootPath);
-
-			return Result.Fail("Trend service is not available");
-		}
-
+		var context = contextResult.Value;
 		var pensAdded = 0;
 		var errors = new List<string>();
 
-		TrendService.Dispatcher.Invoke(() =>
+		context.Dispatcher.Invoke(() =>
 		{
 			_logger?.LogDebug(
 				"Dispatcher invoked to apply pen sequence. TrendRootPath='{TrendRootPath}', SequenceCount={SequenceCount}",
 				trendRootPath,
 				sequence.Count);
 
-			var trend = _trendOperations.FindOpenTrend(trendService, trendItem.FullName);
-			if (trend == null)
+			var trendResult = _trendWindowAccessor.GetOrOpenTrend(context);
+			if (trendResult.IsFailed)
 			{
-				_logger?.LogError(
-					"Trend window for item '{TrendItemFullName}' is not open.",
-					trendItem.FullName);
-
-				errors.Add("Trend window is closed");
+				errors.AddRange(trendResult.Errors.Select(e => e.Message));
 				return;
 			}
 
-			_trendOperations.ConfigureTrendCapacity(trend, DefaultMaxTrendParameters);
+			var trend = trendResult.Value;
+
+			_trendWindowAccessor.EnsureCapacityLimit(trend);
+
+			var clearResult = _trendWindowAccessor.ClearExistingGraphs(trend);
+			if (clearResult.IsFailed)
+			{
+				errors.AddRange(clearResult.Errors.Select(e => e.Message));
+				return;
+			}
 
 			foreach (var item in sequence)
 			{

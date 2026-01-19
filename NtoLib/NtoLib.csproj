@@ -853,8 +853,10 @@
     <Compile Include="TrendPensManager\Services\PenSequenceBuilder.cs" />
     <Compile Include="TrendPensManager\Services\ServiceFilter.cs" />
     <Compile Include="TrendPensManager\Services\TreeTraversalService.cs" />
+    <Compile Include="TrendPensManager\Services\TrendContext.cs" />
     <Compile Include="TrendPensManager\Services\TrendOperations.cs" />
     <Compile Include="TrendPensManager\Services\TrendPenApplicator.cs" />
+    <Compile Include="TrendPensManager\Services\TrendWindowAccessor.cs" />
     <Compile Include="TrendPensManager\TrendPensManagerFB.cs" />
     <Compile Include="InputFields\TextBoxInt\TextBoxIntControl.cs">
       <SubType>UserControl</SubType>

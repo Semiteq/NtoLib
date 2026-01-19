@@ -25,7 +25,6 @@ namespace NtoLib.TrendPensManager.Facade;
 
 public class TrendPensService : ITrendPensService
 {
-	private readonly IProjectHlp _project;
 	private readonly TreeTraversalService _treeTraversal;
 	private readonly ConfigLoaderReader _configReader;
 	private readonly PenSequenceBuilder _sequenceBuilder;
@@ -36,7 +35,6 @@ public class TrendPensService : ITrendPensService
 		IProjectHlp project,
 		ILogger<TrendPensService> logger)
 	{
-		_project = project ?? throw new ArgumentNullException(nameof(project));
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
 		var serviceFilter = new ServiceFilter();
@@ -45,18 +43,17 @@ public class TrendPensService : ITrendPensService
 		_sequenceBuilder = new PenSequenceBuilder(loggerFactory: null);
 
 		var trendOperations = new TrendOperations(project, logger: null);
-		_penApplicator = new TrendPenApplicator(project, trendOperations, logger: null);
+		var trendWindowAccessor = new TrendWindowAccessor(project, trendOperations, logger: null);
+		_penApplicator = new TrendPenApplicator(trendWindowAccessor, trendOperations, logger: null);
 	}
 
 	public TrendPensService(
-		IProjectHlp project,
 		TreeTraversalService treeTraversal,
 		ConfigLoaderReader configReader,
 		PenSequenceBuilder sequenceBuilder,
 		TrendPenApplicator penApplicator,
 		ILogger<TrendPensService> logger)
 	{
-		_project = project ?? throw new ArgumentNullException(nameof(project));
 		_treeTraversal = treeTraversal ?? throw new ArgumentNullException(nameof(treeTraversal));
 		_configReader = configReader ?? throw new ArgumentNullException(nameof(configReader));
 		_sequenceBuilder = sequenceBuilder ?? throw new ArgumentNullException(nameof(sequenceBuilder));
@@ -73,7 +70,7 @@ public class TrendPensService : ITrendPensService
 		_ = serviceSelectionOptions ?? throw new ArgumentNullException(nameof(serviceSelectionOptions));
 
 		_logger.LogInformation(
-			"Starting AutoConfigurePens. TrendRootPath='{TrendRootPath}', ConfigLoaderRootPath='{ConfigLoaderRootPath}', DataRootPath='{DataRootPath}'",
+			"Starting AutoConfigurePens.TrendRootPath='{TrendRootPath}', ConfigLoaderRootPath='{ConfigLoaderRootPath}', DataRootPath='{DataRootPath}'",
 			trendRootPath,
 			configLoaderRootPath,
 			dataRootPath);
@@ -82,13 +79,11 @@ public class TrendPensService : ITrendPensService
 		{
 			var allWarnings = new List<string>();
 
-			_logger.LogDebug(
-				"Traversing services under data root path '{DataRootPath}'",
-				dataRootPath);
+			_logger.LogDebug("Traversing services under data root path '{DataRootPath}'", dataRootPath);
 			var traversalResult = GetChannels(dataRootPath, serviceSelectionOptions);
 			if (traversalResult.IsFailed)
 			{
-				LogErrors("Service traversal failed for data root '{DataRootPath}'", traversalResult.Errors, dataRootPath);
+				LogErrors($"Service traversal failed for data root '{dataRootPath}'", traversalResult.Errors);
 				return Result.Fail(traversalResult.Errors);
 			}
 
@@ -107,7 +102,7 @@ public class TrendPensService : ITrendPensService
 			var configResult = GetConfigLoaderNames(configLoaderRootPath, serviceSelectionOptions);
 			if (configResult.IsFailed)
 			{
-				LogErrors("ConfigLoader reading failed for path '{ConfigLoaderRootPath}'", configResult.Errors, configLoaderRootPath);
+				LogErrors($"ConfigLoader reading failed for path '{configLoaderRootPath}'", configResult.Errors);
 				return Result.Fail(configResult.Errors);
 			}
 
@@ -124,7 +119,7 @@ public class TrendPensService : ITrendPensService
 			var sequenceResult = BuildPenSequence(channels, configNames, trendRootPath);
 			if (sequenceResult.IsFailed)
 			{
-				LogErrors("Pen sequence building failed for trend root '{TrendRootPath}'", sequenceResult.Errors, trendRootPath);
+				LogErrors($"Pen sequence building failed for trend root '{trendRootPath}'", sequenceResult.Errors);
 				return Result.Fail(sequenceResult.Errors);
 			}
 
@@ -144,7 +139,7 @@ public class TrendPensService : ITrendPensService
 			var applyResult = _penApplicator.ApplySequenceToTrend(trendRootPath, sequenceData.Sequence);
 			if (applyResult.IsFailed)
 			{
-				LogErrors("Applying pen sequence to trend failed for '{TrendRootPath}'", applyResult.Errors, trendRootPath);
+				LogErrors($"Applying pen sequence to trend failed for '{trendRootPath}'", applyResult.Errors);
 				return Result.Fail(applyResult.Errors);
 			}
 
