@@ -230,7 +230,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BrokenLinksObserver\BrokenLinksObserverFB.cs" />
     <Compile Include="ConfigLoader\Entities\ConfigLoaderGroups.cs" />
     <Compile Include="Devices\Helpers\Colors.cs" />
     <Compile Include="Devices\Helpers\EventTrigger.cs" />
@@ -788,12 +787,6 @@
     <Compile Include="Recipes\MbeTable\TableControl.Lifecycle.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PinConnector\PinConnectorFB.cs" />
-    <Compile Include="PinConnector\Facade\IPinConnectorService.cs" />
-    <Compile Include="PinConnector\Facade\PinConnectorService.cs" />
-    <Compile Include="BrokenLinksObserver\Entities\BrokenLinkInfo.cs" />
-    <Compile Include="BrokenLinksObserver\Entities\BrokenLinkKind.cs" />
-    <Compile Include="BrokenLinksObserver\Facade\BrokenLinksService.cs" />
     <Compile Include="ClockGenerator\ClockGeneratorFB.cs" />
     <Compile Include="Compatibilty.cs" />
     <Compile Include="ConfigLoader\ConfigLoaderFB.cs" />
@@ -882,8 +875,6 @@
     <Compile Include="Properties\Resources.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BrokenLinksObserver\BrokenLinksObserverFB.bmp" />
-    <EmbeddedResource Include="BrokenLinksObserver\BrokenLinksObserverFB.xml" />
     <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.xml" />
     <EmbeddedResource Include="Devices\Render\Common\LabeledValue.resx">
       <DependentUpon>LabeledValue.cs</DependentUpon>
