@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+  <Map>
+    <Items>
+      <Pin ID="1" Name="Execute" Type="Логический" />
+      <Pin ID="2" Name="Forward" Type="Логический" />
+      <Pin ID="3" Name="DryRun" Type="Логический" />
+      <Pin ID="4" Name="Cancel" Type="Логический" />
+
+      <Pout ID="101" Name="Success" Type="Логический" />
+      <Pout ID="104" Name="IsPending" Type="Логический" />
+    </Items>
+  </Map>
+</FBConfig>

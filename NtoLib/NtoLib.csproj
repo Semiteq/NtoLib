@@ -288,6 +288,17 @@
     <Compile Include="InputFields\Helpers\TextBoxInt.Designer.cs">
       <DependentUpon>TextBoxInt.cs</DependentUpon>
     </Compile>
+    <Compile Include="LinkSwitcher\Entities\LinkOperation.cs" />
+    <Compile Include="LinkSwitcher\Entities\ObjectPair.cs" />
+    <Compile Include="LinkSwitcher\Entities\SwitchPlan.cs" />
+    <Compile Include="LinkSwitcher\Facade\ILinkSwitcherService.cs" />
+    <Compile Include="LinkSwitcher\Facade\LinkSwitcherService.cs" />
+    <Compile Include="LinkSwitcher\LinkSwitcherFB.cs" />
+    <Compile Include="LinkSwitcher\Logging\SwitchLogger.cs" />
+    <Compile Include="LinkSwitcher\TreeOperations\LinkCollector.cs" />
+    <Compile Include="LinkSwitcher\TreeOperations\LinkExecutor.cs" />
+    <Compile Include="LinkSwitcher\TreeOperations\PairDiscovery.cs" />
+    <Compile Include="LinkSwitcher\TreeOperations\StructureValidator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.Communication.cs" />
     <Compile Include="Recipes\MbeTable\MbeTableFB.Configuration.cs" />
@@ -967,6 +978,9 @@
     <EmbeddedResource Include="Resources\ImgWrite.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="LinkSwitcher\LinkSwitcherFB.bmp" />
+    <EmbeddedResource Include="LinkSwitcher\LinkSwitcherFB.xml" />
+    <Content Include="ConfigLoader\ConfigLoaderFB.bmp" />
     <Content Include="Properties\Resources.resources" />
     <None Include="readme.md" />
   </ItemGroup>
