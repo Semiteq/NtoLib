@@ -13,7 +13,7 @@
     <option name="EXECUTE_SCRIPT_FILE" value="true" />
     <envs>
       <env name="BUILD_CONFIGURATION" value="Release" />
-      <env name="REPO_ROOT" value="C:\Users\admin\Projects\git\NtoLib" />
+      <env name="REPO_ROOT" value="C:\Users\admin\projects\NtoLib" />
     </envs>
     <method v="2" />
   </configuration>

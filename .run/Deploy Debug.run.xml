@@ -12,10 +12,10 @@
     <option name="EXECUTE_IN_TERMINAL" value="true" />
     <option name="EXECUTE_SCRIPT_FILE" value="true" />
     <envs>
-      <env name="REPO_ROOT" value="C:\Users\admin\Projects\git\NtoLib" />
       <env name="BUILD_CONFIGURATION" value="Debug" />
-      <env name="NTOLIB_DEST_DIR" value="C:\Program Files (x86)\MPSSoft\MasterSCADA" />
       <env name="NTOLIB_CONFIG_DIR" value="C:\DISTR\Config" />
+      <env name="NTOLIB_DEST_DIR" value="C:\Program Files (x86)\MPSSoft\MasterSCADA" />
+      <env name="REPO_ROOT" value="C:\Users\admin\projects\NtoLib" />
     </envs>
     <method v="2" />
   </configuration>

@@ -1,19 +1,20 @@
-﻿# Функциональный блок "Таблица рецептов MBE" (MbeTableFB)
+# Функциональный блок "Таблица рецептов MBE" (MbeTableFB)
 
 **MbeTableFB** — это гибкий функциональный блок для **MasterSCADA 3.12**, предназначенный для создания, управления и
 исполнения технологических рецептов.
 
-![MbeTableFB](MbeTableFB.png)
+![MbeTableFB](../img/MbeTableFB.png)
 
 ## Оглавление
 
-- [Конфигурация через YAML-файлы](./ModuleConfig/readme.md)
-- [Взаимодействие с ПЛК по Modbus TCP](./ServiceModbusTCP/readme.md)
-- [Импорт и экспорт рецептов в CSV](./ServiceCsv/readme.md)
-- [Пины функционального блока (FB Pins)](./ModuleInfrastructure/readme.md)
-- [UI/UX](./ModulePresentation/readme.md)
-- [Диагностика](./ServiceLogger/readme.md)
-- [Тестирование поведения](../../../Tests/readme.md)
+| # | Раздел | Описание |
+|---|--------|----------|
+| 1 | [Конфигурация (YAML)](01-config.md) | Формат файлов, порядок загрузки, правила валидации |
+| 2 | [Контракт пинов](02-infrastructure.md) | Входные/выходные пины FB, таймеры |
+| 3 | [UI/UX](03-presentation.md) | Режимы выбора, навигация, операции со строками |
+| 4 | [Импорт/экспорт CSV](04-csv.md) | Формат файла, метаданные, валидация |
+| 5 | [Modbus TCP](05-modbus-tcp.md) | Протокол обмена с ПЛК, карта памяти |
+| 6 | [Диагностика](06-logger.md) | Логирование, ротация, формат записей |
 
 ## 1. Ключевые возможности
 
@@ -40,7 +41,7 @@
     - В корневой директории, где установлена MasterSCADA, создайте папку с именем `NtoLibTableConfig`.
 3. Размещение конфигурационных файлов:
     - Поместите в папку `NtoLibTableConfig` четыре обязательных YAML-файла (готовые темплейты для проектов можно найти
-      по [ссылке](https://github.com/Semiteq/NtoLib/tree/master/NtoLib/Recipes/MbeTable/YamlTemplates)):
+      по [ссылке](../../MbeTable/DefaultConfig)):
         - `PropertyDefs.yaml`
         - `PinGroupDefs.yaml`
         - `ColumnDefs.yaml`

@@ -1,4 +1,4 @@
-﻿# Библиотека NtoLib
+# Библиотека NtoLib
 
 Библиотека пользовательских функциональных блоков и инфраструктуры для **MasterSCADA 3.12** (.NET Framework 4.8), используется на установках эпитаксии, плазмохимии и смежных системах.
 
@@ -8,26 +8,26 @@
 
 Функциональный блок загрузки/сохранения именованных настроек оборудования (заслонки, источники, нагреватели, вода, газовые линии) из YAML‑файла конфигурации.
 
-- Документация: [`ConfigLoader`](./ConfigLoader/readme.md)
+- Документация: [`ConfigLoader`](../Docs/ConfigLoader.md)
 
 ### TrendPensManager
 
 Функциональный блок автоматизации настройки трендов: добавляет перья на графики на основе структуры сервисов под `DataRootPath` и имён из ConfigLoader, с автоматическим применением стиля отображения "ступенькой".
 
-- Документация: [`TrendPensManager`](./Recipes/TrendPensManager/readme.md)
+- Документация: [`TrendPensManager`](../Docs/TrendPensManager.md)
 
 ### Таблица рецептов MBE (MbeTable)
 
 Функциональный блок для конфигурации, редактирования и исполнения технологических рецептов в MasterSCADA.
 
-- Документация на блок: [`MbeTable`](./Recipes/MbeTable/readme.md)
+- Документация на блок: [`MbeTable`](../Docs/MbeTable/readme.md)
 - Модули блоков:
-    - Конфигурация через YAML: [`ModuleConfig`](./Recipes/MbeTable/ModuleConfig/readme.md)
-    - Работа с пинами SCADA: [`ModuleInfrastructure`](./Recipes/MbeTable/ModuleInfrastructure/readme.md)
-    - UI/UX и взаимодействие: [`ModulePresentation`](./Recipes/MbeTable/ModulePresentation/readme.md)
-    - Импорт/экспорт CSV: [`ServiceCsv`](./MbeTable/ServiceCsv/readme.md)
-    - Взаимодействие с ПЛК по Modbus TCP: [`ServiceModbusTCP`](./Recipes/MbeTable/ServiceModbusTCP/readme.md)
-    - Диагностика и логирование: [`ServiceLogger`](./Recipes/MbeTable/ServiceLogger/readme.md)
+    - Конфигурация через YAML: [`01-config`](../Docs/MbeTable/01-config.md)
+    - Работа с пинами SCADA: [`02-infrastructure`](../Docs/MbeTable/02-infrastructure.md)
+    - UI/UX и взаимодействие: [`03-presentation`](../Docs/MbeTable/03-presentation.md)
+    - Импорт/экспорт CSV: [`04-csv`](../Docs/MbeTable/04-csv.md)
+    - Взаимодействие с ПЛК по Modbus TCP: [`05-modbus-tcp`](../Docs/MbeTable/05-modbus-tcp.md)
+    - Диагностика и логирование: [`06-logger`](../Docs/MbeTable/06-logger.md)
 
 ### BrokenLinksObserver
 
@@ -53,13 +53,12 @@
 
 Невизуальный функциональный блок для работы со спектрометром ATP2000P. Инкапсулирует протокол обмена и выдаёт в SCADA уже разобранные/нормализованные данные измерений.
 
-## Avoid The Following
+## Известные ограничения платформы
 
-- В легаси FB **нельзя** менять неймспейс FB, которые уже присутствуют в старых проектах. MasterScada кеширует объекты. Если в новой версии FB из dll отличается namespace FB блока в проекте - он не загрузится. Например, нельзя поменять NtoLib/Recipes/MbeTableFB -> NtoLib/MbeTableFB
+Подробности: [`Docs/KnownIssues`](../Docs/KnownIssues/)
 
-- В легаси FB **нельзя** менять тип пинов блока (те, что объявляются в не визуальном классе), например, в MbeTableFB нельзя поменять uint -> int по той же причине, блок не загрузится.
-
-Рекомендуется всё что возможно помечать как `[NonSerializable]`
+- В легаси FB **нельзя** менять неймспейс и типы пинов блоков, уже присутствующих в старых проектах (MasterSCADA кэширует объекты).
+- Рекомендуется всё что возможно помечать как `[NonSerialized]`.
 
 ---
 

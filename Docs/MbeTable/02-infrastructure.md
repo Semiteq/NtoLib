@@ -1,4 +1,4 @@
-﻿# Контракт пинов (MBE Recipe Table)
+# Контракт пинов (MBE Recipe Table)
 
 ## Входные пины (Inputs)
 

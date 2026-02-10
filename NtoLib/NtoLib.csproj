@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\ILRepack.2.0.44\build\ILRepack.props" Condition="Exists('..\packages\ILRepack.2.0.44\build\ILRepack.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -977,22 +977,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\Resources.resources" />
-    <Content Include="Recipes\MbeTable\MbeTableFB.png" />
-    <Content Include="Recipes\MbeTable\ModuleConfig\readme.md" />
-    <None Include="Recipes\MbeTable\ModuleInfrastructure\readme.md" />
-    <None Include="Recipes\MbeTable\ModulePresentation\readme.md" />
-    <None Include="Recipes\MbeTable\readme.md" />
-    <None Include="Recipes\MbeTable\ServiceCsv\readme.md" />
-    <None Include="Recipes\MbeTable\ServiceLogger\readme.md" />
-    <None Include="Recipes\MbeTable\ServiceModbusTCP\readme.md" />
     <None Include="readme.md" />
-    <None Include="TrendPensManager\readme.md" />
-    <Content Include="TrendPensManager\TrendPensManagerFB.png" />
-    <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.bmp" />
-    <Content Include="ConfigLoader\ConfigLoader.png" />
-    <Content Include="ConfigLoader\readme.md" />
-    <EmbeddedResource Include="PinConnector\PinConnectorFB.bmp" />
-    <EmbeddedResource Include="PinConnector\PinConnectorFB.xml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Recipes\MbeTable\ModulePresentation\Behavior\Contract\" />
