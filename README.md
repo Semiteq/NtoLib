@@ -1,6 +1,5 @@
 # NtoLib
 
-![Build status](https://img.shields.io/badge/build-nuke-blue)
 ![Target](https://img.shields.io/badge/target-.NET%20Framework%204.8-lightgrey)
 ![MasterSCADA](https://img.shields.io/badge/MasterSCADA-3.12-informational)
 
@@ -25,6 +24,11 @@
 
 - Каталог: `Build/`
  - Сборка происходит средствами dotnet, ilrepack и shell скриптами. См. [документацию](./build/readme.md) по сборке.
+
+### Документация проекта
+
+- Каталог: `Docs/`
+ - Файлы документации на проект, особенности проекта и отдельные модули. См [каталог](./Docs/readme.md).
 
 
 ## Развёртывание в MasterSCADA
