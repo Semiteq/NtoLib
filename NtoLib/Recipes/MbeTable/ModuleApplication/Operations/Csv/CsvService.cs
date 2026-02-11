@@ -62,6 +62,9 @@ public sealed class CsvService : ICsvService
 			if (rawDataResult.Reasons.Count > 0)
 				result = result.WithReasons(rawDataResult.Reasons);
 
+			if (assemblyResult.Reasons.Count > 0)
+				result = result.WithReasons(assemblyResult.Reasons);
+
 			if (validationResult.Reasons.Count > 0)
 				result = result.WithReasons(validationResult.Reasons);
 

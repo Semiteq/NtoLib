@@ -36,6 +36,8 @@ internal static class AssemblyPipeline
 		}
 
 		var result = Result.Ok(recipe);
+		if (assemblyResult.Reasons.Count > 0)
+			result = result.WithReasons(assemblyResult.Reasons);
 		if (validationResult.Reasons.Count > 0)
 			result = result.WithReasons(validationResult.Reasons);
 

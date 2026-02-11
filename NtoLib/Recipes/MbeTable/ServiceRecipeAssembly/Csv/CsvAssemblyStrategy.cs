@@ -17,6 +17,7 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 using NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
+using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
 
@@ -57,11 +58,12 @@ public sealed class CsvAssemblyStrategy
 
 		var binding = bindingResult.Value;
 		var steps = new List<Step>(rawData.Records.Count);
+		var notApplicableOccurrences = new List<AssemblyColumnNotApplicableWarning.Occurrence>();
 
 		for (var rowIndex = 0; rowIndex < rawData.Records.Count; rowIndex++)
 		{
 			var record = rawData.Records[rowIndex];
-			var stepResult = AssembleStep(record, binding, rowIndex + 2);
+			var stepResult = AssembleStep(record, binding, rowIndex + 2, notApplicableOccurrences);
 			if (stepResult.IsFailed)
 			{
 				_logger.LogError("Step assembly failed at row {RowIndex}: {Errors}", rowIndex + 2,
@@ -72,10 +74,19 @@ public sealed class CsvAssemblyStrategy
 			steps.Add(stepResult.Value);
 		}
 
-		return new Recipe(steps.ToImmutableList());
+		var result = Result.Ok(new Recipe(steps.ToImmutableList()));
+
+		if (notApplicableOccurrences.Count > 0)
+			result = result.WithReason(new AssemblyColumnNotApplicableWarning(notApplicableOccurrences));
+
+		return result;
 	}
 
-	private Result<Step> AssembleStep(string[] record, CsvHeaderBinder.Binding binding, int lineNumber)
+	private Result<Step> AssembleStep(
+		string[] record,
+		CsvHeaderBinder.Binding binding,
+		int lineNumber,
+		List<AssemblyColumnNotApplicableWarning.Occurrence> notApplicableOccurrences)
 	{
 		var actionIdResult = ExtractActionId(record, binding);
 		if (actionIdResult.IsFailed)
@@ -107,8 +118,16 @@ public sealed class CsvAssemblyStrategy
 			if (!builder.Supports(columnDef.Key))
 			{
 				if (!string.IsNullOrWhiteSpace(rawValue))
-					return new AssemblyColumnNotApplicableError(columnDef.Code, actionDefinition.Name, rawValue,
-						lineNumber);
+				{
+					_logger.LogWarning(
+						"Column '{ColumnCode}' not applicable for action '{ActionName}' (id={ActionId}) " +
+						"but has value '{Value}' at line {LineNumber}. Value ignored.",
+						columnDef.Code, actionDefinition.Name, actionId, rawValue, lineNumber);
+
+					notApplicableOccurrences.Add(
+						new AssemblyColumnNotApplicableWarning.Occurrence(
+							actionId, columnDef.Code, rawValue, lineNumber));
+				}
 
 				continue;
 			}

@@ -774,6 +774,7 @@
     <Compile Include="Recipes\MbeTable\ServiceRecipeAssembly\Reasons\Errors\ValidationTargetNotFoundError.cs" />
     <Compile Include="Recipes\MbeTable\ServiceRecipeAssembly\Reasons\Errors\ValidationTargetValueEmptyError.cs" />
     <Compile Include="Recipes\MbeTable\ServiceRecipeAssembly\Reasons\Warnings\ClipboardEmptyWarning.cs" />
+    <Compile Include="Recipes\MbeTable\ServiceRecipeAssembly\Reasons\Warnings\AssemblyColumnNotApplicableWarning.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\IStatusService.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\IStatusSink.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\LabelStatusSink.cs" />
