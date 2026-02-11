@@ -32,7 +32,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 	private const int CancelPinId = 4;
 
 	private const int SuccessPinId = 101;
-	private const int IsPendingPinId = 104;
+	private const int IsPendingPinId = 102;
 
 	private const int MaxDeferredRetries = 100;
 	private const int DeferredRetryIntervalMs = 200;
@@ -166,13 +166,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 
 	private void FlushPendingPlan()
 	{
-		if (_service == null)
-		{
-			_serilogLogger?.Dispose();
-			return;
-		}
-
-		if (!_service.HasPendingTask)
+		if (_service == null || !_service.HasPendingTask)
 		{
 			_serilogLogger?.Dispose();
 			return;
@@ -215,16 +209,18 @@ public sealed class LinkSwitcherFB : StaticFBBase
 			{
 				retries--;
 
-				if (retries <= 0)
+				if (retries > 0)
 				{
-					timer.Stop();
-					timer.Dispose();
-					logger?.Error(
-						"Deferred execution aborted: IProjectHlp.InRuntime is still true after {MaxRetries} retries ({TotalSeconds}s)",
-						MaxDeferredRetries,
-						MaxDeferredRetries * DeferredRetryIntervalMs / 1000.0);
-					logger?.Dispose();
+					return;
 				}
+
+				timer.Stop();
+				timer.Dispose();
+				logger?.Error(
+					"Deferred execution aborted: IProjectHlp.InRuntime is still true after {MaxRetries} retries ({TotalSeconds}s)",
+					MaxDeferredRetries,
+					MaxDeferredRetries * DeferredRetryIntervalMs / 1000.0);
+				logger?.Dispose();
 
 				return;
 			}

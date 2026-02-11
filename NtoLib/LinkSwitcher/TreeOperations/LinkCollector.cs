@@ -20,6 +20,7 @@ public sealed class LinkCollector
 
 		var sourceRootPath = source.FullName;
 		var targetRootPath = target.FullName;
+		var sourceRootPrefix = sourceRootPath + ".";
 
 		const TreeItemMask PinMask = TreeItemMask.Pin | TreeItemMask.Pout | TreeItemMask.Variable;
 		var allPins = source.EnumAllChilds(PinMask, 0);
@@ -33,17 +34,16 @@ public sealed class LinkCollector
 				continue;
 			}
 
-			var relativePath = ExtractRelativePath(pin.FullName, sourceRootPath);
-			if (relativePath == null)
+			if (!pin.FullName.StartsWith(sourceRootPrefix, StringComparison.OrdinalIgnoreCase))
 			{
 				continue;
 			}
 
-			var targetPinPath = targetRootPath + "." + relativePath;
+			var targetPinPath = targetRootPath + pin.FullName.Substring(sourceRootPath.Length);
 
-			CollectIncomingOperations(pin, sourceRootPath, targetPinPath, operations);
-			CollectOutgoingOperations(pin, sourceRootPath, targetPinPath, operations);
-			CollectIConnectOperations(pin, sourceRootPath, targetPinPath, operations);
+			CollectIncomingOperations(pin, targetPinPath, operations);
+			CollectOutgoingOperations(pin, targetPinPath, operations);
+			CollectIConnectOperations(pin, targetPinPath, operations);
 		}
 
 		return Result.Ok<IReadOnlyList<LinkOperation>>(operations);
@@ -51,7 +51,6 @@ public sealed class LinkCollector
 
 	private static void CollectIncomingOperations(
 		ITreePinHlp pin,
-		string sourceRootPath,
 		string targetPinPath,
 		List<LinkOperation> operations)
 	{
@@ -59,11 +58,6 @@ public sealed class LinkCollector
 
 		foreach (var externalPin in incomingConnections)
 		{
-			if (IsInternalConnection(externalPin.FullName, sourceRootPath))
-			{
-				continue;
-			}
-
 			operations.Add(new LinkOperation(
 				externalPin.FullName,
 				pin.FullName,
@@ -74,7 +68,6 @@ public sealed class LinkCollector
 
 	private static void CollectOutgoingOperations(
 		ITreePinHlp pin,
-		string sourceRootPath,
 		string targetPinPath,
 		List<LinkOperation> operations)
 	{
@@ -82,11 +75,6 @@ public sealed class LinkCollector
 
 		foreach (var externalPin in outgoingConnections)
 		{
-			if (IsInternalConnection(externalPin.FullName, sourceRootPath))
-			{
-				continue;
-			}
-
 			operations.Add(new LinkOperation(
 				externalPin.FullName,
 				pin.FullName,
@@ -97,7 +85,6 @@ public sealed class LinkCollector
 
 	private static void CollectIConnectOperations(
 		ITreePinHlp pin,
-		string sourceRootPath,
 		string targetPinPath,
 		List<LinkOperation> operations)
 	{
@@ -105,11 +92,6 @@ public sealed class LinkCollector
 
 		foreach (var externalPin in iConnectLinks)
 		{
-			if (IsInternalConnection(externalPin.FullName, sourceRootPath))
-			{
-				continue;
-			}
-
 			operations.Add(new LinkOperation(
 				externalPin.FullName,
 				pin.FullName,
@@ -117,23 +99,5 @@ public sealed class LinkCollector
 				IsIncoming: false,
 				IsIConnect: true));
 		}
-	}
-
-	private static bool IsInternalConnection(string pinFullName, string rootPath)
-	{
-		return pinFullName.StartsWith(rootPath + ".", StringComparison.OrdinalIgnoreCase)
-			   || string.Equals(pinFullName, rootPath, StringComparison.OrdinalIgnoreCase);
-	}
-
-	private static string? ExtractRelativePath(string fullPath, string rootPath)
-	{
-		var prefix = rootPath + ".";
-
-		if (!fullPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-		{
-			return null;
-		}
-
-		return fullPath[prefix.Length..];
 	}
 }
