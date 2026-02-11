@@ -10,6 +10,12 @@ using NtoLib.InputFields.Helpers;
 
 namespace NtoLib.InputFields.TextBoxInt;
 
+public enum FontSizeMode
+{
+	Auto,
+	Fixed
+}
+
 [ComVisible(true)]
 [Guid("02D828FA-39A4-4363-A58A-C2DEE974C04F")]
 [DisplayName("Целочисленное поле")]
@@ -155,6 +161,36 @@ public partial class TextBoxIntControl : VisualControlBase
 		}
 	}
 
+	private FontSizeMode _fontMode = FontSizeMode.Auto;
+
+	[DispId(76)]
+	[Category("Внешний вид")]
+	[DisplayName("Режим размера шрифта")]
+	public FontSizeMode FontMode
+	{
+		get { return _fontMode; }
+		set
+		{
+			_fontMode = value;
+			UpdateFont();
+		}
+	}
+
+	private float _fixedFontSize = 12f;
+
+	[DispId(77)]
+	[Category("Внешний вид")]
+	[DisplayName("Фиксированный размер шрифта")]
+	public float FixedFontSize
+	{
+		get { return _fixedFontSize; }
+		set
+		{
+			_fixedFontSize = value <= 1 ? 1 : value;
+			UpdateFont();
+		}
+	}
+
 	[DispId(80)]
 	[Category("Значение")]
 	[DisplayName("Границы из контрола")]
@@ -243,6 +279,11 @@ public partial class TextBoxIntControl : VisualControlBase
 	/// <summary> Поледнее значение, полученное из ФБ </summary>
 	private int _lastInput;
 
+	/// <summary> Флаги ошибок валидации для передачи в ФБ </summary>
+	private bool _validationAboveMax;
+	private bool _validationBelowMin;
+	private bool _validationParseError;
+
 
 	public TextBoxIntControl()
 	{
@@ -321,18 +362,32 @@ public partial class TextBoxIntControl : VisualControlBase
 			UpdateLockBehaviour();
 
 			if (_isInitialized)
+			{
 				FBConnector.SetPinValue(TextBoxIntFB.InputFromControlId, _value);
+				FBConnector.SetPinValue(TextBoxIntFB.ValidationAboveMaxId, _validationAboveMax);
+				FBConnector.SetPinValue(TextBoxIntFB.ValidationBelowMinId, _validationBelowMin);
+				FBConnector.SetPinValue(TextBoxIntFB.ValidationParseErrorId, _validationParseError);
+			}
 		}
 	}
 
 
 	private void UpdateFont()
 	{
-		var doubledBorder = 2 * BorderWidth;
-		var doubledOffset = 2 * TextBoxOffset;
+		float size;
 
-		var size = (Height - doubledBorder - doubledOffset - 1f) / 1.525f;
-		size = size <= 1 ? 1 : size;
+		if (_fontMode == FontSizeMode.Fixed)
+		{
+			size = _fixedFontSize;
+		}
+		else
+		{
+			var doubledBorder = 2 * BorderWidth;
+			var doubledOffset = 2 * TextBoxOffset;
+
+			size = (Height - doubledBorder - doubledOffset - 1f) / 1.525f;
+			size = size <= 1 ? 1 : size;
+		}
 
 		var style = _boldFont ? FontStyle.Bold : FontStyle.Regular;
 
@@ -463,6 +518,10 @@ public partial class TextBoxIntControl : VisualControlBase
 	{
 		var readResult = ReadValue(textBox.Text, out var value);
 
+		_validationAboveMax = false;
+		_validationBelowMin = false;
+		_validationParseError = false;
+
 		if (readResult != ReadResult.Success)
 		{
 			if (!supressMessages)
@@ -473,16 +532,19 @@ public partial class TextBoxIntControl : VisualControlBase
 					case ReadResult.AboveMax:
 					{
 						message = $"Значение должно быть ≤ {_actualMaxValue}";
+						_validationAboveMax = true;
 						break;
 					}
 					case ReadResult.BelowMin:
 					{
 						message = $"Значение должно быть ≥ {_actualMinValue}";
+						_validationBelowMin = true;
 						break;
 					}
 					case ReadResult.ParseError:
 					{
 						message = "Ошибка ввода";
+						_validationParseError = true;
 						break;
 					}
 					default:
@@ -492,6 +554,21 @@ public partial class TextBoxIntControl : VisualControlBase
 				}
 
 				MessageBox.Show(message);
+			}
+			else
+			{
+				switch (readResult)
+				{
+					case ReadResult.AboveMax:
+						_validationAboveMax = true;
+						break;
+					case ReadResult.BelowMin:
+						_validationBelowMin = true;
+						break;
+					case ReadResult.ParseError:
+						_validationParseError = true;
+						break;
+				}
 			}
 		}
 		else

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <FBConfig>
   <Map>
     <Items>
@@ -24,6 +24,17 @@
 
       <Pout ID="120" Name="MaxValueToControl" Type="Целый"/>
       <Pout ID="125" Name="MinValueToControl" Type="Целый"/>
+
+      <Pin ID="200" Name="ValidationAboveMax" Type="Логический" DefaultValue="false"/>
+      <Pin ID="201" Name="ValidationBelowMin" Type="Логический" DefaultValue="false"/>
+      <Pin ID="202" Name="ValidationParseError" Type="Логический" DefaultValue="false"/>
     </Items>
   </VisualMap>
+  <Events>
+    <Items>
+      <Event ID="5000" Name="Значение выше максимума" Category="Warning"/>
+      <Event ID="5001" Name="Значение ниже минимума" Category="Warning"/>
+      <Event ID="5002" Name="Ошибка формата ввода" Category="Warning"/>
+    </Items>
+  </Events>
 </FBConfig>

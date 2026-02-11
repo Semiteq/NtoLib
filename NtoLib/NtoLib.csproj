@@ -815,7 +815,7 @@
     <Compile Include="ConfigLoader\Yaml\YamlSerializer.cs" />
     <Compile Include="ConfigLoader\Yaml\YamlValidator.cs" />
     <Compile Include="ConfigLoader\Pins\PinGroupManager.cs" />
-    <Compile Include="InputFields\TextBoxFloat\TexBoxFloatFB.cs" />
+    <Compile Include="InputFields\TextBoxFloat\TextBoxFloatFB.cs" />
     <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

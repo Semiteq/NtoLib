@@ -9,15 +9,15 @@ using InSAT.Library.Interop;
 
 using NtoLib.Devices.Helpers;
 
-namespace NtoLib.InputFields.TextBoxInt;
+namespace NtoLib.InputFields.TextBoxFloat;
 
 [Serializable]
 [ComVisible(true)]
-[Guid("FF21CFEA-B957-43E8-B035-09BAE4CB6DB1")]
+[Guid("8A3C9E2F-D5B7-4A18-9F6C-E1A8B4D7C9F2")]
 [CatID(CatIDs.CATID_OTHER)]
-[DisplayName("Целочисленное поле")]
-[VisualControls(typeof(TextBoxIntControl))]
-public class TextBoxIntFB : VisualFBBase
+[DisplayName("Дробное поле")]
+[VisualControls(typeof(TextBoxFloatControl))]
+public class TextBoxFloatFB : VisualFBBase
 {
 	private const int InputFromScadaId = 10;
 	private const int OutputToScadaId = 50;
@@ -43,8 +43,8 @@ public class TextBoxIntFB : VisualFBBase
 	private const int BelowMinEventId = 5001;
 	private const int ParseErrorEventId = 5002;
 
-	private int _lastScadaInput;
-	private int _lastControlOutput;
+	private float _lastScadaInput;
+	private float _lastControlOutput;
 
 	[NonSerialized]
 	private EventTrigger _aboveMaxEvent;
@@ -73,7 +73,7 @@ public class TextBoxIntFB : VisualFBBase
 		message = $"{name}: ошибка формата ввода";
 		_parseErrorEvent = new EventTrigger(this, ParseErrorEventId, message, initialInactivity);
 
-		var input = GetPinValue<int>(InputFromScadaId);
+		var input = GetPinValue<float>(InputFromScadaId);
 		_lastScadaInput = input;
 		_lastControlOutput = input;
 		VisualPins.SetPinValue(OutputToControlId, input);
@@ -85,8 +85,8 @@ public class TextBoxIntFB : VisualFBBase
 	{
 		base.UpdateData();
 
-		var scadaInput = GetPinValue<int>(InputFromScadaId);
-		var controlOutput = VisualPins.GetPinValue<int>(InputFromControlId);
+		var scadaInput = GetPinValue<float>(InputFromScadaId);
+		var controlOutput = VisualPins.GetPinValue<float>(InputFromControlId);
 
 		if (scadaInput != _lastScadaInput)
 		{
@@ -107,10 +107,10 @@ public class TextBoxIntFB : VisualFBBase
 		var locked = GetPinValue<bool>(LockFromScadaId);
 		VisualPins.SetPinValue(LockToControl, locked);
 
-		var max = GetPinValue<int>(MaxValueId);
+		var max = GetPinValue<float>(MaxValueId);
 		VisualPins.SetPinValue(MaxValueToControlId, max);
 
-		var min = GetPinValue<int>(MinValueId);
+		var min = GetPinValue<float>(MinValueId);
 		VisualPins.SetPinValue(MinValueToControlId, min);
 
 		var aboveMax = VisualPins.GetPinValue<bool>(ValidationAboveMaxId);
