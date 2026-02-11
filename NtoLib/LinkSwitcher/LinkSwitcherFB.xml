@@ -3,7 +3,7 @@
   <Map>
     <Items>
       <Pin ID="1" Name="Execute" Type="Логический" />
-      <Pin ID="2" Name="Forward" Type="Логический" />
+      <Pin ID="2" Name="Forward" Type="Логический" DefaultValue="True" />
       <Pin ID="3" Name="DryRun" Type="Логический" />
       <Pin ID="4" Name="Cancel" Type="Логический" />
 

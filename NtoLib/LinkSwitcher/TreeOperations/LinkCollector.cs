@@ -72,7 +72,7 @@ public sealed class LinkCollector
 		}
 	}
 
-	private void CollectOutgoingOperations(
+	private static void CollectOutgoingOperations(
 		ITreePinHlp pin,
 		string sourceRootPath,
 		string targetPinPath,

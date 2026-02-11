@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 using FB;
 
@@ -10,6 +11,7 @@ using InSAT.Library.Interop;
 
 using MasterSCADA.Hlp;
 
+using NtoLib.LinkSwitcher.Entities;
 using NtoLib.LinkSwitcher.Facade;
 
 using Serilog;
@@ -21,7 +23,7 @@ namespace NtoLib.LinkSwitcher;
 [ComVisible(true)]
 [Guid("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
 [CatID(CatIDs.CATID_OTHER)]
-[DisplayName("Link Switcher")]
+[DisplayName("Переключатель связей")]
 public sealed class LinkSwitcherFB : StaticFBBase
 {
 	private const int ExecutePinId = 1;
@@ -32,18 +34,21 @@ public sealed class LinkSwitcherFB : StaticFBBase
 	private const int SuccessPinId = 101;
 	private const int IsPendingPinId = 104;
 
+	private const int MaxDeferredRetries = 100;
+	private const int DeferredRetryIntervalMs = 200;
+
 	[NonSerialized] private ILinkSwitcherService? _service;
 	[NonSerialized] private Logger? _serilogLogger;
 	[NonSerialized] private bool _previousExecute;
 	[NonSerialized] private bool _previousCancel;
 	[NonSerialized] private bool _isRuntimeInitialized;
 
-	[DisplayName("1. Путь для поиска пар объектов")]
+	[DisplayName("Путь для поиска пар объектов")]
 	[Category("Настройки поиска")]
 	[Description("Укажите путь в дереве проекта, где находятся пары объектов для перелинковки. Например: 'Компьютер1/Контроллер1'.")]
-	public string SearchPath { get; set; } = "Система.АРМ1.OPC UA Siemens.ServerInterfaces.MBE";
+	public string SearchPath { get; set; } = "Система.АРМ.OPC UA Siemens.ServerInterfaces.MBE";
 
-	[DisplayName("2. Путь для записи лога")]
+	[DisplayName("Путь для записи лога")]
 	[Category("Настройки логирования")]
 	[Description("Укажите полный путь к файлу для записи лога работы функции.")]
 	public string LogFilePath { get; set; } = @"C:\DISTR\Logs\link-switcher.log";
@@ -182,9 +187,51 @@ public sealed class LinkSwitcherFB : StaticFBBase
 
 		var service = _service;
 		var logger = _serilogLogger;
+		var project = TreeItemHlp?.Project;
 
-		MasterSCADAHlp.Instance.ThreadHolder.BeginInvoke((Delegate)(() =>
+		if (project == null)
 		{
+			logger?.Error("Cannot flush pending plan: IProjectHlp is null");
+			logger?.Dispose();
+			return;
+		}
+
+		PostDeferredExecution(service, plan, logger, project, retriesRemaining: MaxDeferredRetries);
+	}
+
+	private static void PostDeferredExecution(
+		ILinkSwitcherService service,
+		SwitchPlan plan,
+		Logger? logger,
+		IProjectHlp project,
+		int retriesRemaining)
+	{
+		var timer = new Timer { Interval = DeferredRetryIntervalMs };
+		var retries = retriesRemaining;
+
+		timer.Tick += (_, _) =>
+		{
+			if (project.InRuntime)
+			{
+				retries--;
+
+				if (retries <= 0)
+				{
+					timer.Stop();
+					timer.Dispose();
+					logger?.Error(
+						"Deferred execution aborted: IProjectHlp.InRuntime is still true after {MaxRetries} retries ({TotalSeconds}s)",
+						MaxDeferredRetries,
+						MaxDeferredRetries * DeferredRetryIntervalMs / 1000.0);
+					logger?.Dispose();
+				}
+
+				return;
+			}
+
+			timer.Stop();
+			timer.Dispose();
+
 			try
 			{
 				var result = service.Execute(plan);
@@ -205,9 +252,11 @@ public sealed class LinkSwitcherFB : StaticFBBase
 			}
 			finally
 			{
-				(logger as IDisposable)?.Dispose();
+				logger?.Dispose();
 			}
-		}));
+		};
+
+		timer.Start();
 	}
 
 	private void WriteOutputs(bool success, bool isPending)
