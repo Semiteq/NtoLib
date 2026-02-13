@@ -290,6 +290,7 @@
     </Compile>
     <Compile Include="LinkSwitcher\Entities\LinkOperation.cs" />
     <Compile Include="LinkSwitcher\Entities\ObjectPair.cs" />
+    <Compile Include="LinkSwitcher\Entities\PairOperations.cs" />
     <Compile Include="LinkSwitcher\Entities\SwitchPlan.cs" />
     <Compile Include="LinkSwitcher\Facade\ILinkSwitcherService.cs" />
     <Compile Include="LinkSwitcher\Facade\LinkSwitcherService.cs" />

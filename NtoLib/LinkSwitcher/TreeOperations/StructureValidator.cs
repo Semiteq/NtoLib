@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentResults;
-
 using MasterSCADA.Hlp;
 
 using MasterSCADALib;
@@ -12,14 +10,20 @@ using NtoLib.LinkSwitcher.Entities;
 
 namespace NtoLib.LinkSwitcher.TreeOperations;
 
-public sealed class StructureValidator
+public static class StructureValidator
 {
-	public Result Validate(ObjectPair pair)
+	public static IReadOnlyList<string> FindDifferences(ObjectPair pair)
 	{
-		return CompareChildren(pair.Source, pair.Target, pair.Name);
+		var differences = new List<string>();
+		CompareChildren(pair.Source, pair.Target, pair.Name, differences);
+		return differences;
 	}
 
-	private Result CompareChildren(ITreeItemHlp source, ITreeItemHlp target, string contextPath)
+	private static void CompareChildren(
+		ITreeItemHlp source,
+		ITreeItemHlp target,
+		string contextPath,
+		List<string> differences)
 	{
 		var sourceChildren = source.EnumHlpChilds(TreeItemMask.All);
 		var targetChildren = target.EnumHlpChilds(TreeItemMask.All);
@@ -34,7 +38,7 @@ public sealed class StructureValidator
 		if (missingInTarget.Count > 0)
 		{
 			var missing = string.Join(", ", missingInTarget);
-			return Result.Fail($"[{contextPath}] Children missing in target: {missing}");
+			differences.Add($"[{contextPath}] Missing in target: {missing}");
 		}
 
 		var missingInSource = targetByName.Keys
@@ -44,25 +48,22 @@ public sealed class StructureValidator
 		if (missingInSource.Count > 0)
 		{
 			var missing = string.Join(", ", missingInSource);
-			return Result.Fail($"[{contextPath}] Children missing in source: {missing}");
+			differences.Add($"[{contextPath}] Missing in source: {missing}");
 		}
 
-		foreach (var name in sourceByName.Keys)
+		var commonNames = sourceByName.Keys
+			.Where(name => targetByName.ContainsKey(name));
+
+		foreach (var name in commonNames)
 		{
 			var sourceChild = sourceByName[name];
 			var targetChild = targetByName[name];
 
 			if (sourceChild is ITreeItemHlp sourceItem && targetChild is ITreeItemHlp targetItem)
 			{
-				var childResult = CompareChildren(sourceItem, targetItem, $"{contextPath}.{name}");
-				if (childResult.IsFailed)
-				{
-					return childResult;
-				}
+				CompareChildren(sourceItem, targetItem, $"{contextPath}.{name}", differences);
 			}
 		}
-
-		return Result.Ok();
 	}
 
 	private static Dictionary<string, ITreeObjectHlp> BuildChildMap(List<ITreeObjectHlp> children)

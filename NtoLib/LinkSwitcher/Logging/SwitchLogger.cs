@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using NtoLib.LinkSwitcher.Entities;
 
@@ -8,6 +10,9 @@ namespace NtoLib.LinkSwitcher.Logging;
 
 public sealed class SwitchLogger
 {
+	private const string DirectTag = "[direct]  ";
+	private const string FeedbackTag = "[feedback]";
+
 	private readonly ILogger _logger;
 
 	public SwitchLogger(ILogger logger)
@@ -15,10 +20,12 @@ public sealed class SwitchLogger
 		_logger = logger;
 	}
 
-	public void LogScanHeader(string searchPath, bool forward)
+	public void LogScanHeader(string searchPath, bool reverse)
 	{
-		var direction = forward ? "Forward (Name -> Name2)" : "Reverse (Name2 -> Name)";
-		_logger.Information("=== LinkSwitcherFB: Scan === Path: {SearchPath}, Direction: {Direction}", searchPath, direction);
+		var direction = reverse ? "Reverse (Name2 -> Name)" : "Forward (Name -> Name2)";
+		_logger.Information("=== LinkSwitcher: Scan ===");
+		_logger.Information("Container: {SearchPath}", searchPath);
+		_logger.Information("Direction: {Direction}", direction);
 	}
 
 	public void LogDiscoveredPairs(IReadOnlyList<ObjectPair> pairs)
@@ -29,80 +36,94 @@ public sealed class SwitchLogger
 			return;
 		}
 
-		_logger.Information("Discovered {PairCount} pairs", pairs.Count);
-		for (var i = 0; i < pairs.Count; i++)
+		_logger.Information("Discovered {PairCount} pair(s)", pairs.Count);
+	}
+
+	public void LogPairScanResult(PairOperations pairOps, string containerPath)
+	{
+		var pair = pairOps.Pair;
+		_logger.Information("--- {SourceName} / {TargetName} ---", pair.Source.Name, pair.Target.Name);
+
+		if (pairOps.StructureWarnings.Count == 0)
 		{
-			_logger.Information("  [{Index}] {SourceName} / {TargetName}", i + 1, pairs[i].Source.Name, pairs[i].Target.Name);
+			_logger.Information("  Structure: OK");
 		}
-	}
-
-	public void LogValidationSuccess(ObjectPair pair, int linkCount)
-	{
-		_logger.Information("  {PairName}: structure OK, links to transfer: {LinkCount}", pair.Name, linkCount);
-	}
-
-	public void LogValidationFailure(ObjectPair pair, string reason)
-	{
-		_logger.Error("  {PairName}: VALIDATION FAILED -- {Reason}", pair.Name, reason);
-	}
-
-	public void LogPlan(IReadOnlyList<LinkOperation> operations)
-	{
-		if (operations.Count == 0)
+		else
 		{
-			_logger.Information("No links to transfer");
+			_logger.Warning("  Structure: MISMATCH");
+			foreach (var warning in pairOps.StructureWarnings)
+			{
+				_logger.Warning("    {Warning}", warning);
+			}
+		}
+
+		if (pairOps.Operations.Count == 0)
+		{
+			_logger.Information("  Links: none");
 			return;
 		}
 
-		_logger.Information("Links to transfer ({OperationCount}):", operations.Count);
-		foreach (var operation in operations)
+		var columnWidths = ComputeColumnWidths(pairOps.Operations, containerPath);
+
+		_logger.Information("  Links: {LinkCount}", pairOps.Operations.Count);
+		foreach (var operation in pairOps.Operations)
 		{
-			var direction = FormatDirection(operation);
-			_logger.Information("  {SourcePin} {Direction} {ExternalPin} => {TargetPin}",
-				operation.SourcePinPath, direction, operation.ExternalPinPath, operation.TargetPinPath);
+			_logger.Information("    {Line}", FormatOperationLine(operation, containerPath, columnWidths));
 		}
 	}
 
-	public void LogDryRunComplete()
+	public void LogPairCollectionFailure(ObjectPair pair, string reason)
 	{
-		_logger.Information("=== DryRun complete: no links were modified ===");
+		_logger.Information("--- {SourceName} / {TargetName} ---", pair.Source.Name, pair.Target.Name);
+		_logger.Error("  Link collection failed: {Reason}", reason);
+	}
+
+	public void LogNoLinksFound()
+	{
+		_logger.Warning("No links to transfer across all pairs");
+	}
+
+	public void LogScanSummary(int pairCount, int totalLinks)
+	{
+		_logger.Information("Total: {TotalLinks} link(s) across {PairCount} pair(s) queued", totalLinks, pairCount);
 	}
 
 	public void LogExecutionHeader()
 	{
-		_logger.Information("=== LinkSwitcherFB: Execution ===");
+		_logger.Information("=== LinkSwitcher: Execution ===");
 	}
 
-	public void LogOperationSuccess(LinkOperation operation)
+	public void LogPairExecutionHeader(ObjectPair pair)
 	{
-		var direction = FormatDirection(operation);
-		_logger.Information("  [OK] {SourcePin} {Direction} {ExternalPin} => {TargetPin}",
-			operation.SourcePinPath, direction, operation.ExternalPinPath, operation.TargetPinPath);
+		_logger.Information("--- {SourceName} / {TargetName} ---", pair.Source.Name, pair.Target.Name);
 	}
 
-	public void LogOperationFailure(LinkOperation operation, string error)
+	public void LogOperationSuccess(LinkOperation operation, string containerPath, ColumnWidths columnWidths)
 	{
-		var direction = FormatDirection(operation);
-		_logger.Error("  [ERROR] {SourcePin} {Direction} {ExternalPin}: {Error}",
-			operation.SourcePinPath, direction, operation.ExternalPinPath, error);
+		_logger.Information("  [OK]  {Line}", FormatOperationLine(operation, containerPath, columnWidths));
+	}
+
+	public void LogOperationFailure(LinkOperation operation, string containerPath, ColumnWidths columnWidths, string error)
+	{
+		_logger.Error("  [ERR] {Line}: {Error}", FormatOperationLine(operation, containerPath, columnWidths), error);
 	}
 
 	public void LogExecutionSummary(int totalCount, int successCount, int failureCount)
 	{
 		if (failureCount == 0)
 		{
-			_logger.Information("Result: all {TotalCount} links transferred successfully", totalCount);
+			_logger.Information("Result: {SuccessCount}/{TotalCount} OK", successCount, totalCount);
 		}
 		else
 		{
-			_logger.Warning("Result: {SuccessCount} of {TotalCount} links transferred, {FailureCount} errors",
+			_logger.Warning("Result: {SuccessCount}/{TotalCount} OK, {FailureCount} error(s)",
 				successCount, totalCount, failureCount);
 		}
 	}
 
 	public void LogCancellation()
 	{
-		_logger.Information("=== LinkSwitcherFB: Operation cancelled by user ===");
+		_logger.Information("=== LinkSwitcher: Cancelled ===");
 	}
 
 	public void LogError(string message)
@@ -110,10 +131,41 @@ public sealed class SwitchLogger
 		_logger.Error("ERROR: {ErrorMessage}", message);
 	}
 
-	private static string FormatDirection(LinkOperation operation)
+	public static ColumnWidths ComputeColumnWidths(IReadOnlyList<LinkOperation> operations, string containerPath)
 	{
-		if (operation.IsIConnect)
-			return "<=>";
-		return operation.IsIncoming ? "<-" : "->";
+		if (operations.Count == 0)
+		{
+			return new ColumnWidths(0, 0);
+		}
+
+		var maxSource = operations.Max(op => StripPrefix(op.SourcePinPath, containerPath).Length);
+		var maxTarget = operations.Max(op => StripPrefix(op.TargetPinPath, containerPath).Length);
+		return new ColumnWidths(maxSource, maxTarget);
+	}
+
+	private static string FormatOperationLine(LinkOperation operation, string containerPath, ColumnWidths widths)
+	{
+		var tag = operation.IsIConnect ? FeedbackTag : DirectTag;
+		var sourceRelative = StripPrefix(operation.SourcePinPath, containerPath);
+		var targetRelative = StripPrefix(operation.TargetPinPath, containerPath);
+
+		var paddedSource = sourceRelative.PadRight(widths.SourceWidth);
+		var paddedTarget = targetRelative.PadRight(widths.TargetWidth);
+
+		return $"{tag} {paddedSource} -> {paddedTarget} : {operation.ExternalPinPath}";
+	}
+
+	private static string StripPrefix(string fullPath, string rootPath)
+	{
+		if (fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) &&
+			fullPath.Length > rootPath.Length &&
+			fullPath[rootPath.Length] == '.')
+		{
+			return fullPath.Substring(rootPath.Length + 1);
+		}
+
+		return fullPath;
 	}
 }
+
+public readonly record struct ColumnWidths(int SourceWidth, int TargetWidth);

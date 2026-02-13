@@ -13,10 +13,10 @@ namespace NtoLib.LinkSwitcher.TreeOperations;
 
 public sealed class LinkCollector
 {
-	public Result<IReadOnlyList<LinkOperation>> CollectOperations(ObjectPair pair, bool forward)
+	public static Result<IReadOnlyList<LinkOperation>> CollectOperations(ObjectPair pair, bool reverse)
 	{
-		var source = forward ? pair.Source : pair.Target;
-		var target = forward ? pair.Target : pair.Source;
+		var source = reverse ? pair.Target : pair.Source;
+		var target = reverse ? pair.Source : pair.Target;
 
 		var sourceRootPath = source.FullName;
 		var targetRootPath = target.FullName;

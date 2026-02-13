@@ -27,12 +27,10 @@ namespace NtoLib.LinkSwitcher;
 public sealed class LinkSwitcherFB : StaticFBBase
 {
 	private const int ExecutePinId = 1;
-	private const int ForwardPinId = 2;
-	private const int DryRunPinId = 3;
-	private const int CancelPinId = 4;
+	private const int ReversePinId = 2;
+	private const int CancelPinId = 3;
 
-	private const int SuccessPinId = 101;
-	private const int IsPendingPinId = 102;
+	private const int IsPendingPinId = 101;
 
 	private const int MaxDeferredRetries = 100;
 	private const int DeferredRetryIntervalMs = 200;
@@ -105,7 +103,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 		{
 			_isRuntimeInitialized = false;
 			_serilogLogger?.Error(exception, "LinkSwitcherFB initialization failed");
-			WriteOutputs(false, false);
+			WritePending(false);
 		}
 	}
 
@@ -127,26 +125,16 @@ public sealed class LinkSwitcherFB : StaticFBBase
 			return;
 		}
 
-		var forward = GetPinValue<bool>(ForwardPinId);
-		var isDryRun = GetPinValue<bool>(DryRunPinId);
+		var reverse = GetPinValue<bool>(ReversePinId);
 
-		var scanResult = _service.ScanAndValidate(SearchPath, forward);
+		var scanResult = _service.ScanAndValidate(SearchPath, reverse);
 		if (scanResult.IsFailed)
 		{
-			WriteOutputs(false, false);
+			WritePending(false);
 			return;
 		}
 
-		var plan = scanResult.Value;
-
-		if (isDryRun)
-		{
-			_service.DryRun(plan);
-			WriteOutputs(true, false);
-			return;
-		}
-
-		WriteOutputs(false, true);
+		WritePending(true);
 	}
 
 	private void ProcessCancelCommand()
@@ -161,7 +149,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 		}
 
 		_service.Cancel();
-		WriteOutputs(false, false);
+		WritePending(false);
 	}
 
 	private void FlushPendingPlan()
@@ -190,7 +178,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 			return;
 		}
 
-		PostDeferredExecution(service, plan, logger, project, retriesRemaining: MaxDeferredRetries);
+		PostDeferredExecution(service, plan, logger, project, MaxDeferredRetries);
 	}
 
 	private static void PostDeferredExecution(
@@ -255,11 +243,9 @@ public sealed class LinkSwitcherFB : StaticFBBase
 		timer.Start();
 	}
 
-	private void WriteOutputs(bool success, bool isPending)
+	private void WritePending(bool isPending)
 	{
 		var now = DateTime.UtcNow;
-
-		SetPinValue(SuccessPinId, success, now);
 		SetPinValue(IsPendingPinId, isPending, now);
 	}
 

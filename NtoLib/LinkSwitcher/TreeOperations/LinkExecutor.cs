@@ -23,35 +23,46 @@ public sealed class LinkExecutor
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public Result Execute(IReadOnlyList<LinkOperation> operations)
+	public Result Execute(IReadOnlyList<PairOperations> pairResults, string containerPath)
 	{
 		_logger.LogExecutionHeader();
 
-		var successCount = 0;
-		var failureCount = 0;
+		var totalSuccess = 0;
+		var totalFailure = 0;
+		var totalCount = 0;
 
-		foreach (var operation in operations)
+		foreach (var pairOps in pairResults)
 		{
-			var result = ExecuteOperation(operation);
+			if (pairOps.Operations.Count == 0)
+				continue;
 
-			if (result.IsSuccess)
+			_logger.LogPairExecutionHeader(pairOps.Pair);
+			var columnWidths = SwitchLogger.ComputeColumnWidths(pairOps.Operations, containerPath);
+
+			foreach (var operation in pairOps.Operations)
 			{
-				successCount++;
-				_logger.LogOperationSuccess(operation);
-			}
-			else
-			{
-				failureCount++;
-				var errorMessage = string.Join("; ", result.Errors);
-				_logger.LogOperationFailure(operation, errorMessage);
+				totalCount++;
+				var result = ExecuteOperation(operation);
+
+				if (result.IsSuccess)
+				{
+					totalSuccess++;
+					_logger.LogOperationSuccess(operation, containerPath, columnWidths);
+				}
+				else
+				{
+					totalFailure++;
+					var errorMessage = string.Join("; ", result.Errors);
+					_logger.LogOperationFailure(operation, containerPath, columnWidths, errorMessage);
+				}
 			}
 		}
 
-		_logger.LogExecutionSummary(operations.Count, successCount, failureCount);
+		_logger.LogExecutionSummary(totalCount, totalSuccess, totalFailure);
 
-		if (failureCount > 0)
+		if (totalFailure > 0)
 		{
-			return Result.Fail($"{failureCount} of {operations.Count} link operations failed.");
+			return Result.Fail($"{totalFailure} of {totalCount} link operations failed.");
 		}
 
 		return Result.Ok();
