@@ -41,10 +41,15 @@ public sealed class LinkSwitcherFB : StaticFBBase
 	[NonSerialized] private bool _previousCancel;
 	[NonSerialized] private bool _isRuntimeInitialized;
 
-	[DisplayName("Путь для поиска пар объектов")]
+	[DisplayName("Путь к узлу 1")]
 	[Category("Настройки поиска")]
-	[Description("Укажите путь в дереве проекта, где находятся пары объектов для перелинковки. Например: 'Компьютер1/Контроллер1'.")]
-	public string SearchPath { get; set; } = "Система.АРМ.OPC UA Siemens.ServerInterfaces.MBE";
+	[Description("Укажите путь в дереве к узлу 1 (Source). Например: 'Компьютер1/Контроллер1/MBE'.")]
+	public string SourcePath { get; set; } = "Система.АРМ.OPC UA Siemens.ServerInterfaces.MBE";
+
+	[DisplayName("Путь к узлу 2")]
+	[Category("Настройки поиска")]
+	[Description("Укажите путь в дереве к узлу 2 (Target). Например: 'Компьютер1/Контроллер1/MBE2'.")]
+	public string TargetPath { get; set; } = "Система.АРМ.OPC UA Siemens.ServerInterfaces.MBE2";
 
 	[DisplayName("Путь для записи лога")]
 	[Category("Настройки логирования")]
@@ -127,7 +132,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 
 		var reverse = GetPinValue<bool>(ReversePinId);
 
-		var scanResult = _service.ScanAndValidate(SearchPath, reverse);
+		var scanResult = _service.ScanAndValidate(SourcePath, TargetPath, reverse);
 		if (scanResult.IsFailed)
 		{
 			WritePending(false);

@@ -6,7 +6,7 @@ namespace NtoLib.LinkSwitcher.Facade;
 
 public interface ILinkSwitcherService
 {
-	Result<SwitchPlan> ScanAndValidate(string searchPath, bool reverse);
+	Result<SwitchPlan> ScanAndValidate(string sourcePath, string targetPath, bool reverse);
 	Result Execute(SwitchPlan plan);
 	void Cancel();
 	bool HasPendingTask { get; }

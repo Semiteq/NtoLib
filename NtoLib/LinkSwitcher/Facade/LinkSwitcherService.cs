@@ -31,12 +31,12 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 		_switchLogger = new SwitchLogger(logger);
 	}
 
-	public Result<SwitchPlan> ScanAndValidate(string searchPath, bool reverse)
+	public Result<SwitchPlan> ScanAndValidate(string sourcePath, string targetPath, bool reverse)
 	{
 		PendingPlan = null;
-		_switchLogger.LogScanHeader(searchPath, reverse);
+		_switchLogger.LogScanHeader(sourcePath, targetPath, reverse);
 
-		var pairsResult = _pairDiscovery.FindPairs(searchPath);
+		var pairsResult = _pairDiscovery.FindPairs(sourcePath, targetPath);
 		if (pairsResult.IsFailed)
 		{
 			var errorMessage = string.Join("; ", pairsResult.Errors);
@@ -49,7 +49,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 
 		if (pairs.Count == 0)
 		{
-			return Result.Fail("No Name/Name2 pairs found in the specified container.");
+			return Result.Fail("No matching pairs found between source and target containers.");
 		}
 
 		var pairResults = new List<PairOperations>();
@@ -68,7 +68,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 
 			var pairOps = new PairOperations(pair, collectResult.Value, structureWarnings);
 			pairResults.Add(pairOps);
-			_switchLogger.LogPairScanResult(pairOps, searchPath);
+			_switchLogger.LogPairScanResult(pairOps);
 		}
 
 		var totalLinks = pairResults.Sum(p => p.Operations.Count);
@@ -78,7 +78,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 			return Result.Fail("No links to transfer across all pairs.");
 		}
 
-		var plan = new SwitchPlan(pairResults, reverse, searchPath);
+		var plan = new SwitchPlan(pairResults, reverse, sourcePath, targetPath);
 		_switchLogger.LogScanSummary(pairResults.Count, totalLinks);
 
 		PendingPlan = plan;
@@ -97,7 +97,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 		}
 
 		var linkExecutor = new LinkExecutor(_project, _switchLogger);
-		var result = linkExecutor.Execute(plan.PairResults, plan.ContainerPath);
+		var result = linkExecutor.Execute(plan.PairResults, plan.SourcePath, plan.TargetPath);
 
 		PendingPlan = null;
 		return result;

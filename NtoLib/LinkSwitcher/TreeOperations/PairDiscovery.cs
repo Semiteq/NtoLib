@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using FluentResults;
 
@@ -21,62 +20,61 @@ public sealed class PairDiscovery
 		_project = project ?? throw new ArgumentNullException(nameof(project));
 	}
 
-	public Result<IReadOnlyList<ObjectPair>> FindPairs(string searchPath)
+	public Result<IReadOnlyList<ObjectPair>> FindPairs(string sourcePath, string targetPath)
 	{
-		if (string.IsNullOrWhiteSpace(searchPath))
+		if (string.IsNullOrWhiteSpace(sourcePath))
 		{
-			return Result.Fail("SearchPath is empty.");
+			return Result.Fail("SourcePath is empty.");
 		}
 
-		var container = _project.SafeItem<ITreeItemHlp>(searchPath);
-		if (container == null)
+		if (string.IsNullOrWhiteSpace(targetPath))
 		{
-			return Result.Fail($"Container not found: {searchPath}");
+			return Result.Fail("TargetPath is empty.");
 		}
 
-		var children = container.EnumHlpChilds(TreeItemMask.Group);
-		var childMap = new Dictionary<string, ITreeItemHlp>(StringComparer.OrdinalIgnoreCase);
-
-		foreach (var child in children)
+		var sourceContainer = _project.SafeItem<ITreeItemHlp>(sourcePath);
+		if (sourceContainer == null)
 		{
-			if (child is ITreeItemHlp treeItem)
-			{
-				childMap[treeItem.Name] = treeItem;
-			}
+			return Result.Fail($"Source container not found: {sourcePath}");
 		}
 
+		var targetContainer = _project.SafeItem<ITreeItemHlp>(targetPath);
+		if (targetContainer == null)
+		{
+			return Result.Fail($"Target container not found: {targetPath}");
+		}
+
+		var targetChildMap = BuildChildMap(targetContainer);
 		var pairs = new List<ObjectPair>();
-		var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-		foreach (var name in childMap.Keys.ToList())
+		foreach (var sourceChild in sourceContainer.EnumHlpChilds(TreeItemMask.Group))
 		{
-			if (processed.Contains(name))
+			if (sourceChild is not ITreeItemHlp sourceItem)
 			{
 				continue;
 			}
 
-			if (name.EndsWith("2", StringComparison.Ordinal))
+			if (targetChildMap.TryGetValue(sourceItem.Name, out var targetItem))
 			{
-				var baseName = name.Substring(0, name.Length - 1);
-				if (childMap.ContainsKey(baseName) && !processed.Contains(baseName))
-				{
-					pairs.Add(new ObjectPair(baseName, childMap[baseName], childMap[name]));
-					processed.Add(baseName);
-					processed.Add(name);
-				}
-			}
-			else
-			{
-				var suffixedName = name + "2";
-				if (childMap.ContainsKey(suffixedName))
-				{
-					pairs.Add(new ObjectPair(name, childMap[name], childMap[suffixedName]));
-					processed.Add(name);
-					processed.Add(suffixedName);
-				}
+				pairs.Add(new ObjectPair(sourceItem.Name, sourceItem, targetItem));
 			}
 		}
 
 		return Result.Ok<IReadOnlyList<ObjectPair>>(pairs);
+	}
+
+	private static Dictionary<string, ITreeItemHlp> BuildChildMap(ITreeItemHlp container)
+	{
+		var map = new Dictionary<string, ITreeItemHlp>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var child in container.EnumHlpChilds(TreeItemMask.Group))
+		{
+			if (child is ITreeItemHlp treeItem)
+			{
+				map[treeItem.Name] = treeItem;
+			}
+		}
+
+		return map;
 	}
 }

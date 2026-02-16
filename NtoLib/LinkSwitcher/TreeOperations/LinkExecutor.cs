@@ -23,7 +23,7 @@ public sealed class LinkExecutor
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public Result Execute(IReadOnlyList<PairOperations> pairResults, string containerPath)
+	public Result Execute(IReadOnlyList<PairOperations> pairResults, string sourcePath, string targetPath)
 	{
 		_logger.LogExecutionHeader();
 
@@ -37,7 +37,7 @@ public sealed class LinkExecutor
 				continue;
 
 			_logger.LogPairExecutionHeader(pairOps.Pair);
-			var columnWidths = SwitchLogger.ComputeColumnWidths(pairOps.Operations, containerPath);
+			var columnWidths = SwitchLogger.ComputeColumnWidths(pairOps.Operations, sourcePath, targetPath);
 
 			foreach (var operation in pairOps.Operations)
 			{
@@ -47,13 +47,13 @@ public sealed class LinkExecutor
 				if (result.IsSuccess)
 				{
 					totalSuccess++;
-					_logger.LogOperationSuccess(operation, containerPath, columnWidths);
+					_logger.LogOperationSuccess(operation, sourcePath, targetPath, columnWidths);
 				}
 				else
 				{
 					totalFailure++;
 					var errorMessage = string.Join("; ", result.Errors);
-					_logger.LogOperationFailure(operation, containerPath, columnWidths, errorMessage);
+					_logger.LogOperationFailure(operation, sourcePath, targetPath, columnWidths, errorMessage);
 				}
 			}
 		}

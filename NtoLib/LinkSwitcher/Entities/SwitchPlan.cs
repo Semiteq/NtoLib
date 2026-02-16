@@ -5,4 +5,5 @@ namespace NtoLib.LinkSwitcher.Entities;
 public sealed record SwitchPlan(
 	IReadOnlyList<PairOperations> PairResults,
 	bool Reverse,
-	string ContainerPath);
+	string SourcePath,
+	string TargetPath);

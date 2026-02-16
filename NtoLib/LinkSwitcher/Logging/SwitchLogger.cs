@@ -20,11 +20,12 @@ public sealed class SwitchLogger
 		_logger = logger;
 	}
 
-	public void LogScanHeader(string searchPath, bool reverse)
+	public void LogScanHeader(string sourcePath, string targetPath, bool reverse)
 	{
-		var direction = reverse ? "Reverse (Name2 -> Name)" : "Forward (Name -> Name2)";
+		var direction = reverse ? "Reverse (Target -> Source)" : "Forward (Source -> Target)";
 		_logger.Information("=== LinkSwitcher: Scan ===");
-		_logger.Information("Container: {SearchPath}", searchPath);
+		_logger.Information("Source: {SourcePath}", sourcePath);
+		_logger.Information("Target: {TargetPath}", targetPath);
 		_logger.Information("Direction: {Direction}", direction);
 	}
 
@@ -39,10 +40,11 @@ public sealed class SwitchLogger
 		_logger.Information("Discovered {PairCount} pair(s)", pairs.Count);
 	}
 
-	public void LogPairScanResult(PairOperations pairOps, string containerPath)
+	public void LogPairScanResult(PairOperations pairOps)
 	{
 		var pair = pairOps.Pair;
-		_logger.Information("--- {SourceName} / {TargetName} ---", pair.Source.Name, pair.Target.Name);
+		_logger.Information("--- {PairName}: {SourceName} <-> {TargetName} ---",
+			pair.Name, pair.Source.FullName, pair.Target.FullName);
 
 		if (pairOps.StructureWarnings.Count == 0)
 		{
@@ -63,18 +65,19 @@ public sealed class SwitchLogger
 			return;
 		}
 
-		var columnWidths = ComputeColumnWidths(pairOps.Operations, containerPath);
+		var columnWidths = ComputeColumnWidths(pairOps.Operations);
 
 		_logger.Information("  Links: {LinkCount}", pairOps.Operations.Count);
 		foreach (var operation in pairOps.Operations)
 		{
-			_logger.Information("    {Line}", FormatOperationLine(operation, containerPath, columnWidths));
+			_logger.Information("    {Line}", FormatOperationLine(operation, columnWidths));
 		}
 	}
 
 	public void LogPairCollectionFailure(ObjectPair pair, string reason)
 	{
-		_logger.Information("--- {SourceName} / {TargetName} ---", pair.Source.Name, pair.Target.Name);
+		_logger.Information("--- {PairName}: {SourceName} <-> {TargetName} ---",
+			pair.Name, pair.Source.Name, pair.Target.Name);
 		_logger.Error("  Link collection failed: {Reason}", reason);
 	}
 
@@ -95,17 +98,22 @@ public sealed class SwitchLogger
 
 	public void LogPairExecutionHeader(ObjectPair pair)
 	{
-		_logger.Information("--- {SourceName} / {TargetName} ---", pair.Source.Name, pair.Target.Name);
+		_logger.Information("--- {PairName}: {SourceName} <-> {TargetName} ---",
+			pair.Name, pair.Source.Name, pair.Target.Name);
 	}
 
-	public void LogOperationSuccess(LinkOperation operation, string containerPath, ColumnWidths columnWidths)
+	public void LogOperationSuccess(
+		LinkOperation operation, string sourcePath, string targetPath, ColumnWidths columnWidths)
 	{
-		_logger.Information("  [OK]  {Line}", FormatOperationLine(operation, containerPath, columnWidths));
+		_logger.Information("  [OK]  {Line}",
+			FormatOperationLine(operation, sourcePath, targetPath, columnWidths));
 	}
 
-	public void LogOperationFailure(LinkOperation operation, string containerPath, ColumnWidths columnWidths, string error)
+	public void LogOperationFailure(
+		LinkOperation operation, string sourcePath, string targetPath, ColumnWidths columnWidths, string error)
 	{
-		_logger.Error("  [ERR] {Line}: {Error}", FormatOperationLine(operation, containerPath, columnWidths), error);
+		_logger.Error("  [ERR] {Line}: {Error}",
+			FormatOperationLine(operation, sourcePath, targetPath, columnWidths), error);
 	}
 
 	public void LogExecutionSummary(int totalCount, int successCount, int failureCount)
@@ -131,26 +139,49 @@ public sealed class SwitchLogger
 		_logger.Error("ERROR: {ErrorMessage}", message);
 	}
 
-	public static ColumnWidths ComputeColumnWidths(IReadOnlyList<LinkOperation> operations, string containerPath)
+	public static ColumnWidths ComputeColumnWidths(
+		IReadOnlyList<LinkOperation> operations, string sourcePath, string targetPath)
 	{
 		if (operations.Count == 0)
 		{
 			return new ColumnWidths(0, 0);
 		}
 
-		var maxSource = operations.Max(op => StripPrefix(op.SourcePinPath, containerPath).Length);
-		var maxTarget = operations.Max(op => StripPrefix(op.TargetPinPath, containerPath).Length);
+		var maxSource = operations.Max(op => StripPrefix(op.SourcePinPath, sourcePath).Length);
+		var maxTarget = operations.Max(op => StripPrefix(op.TargetPinPath, targetPath).Length);
 		return new ColumnWidths(maxSource, maxTarget);
 	}
 
-	private static string FormatOperationLine(LinkOperation operation, string containerPath, ColumnWidths widths)
+	private static ColumnWidths ComputeColumnWidths(IReadOnlyList<LinkOperation> operations)
+	{
+		if (operations.Count == 0)
+		{
+			return new ColumnWidths(0, 0);
+		}
+
+		var maxSource = operations.Max(op => op.SourcePinPath.Length);
+		var maxTarget = operations.Max(op => op.TargetPinPath.Length);
+		return new ColumnWidths(maxSource, maxTarget);
+	}
+
+	private static string FormatOperationLine(
+		LinkOperation operation, string sourcePath, string targetPath, ColumnWidths widths)
 	{
 		var tag = operation.IsIConnect ? FeedbackTag : DirectTag;
-		var sourceRelative = StripPrefix(operation.SourcePinPath, containerPath);
-		var targetRelative = StripPrefix(operation.TargetPinPath, containerPath);
+		var sourceRelative = StripPrefix(operation.SourcePinPath, sourcePath);
+		var targetRelative = StripPrefix(operation.TargetPinPath, targetPath);
 
 		var paddedSource = sourceRelative.PadRight(widths.SourceWidth);
 		var paddedTarget = targetRelative.PadRight(widths.TargetWidth);
+
+		return $"{tag} {paddedSource} -> {paddedTarget} : {operation.ExternalPinPath}";
+	}
+
+	private static string FormatOperationLine(LinkOperation operation, ColumnWidths widths)
+	{
+		var tag = operation.IsIConnect ? FeedbackTag : DirectTag;
+		var paddedSource = operation.SourcePinPath.PadRight(widths.SourceWidth);
+		var paddedTarget = operation.TargetPinPath.PadRight(widths.TargetWidth);
 
 		return $"{tag} {paddedSource} -> {paddedTarget} : {operation.ExternalPinPath}";
 	}
