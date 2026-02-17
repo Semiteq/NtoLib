@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+  <Map>
+    <Items>
+      <Pin ID="10" Name="Input" Type="Вещественный" DefaultValue="0"/>
+      <Pout ID="50" Name="Output" Type="Вещественный"/>
+
+      <Pin ID="15" Name="Lock" Type="Логический" DefaultValue="false"/>
+      <Group Name="RangeLimits">
+        <Items>
+          <Pin ID="20" Name="MaxValue" Type="Вещественный"/>
+          <Pin ID="25" Name="MinValue" Type="Вещественный"/>
+        </Items>
+      </Group>
+    </Items>
+  </Map>
+  <VisualMap>
+    <!-- Intentionally left empty -->
+  </VisualMap>
+  <Events>
+    <Event ID="5000" Name="Значение выше максимума" Category="Warning"/>
+    <Event ID="5001" Name="Значение ниже минимума" Category="Warning"/>
+    <Event ID="5003" Name="Минимум превышает максимум" Category="Warning"/>
+  </Events>
+</FBConfig>

@@ -1,6 +1,6 @@
-﻿namespace NtoLib.InputFields.TextBoxFloat
+﻿namespace NtoLib.NumericBox
 {
-    partial class TextBoxFloatControl
+    partial class NumericBoxControl
     {
         /// <summary> 
         /// Обязательная переменная конструктора.
@@ -30,7 +30,7 @@
         {
             this.pictureBox = new System.Windows.Forms.PictureBox();
             this.label = new System.Windows.Forms.Label();
-            this.textBox = new Helpers.TextBoxFloat();
+            this.textBox = new Helpers.NumericBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -91,7 +91,7 @@
             this.Controls.Add(this.label);
             this.Controls.Add(this.textBox);
             this.Controls.Add(this.pictureBox);
-            this.Name = "TextBoxFloatControl";
+            this.Name = "NumericBoxControl";
             this.Size = new System.Drawing.Size(150, 30);
             this.VisibleChanged += new System.EventHandler(this.HandleVisibleChanged);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ToEditMode);
@@ -103,7 +103,7 @@
         }
 
         #endregion
-        private Helpers.TextBoxFloat textBox;
+        private Helpers.NumericBox textBox;
         private System.Windows.Forms.PictureBox pictureBox;
         private System.Windows.Forms.Label label;
     }

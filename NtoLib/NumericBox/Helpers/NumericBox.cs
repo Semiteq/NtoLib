@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace NtoLib.InputFields.Helpers;
+namespace NtoLib.NumericBox.Helpers;
 
-public partial class TextBoxInt : TextBox
+public partial class NumericBox : TextBox
 {
 	public event Action ValidatingValue;
 
-	public TextBoxInt()
+	public NumericBox()
 	{
 		InitializeComponent();
 	}
@@ -16,7 +16,8 @@ public partial class TextBoxInt : TextBox
 	{
 		base.OnKeyPress(e);
 
-		if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '-')
+		if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '+' && e.KeyChar != '-' &&
+			e.KeyChar != ',' && e.KeyChar != '.' && e.KeyChar != 'E' && e.KeyChar != 'e')
 			e.Handled = true;
 	}
 
@@ -29,7 +30,7 @@ public partial class TextBoxInt : TextBox
 			return;
 		}
 
-		ValidatingValue.Invoke();
+		ValidatingValue?.Invoke();
 
 		e.SuppressKeyPress = true;
 		e.Handled = true;

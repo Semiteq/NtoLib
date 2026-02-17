@@ -2,7 +2,7 @@
 
 using FB.VisualFB;
 
-namespace NtoLib.InputFields.Helpers;
+namespace NtoLib.NumericBox.Helpers;
 
 public static class FocusManager
 {

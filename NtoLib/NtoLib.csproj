@@ -274,20 +274,24 @@
     <Compile Include="Devices\Render\Valves\SlideGateRenderer.cs" />
     <Compile Include="Devices\Render\Valves\SmoothValveRenderer.cs" />
     <Compile Include="Devices\Render\Valves\ValveBaseRenderer.cs" />
-    <Compile Include="InputFields\Helpers\FocusManager.cs" />
-    <Compile Include="InputFields\Helpers\ReadResult.cs" />
-    <Compile Include="InputFields\Helpers\TextBoxFloat.cs">
+    <Compile Include="NumericBox\Entities\ValueArbiter.cs" />
+    <Compile Include="NumericBox\Helpers\DisplayFormatExtensions.cs" />
+    <Compile Include="NumericBox\Helpers\FocusManager.cs" />
+    <Compile Include="NumericBox\Helpers\NumericBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="InputFields\Helpers\TextBoxFloat.Designer.cs">
-      <DependentUpon>TextBoxFloat.cs</DependentUpon>
+    <Compile Include="NumericBox\Helpers\NumericBox.Designer.cs">
+      <DependentUpon>NumericBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="InputFields\Helpers\TextBoxInt.cs">
-      <SubType>Component</SubType>
+    <Compile Include="NumericBox\Helpers\DisplayFormat.cs" />
+    <Compile Include="NumericBox\Helpers\FontSizeMode.cs" />
+    <Compile Include="NumericBox\NumericBoxControl.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="InputFields\Helpers\TextBoxInt.Designer.cs">
-      <DependentUpon>TextBoxInt.cs</DependentUpon>
+    <Compile Include="NumericBox\NumericBoxControl.Designer.cs">
+      <DependentUpon>NumericBoxControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="NumericBox\NumericBoxFB.cs" />
     <Compile Include="LinkSwitcher\Entities\LinkOperation.cs" />
     <Compile Include="LinkSwitcher\Entities\ObjectPair.cs" />
     <Compile Include="LinkSwitcher\Entities\PairOperations.cs" />
@@ -816,13 +820,6 @@
     <Compile Include="ConfigLoader\Yaml\YamlSerializer.cs" />
     <Compile Include="ConfigLoader\Yaml\YamlValidator.cs" />
     <Compile Include="ConfigLoader\Pins\PinGroupManager.cs" />
-    <Compile Include="InputFields\TextBoxFloat\TextBoxFloatFB.cs" />
-    <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="InputFields\TextBoxFloat\TextBoxFloatControl.Designer.cs">
-      <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -864,13 +861,7 @@
     <Compile Include="TrendPensManager\Services\TrendPenApplicator.cs" />
     <Compile Include="TrendPensManager\Services\TrendWindowAccessor.cs" />
     <Compile Include="TrendPensManager\TrendPensManagerFB.cs" />
-    <Compile Include="InputFields\TextBoxInt\TextBoxIntControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="InputFields\TextBoxInt\TextBoxIntControl.Designer.cs">
-      <DependentUpon>TextBoxIntControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="InputFields\TextBoxInt\TextBoxIntFB.cs" />
+
     <Compile Include="Devices\Valves\Status.cs" />
     <Compile Include="Devices\Valves\Settings\SettingsForm.cs">
       <SubType>Form</SubType>
@@ -901,9 +892,14 @@
     <EmbeddedResource Include="Devices\Render\Common\Lamp.resx">
       <DependentUpon>Lamp.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatControl.resx">
-      <DependentUpon>TextBoxFloatControl.cs</DependentUpon>
+    <EmbeddedResource Include="NumericBox\Helpers\NumericBox.resx">
+      <DependentUpon>NumericBox.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="NumericBox\NumericBoxControl.resx">
+      <DependentUpon>NumericBoxControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NumericBox\NumericBoxFB.bmp" />
+    <EmbeddedResource Include="NumericBox\NumericBoxFB.xml" />
     <EmbeddedResource Include="Recipes\MbeTable\MbeTableFB.bmp" />
     <EmbeddedResource Include="Recipes\MbeTable\MbeTableFB.xml" />
     <EmbeddedResource Include="Recipes\MbeTable\TableControl.resx">
@@ -919,9 +915,7 @@
     <EmbeddedResource Include="Devices\Pumps\Settings\PumpSettingForm.resx">
       <DependentUpon>PumpSettingForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntControl.resx">
-      <DependentUpon>TextBoxIntControl.cs</DependentUpon>
-    </EmbeddedResource>
+
     <EmbeddedResource Include="TrendPensManager\TrendPensManagerFB.bmp" />
     <EmbeddedResource Include="TrendPensManager\TrendPensManagerFB.xml" />
     <EmbeddedResource Include="Devices\Valves\Settings\SettingsForm.resx">
@@ -954,16 +948,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ClockGenerator\ClockGeneratorFB.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntFB.bmp" />
-    <EmbeddedResource Include="InputFields\TextBoxInt\TextBoxIntFB.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatFB.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="InputFields\TextBoxFloat\TextBoxFloatFB.bmp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Spectrometer\SpectrometerFB.bmp" />

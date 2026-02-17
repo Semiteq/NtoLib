@@ -12,6 +12,7 @@
 | 2 | [TrendPensManager](trend-pens-manager.md) | Автоматизация настройки перьев трендов |
 | 3 | [LinkSwitcher](link-switcher.md) | Перелинковка связей между структурно идентичными объектами |
 | 4 | [MbeTable](MbeTable/readme.md) | Таблица рецептов MBE: конфигурация, UI, Modbus TCP, CSV |
+| 5 | [NumericBox](numeric-box.md) | Поле ввода числового значения с арбитрацией и валидацией |
 
 ---
 
