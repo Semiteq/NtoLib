@@ -21,5 +21,6 @@ if (-not (Test-Path $RepoRoot))
 }
 
 & (Join-Path $ToolsDir 'Build.ps1') -Configuration $Configuration -RepoRoot $RepoRoot
+& (Join-Path $ToolsDir 'Test.ps1') -Configuration $Configuration -RepoRoot $RepoRoot
 & (Join-Path $ToolsDir 'Merge.ps1') -Configuration $Configuration -RepoRoot $RepoRoot
 & (Join-Path $ToolsDir 'Archive.ps1') -Configuration $Configuration -RepoRoot $RepoRoot

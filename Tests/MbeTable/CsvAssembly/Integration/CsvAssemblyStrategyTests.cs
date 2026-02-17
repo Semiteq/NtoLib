@@ -102,7 +102,7 @@ public sealed class CsvAssemblyStrategyTests
 		warning.Occurrences[0].ColumnCode.Should().Be("target");
 		warning.Occurrences[0].ActionId.Should().Be(10);
 		warning.Occurrences[0].Value.Should().Be("1");
-		warning.Occurrences[0].LineNumber.Should().Be(2);
+		warning.Occurrences[0].LineNumber.Should().Be(1);
 	}
 
 	[Fact]
@@ -149,13 +149,13 @@ public sealed class CsvAssemblyStrategyTests
 		warning.Should().NotBeNull("a summary warning should be present");
 		warning!.Occurrences.Should().HaveCount(3);
 
-		warning.Occurrences[0].LineNumber.Should().Be(2);
+		warning.Occurrences[0].LineNumber.Should().Be(1);
 		warning.Occurrences[0].ColumnCode.Should().Be("target");
 
-		warning.Occurrences[1].LineNumber.Should().Be(3);
+		warning.Occurrences[1].LineNumber.Should().Be(2);
 		warning.Occurrences[1].ColumnCode.Should().Be("initial_value");
 
-		warning.Occurrences[2].LineNumber.Should().Be(4);
+		warning.Occurrences[2].LineNumber.Should().Be(3);
 		warning.Occurrences[2].ColumnCode.Should().Be("task");
 	}
 
@@ -183,8 +183,8 @@ public sealed class CsvAssemblyStrategyTests
 		warning.Should().NotBeNull();
 		warning!.Occurrences.Should().HaveCount(2);
 
-		warning.Occurrences[0].LineNumber.Should().Be(3);
-		warning.Occurrences[1].LineNumber.Should().Be(5);
+		warning.Occurrences[0].LineNumber.Should().Be(2);
+		warning.Occurrences[1].LineNumber.Should().Be(4);
 	}
 
 	[Fact]
