@@ -20,13 +20,13 @@ public sealed class AssemblyColumnNotApplicableWarning : BilingualWarning
 	private static string BuildEnglishMessage(IReadOnlyList<Occurrence> occurrences)
 	{
 		var lines = string.Join(", ", occurrences.Select(o => o.LineNumber.ToString()));
-		return $"Extra values in non-applicable columns ignored in {occurrences.Count} row(s). Lines: {lines}";
+		return $"Extra values in non-applicable columns ignored in {occurrences.Count} row(s). Lines: {lines}. Data logged.";
 	}
 
 	private static string BuildRussianMessage(IReadOnlyList<Occurrence> occurrences)
 	{
 		var lines = string.Join(", ", occurrences.Select(o => o.LineNumber.ToString()));
-		return $"Найдены лишние поля в {occurrences.Count} строк(е/ах). Значения игнорированы. Строки: {lines}";
+		return $"Найдены лишние поля в {occurrences.Count} строк(е/ах). Значения игнорированы. Номера строк: {lines}. Добавлена запись в лог.";
 	}
 
 	public sealed class Occurrence

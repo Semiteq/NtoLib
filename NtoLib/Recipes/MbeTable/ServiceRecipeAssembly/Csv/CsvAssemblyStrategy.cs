@@ -63,10 +63,10 @@ public sealed class CsvAssemblyStrategy
 		for (var rowIndex = 0; rowIndex < rawData.Records.Count; rowIndex++)
 		{
 			var record = rawData.Records[rowIndex];
-			var stepResult = AssembleStep(record, binding, rowIndex + 2, notApplicableOccurrences);
+			var stepResult = AssembleStep(record, binding, rowIndex + 1, notApplicableOccurrences);
 			if (stepResult.IsFailed)
 			{
-				_logger.LogError("Step assembly failed at row {RowIndex}: {Errors}", rowIndex + 2,
+				_logger.LogError("Step assembly failed at row {RowIndex}: {Errors}", rowIndex + 1,
 					string.Join("; ", stepResult.Errors.Select(e => e.Message)));
 				return stepResult.ToResult<Recipe>();
 			}
