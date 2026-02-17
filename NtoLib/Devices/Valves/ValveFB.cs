@@ -46,22 +46,22 @@ public class ValveFB : VisualFBBaseExtended
 	public const int OpenSmoothlyCmdId = 102;
 
 	public const int CollistionEventId = 5000;
-	private EventTrigger _collisionEvent;
+	private EventTrigger? _collisionEvent;
 
 	public const int NotOpenedEventId = 5001;
-	private EventTrigger _notOpenedEvent;
+	private EventTrigger? _notOpenedEvent;
 
 	public const int NotClosedEventId = 5002;
-	private EventTrigger _notClosedEvent;
+	private EventTrigger? _notClosedEvent;
 
 	public const int OpenedEventId = 5010;
-	private EventTrigger _openedEvent;
+	private EventTrigger? _openedEvent;
 
 	public const int OpenedSmoothlyEventId = 5011;
-	private EventTrigger _openedSmoothlyEvent;
+	private EventTrigger? _openedSmoothlyEvent;
 
 	public const int ClosedEventId = 5012;
-	private EventTrigger _closedEvent;
+	private EventTrigger? _closedEvent;
 
 	public const int UserOpenEventId = 5020;
 	public const int UserOpenSmoothlyEventId = 5021;
@@ -179,13 +179,13 @@ public class ValveFB : VisualFBBaseExtended
 		_prevCloseCmd = closeCmd;
 
 		var canRaisePositionErrors = used && !(manual && withoutSensors);
-		_collisionEvent.Update(collision && canRaisePositionErrors);
-		_notOpenedEvent.Update(notOpened && canRaisePositionErrors);
-		_notClosedEvent.Update(notClosed && canRaisePositionErrors);
+		_collisionEvent?.Update(collision && canRaisePositionErrors);
+		_notOpenedEvent?.Update(notOpened && canRaisePositionErrors);
+		_notClosedEvent?.Update(notClosed && canRaisePositionErrors);
 
-		_openedEvent.Update(opened && used);
-		_openedSmoothlyEvent.Update(openedSmoothly && used);
-		_closedEvent.Update(closed && used);
+		_openedEvent?.Update(opened && used);
+		_openedSmoothlyEvent?.Update(openedSmoothly && used);
+		_closedEvent?.Update(closed && used);
 	}
 
 	protected override OpcQuality GetConnectionQuality()

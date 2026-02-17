@@ -23,8 +23,6 @@ public partial class MbeTableFB
 	private uint _floatAreaSize = 19600;
 	private uint _intBaseAddr = 27700;
 	private uint _intAreaSize = 1400;
-	private uint _boolBaseAddr = 29100;
-	private uint _boolAreaSize = 50;
 	private float _epsilon = 1e-4f;
 	private bool _logToFile = false;
 	private string _logDirPath = "C:\\DISTR\\Logs";

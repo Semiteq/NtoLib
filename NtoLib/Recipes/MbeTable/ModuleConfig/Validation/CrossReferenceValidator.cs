@@ -126,7 +126,7 @@ public sealed class CrossReferenceValidator
 				var columnContext = $"{context}, ColumnKey='{column.Key}'";
 
 				var validationResult = ValidationCheck.ReferenceExists(
-					column.GroupName,
+					column.GroupName!,
 					existingPinGroupNames,
 					columnContext,
 					"group_name");
@@ -179,7 +179,7 @@ public sealed class CrossReferenceValidator
 		var columnContext = $"{actionContext}, ColumnKey='{column.Key}'";
 
 		var validationResult = ValidateDefaultValueAgainstPropertyDefinition(
-			column.DefaultValue,
+			column.DefaultValue!,
 			propertyDef,
 			columnContext);
 

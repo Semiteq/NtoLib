@@ -39,7 +39,7 @@ public sealed class ComboboxDataProvider : IComboboxDataProvider
 		if (validationResult.IsFailed)
 			return validationResult.ToResult();
 
-		var groupName = columnResult.Value.GroupName;
+		var groupName = columnResult.Value.GroupName!;
 		return _targets.GetFilteredGroupTargets(groupName);
 	}
 

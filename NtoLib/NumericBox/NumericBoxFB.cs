@@ -43,13 +43,13 @@ public class NumericBoxFB : VisualFBBase
 	private readonly ValueArbiter _arbiter = new(DefaultPrecision, DefaultDebounceSeconds);
 
 	[NonSerialized]
-	private EventTrigger _aboveMaxEvent;
+	private EventTrigger? _aboveMaxEvent;
 
 	[NonSerialized]
-	private EventTrigger _belowMinEvent;
+	private EventTrigger? _belowMinEvent;
 
 	[NonSerialized]
-	private EventTrigger _limitsInconsistentEvent;
+	private EventTrigger? _limitsInconsistentEvent;
 
 	[Browsable(false)]
 	public float OutputValue => _arbiter.OutputValue;
@@ -138,9 +138,9 @@ public class NumericBoxFB : VisualFBBase
 		var isBelowMin = min.HasValue && output < min.Value;
 		var areLimitsInconsistent = min.HasValue && max.HasValue && min.Value > max.Value;
 
-		_aboveMaxEvent.Update(isAboveMax);
-		_belowMinEvent.Update(isBelowMin);
-		_limitsInconsistentEvent.Update(areLimitsInconsistent);
+		_aboveMaxEvent?.Update(isAboveMax);
+		_belowMinEvent?.Update(isBelowMin);
+		_limitsInconsistentEvent?.Update(areLimitsInconsistent);
 	}
 
 	private float? GetConnectedLimit(int pinId)

@@ -35,7 +35,7 @@ public sealed class ClipboardSerializationService : IClipboardSerializationServi
 				{
 					// For action we store raw numeric value; for others display value sanitized.
 					value = col == MandatoryColumns.Action
-						? prop.GetValueAsObject.ToString()
+						? prop.GetValueAsObject?.ToString() ?? string.Empty
 						: prop.GetDisplayValue;
 				}
 				else
@@ -61,7 +61,7 @@ public sealed class ClipboardSerializationService : IClipboardSerializationServi
 			return Result.Ok<IReadOnlyList<string[]>>(Array.Empty<string[]>())
 				.WithReason(new ClipboardEmptyWarning());
 
-		var lines = tsv.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+		var lines = tsv!.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
 		var result = lines
 			.Select((line, idx) =>
 			{

@@ -124,7 +124,7 @@ public static class ValidationCheck
 				.WithDetail("field", fieldName));
 		}
 
-		if (!allowedValues.Contains(value))
+		if (!allowedValues.Contains(value!))
 		{
 			var allowed = string.Join(", ", allowedValues);
 			return Result.Fail(new ConfigError(

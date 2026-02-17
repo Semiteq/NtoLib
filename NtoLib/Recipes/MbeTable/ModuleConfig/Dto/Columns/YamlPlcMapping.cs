@@ -2,6 +2,6 @@
 
 public sealed class YamlPlcMapping
 {
-	public string Area { get; set; }
+	public string Area { get; set; } = string.Empty;
 	public int Index { get; set; }
 }

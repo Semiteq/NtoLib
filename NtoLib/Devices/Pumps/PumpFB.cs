@@ -80,19 +80,19 @@ public class PumpFB : VisualFBBaseExtended
 	public const int StopCmdId = 101;
 
 	public const int ConnectionDisabledEventId = 5000;
-	private EventTrigger _connectionDisabledEvent;
+	private EventTrigger? _connectionDisabledEvent;
 
 	public const int AccelerationStartEventId = 5010;
-	private EventTrigger _accelerationEvent;
+	private EventTrigger? _accelerationEvent;
 
 	public const int DecelerationStartEventId = 5011;
-	private EventTrigger _decelerationEvent;
+	private EventTrigger? _decelerationEvent;
 
 	public const int ReachNominalSpeedEventId = 5012;
-	private EventTrigger _nominalSpeedEvent;
+	private EventTrigger? _nominalSpeedEvent;
 
 	public const int StopEventId = 5013;
-	private EventTrigger _stopEvent;
+	private EventTrigger? _stopEvent;
 
 	public const int UserStartEventId = 5020;
 	public const int UserStopEventId = 5021;
@@ -240,12 +240,12 @@ public class PumpFB : VisualFBBaseExtended
 
 		if (used)
 		{
-			_connectionDisabledEvent.Update(!connectionOk);
+			_connectionDisabledEvent?.Update(!connectionOk);
 
-			_nominalSpeedEvent.Update(workOnNominalSpeed);
-			_stopEvent.Update(stopped);
-			_accelerationEvent.Update(accelerating);
-			_decelerationEvent.Update(decelerating);
+			_nominalSpeedEvent?.Update(workOnNominalSpeed);
+			_stopEvent?.Update(stopped);
+			_accelerationEvent?.Update(accelerating);
+			_decelerationEvent?.Update(decelerating);
 		}
 	}
 

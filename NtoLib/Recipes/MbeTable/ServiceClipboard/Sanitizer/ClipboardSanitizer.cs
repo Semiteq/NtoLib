@@ -13,8 +13,7 @@ public static class ClipboardSanitizer
 		if (string.IsNullOrEmpty(input))
 			return string.Empty;
 
-		// Normalize line breaks to space, remove tabs
-		var normalized = input
+		var normalized = input!
 			.Replace('\t', ' ')
 			.Replace('\r', ' ')
 			.Replace('\n', ' ');

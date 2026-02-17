@@ -24,7 +24,7 @@ public partial class Lamp : UserControl
 		}
 	}
 
-	public string TextOnLamp { get; set; }
+	public string TextOnLamp { get; set; } = string.Empty;
 
 	private bool _active;
 

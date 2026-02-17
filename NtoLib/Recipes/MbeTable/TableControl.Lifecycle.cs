@@ -27,7 +27,7 @@ namespace NtoLib.Recipes.MbeTable;
 public partial class TableControl
 {
 	[NonSerialized] private Timer? _permissionsDebounceTimer;
-	[NonSerialized] private UiPermissions _pendingPermissions;
+	[NonSerialized] private UiPermissions? _pendingPermissions;
 
 	[NonSerialized] private TableInputManager? _inputManager;
 
@@ -116,7 +116,7 @@ public partial class TableControl
 			_serviceProvider!,
 			_table);
 
-		_renderCoordinator.Initialize();
+		_renderCoordinator?.Initialize();
 	}
 
 	private void InitializeInputManager()
@@ -238,7 +238,8 @@ public partial class TableControl
 		if (_permissionsDebounceTimer == null)
 			return;
 		_permissionsDebounceTimer.Stop();
-		ApplyPermissionsNow(_pendingPermissions);
+		if (_pendingPermissions != null)
+			ApplyPermissionsNow(_pendingPermissions);
 	}
 
 	private void ApplyPermissionsNow(UiPermissions permissions)

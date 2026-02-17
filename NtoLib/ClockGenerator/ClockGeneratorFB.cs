@@ -44,7 +44,7 @@ namespace NtoLib.ClockGenerator
 		public int Min { get; set; }
 
 		[NonSerialized]
-		private Timer _clockTimer;
+		private Timer? _clockTimer;
 
 		private int _counter;
 
@@ -73,7 +73,10 @@ namespace NtoLib.ClockGenerator
 
 		protected override void UpdateData()
 		{
-			if (_clockTimer?.Interval != Delay)
+			if (_clockTimer == null)
+				return;
+
+			if (_clockTimer.Interval != Delay)
 				_clockTimer.Interval = Delay;
 		}
 

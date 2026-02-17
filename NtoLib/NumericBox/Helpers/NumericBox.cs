@@ -5,7 +5,7 @@ namespace NtoLib.NumericBox.Helpers;
 
 public partial class NumericBox : TextBox
 {
-	public event Action ValidatingValue;
+	public event Action? ValidatingValue;
 
 	public NumericBox()
 	{

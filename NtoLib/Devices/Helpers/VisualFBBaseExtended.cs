@@ -12,7 +12,7 @@ namespace NtoLib.Devices.Helpers;
 [ComVisible(true)]
 public abstract class VisualFBBaseExtended : VisualFBBase
 {
-	[NonSerialized] private Timer _connectionCheckTimer;
+	[NonSerialized] private Timer? _connectionCheckTimer;
 	[NonSerialized] private OpcQuality _previousOpcQuality;
 
 

@@ -72,9 +72,10 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 	private static Result ValidateSupportedColumnTypes(IReadOnlyList<YamlColumnDefinition> items)
 	{
 		var unsupported = items
-			.Where(d => !string.IsNullOrWhiteSpace(d.Ui?.ColumnType) &&
+			.Where(d => d.Ui != null &&
+						!string.IsNullOrWhiteSpace(d.Ui.ColumnType) &&
 						!_supportedColumnTypes.Contains(d.Ui.ColumnType))
-			.Select(d => new { d.Key, ColumnType = d.Ui?.ColumnType })
+			.Select(d => new { d.Key, d.Ui!.ColumnType })
 			.ToList();
 
 		if (unsupported.Any())

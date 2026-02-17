@@ -2,7 +2,7 @@
 
 public sealed class YamlPinGroupDefinition
 {
-	public string GroupName { get; set; }
+	public string GroupName { get; set; } = string.Empty;
 	public int PinGroupId { get; set; }
 	public int FirstPinId { get; set; }
 	public int PinQuantity { get; set; }

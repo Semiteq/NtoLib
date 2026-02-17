@@ -4,6 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Dto.Actions;
 
 public sealed class YamlFormulaDefinition
 {
-	public string Expression { get; set; }
-	public List<string> RecalcOrder { get; set; }
+	public string Expression { get; set; } = string.Empty;
+	public List<string> RecalcOrder { get; set; } = new();
 }

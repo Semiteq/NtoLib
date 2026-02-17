@@ -30,7 +30,7 @@ public partial class TableControl : VisualControlBase
 
 	[NonSerialized] private bool _runtimeInitialized;
 	[NonSerialized] private TableBehaviorManager? _behaviorManager;
-	[NonSerialized] private ITableRenderCoordinator _renderCoordinator;
+	[NonSerialized] private ITableRenderCoordinator? _renderCoordinator;
 	[NonSerialized] private ILogger? _logger;
 
 	public TableControl() : base(true)
