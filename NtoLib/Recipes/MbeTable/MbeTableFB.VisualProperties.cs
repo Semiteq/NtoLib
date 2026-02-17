@@ -28,42 +28,48 @@ public partial class MbeTableFB
 	private string _logDirPath = "C:\\DISTR\\Logs";
 	private string _configDirPath = "C:\\DISTR\\Config\\NtoLibTableConfig";
 
-	[DisplayName("01. IP адрес контроллера байт 1")]
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 1")]
 	public uint UControllerIp1
 	{
 		get => _controllerIp1;
 		set => _controllerIp1 = value;
 	}
 
-	[DisplayName("02. IP адрес контроллера байт 2")]
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 2")]
 	public uint UControllerIp2
 	{
 		get => _controllerIp2;
 		set => _controllerIp2 = value;
 	}
 
-	[DisplayName("03. IP адрес контроллера байт 3")]
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 3")]
 	public uint UControllerIp3
 	{
 		get => _controllerIp3;
 		set => _controllerIp3 = value;
 	}
 
-	[DisplayName("04. IP адрес контроллера байт 4")]
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 4")]
 	public uint UControllerIp4
 	{
 		get => _controllerIp4;
 		set => _controllerIp4 = value;
 	}
 
-	[DisplayName("05. TCP порт")]
+	[Category("Контроллер")]
+	[DisplayName("TCP порт")]
 	public uint ControllerTcpPort
 	{
 		get => _controllerTcpPort;
 		set => _controllerTcpPort = value;
 	}
 
-	[DisplayName("06. Unit ID")]
+	[Category("Контроллер")]
+	[DisplayName("Unit ID")]
 	[Description("Идентификатор Modbus устройства")]
 	public uint UnitId
 	{
@@ -71,7 +77,8 @@ public partial class MbeTableFB
 		set => _unitId = value;
 	}
 
-	[DisplayName("07. Задержка")]
+	[Category("Обработка ошибок")]
+	[DisplayName("Задержка")]
 	[Description("Задержка при ошибке связи, мс")]
 	public uint TimeoutMs
 	{
@@ -79,7 +86,8 @@ public partial class MbeTableFB
 		set => _timeoutMs = value;
 	}
 
-	[DisplayName("08. Количество повторов")]
+	[Category("Обработка ошибок")]
+	[DisplayName("Количество повторов")]
 	[Description("Количество повторов при ошибке связи")]
 	public uint MaxRetries
 	{
@@ -87,7 +95,8 @@ public partial class MbeTableFB
 		set => _maxRetries = value;
 	}
 
-	[DisplayName("09. Задержка между повторами")]
+	[Category("Обработка ошибок")]
+	[DisplayName("Задержка между повторами")]
 	[Description("Задержка между попытками повтора при ошибке связи, мс")]
 	public uint BackoffDelayMs
 	{
@@ -95,7 +104,8 @@ public partial class MbeTableFB
 		set => _backoffDelayMs = value;
 	}
 
-	[DisplayName("10. Magic Number")]
+	[Category("Протокол Modbus")]
+	[DisplayName("Magic Number")]
 	[Description("Магическое число для проверки связи. Должно совпадать с настройкой контроллера.")]
 	public uint MagicNumber
 	{
@@ -103,7 +113,8 @@ public partial class MbeTableFB
 		set => _magicNumber = value;
 	}
 
-	[DisplayName("11. Порядок слов")]
+	[Category("Протокол Modbus")]
+	[DisplayName("Порядок слов")]
 	[Description("Порядок байт при передаче 32-битных значений (Float, DWord)")]
 	[TypeConverter(typeof(WordOrderConverter))]
 	public WordOrder WordOrder
@@ -112,7 +123,8 @@ public partial class MbeTableFB
 		set => _wordOrder = value;
 	}
 
-	[DisplayName("12. Адрес системной области данных")]
+	[Category("Адресация регистров")]
+	[DisplayName("Адрес системной области данных")]
 	[Description("Определяет начальный адрес, где располагается зона системных данных (10 регистров)")]
 	public uint UControlBaseAddr
 	{
@@ -120,7 +132,8 @@ public partial class MbeTableFB
 		set => _controlBaseAddr = value;
 	}
 
-	[DisplayName("13. Базовый адрес хранения данных типа Real (Float)")]
+	[Category("Адресация регистров")]
+	[DisplayName("Базовый адрес хранения данных типа Real (Float)")]
 	[Description("Определяет начальный адрес, куда помещаются данные типа 'вещественный'")]
 	public uint UFloatBaseAddr
 	{
@@ -128,7 +141,8 @@ public partial class MbeTableFB
 		set => _floatBaseAddr = value;
 	}
 
-	[DisplayName("14. Размер области хранения данных типа Real (Float)")]
+	[Category("Адресация регистров")]
+	[DisplayName("Размер области хранения данных типа Real (Float)")]
 	[Description("Определяет размер области для данных типа 'вещественный'.")]
 	public uint UFloatAreaSize
 	{
@@ -136,7 +150,8 @@ public partial class MbeTableFB
 		set => _floatAreaSize = value;
 	}
 
-	[DisplayName("15. Базовый адрес хранения данных типа Int")]
+	[Category("Адресация регистров")]
+	[DisplayName("Базовый адрес хранения данных типа Int")]
 	[Description("Определяет начальный адрес, куда помещаются данные типа 'целый 16 бит'")]
 	public uint UIntBaseAddr
 	{
@@ -144,7 +159,8 @@ public partial class MbeTableFB
 		set => _intBaseAddr = value;
 	}
 
-	[DisplayName("16. Размер области хранения данных типа Int")]
+	[Category("Адресация регистров")]
+	[DisplayName("Размер области хранения данных типа Int")]
 	[Description("Определяет размер области для данных типа 'целый 16 бит'")]
 	public uint UIntAreaSize
 	{
@@ -152,7 +168,8 @@ public partial class MbeTableFB
 		set => _intAreaSize = value;
 	}
 
-	[DisplayName("17. Эпсилон")]
+	[Category("Вычисления")]
+	[DisplayName("Эпсилон")]
 	[Description("Допуск сравнения чисел с плавающей точкой")]
 	public float Epsilon
 	{
@@ -160,7 +177,8 @@ public partial class MbeTableFB
 		set => _epsilon = value;
 	}
 
-	[DisplayName("18. Записывать лог в файл")]
+	[Category("Логирование")]
+	[DisplayName("Записывать лог в файл")]
 	[Description("Если включено, все операции чтения/записи будут логироваться в файл.")]
 	public bool LogToFile
 	{
@@ -168,7 +186,8 @@ public partial class MbeTableFB
 		set => _logToFile = value;
 	}
 
-	[DisplayName("19. Путь к каталогу логов")]
+	[Category("Логирование")]
+	[DisplayName("Путь к каталогу логов")]
 	[Description("Каталог, куда будут записываться логи. Можно использовать переменные окружения.")]
 	public string LogDirPath
 	{
@@ -176,7 +195,8 @@ public partial class MbeTableFB
 		set => _logDirPath = value;
 	}
 
-	[DisplayName("20. Путь к конфигурационному каталогу")]
+	[Category("Конфигурация")]
+	[DisplayName("Путь к конфигурационному каталогу")]
 	[Description("Каталог, где хранятся файлы конфигурации таблицы рецептов. Изменения вступят в силу при следующей загрузке блока.")]
 	public string ConfigDirPath
 	{

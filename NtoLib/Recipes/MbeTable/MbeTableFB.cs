@@ -35,6 +35,7 @@ public partial class MbeTableFB : VisualFBBase
 	private const string DefaultPinGroupDefsFileName = "PinGroupDefs.yaml";
 	private const string DefaultActionsDefsFileName = "ActionsDefs.yaml";
 
+	[Browsable(false)]
 	public IServiceProvider? ServiceProvider => _serviceProvider;
 
 	[NonSerialized] private Lazy<AppConfiguration>? _appConfigurationLazy;
