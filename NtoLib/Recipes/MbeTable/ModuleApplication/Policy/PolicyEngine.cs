@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 

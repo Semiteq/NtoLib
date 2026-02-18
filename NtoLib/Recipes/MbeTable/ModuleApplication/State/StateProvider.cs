@@ -8,7 +8,6 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 using NtoLib.Recipes.MbeTable.ResultsExtension;

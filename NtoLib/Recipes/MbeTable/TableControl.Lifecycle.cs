@@ -14,10 +14,10 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
+using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
@@ -285,23 +285,17 @@ public partial class TableControl
 	{
 		var app = _serviceProvider!.GetRequiredService<IRecipeApplicationService>();
 		var rowStateProvider = _serviceProvider!.GetRequiredService<IRowExecutionStateProvider>();
-		var loadCmd = _serviceProvider!.GetRequiredService<LoadRecipeCommand>();
-		var saveCmd = _serviceProvider!.GetRequiredService<SaveRecipeCommand>();
-		var sendCmd = _serviceProvider!.GetRequiredService<SendRecipeCommand>();
-		var receiveCmd = _serviceProvider!.GetRequiredService<ReceiveRecipeCommand>();
-		var addCmd = _serviceProvider!.GetRequiredService<AddStepCommand>();
-		var removeCmd = _serviceProvider!.GetRequiredService<RemoveStepCommand>();
+		var busy = _serviceProvider!.GetRequiredService<IBusyStateManager>();
+		var openDialog = _serviceProvider!.GetRequiredService<OpenFileDialog>();
+		var saveDialog = _serviceProvider!.GetRequiredService<SaveFileDialog>();
 
 		return new TablePresenter(
 			view,
 			app,
 			rowStateProvider,
-			loadCmd,
-			saveCmd,
-			sendCmd,
-			receiveCmd,
-			addCmd,
-			removeCmd);
+			busy,
+			openDialog,
+			saveDialog);
 	}
 
 	public override void put_DesignMode(int bDesignMode)

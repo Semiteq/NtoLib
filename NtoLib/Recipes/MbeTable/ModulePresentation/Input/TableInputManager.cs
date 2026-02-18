@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
+using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 
 /// <summary>
 /// Handles keyboard shortcuts and row-header context menu for the recipe table.
-/// Maps UI input (Ctrl+C/X/V/N/Delete, context menu) to clipboard and insert commands.
+/// Maps UI input (Ctrl+C/X/V/N/Delete, context menu) to clipboard and insert operations.
 /// </summary>
 public sealed class TableInputManager : IDisposable
 {
@@ -24,11 +24,7 @@ public sealed class TableInputManager : IDisposable
 	public TableInputManager(
 		DataGridView table,
 		IRecipeApplicationService applicationService,
-		CopyRowsCommand copyCommand,
-		CutRowsCommand cutCommand,
-		PasteRowsCommand pasteCommand,
-		DeleteRowsCommand deleteCommand,
-		InsertRowCommand insertCommand)
+		IBusyStateManager busyStateManager)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		var selectionService = new TableSelectionService(_table);
@@ -36,11 +32,7 @@ public sealed class TableInputManager : IDisposable
 			_table,
 			applicationService,
 			selectionService,
-			copyCommand,
-			cutCommand,
-			pasteCommand,
-			deleteCommand,
-			insertCommand);
+			busyStateManager);
 
 		_shortcutHandler = new TableShortcutHandler(_table, _actions);
 		_rowHeaderMenuService = new TableRowHeaderContextMenuService(_table, _actions);

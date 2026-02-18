@@ -7,18 +7,6 @@ using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.AddStep;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CopySteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CutSteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.DeleteSteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.EditCell;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Load;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.PasteSteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Recive;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Remove;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Save;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Send;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Policy;
@@ -41,7 +29,6 @@ using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
 using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
@@ -267,7 +254,6 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<IStateProvider, StateProvider>();
 		services.AddSingleton<PolicyReasonsSinkAdapter>();
 		services.AddSingleton<IStatusPresenter, StatusPresenter>();
-		services.AddSingleton<OperationPipeline>();
 
 		// ServiceClipboard services
 		services.AddSingleton<IClipboardRawAccess, SystemClipboardRawAccess>();
@@ -281,37 +267,8 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<RecipeViewModel>();
 		services.AddSingleton<IModbusTcpService, ModbusTcpService>();
 		services.AddSingleton<ICsvService, CsvService>();
-		services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
-
-		// Existing operation definitions
-		services.AddSingleton<EditCellOperationDefinition>();
-		services.AddSingleton<AddStepOperationDefinition>();
-		services.AddSingleton<RemoveStepOperationDefinition>();
-		services.AddSingleton<LoadRecipeOperationDefinition>();
-		services.AddSingleton<SaveRecipeOperationDefinition>();
-		services.AddSingleton<SendRecipeOperationDefinition>();
-		services.AddSingleton<ReceiveRecipeOperationDefinition>();
-
-		// Clipboard operation definitions
-		services.AddSingleton<CopyRowsOperationDefinition>();
-		services.AddSingleton<CutRowsOperationDefinition>();
-		services.AddSingleton<PasteRowsOperationDefinition>();
-		services.AddSingleton<DeleteRowsOperationDefinition>();
-
-		// Existing operation handlers
-		services.AddSingleton<IRecipeOperationHandler<EditCellArgs>, EditCellOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<AddStepArgs>, AddStepOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<RemoveStepArgs>, RemoveStepOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<LoadRecipeArgs>, LoadRecipeOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<SaveRecipeArgs>, SaveRecipeOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<SendRecipeArgs>, SendRecipeOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<ReceiveRecipeArgs>, ReceiveRecipeOperationHandler>();
-
-		// Clipboard operation handlers
-		services.AddSingleton<IRecipeOperationHandler<CopyRowsArgs>, CopyRowsOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<CutRowsArgs>, CutRowsOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<PasteRowsArgs>, PasteRowsOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<DeleteRowsArgs>, DeleteRowsOperationHandler>();
+		services.AddSingleton<OperationPipelineRunner>();
+		services.AddSingleton<IRecipeApplicationService, RecipeOperationService>();
 	}
 
 	private static void RegisterPresentationServices(IServiceCollection services)
@@ -329,19 +286,6 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<ICellRenderer, ComboBoxCellRenderer>();
 		services.AddScoped<ITableRenderCoordinator, TableRenderCoordinator>();
 		services.AddSingleton<FactoryColumnRegistry>();
-
-		services.AddSingleton<LoadRecipeCommand>();
-		services.AddSingleton<SaveRecipeCommand>();
-		services.AddSingleton<SendRecipeCommand>();
-		services.AddSingleton<ReceiveRecipeCommand>();
-		services.AddSingleton<RemoveStepCommand>();
-		services.AddSingleton<AddStepCommand>();
-
-		services.AddSingleton<CopyRowsCommand>();
-		services.AddSingleton<CutRowsCommand>();
-		services.AddSingleton<PasteRowsCommand>();
-		services.AddSingleton<DeleteRowsCommand>();
-		services.AddSingleton<InsertRowCommand>();
 
 		services.AddSingleton(_ => new OpenFileDialog
 		{
