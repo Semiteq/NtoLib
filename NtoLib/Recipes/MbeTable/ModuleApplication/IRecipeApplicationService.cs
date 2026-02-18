@@ -6,7 +6,6 @@ using FluentResults;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication;
 
@@ -17,7 +16,6 @@ public interface IRecipeApplicationService
 	event Action? RecipeStructureChanged;
 	event Action<int>? StepDataChanged;
 
-	Recipe GetCurrentRecipe();
 	int GetRowCount();
 
 	Task<Result> SetCellValueAsync(int rowIndex, ColumnIdentifier columnKey, object value);

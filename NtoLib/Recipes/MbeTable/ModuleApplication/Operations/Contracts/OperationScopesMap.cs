@@ -1,7 +1,6 @@
-﻿using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
+﻿using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
 
-namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
+namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
 
 public static class OperationScopesMap
 {

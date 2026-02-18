@@ -44,7 +44,9 @@ public sealed class RecipeViewModel
 	public void OnTimeRecalculated(int fromStepIndex)
 	{
 		if (fromStepIndex < 0 || fromStepIndex >= _viewModels.Count)
+		{
 			return;
+		}
 
 		var recipe = _recipeService.CurrentSnapshot.Recipe;
 		var startTimes = _recipeService.CurrentSnapshot.StepStartTimes;
@@ -59,14 +61,20 @@ public sealed class RecipeViewModel
 	public Result<object?> GetCellValue(int rowIndex, int columnIndex)
 	{
 		if (rowIndex < 0 || rowIndex >= _viewModels.Count)
+		{
 			return new ApplicationInvalidRowIndexError(rowIndex);
+		}
 
 		if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
+		{
 			return new ApplicationInvalidColumnIndexError(columnIndex);
+		}
 
 		var state = GetCellState(rowIndex, columnIndex);
 		if (state is PropertyState.Disabled)
+		{
 			return Result.Ok<object?>(null);
+		}
 
 		var columnKey = _tableColumns[columnIndex].Key;
 		return _viewModels[rowIndex].GetPropertyValue(columnKey);
@@ -75,9 +83,14 @@ public sealed class RecipeViewModel
 	public PropertyState GetCellState(int rowIndex, int columnIndex)
 	{
 		if (rowIndex < 0 || rowIndex >= _viewModels.Count)
+		{
 			return PropertyState.Disabled;
+		}
+
 		if (columnIndex < 0 || columnIndex >= _tableColumns.Count)
+		{
 			return PropertyState.Disabled;
+		}
 
 		var step = _recipeService.CurrentSnapshot.Recipe.Steps[rowIndex];
 		var columnKey = _tableColumns[columnIndex].Key;
@@ -90,7 +103,10 @@ public sealed class RecipeViewModel
 		try
 		{
 			if (rowIndex < 0 || rowIndex >= _viewModels.Count)
+			{
 				return 0;
+			}
+
 			return _loopNestingProvider.GetNestingDepth(rowIndex);
 		}
 		catch

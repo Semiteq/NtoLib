@@ -38,11 +38,15 @@ public sealed class StepViewModel
 	public Result<object?> GetPropertyValue(ColumnIdentifier identifier)
 	{
 		if (identifier == MandatoryColumns.StepStartTime)
+		{
 			return StepStartTime;
+		}
 
 		var getPropertyResult = _step.GetProperty(identifier);
 		if (getPropertyResult.IsFailed)
+		{
 			return getPropertyResult.ToResult();
+		}
 
 		var property = getPropertyResult.Value;
 
@@ -57,13 +61,17 @@ public sealed class StepViewModel
 	{
 		var getPropertyResult = _step.GetProperty(MandatoryColumns.Action);
 		if (getPropertyResult.IsFailed)
+		{
 			return getPropertyResult.ToResult();
+		}
 
 		var actionProperty = getPropertyResult.Value;
 
 		var getValueResult = actionProperty.GetValue<short>();
 		if (getValueResult.IsFailed)
+		{
 			return getValueResult.ToResult();
+		}
 
 		return Result.Ok(getValueResult.Value);
 	}

@@ -1,9 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Commands;
+using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation;
@@ -13,34 +16,24 @@ public sealed class TablePresenter : ITablePresenter
 	private readonly ITableView _view;
 	private readonly IRecipeApplicationService _app;
 	private readonly IRowExecutionStateProvider _rowStateProvider;
-
-	private readonly LoadRecipeCommand _loadCmd;
-	private readonly SaveRecipeCommand _saveCmd;
-	private readonly SendRecipeCommand _sendCmd;
-	private readonly ReceiveRecipeCommand _receiveCmd;
-	private readonly RemoveStepCommand _removeStepCmd;
-	private readonly AddStepCommand _addStepCmd;
+	private readonly IBusyStateManager _busy;
+	private readonly OpenFileDialog _openDialog;
+	private readonly SaveFileDialog _saveDialog;
 
 	public TablePresenter(
 		ITableView view,
 		IRecipeApplicationService app,
 		IRowExecutionStateProvider rowStateProvider,
-		LoadRecipeCommand loadCmd,
-		SaveRecipeCommand saveCmd,
-		SendRecipeCommand sendCmd,
-		ReceiveRecipeCommand receiveCmd,
-		AddStepCommand addStepCmd,
-		RemoveStepCommand removeStepCmd)
+		IBusyStateManager busy,
+		OpenFileDialog openDialog,
+		SaveFileDialog saveDialog)
 	{
 		_view = view;
 		_app = app;
 		_rowStateProvider = rowStateProvider;
-		_loadCmd = loadCmd;
-		_saveCmd = saveCmd;
-		_sendCmd = sendCmd;
-		_receiveCmd = receiveCmd;
-		_addStepCmd = addStepCmd;
-		_removeStepCmd = removeStepCmd;
+		_busy = busy;
+		_openDialog = openDialog;
+		_saveDialog = saveDialog;
 
 		_rowStateProvider.CurrentLineChanged += OnCurrentLineChanged;
 	}
@@ -55,10 +48,47 @@ public sealed class TablePresenter : ITablePresenter
 		_app.StepDataChanged += row => _view.InvalidateRow(row);
 	}
 
-	public Task LoadRecipeAsync() => _loadCmd.ExecuteAsync();
-	public Task SaveRecipeAsync() => _saveCmd.ExecuteAsync();
-	public Task SendRecipeAsync() => _sendCmd.ExecuteAsync();
-	public Task ReceiveRecipeAsync() => _receiveCmd.ExecuteAsync();
+	public async Task LoadRecipeAsync()
+	{
+		if (_openDialog.ShowDialog() != DialogResult.OK)
+			return;
+
+		var path = _openDialog.FileName;
+		if (!File.Exists(path))
+			return;
+
+		using (_busy.Enter(OperationKind.Loading))
+		{
+			await _app.LoadRecipeAsync(path).ConfigureAwait(false);
+		}
+	}
+
+	public async Task SaveRecipeAsync()
+	{
+		if (_saveDialog.ShowDialog() != DialogResult.OK)
+			return;
+
+		using (_busy.Enter(OperationKind.Saving))
+		{
+			await _app.SaveRecipeAsync(_saveDialog.FileName).ConfigureAwait(false);
+		}
+	}
+
+	public async Task SendRecipeAsync()
+	{
+		using (_busy.Enter(OperationKind.Transferring))
+		{
+			await _app.SendRecipeAsync().ConfigureAwait(false);
+		}
+	}
+
+	public async Task ReceiveRecipeAsync()
+	{
+		using (_busy.Enter(OperationKind.Transferring))
+		{
+			await _app.ReceiveRecipeAsync().ConfigureAwait(false);
+		}
+	}
 
 	public Task AddStepAfterCurrent()
 	{
@@ -67,7 +97,8 @@ public sealed class TablePresenter : ITablePresenter
 		var insert = current < 0 ? 0 : current + 1;
 		if (insert > rowCount)
 			insert = rowCount;
-		return _addStepCmd.ExecuteAsync(insert);
+		_app.AddStep(insert);
+		return Task.CompletedTask;
 	}
 
 	public Task AddStepBeforeCurrent()
@@ -77,16 +108,18 @@ public sealed class TablePresenter : ITablePresenter
 		var insert = current < 0 ? 0 : current;
 		if (insert > rowCount)
 			insert = rowCount;
-		return _addStepCmd.ExecuteAsync(insert);
+		_app.AddStep(insert);
+		return Task.CompletedTask;
 	}
 
-	public async Task RemoveCurrentStep()
+	public Task RemoveCurrentStep()
 	{
 		var rowCount = _app.GetRowCount();
 		var current = _view.CurrentRowIndex;
 		if (current < 0 || current >= rowCount)
-			return;
-		await _removeStepCmd.ExecuteAsync(current).ConfigureAwait(false);
+			return Task.CompletedTask;
+		_app.RemoveStep(current);
+		return Task.CompletedTask;
 	}
 
 	public void Dispose()

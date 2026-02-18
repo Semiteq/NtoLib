@@ -5,18 +5,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.AddStep;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CopySteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.CutSteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.DeleteSteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.EditCell;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Load;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.PasteSteps;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Recive;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Remove;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Save;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Handlers.Send;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
+using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Policy;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Policy.Registry;
@@ -26,6 +17,7 @@ using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
+using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 using NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 using NtoLib.Recipes.MbeTable.ModuleCore.Properties;
@@ -112,55 +104,35 @@ public static class ApplicationTestServiceProviderFactory
 		services.AddSingleton<IStateProvider, StateProvider>();
 		services.AddSingleton<PolicyReasonsSinkAdapter>();
 		services.AddSingleton<IStatusPresenter, FakeStatusPresenter>();
-		services.AddSingleton<OperationPipeline>();
 
 		services.AddSingleton<RecipeViewModel>();
 
-		services.AddSingleton<EditCellOperationDefinition>();
-		services.AddSingleton<AddStepOperationDefinition>();
-		services.AddSingleton<RemoveStepOperationDefinition>();
-		services.AddSingleton<CopyRowsOperationDefinition>();
-		services.AddSingleton<CutRowsOperationDefinition>();
-		services.AddSingleton<PasteRowsOperationDefinition>();
-		services.AddSingleton<DeleteRowsOperationDefinition>();
+		services.AddSingleton<ICsvService, FakeCsvService>();
+		services.AddSingleton<IModbusTcpService, FakeModbusTcpService>();
 
-		services.AddSingleton<IRecipeOperationHandler<EditCellArgs>, EditCellOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<AddStepArgs>, AddStepOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<RemoveStepArgs>, RemoveStepOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<CopyRowsArgs>, CopyRowsOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<CutRowsArgs>, CutRowsOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<PasteRowsArgs>, PasteRowsOperationHandler>();
-		services.AddSingleton<IRecipeOperationHandler<DeleteRowsArgs>, DeleteRowsOperationHandler>();
-
-		services.AddSingleton<IRecipeOperationHandler<LoadRecipeArgs>, FakeLoadRecipeHandler>();
-		services.AddSingleton<IRecipeOperationHandler<SaveRecipeArgs>, FakeSaveRecipeHandler>();
-		services.AddSingleton<IRecipeOperationHandler<SendRecipeArgs>, FakeSendRecipeHandler>();
-		services.AddSingleton<IRecipeOperationHandler<ReceiveRecipeArgs>, FakeReceiveRecipeHandler>();
-
-		services.AddSingleton<IRecipeApplicationService, RecipeApplicationService>();
+		services.AddSingleton<OperationPipelineRunner>();
+		services.AddSingleton<IRecipeApplicationService, RecipeOperationService>();
 
 		services.AddSingleton<IForLoopNestingProvider, ForLoopNestingProvider>();
 
 		return services.BuildServiceProvider();
 	}
 
-	private sealed class FakeLoadRecipeHandler : IRecipeOperationHandler<LoadRecipeArgs>
+	private sealed class FakeCsvService : ICsvService
 	{
-		public Task<Result> ExecuteAsync(LoadRecipeArgs args) => Task.FromResult(Result.Ok());
+		public Task<Result<Recipe>> ReadCsvAsync(string filePath)
+			=> Task.FromResult(Result.Ok(Recipe.Empty));
+
+		public Task<Result> WriteCsvAsync(Recipe recipe, string filePath)
+			=> Task.FromResult(Result.Ok());
 	}
 
-	private sealed class FakeSaveRecipeHandler : IRecipeOperationHandler<SaveRecipeArgs>
+	private sealed class FakeModbusTcpService : IModbusTcpService
 	{
-		public Task<Result> ExecuteAsync(SaveRecipeArgs args) => Task.FromResult(Result.Ok());
-	}
+		public Task<Result> SendRecipeAsync(Recipe recipe)
+			=> Task.FromResult(Result.Ok());
 
-	private sealed class FakeSendRecipeHandler : IRecipeOperationHandler<SendRecipeArgs>
-	{
-		public Task<Result> ExecuteAsync(SendRecipeArgs args) => Task.FromResult(Result.Ok());
-	}
-
-	private sealed class FakeReceiveRecipeHandler : IRecipeOperationHandler<ReceiveRecipeArgs>
-	{
-		public Task<Result> ExecuteAsync(ReceiveRecipeArgs args) => Task.FromResult(Result.Ok());
+		public Task<Result<Recipe>> ReceiveRecipeAsync()
+			=> Task.FromResult(Result.Ok(Recipe.Empty));
 	}
 }
