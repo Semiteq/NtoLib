@@ -80,7 +80,7 @@ public sealed class RecipeReader : IRecipeReader
 			{
 				_logger.LogWarning("CSV body hash mismatch: expected {ExpectedHash}, actual {ActualHash}",
 					check.ExpectedHash, check.ActualHash);
-				return Result.Ok().WithReason(new CsvHashMismatchWarning(check.ExpectedHash, check.ActualHash));
+				return Result.Ok().WithReason(new CsvHashMismatchWarning());
 			}
 		}
 

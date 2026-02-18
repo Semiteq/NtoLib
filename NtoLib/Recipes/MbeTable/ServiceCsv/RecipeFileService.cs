@@ -185,8 +185,7 @@ public sealed class RecipeFileService : IRecipeFileService
 			{
 				_logger.LogWarning("Hash mismatch. Expected={Expected}, Actual={Actual}", integrityCheck.ExpectedHash,
 					integrityCheck.ActualHash);
-				result = result.WithReason(new CsvHashMismatchWarning(integrityCheck.ExpectedHash,
-					integrityCheck.ActualHash));
+				result = result.WithReason(new CsvHashMismatchWarning());
 			}
 		}
 

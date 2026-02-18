@@ -4,15 +4,10 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Warnings;
 
 public sealed class CsvHashMismatchWarning : BilingualWarning
 {
-	public string ExpectedHash { get; }
-	public string ActualHash { get; }
-
-	public CsvHashMismatchWarning(string expectedHash, string actualHash)
-		: base(
-			$"CSV file was modified externally. Expected hash: {expectedHash}, actual: {actualHash}",
-			$"CSV файл был изменен вне приложения. Ожидаемый хеш: {expectedHash}, фактический: {actualHash}")
+	public CsvHashMismatchWarning() : base(
+		$"CSV file was modified externally. Hash didn't match.",
+		$"CSV файл был изменен вне приложения. Хэш не совпал.")
 	{
-		ExpectedHash = expectedHash;
-		ActualHash = actualHash;
+
 	}
 }
