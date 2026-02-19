@@ -13,6 +13,7 @@
 | 3 | [LinkSwitcher](link-switcher.md) | Перелинковка связей между структурно идентичными объектами |
 | 4 | [MbeTable](MbeTable/readme.md) | Таблица рецептов MBE: конфигурация, UI, Modbus TCP, CSV |
 | 5 | [NumericBox](numeric-box.md) | Поле ввода числового значения с арбитрацией и валидацией |
+| 6 | [Installer](installer.md) | Графический установщик NtoLib: копирование файлов, конфигурации и COM-регистрация |
 
 ---
 
