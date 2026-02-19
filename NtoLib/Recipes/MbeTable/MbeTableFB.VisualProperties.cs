@@ -26,7 +26,7 @@ public partial class MbeTableFB
 	private float _epsilon = 1e-4f;
 	private bool _logToFile = false;
 	private string _logDirPath = "C:\\DISTR\\Logs";
-	private string _configDirPath = "C:\\DISTR\\Config\\NtoLibTableConfig";
+	private string? _configDirPath = "C:\\DISTR\\Config\\NtoLibTableConfig";
 
 	[Category("Контроллер")]
 	[DisplayName("IP адрес контроллера байт 1")]

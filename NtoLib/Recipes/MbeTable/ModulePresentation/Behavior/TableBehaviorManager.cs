@@ -3,6 +3,7 @@ using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
+using NtoLib.Recipes.MbeTable.Utilities;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 
@@ -59,27 +60,16 @@ public sealed class TableBehaviorManager : IDisposable
 			return;
 		}
 
-		foreach (var behavior in _behaviors)
+		var actions = new Action[_behaviors.Length + 1];
+		for (var i = 0; i < _behaviors.Length; i++)
 		{
-			try
-			{
-				behavior.Detach();
-			}
-			catch
-			{
-				// ignored
-			}
+			var behavior = _behaviors[i];
+			actions[i] = () => behavior.Detach();
 		}
 
-		try
-		{
-			_table.Disposed -= OnTableDisposed;
-		}
-		catch
-		{
-			// ignored
-		}
+		actions[_behaviors.Length] = () => _table.Disposed -= OnTableDisposed;
 
+		SafeDisposal.RunAll(actions);
 		_attached = false;
 	}
 
@@ -92,37 +82,20 @@ public sealed class TableBehaviorManager : IDisposable
 
 		_disposed = true;
 
-		try
+		SafeDisposal.RunAll(Detach);
+
+		var disposeActions = new Action[_behaviors.Length];
+		for (var i = 0; i < _behaviors.Length; i++)
 		{
-			Detach();
-		}
-		catch
-		{
-			// ignored
+			var behavior = _behaviors[i];
+			disposeActions[i] = () => behavior.Dispose();
 		}
 
-		foreach (var behavior in _behaviors)
-		{
-			try
-			{
-				behavior.Dispose();
-			}
-			catch
-			{
-				// ignored
-			}
-		}
+		SafeDisposal.RunAll(disposeActions);
 	}
 
 	private void OnTableDisposed(object? sender, EventArgs e)
 	{
-		try
-		{
-			Detach();
-		}
-		catch
-		{
-			// ignored
-		}
+		SafeDisposal.RunAll(Detach);
 	}
 }

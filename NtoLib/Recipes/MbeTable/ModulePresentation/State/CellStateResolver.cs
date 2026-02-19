@@ -23,46 +23,24 @@ public sealed class CellStateResolver
 	public CellVisualState ResolveAvailability(int rowIndex, int columnIndex, RecipeViewModel viewModel)
 	{
 		var propertyState = viewModel.GetCellState(rowIndex, columnIndex);
-		var dataState = MapPropertyStateToDataState(propertyState);
 		var scheme = _colorSchemeProvider.Current;
 
-		return dataState switch
+		if (propertyState == PropertyState.Enabled)
 		{
-			CellDataState.Normal => new CellVisualState(
+			return new CellVisualState(
 				Font: scheme.LineFont,
 				ForeColor: scheme.LineTextColor,
 				BackColor: scheme.LineBgColor,
 				IsReadOnly: false,
-				ComboDisplayStyle: DataGridViewComboBoxDisplayStyle.DropDownButton),
-			CellDataState.ReadOnly => new CellVisualState(
-				Font: scheme.BlockedFont,
-				ForeColor: scheme.BlockedTextColor,
-				BackColor: scheme.BlockedBgColor,
-				IsReadOnly: true,
-				ComboDisplayStyle: DataGridViewComboBoxDisplayStyle.Nothing),
-			CellDataState.Disabled => new CellVisualState(
-				Font: scheme.BlockedFont,
-				ForeColor: scheme.BlockedTextColor,
-				BackColor: scheme.BlockedBgColor,
-				IsReadOnly: true,
-				ComboDisplayStyle: DataGridViewComboBoxDisplayStyle.Nothing),
-			_ => new CellVisualState(
-				Font: scheme.BlockedFont,
-				ForeColor: scheme.BlockedTextColor,
-				BackColor: scheme.BlockedBgColor,
-				IsReadOnly: true,
-				ComboDisplayStyle: DataGridViewComboBoxDisplayStyle.Nothing)
-		};
+				ComboDisplayStyle: DataGridViewComboBoxDisplayStyle.DropDownButton);
+		}
+
+		return new CellVisualState(
+			Font: scheme.BlockedFont,
+			ForeColor: scheme.BlockedTextColor,
+			BackColor: scheme.BlockedBgColor,
+			IsReadOnly: true,
+			ComboDisplayStyle: DataGridViewComboBoxDisplayStyle.Nothing);
 	}
 
-	private static CellDataState MapPropertyStateToDataState(PropertyState propertyState)
-	{
-		return propertyState switch
-		{
-			PropertyState.Disabled => CellDataState.Disabled,
-			PropertyState.Readonly => CellDataState.ReadOnly,
-			PropertyState.Enabled => CellDataState.Normal,
-			_ => CellDataState.Disabled
-		};
-	}
 }

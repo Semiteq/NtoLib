@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
+using NtoLib.Recipes.MbeTable.Utilities;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 
@@ -21,169 +22,95 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 	public int RowCount
 	{
 		get => _grid.RowCount;
-		set
-		{
-			if (_grid.IsDisposed)
-			{
-				return;
-			}
-
-			if (_grid.InvokeRequired)
-			{
-				try
-				{
-					_grid.BeginInvoke(new Action(() => _grid.RowCount = value));
-				}
-				catch
-				{
-					// ignored
-				}
-			}
-			else
-			{
-				_grid.RowCount = value;
-			}
-		}
+		set => RunOnGrid(() => _grid.RowCount = value);
 	}
 
-	public void Invalidate()
-	{
-		if (_grid.IsDisposed)
-		{
-			return;
-		}
-
-		if (_grid.InvokeRequired)
-		{
-			try
-			{
-				_grid.BeginInvoke(new Action(() => _grid.Invalidate()));
-			}
-			catch
-			{
-				// ignored
-			}
-		}
-		else
-		{
-			_grid.Invalidate();
-		}
-	}
+	public void Invalidate() => RunOnGrid(() => _grid.Invalidate());
 
 	public void InvalidateRow(int rowIndex)
 	{
-		if (_grid.IsDisposed)
-		{
-			return;
-		}
-
 		if (rowIndex < 0)
 		{
 			return;
 		}
 
-		if (_grid.InvokeRequired)
+		RunOnGrid(() =>
 		{
-			try
+			if (rowIndex < _grid.RowCount)
 			{
-				_grid.BeginInvoke(new Action(() => InvalidateRow(rowIndex)));
+				_grid.InvalidateRow(rowIndex);
 			}
-			catch
-			{
-				// ignored
-			}
-
-			return;
-		}
-
-		if (rowIndex < _grid.RowCount)
-		{
-			_grid.InvalidateRow(rowIndex);
-		}
+		});
 	}
 
 	public void InvalidateCell(int columnIndex, int rowIndex)
 	{
-		if (_grid.IsDisposed)
-		{
-			return;
-		}
-
 		if (rowIndex < 0 || columnIndex < 0)
 		{
 			return;
 		}
 
-		if (_grid.InvokeRequired)
+		RunOnGrid(() =>
 		{
-			try
+			if (rowIndex < _grid.RowCount && columnIndex < _grid.ColumnCount)
 			{
-				_grid.BeginInvoke(new Action(() => InvalidateCell(columnIndex, rowIndex)));
+				_grid.InvalidateCell(columnIndex, rowIndex);
 			}
-			catch
-			{
-				// ignored
-			}
-
-			return;
-		}
-
-		if (rowIndex < _grid.RowCount && columnIndex < _grid.ColumnCount)
-		{
-			_grid.InvalidateCell(columnIndex, rowIndex);
-		}
+		});
 	}
 
 	public void EnsureRowVisible(int rowIndex)
+	{
+		if (rowIndex < 0)
+		{
+			return;
+		}
+
+		RunOnGrid(() =>
+		{
+			if (!_grid.IsHandleCreated || rowIndex >= _grid.RowCount)
+			{
+				return;
+			}
+
+			try
+			{
+				var first = _grid.FirstDisplayedScrollingRowIndex;
+				var visible = _grid.DisplayedRowCount(false);
+
+				if (first < 0 || visible <= 0 || rowIndex < first || rowIndex >= first + visible)
+				{
+					_grid.FirstDisplayedScrollingRowIndex = rowIndex;
+				}
+			}
+			catch
+			{
+				// DataGridView can throw if layout is in progress
+			}
+		});
+	}
+
+	private void RunOnGrid(Action action)
 	{
 		if (_grid.IsDisposed)
 		{
 			return;
 		}
 
-		if (rowIndex < 0)
-		{
-			return;
-		}
-
 		if (_grid.InvokeRequired)
 		{
 			try
 			{
-				_grid.BeginInvoke(new Action(() => EnsureRowVisible(rowIndex)));
+				_grid.BeginInvoke(action);
 			}
 			catch
 			{
-				// ignored
+				/* Grid disposed between check and invoke */
 			}
-
 			return;
 		}
 
-		if (!_grid.IsHandleCreated)
-		{
-			return;
-		}
-
-		if (rowIndex >= _grid.RowCount)
-		{
-			return;
-		}
-
-		try
-		{
-			var first = _grid.FirstDisplayedScrollingRowIndex;
-			var visible = _grid.DisplayedRowCount(false);
-
-			if (first < 0 || visible <= 0 || rowIndex < first || rowIndex >= first + visible)
-			{
-				_grid.FirstDisplayedScrollingRowIndex = rowIndex;
-			}
-		}
-		catch
-		{
-			// ignored
-		}
+		action();
 	}
 
 	public int CurrentRowIndex => _grid.CurrentCell?.RowIndex ?? -1;
@@ -219,14 +146,8 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 
 	public void Dispose()
 	{
-		try
-		{
-			_grid.CellValueNeeded -= OnCellValueNeededInternal;
-			_grid.CellValuePushed -= OnCellValuePushedInternal;
-		}
-		catch
-		{
-			// ignored
-		}
+		SafeDisposal.RunAll(
+			() => _grid.CellValueNeeded -= OnCellValueNeededInternal,
+			() => _grid.CellValuePushed -= OnCellValuePushedInternal);
 	}
 }

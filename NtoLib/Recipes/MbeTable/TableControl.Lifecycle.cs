@@ -1,25 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
-using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
-using NtoLib.Recipes.MbeTable.ModulePresentation.State;
-using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
-using NtoLib.Recipes.MbeTable.ServiceStatus;
+using NtoLib.Recipes.MbeTable.Utilities;
 
 namespace NtoLib.Recipes.MbeTable;
 
@@ -29,6 +23,7 @@ public partial class TableControl
 	[NonSerialized] private UiPermissions? _pendingPermissions;
 
 	[NonSerialized] private TableInputManager? _inputManager;
+	[NonSerialized] private TableControlServices? _services;
 
 	private void InitializeServicesAndRuntime()
 	{
@@ -50,6 +45,8 @@ public partial class TableControl
 
 		try
 		{
+			_services = _serviceProvider.GetRequiredService<TableControlServices>();
+
 			InitializeLogger();
 			InitializeColorScheme();
 			SubscribeGlobalServices();
@@ -73,40 +70,32 @@ public partial class TableControl
 
 	private void InitializeLogger()
 	{
-		_logger = _serviceProvider!.GetRequiredService<ILogger<TableControl>>();
+		_logger = _services!.Logger;
 		_logger.LogDebug("Starting TableControl initialization");
 	}
 
 	private void SubscribeGlobalServices()
 	{
-		var stateProvider = _serviceProvider!.GetRequiredService<StateProvider>();
-		stateProvider.PermissionsChanged += OnPermissionsChanged;
+		_services!.StateProvider.PermissionsChanged += OnPermissionsChanged;
 
-		// init debounce timer
 		_permissionsDebounceTimer = new Timer { Interval = 80 };
 		_permissionsDebounceTimer.Tick += PermissionsDebounceTimer_Tick;
 
-		var status = _serviceProvider!.GetRequiredService<StatusService>();
-		var scheme = _serviceProvider!.GetRequiredService<ColorScheme>();
-		status.AttachLabel(_labelStatus, scheme);
+		_services.StatusService.AttachLabel(_labelStatus, _services.ColorScheme);
 	}
 
 	private void InitializeColorScheme()
 	{
-		_colorSchemeProvider = _serviceProvider!.GetRequiredService<DesignTimeColorSchemeProvider>();
+		_colorSchemeProvider = _services!.ColorSchemeProvider;
 
 		ApplyPendingColorMutations();
 	}
 
 	private void ConfigureRecipeTable()
 	{
-		var schemeProvider = _serviceProvider!.GetRequiredService<DesignTimeColorSchemeProvider>();
-		var columnDefinitions = _serviceProvider!.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
-		var columnRegistry = _serviceProvider!.GetRequiredService<FactoryColumnRegistry>();
-
 		GridOptions.Init(_table);
-		GridStyle.Init(_table, schemeProvider.Current);
-		GridColumns.Init(_table, columnDefinitions, columnRegistry);
+		GridStyle.Init(_table, _services!.ColorSchemeProvider.Current);
+		GridColumns.Init(_table, _services.ColumnDefinitions, _services.ColumnRegistry);
 	}
 
 	private void AttachBehaviorManager()
@@ -155,7 +144,9 @@ public partial class TableControl
 	{
 		_logger!.LogDebug("Trying initial reading recipe from PLC");
 		if (_presenter == null)
+		{
 			return;
+		}
 
 		if (IsHandleCreated)
 		{
@@ -187,13 +178,12 @@ public partial class TableControl
 		try
 		{
 			_logger!.LogDebug("Applying initial permissions");
-			var stateProvider = _serviceProvider?.GetService<StateProvider>();
-			if (stateProvider == null)
+			var permissions = _services?.StateProvider.GetUiPermissions();
+			if (permissions == null)
 			{
 				return;
 			}
 
-			var permissions = stateProvider.GetUiPermissions();
 			_logger!.LogDebug("Current permissions: {Permissions}", permissions);
 
 			if (InvokeRequired)
@@ -213,8 +203,7 @@ public partial class TableControl
 
 	private void HandleInitializationError(Exception ex)
 	{
-		var logger = _serviceProvider?.GetService<ILogger<TableControl>>();
-		logger?.LogCritical(ex, "TableControl initialization failed");
+		_logger?.LogCritical(ex, "TableControl initialization failed");
 
 		MessageBox.Show(
 			$@"Failed to initialize table: {ex.Message}",
@@ -263,7 +252,7 @@ public partial class TableControl
 
 	private void ApplyPermissionsNow(UiPermissions permissions)
 	{
-		var scheme = _serviceProvider?.GetService<ColorScheme>();
+		var scheme = _services?.ColorScheme;
 		if (scheme == null)
 		{
 			return;
@@ -283,12 +272,7 @@ public partial class TableControl
 			{
 				if (makeReadOnly)
 				{
-					try
-					{ _table.EndEdit(); }
-					catch
-					{
-						/* ignored */
-					}
+					SafeDisposal.RunAll(() => _table.EndEdit());
 				}
 
 				_table.ReadOnly = makeReadOnly;
@@ -302,21 +286,15 @@ public partial class TableControl
 		button.BackColor = enabled ? scheme.ButtonsColor : scheme.BlockedButtonsColor;
 	}
 
-	private ITablePresenter CreatePresenter(ITableView view)
+	private TablePresenter CreatePresenter(ITableView view)
 	{
-		var app = _serviceProvider!.GetRequiredService<RecipeOperationService>();
-		var rowStateProvider = _serviceProvider!.GetRequiredService<ThreadSafeRowExecutionStateProvider>();
-		var busy = _serviceProvider!.GetRequiredService<BusyStateManager>();
-		var openDialog = _serviceProvider!.GetRequiredService<OpenFileDialog>();
-		var saveDialog = _serviceProvider!.GetRequiredService<SaveFileDialog>();
-
 		return new TablePresenter(
 			view,
-			app,
-			rowStateProvider,
-			busy,
-			openDialog,
-			saveDialog);
+			_services!.RecipeOperationService,
+			_services.RowStateProvider,
+			_services.BusyStateManager,
+			_services.OpenFileDialog,
+			_services.SaveFileDialog);
 	}
 
 	public override void put_DesignMode(int bDesignMode)
@@ -360,65 +338,34 @@ public partial class TableControl
 
 	private void CleanupRuntimeState()
 	{
-		try
+		if (_services == null && _serviceProvider == null)
 		{
-			if (_serviceProvider == null)
-			{
-				return;
-			}
+			return;
+		}
 
-			UnsubscribeGlobalServices();
-			DisposeRuntimeComponents();
-		}
-		catch
-		{
-			/* ignored */
-		}
+		SafeDisposal.RunAll(UnsubscribeGlobalServices, DisposeRuntimeComponents);
 
 		ResetRuntimeFields();
 	}
 
 	private void UnsubscribeGlobalServices()
 	{
-		var stateProvider = _serviceProvider!.GetService<StateProvider>();
-		if (stateProvider != null)
+		if (_services != null)
 		{
-			stateProvider.PermissionsChanged -= OnPermissionsChanged;
+			_services.StateProvider.PermissionsChanged -= OnPermissionsChanged;
 		}
 
 		if (_permissionsDebounceTimer != null)
 		{
-			try
-			{ _permissionsDebounceTimer.Stop(); }
-			catch
-			{
-				/* ignored */
-			}
-
-			try
-			{ _permissionsDebounceTimer.Tick -= PermissionsDebounceTimer_Tick; }
-			catch
-			{
-				/* ignored */
-			}
-
-			try
-			{ _permissionsDebounceTimer.Dispose(); }
-			catch
-			{
-				/* ignored */
-			}
+			SafeDisposal.RunAll(
+				() => _permissionsDebounceTimer.Stop(),
+				() => _permissionsDebounceTimer.Tick -= PermissionsDebounceTimer_Tick,
+				() => _permissionsDebounceTimer.Dispose());
 
 			_permissionsDebounceTimer = null;
 		}
 
-		var status = _serviceProvider!.GetService<StatusService>();
-		try
-		{ status?.Detach(); }
-		catch
-		{
-			/* ignored */
-		}
+		SafeDisposal.RunAll(() => _services?.StatusService.Detach());
 	}
 
 	private void DisposeRuntimeComponents()
@@ -437,6 +384,7 @@ public partial class TableControl
 		_presenter = null;
 		_tableView = null;
 		_serviceProvider = null;
+		_services = null;
 		_colorSchemeProvider = null;
 		_runtimeInitialized = false;
 	}
@@ -466,11 +414,6 @@ public partial class TableControl
 
 	private static void TryDisposeFont(Font? font)
 	{
-		try
-		{ font?.Dispose(); }
-		catch
-		{
-			/* ignored */
-		}
+		SafeDisposal.TryDispose(font);
 	}
 }

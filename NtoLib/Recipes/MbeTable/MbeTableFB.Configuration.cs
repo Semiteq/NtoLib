@@ -48,10 +48,7 @@ public partial class MbeTableFB
 	private AppConfiguration LoadConfigurationInternal()
 	{
 		// Backwords compatibility:
-		if (_configDirPath is null)
-		{
-			_configDirPath = Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
-		}
+		_configDirPath ??= Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
 
 		IConfigurationLoader loader = new ConfigurationLoader();
 
@@ -83,13 +80,13 @@ public partial class MbeTableFB
 		catch (ConfigException ex)
 		{
 			var fullMessage = BuildConfigExceptionMessage(ex);
-			MessageBox.Show(fullMessage, "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			MessageBox.Show(fullMessage, @"Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			throw;
 		}
 		catch (Exception ex)
 		{
 			var fullMessage = $"Unexpected configuration error: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}";
-			MessageBox.Show(fullMessage, "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			MessageBox.Show(fullMessage, @"Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			throw;
 		}
 	}

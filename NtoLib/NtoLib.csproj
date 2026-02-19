@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\ILRepack.2.0.44\build\ILRepack.props" Condition="Exists('..\packages\ILRepack.2.0.44\build\ILRepack.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -556,13 +556,14 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableRowHeaderContextMenuService.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableSelectionService.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Input\TableShortcutHandler.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\ITablePresenters.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\TableControlServices.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Mapping\ColumnStyleMapper.cs" />
-    <Compile Include="Recipes\MbeTable\ModulePresentation\Models\CellDataState.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Models\CellVisualState.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Models\RowExecutionState.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\CellFormattingEngine.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\CellRenderContext.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\ComboBoxCellRenderer.cs" />
+    <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\EditGatingCoordinator.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\TableRenderCoordinator.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\StateProviders\ThreadSafeRowExecutionStateProvider.cs" />
     <Compile Include="Recipes\MbeTable\ModulePresentation\State\BusyStateManager.cs" />
@@ -677,6 +678,7 @@
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusFormatter.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusKind.cs" />
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusService.cs" />
+    <Compile Include="Recipes\MbeTable\Utilities\SafeDisposal.cs" />
     <Compile Include="Recipes\MbeTable\TableControl.Buttons.cs">
       <SubType>UserControl</SubType>
     </Compile>

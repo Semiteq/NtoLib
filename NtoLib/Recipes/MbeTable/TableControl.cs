@@ -24,7 +24,7 @@ namespace NtoLib.Recipes.MbeTable;
 public partial class TableControl : VisualControlBase
 {
 	[NonSerialized] private IServiceProvider? _serviceProvider;
-	[NonSerialized] private ITablePresenter? _presenter;
+	[NonSerialized] private TablePresenter? _presenter;
 	[NonSerialized] private ITableView? _tableView;
 	[NonSerialized] private DesignTimeColorSchemeProvider? _colorSchemeProvider;
 

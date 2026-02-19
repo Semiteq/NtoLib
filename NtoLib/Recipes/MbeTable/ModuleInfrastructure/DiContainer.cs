@@ -26,6 +26,7 @@ using NtoLib.Recipes.MbeTable.ModuleCore.State;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
+using NtoLib.Recipes.MbeTable.ModulePresentation;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
@@ -283,6 +284,7 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<ComboBoxCellRenderer>();
 		services.AddScoped<TableRenderCoordinator>();
 		services.AddSingleton<FactoryColumnRegistry>();
+		services.AddSingleton<TableControlServices>();
 
 		services.AddSingleton(_ => new OpenFileDialog
 		{

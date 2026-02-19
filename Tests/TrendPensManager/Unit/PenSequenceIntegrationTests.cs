@@ -32,41 +32,6 @@ public sealed class PenSequenceIntegrationTests
 		throw new DirectoryNotFoundException("TrendPensManager/TestData root not found");
 	}
 
-	[Fact(Skip = "Broken real dump: no used channels or non-empty Sources_OUT")]
-	public void BuildPlan_FromRealDump_AddsExpectedPensForUsedChannels()
-	{
-		var root = GetTestDataRoot();
-		var trendDumpPath = Path.Combine(root, "TrendTreeDump_PLZ_Inject.Графики_20251205_103737.json");
-		var configDumpPath = Path.Combine(root, "ConfigLoaderDump_PLZ_Inject.Config.Загрузчик конфигурации_20251205_103737.json");
-
-		var (channels, traversalWarnings) = TrendPensTestHelper.LoadChannelsFromJson(trendDumpPath);
-		var configResult = TrendPensTestHelper.LoadConfigFromJson(configDumpPath);
-		configResult.IsSuccess.Should().BeTrue();
-
-		// mark first Heaters channel as used for the test
-		var firstHeater = channels.First(c => c.ServiceType == ServiceType.Heaters);
-		var patchedChannels = channels
-			.Select(c => c == firstHeater
-				? new ChannelInfo(c.ServiceName, c.ServiceType, c.ChannelNumber, c.Used, c.Parameters)
-				: c)
-			.ToList();
-
-		var planBuilder = new PenSequenceBuilder(NullLoggerFactory.Instance);
-
-		var planResult = planBuilder.BuildSequence(patchedChannels, configResult.Value, "PLZ_Inject.Графики");
-		planResult.IsSuccess.Should().BeTrue();
-
-		var sequence = planResult.Value.Sequence;
-		sequence.Should().NotBeEmpty();
-		sequence.All(p => p.TrendPath == "PLZ_Inject.Графики").Should().BeTrue();
-
-		var expectedConfigName = configResult.Value[ServiceType.Heaters][firstHeater.ChannelNumber - 1];
-		if (!string.IsNullOrWhiteSpace(expectedConfigName))
-		{
-			sequence.Any(p => p.PenDisplayName.EndsWith(" " + expectedConfigName, StringComparison.Ordinal)).Should().BeTrue();
-		}
-	}
-
 	[Fact]
 	public void BuildPlan_SingleHeaterChannel_UsesConfigNameSuffix()
 	{

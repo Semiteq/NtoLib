@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
+using NtoLib.Recipes.MbeTable.Utilities;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 
@@ -60,48 +60,18 @@ public sealed class TableInputManager : IDisposable
 			return;
 		}
 
-		try
-		{
-			_table.Disposed -= OnTableDisposed;
-		}
-		catch
-		{
-			/* ignored */
-		}
-
-		try
-		{
-			_shortcutHandler.Detach();
-		}
-		catch
-		{
-			/* ignored */
-		}
-
-		try
-		{
-			_rowHeaderMenuService.Detach();
-		}
-		catch
-		{
-			/* ignored */
-		}
-
-		RemoveCtrlNHotkeyHook();
+		SafeDisposal.RunAll(
+			() => _table.Disposed -= OnTableDisposed,
+			() => _shortcutHandler.Detach(),
+			() => _rowHeaderMenuService.Detach(),
+			RemoveCtrlNHotkeyHook);
 
 		_attached = false;
 	}
 
 	private void OnTableDisposed(object? sender, EventArgs e)
 	{
-		try
-		{
-			Detach();
-		}
-		catch
-		{
-			/* ignored */
-		}
+		Detach();
 	}
 
 	public void Dispose()
@@ -126,15 +96,7 @@ public sealed class TableInputManager : IDisposable
 			return;
 		}
 
-		try
-		{
-			_ctrlNHotkeyHook.Dispose();
-		}
-		catch
-		{
-			/* ignored */
-		}
-
+		SafeDisposal.TryDispose(_ctrlNHotkeyHook);
 		_ctrlNHotkeyHook = null;
 	}
 

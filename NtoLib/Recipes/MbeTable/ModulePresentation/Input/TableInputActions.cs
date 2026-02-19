@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -26,70 +27,24 @@ internal sealed class TableInputActions
 		_busy = busy ?? throw new ArgumentNullException(nameof(busy));
 	}
 
-	public async Task<bool> TryCopyAsync()
-	{
-		var indices = _selectionService.GetSelectedRowIndices();
-		if (indices.Count == 0)
-		{
-			return false;
-		}
+	public bool CanCopy() => CanOperateOnSelection();
+	public bool CanCut() => CanOperateOnSelection();
+	public bool CanDelete() => CanOperateOnSelection();
+	public bool CanPaste() => !_table.IsCurrentCellInEditMode && !_busy.IsBusy;
+	public bool CanInsert() => !_busy.IsBusy;
 
-		if (_busy.IsBusy)
-		{
-			return false;
-		}
+	public Task<bool> TryCopyAsync() =>
+		TryOperateOnSelectionAsync(indices => _applicationService.CopyRowsAsync(indices));
 
-		await _applicationService.CopyRowsAsync(indices).ConfigureAwait(true);
-		return true;
-	}
+	public Task<bool> TryCutAsync() =>
+		TryOperateOnSelectionAsync(indices => _applicationService.CutRowsAsync(indices));
 
-	public bool CanCopy()
-	{
-		var indices = _selectionService.GetSelectedRowIndices();
-		if (indices.Count == 0)
-		{
-			return false;
-		}
-
-		return !_busy.IsBusy;
-	}
-
-	public async Task<bool> TryCutAsync()
-	{
-		var indices = _selectionService.GetSelectedRowIndices();
-		if (indices.Count == 0)
-		{
-			return false;
-		}
-
-		if (_busy.IsBusy)
-		{
-			return false;
-		}
-
-		await _applicationService.CutRowsAsync(indices).ConfigureAwait(true);
-		return true;
-	}
-
-	public bool CanCut()
-	{
-		var indices = _selectionService.GetSelectedRowIndices();
-		if (indices.Count == 0)
-		{
-			return false;
-		}
-
-		return !_busy.IsBusy;
-	}
+	public Task<bool> TryDeleteAsync() =>
+		TryOperateOnSelectionAsync(indices => _applicationService.DeleteRowsAsync(indices));
 
 	public async Task<bool> TryPasteAsync()
 	{
-		if (_table.IsCurrentCellInEditMode)
-		{
-			return false;
-		}
-
-		if (_busy.IsBusy)
+		if (!CanPaste())
 		{
 			return false;
 		}
@@ -99,44 +54,6 @@ internal sealed class TableInputActions
 
 		await _applicationService.PasteRowsAsync(insertIndex).ConfigureAwait(true);
 		return true;
-	}
-
-	public bool CanPaste()
-	{
-		if (_table.IsCurrentCellInEditMode)
-		{
-			return false;
-		}
-
-		return !_busy.IsBusy;
-	}
-
-	public async Task<bool> TryDeleteAsync()
-	{
-		var indices = _selectionService.GetSelectedRowIndices();
-		if (indices.Count == 0)
-		{
-			return false;
-		}
-
-		if (_busy.IsBusy)
-		{
-			return false;
-		}
-
-		await _applicationService.DeleteRowsAsync(indices).ConfigureAwait(true);
-		return true;
-	}
-
-	public bool CanDelete()
-	{
-		var indices = _selectionService.GetSelectedRowIndices();
-		if (indices.Count == 0)
-		{
-			return false;
-		}
-
-		return !_busy.IsBusy;
 	}
 
 	public Task<bool> TryInsertAsync()
@@ -153,8 +70,18 @@ internal sealed class TableInputActions
 		return Task.FromResult(true);
 	}
 
-	public bool CanInsert()
+	private bool CanOperateOnSelection() =>
+		_selectionService.GetSelectedRowIndices().Count > 0 && !_busy.IsBusy;
+
+	private async Task<bool> TryOperateOnSelectionAsync(Func<IReadOnlyList<int>, Task> operation)
 	{
-		return !_busy.IsBusy;
+		var indices = _selectionService.GetSelectedRowIndices();
+		if (indices.Count == 0 || _busy.IsBusy)
+		{
+			return false;
+		}
+
+		await operation(indices).ConfigureAwait(true);
+		return true;
 	}
 }

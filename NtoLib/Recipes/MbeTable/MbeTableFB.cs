@@ -89,7 +89,7 @@ public partial class MbeTableFB : VisualFBBase
 					$"\n\nInner Exception:\n{ex.InnerException.GetType().Name}: {ex.InnerException.Message}\n{ex.InnerException.StackTrace}";
 			}
 
-			MessageBox.Show(fullMessage, "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			MessageBox.Show(fullMessage, @"Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			throw;
 		}
 	}

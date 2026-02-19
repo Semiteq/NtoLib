@@ -67,11 +67,8 @@ public partial class TableControl
 		get => _controlBgColor ??= ColorScheme.Default.ControlBackgroundColor;
 		set
 		{
-			if (_controlBgColor == value)
-				return;
-			_controlBgColor = value;
-			BackColor = value;
-			RegisterColorMutation(scheme => scheme with { ControlBackgroundColor = value });
+			if (SetDesignTimeProperty(ref _controlBgColor, value, s => s with { ControlBackgroundColor = value }))
+				BackColor = value;
 		}
 	}
 
@@ -81,12 +78,9 @@ public partial class TableControl
 		get => _statusBgColor ??= ColorScheme.Default.StatusBgColor;
 		set
 		{
-			if (_statusBgColor == value)
-				return;
-			_statusBgColor = value;
-			if (_labelStatus != null)
-				_labelStatus.BackColor = value;
-			RegisterColorMutation(scheme => scheme with { StatusBgColor = value });
+			if (SetDesignTimeProperty(ref _statusBgColor, value, s => s with { StatusBgColor = value }))
+				if (_labelStatus != null)
+					_labelStatus.BackColor = value;
 		}
 	}
 
@@ -96,12 +90,9 @@ public partial class TableControl
 		get => _tableBgColor ??= ColorScheme.Default.TableBackgroundColor;
 		set
 		{
-			if (_tableBgColor == value)
-				return;
-			_tableBgColor = value;
-			if (_table != null)
-				_table.BackgroundColor = value;
-			RegisterColorMutation(scheme => scheme with { TableBackgroundColor = value });
+			if (SetDesignTimeProperty(ref _tableBgColor, value, s => s with { TableBackgroundColor = value }))
+				if (_table != null)
+					_table.BackgroundColor = value;
 		}
 	}
 
@@ -111,9 +102,10 @@ public partial class TableControl
 		get => _buttonsColor ??= ColorScheme.Default.ButtonsColor;
 		set
 		{
-			if (_buttonsColor == value)
+			if (!SetDesignTimeProperty(ref _buttonsColor, value,
+				s => s with { ButtonsColor = value, BlockedButtonsColor = Darken(value) }))
 				return;
-			_buttonsColor = value;
+
 			if (_buttonOpen != null)
 				_buttonOpen.BackColor = value;
 			if (_buttonSave != null)
@@ -126,11 +118,6 @@ public partial class TableControl
 				_buttonDel.BackColor = value;
 			if (_buttonWrite != null)
 				_buttonWrite.BackColor = value;
-			RegisterColorMutation(scheme => scheme with
-			{
-				ButtonsColor = value,
-				BlockedButtonsColor = Darken(value)
-			});
 		}
 	}
 
@@ -138,171 +125,103 @@ public partial class TableControl
 	public Font HeaderFont
 	{
 		get => _headerFont ??= ColorScheme.Default.HeaderFont;
-		set
-		{
-			if (Equals(_headerFont, value))
-				return;
-			_headerFont = value;
-			RegisterColorMutation(scheme => scheme with { HeaderFont = value });
-		}
+		set => SetDesignTimeProperty(ref _headerFont, value, s => s with { HeaderFont = value });
 	}
 
 	[DisplayName("Цвет фона заголовка таблицы")]
 	public Color HeaderBgColor
 	{
 		get => _headerBgColor ??= ColorScheme.Default.HeaderBgColor;
-		set
-		{
-			if (_headerBgColor == value)
-				return;
-			_headerBgColor = value;
-			RegisterColorMutation(scheme => scheme with { HeaderBgColor = value });
-		}
+		set => SetDesignTimeProperty(ref _headerBgColor, value, s => s with { HeaderBgColor = value });
 	}
 
 	[DisplayName("Цвет текста заголовка таблицы")]
 	public Color HeaderTextColor
 	{
 		get => _headerTextColor ??= ColorScheme.Default.HeaderTextColor;
-		set
-		{
-			if (_headerTextColor == value)
-				return;
-			_headerTextColor = value;
-			RegisterColorMutation(scheme => scheme with { HeaderTextColor = value });
-		}
+		set => SetDesignTimeProperty(ref _headerTextColor, value, s => s with { HeaderTextColor = value });
 	}
 
 	[DisplayName("Шрифт строки таблицы")]
 	public Font LineFont
 	{
 		get => _lineFont ??= ColorScheme.Default.LineFont;
-		set
-		{
-			if (Equals(_lineFont, value))
-				return;
-			_lineFont = value;
-			RegisterColorMutation(scheme => scheme with { LineFont = value });
-		}
+		set => SetDesignTimeProperty(ref _lineFont, value, s => s with { LineFont = value });
 	}
 
 	[DisplayName("Цвет фона строки таблицы")]
 	public Color LineBgColor
 	{
 		get => _lineBgColor ??= ColorScheme.Default.LineBgColor;
-		set
-		{
-			if (_lineBgColor == value)
-				return;
-			_lineBgColor = value;
-			RegisterColorMutation(scheme => scheme with { LineBgColor = value });
-		}
+		set => SetDesignTimeProperty(ref _lineBgColor, value, s => s with { LineBgColor = value });
 	}
 
 	[DisplayName("Цвет текста строки таблицы")]
 	public Color LineTextColor
 	{
 		get => _lineTextColor ??= ColorScheme.Default.LineTextColor;
-		set
-		{
-			if (_lineTextColor == value)
-				return;
-			_lineTextColor = value;
-			RegisterColorMutation(scheme => scheme with { LineTextColor = value });
-		}
+		set => SetDesignTimeProperty(ref _lineTextColor, value, s => s with { LineTextColor = value });
 	}
 
 	[DisplayName("Шрифт текущей строки таблицы")]
 	public Font SelectedLineFont
 	{
 		get => _selectedLineFont ??= ColorScheme.Default.SelectedLineFont;
-		set
-		{
-			if (Equals(_selectedLineFont, value))
-				return;
-			_selectedLineFont = value;
-			RegisterColorMutation(scheme => scheme with { SelectedLineFont = value });
-		}
+		set => SetDesignTimeProperty(ref _selectedLineFont, value, s => s with { SelectedLineFont = value });
 	}
 
 	[DisplayName("Цвет фона текущей строки таблицы")]
 	public Color SelectedLineBgColor
 	{
 		get => _selectedLineBgColor ??= ColorScheme.Default.SelectedLineBgColor;
-		set
-		{
-			if (_selectedLineBgColor == value)
-				return;
-			_selectedLineBgColor = value;
-			RegisterColorMutation(scheme => scheme with { SelectedLineBgColor = value });
-		}
+		set => SetDesignTimeProperty(ref _selectedLineBgColor, value, s => s with { SelectedLineBgColor = value });
 	}
 
 	[DisplayName("Цвет текста текущей строки таблицы")]
 	public Color SelectedLineTextColor
 	{
 		get => _selectedLineTextColor ??= ColorScheme.Default.SelectedLineTextColor;
-		set
-		{
-			if (_selectedLineTextColor == value)
-				return;
-			_selectedLineTextColor = value;
-			RegisterColorMutation(scheme => scheme with { SelectedLineTextColor = value });
-		}
+		set => SetDesignTimeProperty(ref _selectedLineTextColor, value, s => s with { SelectedLineTextColor = value });
 	}
 
 	[DisplayName("Шрифт пройденной строки таблицы")]
 	public Font PassedLineFont
 	{
 		get => _passedLineFont ??= ColorScheme.Default.PassedLineFont;
-		set
-		{
-			if (Equals(_passedLineFont, value))
-				return;
-			_passedLineFont = value;
-			RegisterColorMutation(scheme => scheme with { PassedLineFont = value });
-		}
+		set => SetDesignTimeProperty(ref _passedLineFont, value, s => s with { PassedLineFont = value });
 	}
 
 	[DisplayName("Цвет фона пройденной строки таблицы")]
 	public Color PassedLineBgColor
 	{
 		get => _passedLineBgColor ??= ColorScheme.Default.PassedLineBgColor;
-		set
-		{
-			if (_passedLineBgColor == value)
-				return;
-			_passedLineBgColor = value;
-			RegisterColorMutation(scheme => scheme with { PassedLineBgColor = value });
-		}
+		set => SetDesignTimeProperty(ref _passedLineBgColor, value, s => s with { PassedLineBgColor = value });
 	}
 
 	[DisplayName("Цвет текста пройденной строки таблицы")]
 	public Color PassedLineTextColor
 	{
 		get => _passedLineTextColor ??= ColorScheme.Default.PassedLineTextColor;
-		set
-		{
-			if (_passedLineTextColor == value)
-				return;
-			_passedLineTextColor = value;
-			RegisterColorMutation(scheme => scheme with { PassedLineTextColor = value });
-		}
+		set => SetDesignTimeProperty(ref _passedLineTextColor, value, s => s with { PassedLineTextColor = value });
 	}
 
 	[DisplayName("Цвет фона заблокированной ячейки")]
 	public Color BlockedBgColor
 	{
 		get => _blockedBgColor ??= ColorScheme.Default.BlockedBgColor;
-		set
-		{
-			if (_blockedBgColor == value)
-				return;
-			_blockedBgColor = value;
-			RegisterColorMutation(scheme => scheme with { BlockedBgColor = value });
-		}
+		set => SetDesignTimeProperty(ref _blockedBgColor, value, s => s with { BlockedBgColor = value });
 	}
 
+
+	private bool SetDesignTimeProperty<T>(ref T? field, T value, Func<ColorScheme, ColorScheme> mutation)
+	{
+		if (EqualityComparer<T>.Default.Equals(field!, value!))
+			return false;
+
+		field = value;
+		RegisterColorMutation(mutation);
+		return true;
+	}
 
 	private void RegisterColorMutation(Func<ColorScheme, ColorScheme> mutation)
 	{

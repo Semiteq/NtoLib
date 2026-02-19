@@ -10,7 +10,7 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation;
 
-public sealed class TablePresenter : ITablePresenter
+public sealed class TablePresenter : IDisposable
 {
 	private readonly ITableView _view;
 	private readonly RecipeOperationService _app;
