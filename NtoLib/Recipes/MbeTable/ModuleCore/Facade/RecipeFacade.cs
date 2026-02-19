@@ -20,13 +20,13 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Facade;
 /// <summary>
 /// Coordinates mutation, formula application, and analysis.
 /// </summary>
-public sealed class RecipeFacade : IRecipeFacade
+public sealed class RecipeFacade
 {
 	private readonly RecipeMutator _mutator;
 	private readonly FormulaApplicationCoordinator _formulaCoordinator;
-	private readonly IActionRepository _actionRepository;
-	private readonly IRecipeAnalyzer _analyzer;
-	private readonly IRecipeStateManager _state;
+	private readonly ActionRepository _actionRepository;
+	private readonly RecipeAnalyzer _analyzer;
+	private readonly RecipeStateManager _state;
 	private readonly ILogger<RecipeFacade> _logger;
 
 	private Recipe _recipe = Recipe.Empty;
@@ -37,9 +37,9 @@ public sealed class RecipeFacade : IRecipeFacade
 	public RecipeFacade(
 		RecipeMutator mutator,
 		FormulaApplicationCoordinator formulaCoordinator,
-		IActionRepository actionRepository,
-		IRecipeAnalyzer analyzer,
-		IRecipeStateManager state,
+		ActionRepository actionRepository,
+		RecipeAnalyzer analyzer,
+		RecipeStateManager state,
 		ILogger<RecipeFacade> logger)
 	{
 		_mutator = mutator;

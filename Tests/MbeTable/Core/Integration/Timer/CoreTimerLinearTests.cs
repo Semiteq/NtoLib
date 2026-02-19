@@ -29,7 +29,7 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(0).SetDuration(0, FirstStepDuration);
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -58,7 +58,7 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(0).SetDuration(0, FirstStepDuration);
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -87,7 +87,7 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(0).SetDuration(0, FirstStepDuration);
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -116,7 +116,7 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(0).SetDuration(0, FirstStepDuration);
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 9f), analysis);
@@ -146,7 +146,7 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(0).SetDuration(0, FirstStepDuration);
 		d.AddFor(1, 1);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 

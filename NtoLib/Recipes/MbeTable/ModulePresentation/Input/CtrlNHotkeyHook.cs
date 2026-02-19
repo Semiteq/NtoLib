@@ -50,17 +50,25 @@ internal sealed class CtrlNHotkeyHook : IMessageFilter, IDisposable
 	public bool PreFilterMessage(ref Message m)
 	{
 		if (_isDisposed)
+		{
 			return false;
+		}
 
 		if (m.Msg != WmKeyDown && m.Msg != WmSysKeyDown)
+		{
 			return false;
+		}
 
 		if ((Control.ModifierKeys & Keys.Control) != Keys.Control)
+		{
 			return false;
+		}
 
 		var key = (Keys)(int)m.WParam;
 		if (key != Keys.N)
+		{
 			return false;
+		}
 
 		if (!_focusRoot.TryGetTarget(out var focusRoot))
 		{
@@ -71,7 +79,9 @@ internal sealed class CtrlNHotkeyHook : IMessageFilter, IDisposable
 		try
 		{
 			if (focusRoot.IsDisposed || !focusRoot.ContainsFocus)
+			{
 				return false;
+			}
 		}
 		catch
 		{

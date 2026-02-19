@@ -19,14 +19,14 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 /// </summary>
 public sealed class RecipeMutator
 {
-	private readonly IActionRepository _actionRepository;
+	private readonly ActionRepository _actionRepository;
 	private readonly IActionTargetProvider _actionTargetProvider;
 	private readonly PropertyDefinitionRegistry _propertyRegistry;
 	private readonly IReadOnlyList<ColumnDefinition> _tableColumns;
 	private readonly ILogger<RecipeMutator> _logger;
 
 	public RecipeMutator(
-		IActionRepository actionRepository,
+		ActionRepository actionRepository,
 		IActionTargetProvider actionTargetProvider,
 		PropertyDefinitionRegistry propertyRegistry,
 		IReadOnlyList<ColumnDefinition> tableColumns,

@@ -13,7 +13,7 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 /// <summary>
 /// Handles chunked read/write operations for Modbus communication.
 /// </summary>
-public sealed class ModbusChunkHandler : IModbusChunkHandler
+public sealed class ModbusChunkHandler
 {
 	private readonly ILogger<ModbusChunkHandler> _logger;
 
@@ -23,7 +23,7 @@ public sealed class ModbusChunkHandler : IModbusChunkHandler
 	}
 
 	public async Task<Result> WriteChunkedAsync(
-		IModbusTransport transport,
+		ModbusTransport transport,
 		int baseAddress,
 		int[] data,
 		int chunkSize,
@@ -59,7 +59,7 @@ public sealed class ModbusChunkHandler : IModbusChunkHandler
 	}
 
 	public async Task<Result<int[]>> ReadChunkedAsync(
-		IModbusTransport transport,
+		ModbusTransport transport,
 		int baseAddress,
 		int totalRegisters,
 		int chunkSize,

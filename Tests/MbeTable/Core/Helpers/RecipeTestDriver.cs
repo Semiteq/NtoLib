@@ -6,9 +6,9 @@ namespace Tests.MbeTable.Core.Helpers;
 
 public sealed class RecipeTestDriver
 {
-	private readonly IRecipeFacade _facade;
+	private readonly RecipeFacade _facade;
 
-	public RecipeTestDriver(IRecipeFacade facade)
+	public RecipeTestDriver(RecipeFacade facade)
 	{
 		_facade = facade;
 	}

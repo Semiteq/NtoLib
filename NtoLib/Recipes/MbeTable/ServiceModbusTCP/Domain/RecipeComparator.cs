@@ -14,9 +14,9 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 
 public sealed class RecipeComparator
 {
-	private readonly IRuntimeOptionsProvider _optionsProvider;
+	private readonly FbRuntimeOptionsProvider _optionsProvider;
 
-	public RecipeComparator(IRuntimeOptionsProvider optionsProvider)
+	public RecipeComparator(FbRuntimeOptionsProvider optionsProvider)
 	{
 		_optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
 	}

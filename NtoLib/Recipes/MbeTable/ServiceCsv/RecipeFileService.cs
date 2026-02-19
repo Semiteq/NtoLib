@@ -17,20 +17,20 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv;
 
-public sealed class RecipeFileService : IRecipeFileService
+public sealed class RecipeFileService
 {
-	private readonly ICsvDataExtractor _dataExtractor;
-	private readonly IRecipeWriter _writer;
-	private readonly IMetadataService _metadataService;
-	private readonly IIntegrityService _integrityService;
+	private readonly CsvDataExtractor _dataExtractor;
+	private readonly RecipeWriter _writer;
+	private readonly MetadataService _metadataService;
+	private readonly IntegrityService _integrityService;
 	private readonly ILogger<RecipeFileService> _logger;
 	private readonly object _fileLock = new();
 
 	public RecipeFileService(
-		ICsvDataExtractor dataExtractor,
-		IRecipeWriter writer,
-		IMetadataService metadataService,
-		IIntegrityService integrityService,
+		CsvDataExtractor dataExtractor,
+		RecipeWriter writer,
+		MetadataService metadataService,
+		IntegrityService integrityService,
 		ILogger<RecipeFileService> logger)
 	{
 		_dataExtractor = dataExtractor ?? throw new ArgumentNullException(nameof(dataExtractor));
@@ -178,8 +178,8 @@ public sealed class RecipeFileService : IRecipeFileService
 
 		if (!string.IsNullOrWhiteSpace(metadata.BodyHashBase64))
 		{
-			var actualHash = _integrityService.CalculateHash(rawData.Rows);
-			var integrityCheck = _integrityService.VerifyIntegrity(metadata.BodyHashBase64, actualHash);
+			var actualHash = IntegrityService.CalculateHash(rawData.Rows);
+			var integrityCheck = IntegrityService.VerifyIntegrity(metadata.BodyHashBase64, actualHash);
 
 			if (!integrityCheck.IsValid)
 			{

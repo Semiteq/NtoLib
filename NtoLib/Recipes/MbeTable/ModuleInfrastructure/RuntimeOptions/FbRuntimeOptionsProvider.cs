@@ -4,7 +4,7 @@ using System.Net;
 
 namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 
-public sealed class FbRuntimeOptionsProvider : IRuntimeOptionsProvider
+public sealed class FbRuntimeOptionsProvider
 {
 	private readonly MbeTableFB _fb;
 

@@ -6,7 +6,7 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ServiceStatus;
 
-public sealed class StatusService : IStatusService
+public sealed class StatusService
 {
 	private readonly StatusFormatter _formatter;
 	private IStatusSink? _sink;

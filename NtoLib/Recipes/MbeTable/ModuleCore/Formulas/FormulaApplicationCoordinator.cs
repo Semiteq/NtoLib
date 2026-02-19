@@ -11,10 +11,10 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 
 public sealed class FormulaApplicationCoordinator
 {
-	private readonly IFormulaEngine _engine;
-	private readonly IStepVariableAdapter _adapter;
+	private readonly FormulaEngine _engine;
+	private readonly StepVariableAdapter _adapter;
 
-	public FormulaApplicationCoordinator(IFormulaEngine engine, IStepVariableAdapter adapter)
+	public FormulaApplicationCoordinator(FormulaEngine engine, StepVariableAdapter adapter)
 	{
 		_engine = engine ?? throw new ArgumentNullException(nameof(engine));
 		_adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));

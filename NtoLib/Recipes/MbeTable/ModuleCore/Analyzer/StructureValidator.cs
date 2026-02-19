@@ -10,7 +10,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// <summary>
 /// Validates basic structural invariants (null steps, missing action property).
 /// </summary>
-public sealed class StructureValidator : IStructureValidator
+public sealed class StructureValidator
 {
 	public StructureResult Validate(Recipe recipe)
 	{

@@ -13,13 +13,12 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 
 public sealed class ActionComboBox : FactoryColumnComboBoxBase
 {
-	private readonly IComboboxDataProvider _comboProvider;
+	private readonly ComboboxDataProvider _comboProvider;
 
 	public ActionComboBox(
-		IComboboxDataProvider comboProvider,
-		IServiceProvider serviceProvider,
-		IColumnAlignmentResolver alignmentResolver)
-		: base(serviceProvider, alignmentResolver)
+		ComboboxDataProvider comboProvider,
+		IServiceProvider serviceProvider)
+		: base(serviceProvider)
 	{
 		_comboProvider = comboProvider;
 	}

@@ -44,7 +44,7 @@ public sealed class FactoryColumnRegistry
 		}
 
 		var factory = (IFactoryColumn)_serviceProvider.GetRequiredService(factoryType);
-		var scheme = _serviceProvider.GetRequiredService<IColorSchemeProvider>().Current;
+		var scheme = _serviceProvider.GetRequiredService<DesignTimeColorSchemeProvider>().Current;
 		return factory.CreateColumn(definition, scheme);
 	}
 }

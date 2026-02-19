@@ -17,26 +17,26 @@ using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 
-public sealed class RecipePlcService : IRecipePlcService
+public sealed class RecipePlcService
 {
-	private readonly IPlcWriter _writer;
-	private readonly IPlcReader _reader;
-	private readonly IModbusTransport _transport;
+	private readonly PlcWriter _writer;
+	private readonly PlcReader _reader;
+	private readonly ModbusTransport _transport;
 	private readonly PlcRecipeSerializer _serializer;
 	private readonly PlcCapacityCalculator _capacity;
 	private readonly RecipeColumnLayout _layout;
-	private readonly IRuntimeOptionsProvider _runtimeOptionsProvider;
+	private readonly FbRuntimeOptionsProvider _runtimeOptionsProvider;
 	private readonly IDisconnectStrategy _disconnectStrategy;
 	private readonly ILogger<RecipePlcService> _logger;
 
 	public RecipePlcService(
-		IPlcWriter writer,
-		IPlcReader reader,
-		IModbusTransport transport,
+		PlcWriter writer,
+		PlcReader reader,
+		ModbusTransport transport,
 		PlcRecipeSerializer serializer,
 		PlcCapacityCalculator capacity,
 		RecipeColumnLayout layout,
-		IRuntimeOptionsProvider runtimeOptionsProvider,
+		FbRuntimeOptionsProvider runtimeOptionsProvider,
 		IDisconnectStrategy disconnectStrategy,
 		ILogger<RecipePlcService> logger)
 	{

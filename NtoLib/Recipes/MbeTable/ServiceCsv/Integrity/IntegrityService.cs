@@ -5,12 +5,9 @@ using System.Text;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.Integrity;
 
-/// <summary>
-/// Implements data integrity operations using SHA-256 hashing.
-/// </summary>
-public sealed class IntegrityService : IIntegrityService
+public sealed class IntegrityService
 {
-	public string CalculateHash(IEnumerable<string> dataRows)
+	public static string CalculateHash(IEnumerable<string> dataRows)
 	{
 		using var sha256 = SHA256.Create();
 		var stringBuilder = new StringBuilder();
@@ -27,7 +24,7 @@ public sealed class IntegrityService : IIntegrityService
 		return Convert.ToBase64String(hashBytes);
 	}
 
-	public IntegrityCheckResult VerifyIntegrity(string expectedHash, string actualHash)
+	public static IntegrityCheckResult VerifyIntegrity(string expectedHash, string actualHash)
 	{
 		var isValid = string.Equals(expectedHash, actualHash, StringComparison.Ordinal);
 

@@ -17,16 +17,16 @@ public sealed class RecipeViewModel
 
 	private readonly List<StepViewModel> _viewModels = new();
 	private readonly IReadOnlyList<ColumnDefinition> _tableColumns;
-	private readonly IRecipeFacade _recipeService;
-	private readonly IComboboxDataProvider _comboboxDataProvider;
+	private readonly RecipeFacade _recipeService;
+	private readonly ComboboxDataProvider _comboboxDataProvider;
 	private readonly PropertyStateProvider _propertyStateProvider;
-	private readonly IForLoopNestingProvider _loopNestingProvider;
+	private readonly ForLoopNestingProvider _loopNestingProvider;
 
 	public RecipeViewModel(
-		IRecipeFacade recipeService,
-		IComboboxDataProvider comboboxDataProvider,
+		RecipeFacade recipeService,
+		ComboboxDataProvider comboboxDataProvider,
 		PropertyStateProvider propertyStateProvider,
-		IForLoopNestingProvider loopNestingProvider,
+		ForLoopNestingProvider loopNestingProvider,
 		IReadOnlyList<ColumnDefinition> tableColumns)
 	{
 		_recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));

@@ -8,10 +8,10 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 internal sealed class TableDataErrorBehavior : ITableGridBehavior
 {
 	private readonly DataGridView _table;
-	private readonly IStatusService? _statusService;
+	private readonly StatusService? _statusService;
 	private bool _attached;
 
-	public TableDataErrorBehavior(DataGridView table, IStatusService? statusService)
+	public TableDataErrorBehavior(DataGridView table, StatusService? statusService)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		_statusService = statusService;

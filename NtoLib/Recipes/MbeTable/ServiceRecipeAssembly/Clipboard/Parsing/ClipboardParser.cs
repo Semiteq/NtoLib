@@ -9,14 +9,14 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Parsing;
 
-public sealed class ClipboardParser : IClipboardParser
+public sealed class ClipboardParser
 {
-	private readonly IClipboardSchemaDescriptor _schema;
-	private readonly IClipboardSchemaValidator _validator;
+	private readonly ClipboardSchemaDescriptor _schema;
+	private readonly ClipboardSchemaValidator _validator;
 
 	public ClipboardParser(
-		IClipboardSchemaDescriptor schema,
-		IClipboardSchemaValidator validator)
+		ClipboardSchemaDescriptor schema,
+		ClipboardSchemaValidator validator)
 	{
 		_schema = schema ?? throw new ArgumentNullException(nameof(schema));
 		_validator = validator ?? throw new ArgumentNullException(nameof(validator));

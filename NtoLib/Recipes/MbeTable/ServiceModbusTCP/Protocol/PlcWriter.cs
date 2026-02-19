@@ -11,20 +11,20 @@ using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 
-internal sealed class PlcWriter : IPlcWriter
+public sealed class PlcWriter
 {
 	private const int ChunkSize = 123;
 	private const int OffsetRowCount = 1;
 
-	private readonly IModbusTransport _transport;
-	private readonly IModbusChunkHandler _chunkHandler;
-	private readonly IRuntimeOptionsProvider _optionsProvider;
+	private readonly ModbusTransport _transport;
+	private readonly ModbusChunkHandler _chunkHandler;
+	private readonly FbRuntimeOptionsProvider _optionsProvider;
 	private readonly ILogger<PlcWriter> _logger;
 
 	public PlcWriter(
-		IModbusTransport transport,
-		IModbusChunkHandler chunkHandler,
-		IRuntimeOptionsProvider optionsProvider,
+		ModbusTransport transport,
+		ModbusChunkHandler chunkHandler,
+		FbRuntimeOptionsProvider optionsProvider,
 		ILogger<PlcWriter> logger)
 	{
 		_transport = transport ?? throw new ArgumentNullException(nameof(transport));

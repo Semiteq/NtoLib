@@ -12,11 +12,11 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Protocol;
 public sealed class PlcCapacityCalculator
 {
 	private readonly RecipeColumnLayout _layout;
-	private readonly IRuntimeOptionsProvider _optionsProvider;
+	private readonly FbRuntimeOptionsProvider _optionsProvider;
 
 	public PlcCapacityCalculator(
 		RecipeColumnLayout layout,
-		IRuntimeOptionsProvider optionsProvider)
+		FbRuntimeOptionsProvider optionsProvider)
 	{
 		_layout = layout ?? throw new ArgumentNullException(nameof(layout));
 		_optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));

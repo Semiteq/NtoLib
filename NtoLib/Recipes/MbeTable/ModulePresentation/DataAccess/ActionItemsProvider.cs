@@ -6,14 +6,11 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 
-/// <summary>
-/// Provides static Action items for the Action ComboBox column.
-/// </summary>
 public sealed class ActionItemsProvider : IComboBoxItemsProvider
 {
-	private readonly IComboboxDataProvider _provider;
+	private readonly ComboboxDataProvider _provider;
 
-	public ActionItemsProvider(IComboboxDataProvider provider)
+	public ActionItemsProvider(ComboboxDataProvider provider)
 	{
 		_provider = provider;
 	}

@@ -10,7 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 
-public sealed class FormulaEngine : IFormulaEngine
+public sealed class FormulaEngine
 {
 	private readonly IReadOnlyDictionary<short, CompiledFormula> _compiledFormulas;
 

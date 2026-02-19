@@ -8,9 +8,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 /// Polls raw pins, maintains last good snapshot, raises granular events on field changes.
 /// Freezes while any required pin has bad quality.
 /// </summary>
-internal sealed class RecipeRuntimeStatePoller : IRecipeRuntimeState
+public sealed class RecipeRuntimeStatePoller
 {
-	private readonly IPinAccessor _pins;
+	private readonly FbPinAccessor _pins;
 	private readonly float _epsilon;
 
 	private bool _initialized;
@@ -32,7 +32,7 @@ internal sealed class RecipeRuntimeStatePoller : IRecipeRuntimeState
 	private readonly int _idStepElapsed;
 
 	public RecipeRuntimeStatePoller(
-		IPinAccessor pins,
+		FbPinAccessor pins,
 		float epsilon,
 		int idRecipeActive,
 		int idSendEnabled,

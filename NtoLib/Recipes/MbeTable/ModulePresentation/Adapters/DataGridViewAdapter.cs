@@ -2,20 +2,20 @@
 using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 
 public sealed class DataGridViewAdapter : ITableView, IDisposable
 {
 	private readonly DataGridView _grid;
+	public event EventHandler<CellValueEventArgs>? CellValueNeeded;
+	public event EventHandler<CellValueEventArgs>? CellValuePushed;
 
 	public DataGridViewAdapter(DataGridView grid)
 	{
 		_grid = grid ?? throw new ArgumentNullException(nameof(grid));
 		_grid.CellValueNeeded += OnCellValueNeededInternal;
 		_grid.CellValuePushed += OnCellValuePushedInternal;
-		_grid.CurrentCellChanged += OnCurrentCellChangedInternal;
 	}
 
 	public int RowCount
@@ -24,13 +24,20 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 		set
 		{
 			if (_grid.IsDisposed)
+			{
 				return;
+			}
 
 			if (_grid.InvokeRequired)
 			{
 				try
-				{ _grid.BeginInvoke(new Action(() => _grid.RowCount = value)); }
-				catch { }
+				{
+					_grid.BeginInvoke(new Action(() => _grid.RowCount = value));
+				}
+				catch
+				{
+					// ignored
+				}
 			}
 			else
 			{
@@ -39,19 +46,23 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 		}
 	}
 
-	public bool IsHandleCreated => _grid.IsHandleCreated;
-	public bool IsDisposed => _grid.IsDisposed;
-
 	public void Invalidate()
 	{
 		if (_grid.IsDisposed)
+		{
 			return;
+		}
 
 		if (_grid.InvokeRequired)
 		{
 			try
-			{ _grid.BeginInvoke(new Action(() => _grid.Invalidate())); }
-			catch { }
+			{
+				_grid.BeginInvoke(new Action(() => _grid.Invalidate()));
+			}
+			catch
+			{
+				// ignored
+			}
 		}
 		else
 		{
@@ -62,63 +73,102 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 	public void InvalidateRow(int rowIndex)
 	{
 		if (_grid.IsDisposed)
+		{
 			return;
+		}
+
 		if (rowIndex < 0)
+		{
 			return;
+		}
 
 		if (_grid.InvokeRequired)
 		{
 			try
-			{ _grid.BeginInvoke(new Action(() => InvalidateRow(rowIndex))); }
-			catch { }
+			{
+				_grid.BeginInvoke(new Action(() => InvalidateRow(rowIndex)));
+			}
+			catch
+			{
+				// ignored
+			}
 
 			return;
 		}
 
 		if (rowIndex < _grid.RowCount)
+		{
 			_grid.InvalidateRow(rowIndex);
+		}
 	}
 
 	public void InvalidateCell(int columnIndex, int rowIndex)
 	{
 		if (_grid.IsDisposed)
+		{
 			return;
+		}
+
 		if (rowIndex < 0 || columnIndex < 0)
+		{
 			return;
+		}
 
 		if (_grid.InvokeRequired)
 		{
 			try
-			{ _grid.BeginInvoke(new Action(() => InvalidateCell(columnIndex, rowIndex))); }
-			catch { }
+			{
+				_grid.BeginInvoke(new Action(() => InvalidateCell(columnIndex, rowIndex)));
+			}
+			catch
+			{
+				// ignored
+			}
 
 			return;
 		}
 
 		if (rowIndex < _grid.RowCount && columnIndex < _grid.ColumnCount)
+		{
 			_grid.InvalidateCell(columnIndex, rowIndex);
+		}
 	}
 
 	public void EnsureRowVisible(int rowIndex)
 	{
 		if (_grid.IsDisposed)
+		{
 			return;
+		}
+
 		if (rowIndex < 0)
+		{
 			return;
+		}
 
 		if (_grid.InvokeRequired)
 		{
 			try
-			{ _grid.BeginInvoke(new Action(() => EnsureRowVisible(rowIndex))); }
-			catch { }
+			{
+				_grid.BeginInvoke(new Action(() => EnsureRowVisible(rowIndex)));
+			}
+			catch
+			{
+				// ignored
+			}
 
 			return;
 		}
 
 		if (!_grid.IsHandleCreated)
+		{
 			return;
+		}
+
 		if (rowIndex >= _grid.RowCount)
+		{
 			return;
+		}
 
 		try
 		{
@@ -126,25 +176,14 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 			var visible = _grid.DisplayedRowCount(false);
 
 			if (first < 0 || visible <= 0 || rowIndex < first || rowIndex >= first + visible)
+			{
 				_grid.FirstDisplayedScrollingRowIndex = rowIndex;
+			}
 		}
 		catch
 		{
-			// Ignore transient failures when grid is in an invalid state (e.g., no rows yet displayed)
+			// ignored
 		}
-	}
-
-	public void BeginInvoke(Action action)
-	{
-		if (action == null)
-			return;
-		if (_grid.IsDisposed)
-			return;
-
-		if (_grid.InvokeRequired)
-			_grid.BeginInvoke(action);
-		else
-			action();
 	}
 
 	public int CurrentRowIndex => _grid.CurrentCell?.RowIndex ?? -1;
@@ -152,7 +191,9 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 	public ColumnIdentifier? GetColumnKey(int columnIndex)
 	{
 		if (columnIndex < 0 || columnIndex >= _grid.ColumnCount)
+		{
 			return null;
+		}
 
 		var column = _grid.Columns[columnIndex];
 		var key = !string.IsNullOrEmpty(column.Name)
@@ -161,10 +202,6 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 
 		return key;
 	}
-
-	public event EventHandler<CellValueEventArgs>? CellValueNeeded;
-	public event EventHandler<CellValueEventArgs>? CellValuePushed;
-	public event EventHandler? CurrentCellChanged;
 
 	private void OnCellValueNeededInternal(object? sender, DataGridViewCellValueEventArgs e)
 	{
@@ -179,10 +216,6 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 		CellValuePushed?.Invoke(this, args);
 	}
 
-	private void OnCurrentCellChangedInternal(object? sender, EventArgs e)
-	{
-		CurrentCellChanged?.Invoke(this, EventArgs.Empty);
-	}
 
 	public void Dispose()
 	{
@@ -190,8 +223,10 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 		{
 			_grid.CellValueNeeded -= OnCellValueNeededInternal;
 			_grid.CellValuePushed -= OnCellValuePushedInternal;
-			_grid.CurrentCellChanged -= OnCurrentCellChangedInternal;
 		}
-		catch { }
+		catch
+		{
+			// ignored
+		}
 	}
 }

@@ -9,10 +9,8 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Modbus;
 
-/// <summary>
-/// Modbus-specific recipe assembly service.
-/// </summary>
-public sealed class ModbusRecipeAssemblyService : IModbusRecipeAssemblyService
+
+public sealed class ModbusRecipeAssemblyService
 {
 	private readonly ModbusAssemblyStrategy _modbusStrategy;
 	private readonly AssemblyValidator _validator;

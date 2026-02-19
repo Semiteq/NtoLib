@@ -11,10 +11,7 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
 
-/// <summary>
-/// CSV-specific recipe assembly service.
-/// </summary>
-public sealed class CsvRecipeAssemblyService : ICsvRecipeAssemblyService
+public sealed class CsvRecipeAssemblyService
 {
 	private readonly CsvAssemblyStrategy _csvStrategy;
 	private readonly AssemblyValidator _validator;

@@ -30,7 +30,7 @@ public sealed class CoreTimerDynamicTests
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 		d.AddWait(2).SetDuration(2, ThirdStepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		var capturedValues = new List<(TimeSpan stepLeft, TimeSpan totalLeft)>();
@@ -66,7 +66,7 @@ public sealed class CoreTimerDynamicTests
 		d.AddWait(1).SetDuration(1, BodyDuration);
 		d.AddEndFor(2);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		var capturedValues = new List<TimeSpan>();
@@ -97,7 +97,7 @@ public sealed class CoreTimerDynamicTests
 		var d = new RecipeTestDriver(facade);
 		d.AddWait(0).SetDuration(0, FirstStepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		var capturedValues = new List<TimeSpan>();
@@ -123,7 +123,7 @@ public sealed class CoreTimerDynamicTests
 		var d = new RecipeTestDriver(facade);
 		d.AddWait(0).SetDuration(0, FirstStepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		var capturedStepLeft = new List<TimeSpan>();
@@ -164,7 +164,7 @@ public sealed class CoreTimerDynamicTests
 		d.AddEndFor(3);
 		d.AddEndFor(4);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		var capturedValues = new List<TimeSpan>();

@@ -10,7 +10,7 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 
-public sealed class CsvHeaderBinder : ICsvHeaderBinder
+public sealed class CsvHeaderBinder
 {
 	public sealed record Binding(
 		IReadOnlyList<string> FileTokens,

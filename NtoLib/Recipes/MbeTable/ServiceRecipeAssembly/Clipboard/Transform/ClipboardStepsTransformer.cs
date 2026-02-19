@@ -12,14 +12,14 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Transform;
 
-public sealed class ClipboardStepsTransformer : IClipboardStepsTransformer
+public sealed class ClipboardStepsTransformer
 {
-	private readonly IActionRepository _actionRepository;
+	private readonly ActionRepository _actionRepository;
 	private readonly PropertyDefinitionRegistry _propertyRegistry;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
 
 	public ClipboardStepsTransformer(
-		IActionRepository actionRepository,
+		ActionRepository actionRepository,
 		PropertyDefinitionRegistry propertyRegistry,
 		IReadOnlyList<ColumnDefinition> columns)
 	{

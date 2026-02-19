@@ -11,10 +11,10 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
 internal sealed class RuntimeServiceHost : IDisposable
 {
-	private readonly ITimerService _timerService;
-	private readonly IRecipeFacade _recipeFacade;
-	private readonly IRecipeRuntimeState _runtimeState;
-	private readonly IStateProvider _stateProvider;
+	private readonly TimerService _timerService;
+	private readonly RecipeFacade _recipeFacade;
+	private readonly RecipeRuntimeStatePoller _runtimeState;
+	private readonly StateProvider _stateProvider;
 	private readonly MbeTableFB _owner;
 
 	public RuntimeServiceHost(IServiceProvider serviceProvider)
@@ -22,10 +22,10 @@ internal sealed class RuntimeServiceHost : IDisposable
 		if (serviceProvider == null)
 			throw new ArgumentNullException(nameof(serviceProvider));
 
-		_timerService = serviceProvider.GetRequiredService<ITimerService>();
-		_recipeFacade = serviceProvider.GetRequiredService<IRecipeFacade>();
-		_runtimeState = serviceProvider.GetRequiredService<IRecipeRuntimeState>();
-		_stateProvider = serviceProvider.GetRequiredService<IStateProvider>();
+		_timerService = serviceProvider.GetRequiredService<TimerService>();
+		_recipeFacade = serviceProvider.GetRequiredService<RecipeFacade>();
+		_runtimeState = serviceProvider.GetRequiredService<RecipeRuntimeStatePoller>();
+		_stateProvider = serviceProvider.GetRequiredService<StateProvider>();
 		_owner = serviceProvider.GetRequiredService<MbeTableFB>();
 
 		_timerService.TimesUpdated += OnTimesUpdated;

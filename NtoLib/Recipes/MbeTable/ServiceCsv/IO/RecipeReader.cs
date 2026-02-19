@@ -12,20 +12,17 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 
-/// <summary>
-/// Extracts raw CSV data from file, verifies metadata and integrity.
-/// </summary>
-public sealed class RecipeReader : IRecipeReader
+public sealed class RecipeReader
 {
-	private readonly ICsvDataExtractor _dataExtractor;
-	private readonly IMetadataService _metadataService;
-	private readonly IIntegrityService _integrityService;
+	private readonly CsvDataExtractor _dataExtractor;
+	private readonly MetadataService _metadataService;
+	private readonly IntegrityService _integrityService;
 	private readonly ILogger<RecipeReader> _logger;
 
 	public RecipeReader(
-		ICsvDataExtractor dataExtractor,
-		IMetadataService metadataService,
-		IIntegrityService integrityService,
+		CsvDataExtractor dataExtractor,
+		MetadataService metadataService,
+		IntegrityService integrityService,
 		ILogger<RecipeReader> logger)
 	{
 		_dataExtractor = dataExtractor ?? throw new ArgumentNullException(nameof(dataExtractor));
@@ -74,8 +71,8 @@ public sealed class RecipeReader : IRecipeReader
 
 		if (!string.IsNullOrWhiteSpace(meta.BodyHashBase64))
 		{
-			var actual = _integrityService.CalculateHash(data.Rows);
-			var check = _integrityService.VerifyIntegrity(meta.BodyHashBase64, actual);
+			var actual = IntegrityService.CalculateHash(data.Rows);
+			var check = IntegrityService.VerifyIntegrity(meta.BodyHashBase64, actual);
 			if (!check.IsValid)
 			{
 				_logger.LogWarning("CSV body hash mismatch: expected {ExpectedHash}, actual {ActualHash}",

@@ -38,28 +38,28 @@ public static class TestServiceProviderFactory
 
 		services.AddSingleton(compiledFormulas);
 
-		services.AddSingleton<IActionRepository, ActionRepository>();
-		services.AddSingleton<IComboboxDataProvider, ComboboxDataProvider>();
+		services.AddSingleton<ActionRepository>();
+		services.AddSingleton<ComboboxDataProvider>();
 		services.AddSingleton<PropertyDefinitionRegistry>();
 		services.AddSingleton<PropertyStateProvider>();
 
-		services.AddSingleton<IStructureValidator, StructureValidator>();
-		services.AddSingleton<ILoopParser, LoopParser>();
-		services.AddSingleton<ILoopSemanticEvaluator, LoopSemanticEvaluator>();
-		services.AddSingleton<ITimingCalculator, TimingCalculator>();
-		services.AddSingleton<IRecipeAnalyzer, RecipeAnalyzer>();
-		services.AddSingleton<IRecipeStateManager, RecipeStateManager>();
+		services.AddSingleton<StructureValidator>();
+		services.AddSingleton<LoopParser>();
+		services.AddSingleton<LoopSemanticEvaluator>();
+		services.AddSingleton<TimingCalculator>();
+		services.AddSingleton<RecipeAnalyzer>();
+		services.AddSingleton<RecipeStateManager>();
 
-		services.AddSingleton<IFormulaEngine, FormulaEngine>();
-		services.AddSingleton<IStepVariableAdapter, StepVariableAdapter>();
+		services.AddSingleton<FormulaEngine>();
+		services.AddSingleton<StepVariableAdapter>();
 		services.AddSingleton<FormulaApplicationCoordinator>();
 		services.AddSingleton<RecipeMutator>();
 
 		services.AddSingleton<IActionTargetProvider, FakeActionTargetProvider>();
 
-		services.AddSingleton<IRecipeFacade, RecipeFacade>();
+		services.AddSingleton<RecipeFacade>();
 
-		services.AddSingleton<ITimerService, TimerService>();
+		services.AddSingleton<TimerService>();
 
 		return services.BuildServiceProvider();
 	}

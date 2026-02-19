@@ -6,11 +6,11 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Schema;
 
-public sealed class ClipboardSchemaValidator : IClipboardSchemaValidator
+public sealed class ClipboardSchemaValidator
 {
-	private readonly IClipboardSchemaDescriptor _schema;
+	private readonly ClipboardSchemaDescriptor _schema;
 
-	public ClipboardSchemaValidator(IClipboardSchemaDescriptor schema)
+	public ClipboardSchemaValidator(ClipboardSchemaDescriptor schema)
 	{
 		_schema = schema ?? throw new ArgumentNullException(nameof(schema));
 	}

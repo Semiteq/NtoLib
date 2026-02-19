@@ -16,7 +16,7 @@ public sealed class TableBehaviorManager : IDisposable
 
 	public TableBehaviorManager(
 		DataGridView table,
-		IStatusService? statusManager,
+		StatusService? statusManager,
 		ColorScheme colorScheme)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));

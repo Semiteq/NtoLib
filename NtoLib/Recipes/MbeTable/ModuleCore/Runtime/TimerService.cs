@@ -11,7 +11,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
 /// <summary>
 /// Timer logic consuming analysis snapshot only. Loop offsets ignored when loop integrity compromised.
 /// </summary>
-public sealed class TimerService : ITimerService
+public sealed class TimerService
 {
 	private readonly ILogger<TimerService> _logger;
 	private TimeSpan _lastTotalElapsed = TimeSpan.Zero;

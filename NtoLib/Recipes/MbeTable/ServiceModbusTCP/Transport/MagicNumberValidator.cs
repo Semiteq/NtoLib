@@ -16,7 +16,7 @@ using NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
-internal sealed class MagicNumberValidator
+public sealed class MagicNumberValidator
 {
 	private readonly ILogger<MagicNumberValidator> _logger;
 

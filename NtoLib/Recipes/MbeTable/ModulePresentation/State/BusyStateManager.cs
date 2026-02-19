@@ -1,42 +1,24 @@
 ﻿using System;
 using System.Threading;
 
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
-
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.State;
 
 /// <summary>
-/// Thread-safe manager controlling global UI busy flag via <see cref="Enter"/> / scope pattern.
+/// Thread-safe manager controlling global UI busy flag.
 /// </summary>
-public sealed class BusyStateManager : IBusyStateManager
+public sealed class BusyStateManager
 {
-	private int _counter; // Number of nested busy scopes
-	private OperationKind? _currentOperation;
+	private int _counter;
 
 	public bool IsBusy => Volatile.Read(ref _counter) > 0;
 
-	public event Action<bool>? BusyStateChanged;
-
-	/// <inheritdoc />
-	public IDisposable Enter(OperationKind operation)
+	public IDisposable Enter()
 	{
-		if (Interlocked.Increment(ref _counter) == 1)
-		{
-			_currentOperation = operation;
-			BusyStateChanged?.Invoke(true);
-		}
-
+		Interlocked.Increment(ref _counter);
 		return new Scope(this);
 	}
 
-	private void Exit()
-	{
-		if (Interlocked.Decrement(ref _counter) == 0)
-		{
-			_currentOperation = null;
-			BusyStateChanged?.Invoke(false);
-		}
-	}
+	private void Exit() => Interlocked.Decrement(ref _counter);
 
 	private sealed class Scope : IDisposable
 	{

@@ -12,18 +12,15 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 
-/// <summary>
-/// Extracts and validates raw data from CSV files.
-/// </summary>
-public sealed class CsvDataExtractor : ICsvDataExtractor
+public sealed class CsvDataExtractor
 {
-	private readonly ICsvHelperFactory _csvHelperFactory;
-	private readonly ICsvHeaderBinder _headerBinder;
+	private readonly CsvHelperFactory _csvHelperFactory;
+	private readonly CsvHeaderBinder _headerBinder;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
 
 	public CsvDataExtractor(
-		ICsvHelperFactory csvHelperFactory,
-		ICsvHeaderBinder headerBinder,
+		CsvHelperFactory csvHelperFactory,
+		CsvHeaderBinder headerBinder,
 		IReadOnlyList<ColumnDefinition> columns)
 	{
 		_csvHelperFactory = csvHelperFactory ?? throw new ArgumentNullException(nameof(csvHelperFactory));

@@ -59,49 +59,49 @@ public static class ApplicationTestServiceProviderFactory
 		services.AddSingleton(config.PropertyDefinitions);
 		services.AddSingleton(compiledFormulas);
 
-		services.AddSingleton<IActionRepository, ActionRepository>();
-		services.AddSingleton<IComboboxDataProvider, ComboboxDataProvider>();
+		services.AddSingleton<ActionRepository>();
+		services.AddSingleton<ComboboxDataProvider>();
 		services.AddSingleton<PropertyDefinitionRegistry>();
 		services.AddSingleton<PropertyStateProvider>();
 
-		services.AddSingleton<IStructureValidator, StructureValidator>();
-		services.AddSingleton<ILoopParser, LoopParser>();
-		services.AddSingleton<ILoopSemanticEvaluator, LoopSemanticEvaluator>();
-		services.AddSingleton<ITimingCalculator, TimingCalculator>();
-		services.AddSingleton<IRecipeAnalyzer, RecipeAnalyzer>();
-		services.AddSingleton<IRecipeStateManager, RecipeStateManager>();
+		services.AddSingleton<StructureValidator>();
+		services.AddSingleton<LoopParser>();
+		services.AddSingleton<LoopSemanticEvaluator>();
+		services.AddSingleton<TimingCalculator>();
+		services.AddSingleton<RecipeAnalyzer>();
+		services.AddSingleton<RecipeStateManager>();
 
-		services.AddSingleton<IFormulaEngine, FormulaEngine>();
-		services.AddSingleton<IStepVariableAdapter, StepVariableAdapter>();
+		services.AddSingleton<FormulaEngine>();
+		services.AddSingleton<StepVariableAdapter>();
 		services.AddSingleton<FormulaApplicationCoordinator>();
 		services.AddSingleton<RecipeMutator>();
 
 		services.AddSingleton<IActionTargetProvider, FakeActionTargetProvider>();
 
-		services.AddSingleton<IRecipeFacade, RecipeFacade>();
-		services.AddSingleton<ITimerService, TimerService>();
+		services.AddSingleton<RecipeFacade>();
+		services.AddSingleton<TimerService>();
 
 		services.AddSingleton<AssemblyValidator>();
 		services.AddSingleton<TargetAvailabilityValidator>();
 
 		services.AddSingleton<FakeClipboardRawAccess>();
 		services.AddSingleton<IClipboardRawAccess>(sp => sp.GetRequiredService<FakeClipboardRawAccess>());
-		services.AddSingleton<IClipboardSerializationService, ClipboardSerializationService>();
-		services.AddSingleton<IClipboardService, ClipboardService>();
+		services.AddSingleton<ClipboardSerializationService>();
+		services.AddSingleton<ClipboardService>();
 
-		services.AddSingleton<IClipboardSchemaDescriptor>(sp =>
+		services.AddSingleton<ClipboardSchemaDescriptor>(sp =>
 		{
 			var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
 			return new ClipboardSchemaDescriptor(columns);
 		});
-		services.AddSingleton<IClipboardSchemaValidator, ClipboardSchemaValidator>();
-		services.AddSingleton<IClipboardParser, ClipboardParser>();
-		services.AddSingleton<IClipboardStepsTransformer, ClipboardStepsTransformer>();
-		services.AddSingleton<IClipboardAssemblyService, ClipboardAssemblyService>();
+		services.AddSingleton<ClipboardSchemaValidator>();
+		services.AddSingleton<ClipboardParser>();
+		services.AddSingleton<ClipboardStepsTransformer>();
+		services.AddSingleton<ClipboardAssemblyService>();
 
 		services.AddSingleton<ErrorPolicyRegistry>();
 		services.AddSingleton<PolicyEngine>();
-		services.AddSingleton<IStateProvider, StateProvider>();
+		services.AddSingleton<StateProvider>();
 		services.AddSingleton<PolicyReasonsSinkAdapter>();
 		services.AddSingleton<IStatusPresenter, FakeStatusPresenter>();
 
@@ -111,9 +111,9 @@ public static class ApplicationTestServiceProviderFactory
 		services.AddSingleton<IModbusTcpService, FakeModbusTcpService>();
 
 		services.AddSingleton<OperationPipelineRunner>();
-		services.AddSingleton<IRecipeApplicationService, RecipeOperationService>();
+		services.AddSingleton<RecipeOperationService>();
 
-		services.AddSingleton<IForLoopNestingProvider, ForLoopNestingProvider>();
+		services.AddSingleton<ForLoopNestingProvider>();
 
 		return services.BuildServiceProvider();
 	}

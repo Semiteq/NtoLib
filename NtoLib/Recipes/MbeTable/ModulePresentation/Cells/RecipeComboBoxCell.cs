@@ -15,7 +15,7 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
 public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
 {
 	private IComboBoxItemsProvider? _itemsProvider;
-	private ICellRenderer? _renderer;
+	private ComboBoxCellRenderer? _renderer;
 
 	public RecipeComboBoxCell()
 	{
@@ -28,7 +28,7 @@ public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
 	}
 
 	public void SetItemsProvider(IComboBoxItemsProvider itemsProvider) => _itemsProvider = itemsProvider;
-	public void SetRenderer(ICellRenderer renderer) => _renderer = renderer;
+	public void SetRenderer(ComboBoxCellRenderer renderer) => _renderer = renderer;
 
 	public override object Clone()
 	{

@@ -9,14 +9,14 @@ using NtoLib.Recipes.MbeTable.ServiceClipboard.Serialization;
 
 namespace NtoLib.Recipes.MbeTable.ServiceClipboard;
 
-public sealed class ClipboardService : IClipboardService
+public sealed class ClipboardService
 {
 	private readonly IClipboardRawAccess _rawAccess;
-	private readonly IClipboardSerializationService _serialization;
+	private readonly ClipboardSerializationService _serialization;
 
 	public ClipboardService(
 		IClipboardRawAccess rawAccess,
-		IClipboardSerializationService serialization)
+		ClipboardSerializationService serialization)
 	{
 		_rawAccess = rawAccess ?? throw new ArgumentNullException(nameof(rawAccess));
 		_serialization = serialization ?? throw new ArgumentNullException(nameof(serialization));

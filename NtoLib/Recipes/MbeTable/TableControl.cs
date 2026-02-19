@@ -7,7 +7,7 @@ using FB.VisualFB;
 using Microsoft.Extensions.Logging;
 
 using NtoLib.Recipes.MbeTable.ModulePresentation;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
+using NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
@@ -30,7 +30,7 @@ public partial class TableControl : VisualControlBase
 
 	[NonSerialized] private bool _runtimeInitialized;
 	[NonSerialized] private TableBehaviorManager? _behaviorManager;
-	[NonSerialized] private ITableRenderCoordinator? _renderCoordinator;
+	[NonSerialized] private TableRenderCoordinator? _renderCoordinator;
 	[NonSerialized] private ILogger? _logger;
 
 	public TableControl() : base(true)

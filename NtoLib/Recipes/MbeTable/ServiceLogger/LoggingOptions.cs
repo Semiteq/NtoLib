@@ -7,7 +7,7 @@ public sealed class LoggingOptions
 	public bool Enabled { get; }
 	public string FilePath { get; }
 
-	public LoggingOptions(IRuntimeOptionsProvider runtimeOptionsProvider)
+	public LoggingOptions(FbRuntimeOptionsProvider runtimeOptionsProvider)
 	{
 		var runtimeOptions = runtimeOptionsProvider.GetCurrent();
 		Enabled = runtimeOptions.LogToFile;

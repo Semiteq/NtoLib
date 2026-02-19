@@ -31,7 +31,7 @@ public sealed class CsvAssemblyStrategyTests
 
 	private static CsvAssemblyStrategy BuildStrategy(IServiceProvider services)
 	{
-		var actionRepository = services.GetRequiredService<IActionRepository>();
+		var actionRepository = services.GetRequiredService<ActionRepository>();
 		var propertyRegistry = services.GetRequiredService<PropertyDefinitionRegistry>();
 		var columns = services.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
 		var headerBinder = new CsvHeaderBinder();

@@ -25,16 +25,16 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Schema;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication;
 
-public sealed class RecipeOperationService : IRecipeApplicationService
+public sealed class RecipeOperationService
 {
-	private readonly IRecipeFacade _recipeFacade;
-	private readonly ITimerService _timer;
+	private readonly RecipeFacade _recipeFacade;
+	private readonly TimerService _timer;
 	private readonly OperationPipelineRunner _pipeline;
 	private readonly ICsvService _csv;
 	private readonly IModbusTcpService _modbus;
-	private readonly IClipboardService _clipboard;
-	private readonly IClipboardSchemaDescriptor _schema;
-	private readonly IClipboardAssemblyService _clipboardAssembly;
+	private readonly ClipboardService _clipboard;
+	private readonly ClipboardSchemaDescriptor _schema;
+	private readonly ClipboardAssemblyService _clipboardAssembly;
 	private readonly ILogger<RecipeOperationService> _logger;
 
 	public RecipeViewModel ViewModel { get; }
@@ -43,14 +43,14 @@ public sealed class RecipeOperationService : IRecipeApplicationService
 	public event Action<int>? StepDataChanged;
 
 	public RecipeOperationService(
-		IRecipeFacade recipeFacade,
-		ITimerService timer,
+		RecipeFacade recipeFacade,
+		TimerService timer,
 		OperationPipelineRunner pipeline,
 		ICsvService csv,
 		IModbusTcpService modbus,
-		IClipboardService clipboard,
-		IClipboardSchemaDescriptor schema,
-		IClipboardAssemblyService clipboardAssembly,
+		ClipboardService clipboard,
+		ClipboardSchemaDescriptor schema,
+		ClipboardAssemblyService clipboardAssembly,
 		RecipeViewModel viewModel,
 		ILogger<RecipeOperationService> logger)
 	{

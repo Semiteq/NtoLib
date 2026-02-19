@@ -8,7 +8,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.State;
 /// Maintains current and last valid snapshots.
 /// Thread-safe via interlocked exchange.
 /// </summary>
-public sealed class RecipeStateManager : IRecipeStateManager
+public sealed class RecipeStateManager
 {
 	private RecipeAnalysisSnapshot _current = RecipeAnalysisSnapshot.Empty;
 	private RecipeAnalysisSnapshot? _lastValid;

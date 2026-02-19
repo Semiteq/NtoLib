@@ -86,7 +86,7 @@ public sealed class ClipboardPasteValidationTests
 		var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
 		using var _ = services as IDisposable;
 
-		var repo = services.GetRequiredService<IActionRepository>();
+		var repo = services.GetRequiredService<ActionRepository>();
 		var actionResult = repo.GetActionDefinitionById(ActionIdWithTask);
 		if (actionResult.IsFailed)
 		{
@@ -119,7 +119,7 @@ public sealed class ClipboardPasteValidationTests
 		var (services, app, clipboard) = ClipboardTestHelper.BuildApplication();
 		using var _ = services as IDisposable;
 
-		var repo = services.GetRequiredService<IActionRepository>();
+		var repo = services.GetRequiredService<ActionRepository>();
 		var actionResult = repo.GetActionDefinitionById(ActionIdWithTask);
 		if (actionResult.IsFailed)
 		{

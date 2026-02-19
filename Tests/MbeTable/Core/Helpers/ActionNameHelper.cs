@@ -9,7 +9,7 @@ namespace Tests.MbeTable.Core.Helpers;
 /// </summary>
 public static class ActionNameHelper
 {
-	public static short GetActionIdOrThrow(IActionRepository repo, string name)
+	public static short GetActionIdOrThrow(ActionRepository repo, string name)
 	{
 		if (repo == null)
 			throw new ArgumentNullException(nameof(repo));
@@ -25,7 +25,7 @@ public static class ActionNameHelper
 		return result.Value.Id;
 	}
 
-	public static Result<short> GetActionId(IActionRepository repo, string name)
+	public static Result<short> GetActionId(ActionRepository repo, string name)
 	{
 		return string.IsNullOrWhiteSpace(name)
 			? Result.Fail("Name empty")

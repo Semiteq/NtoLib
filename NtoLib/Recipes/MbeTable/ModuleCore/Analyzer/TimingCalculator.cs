@@ -9,7 +9,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// <summary>
 /// Computes linear start times and expands closed loops by iteration count.
 /// </summary>
-public sealed class TimingCalculator : ITimingCalculator
+public sealed class TimingCalculator
 {
 	public TimingResult Calculate(Recipe recipe, LoopSemanticsResult loopSemantics)
 	{

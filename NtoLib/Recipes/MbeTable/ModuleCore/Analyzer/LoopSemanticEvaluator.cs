@@ -11,7 +11,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// <summary>
 /// Applies semantic rules: iteration extraction, max depth detection, integrity flags.
 /// </summary>
-public sealed class LoopSemanticEvaluator : ILoopSemanticEvaluator
+public sealed class LoopSemanticEvaluator
 {
 	private const int ForLoopActionId = (int)ServiceActions.ForLoop;
 	private const int MaxDepth = 3;

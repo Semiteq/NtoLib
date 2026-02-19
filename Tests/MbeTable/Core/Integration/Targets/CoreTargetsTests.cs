@@ -25,7 +25,7 @@ public sealed class CoreTargetsTests
 		var (services, _) = CoreTestHelper.BuildCore();
 		using var __ = services as IDisposable;
 
-		var provider = services.GetRequiredService<IComboboxDataProvider>();
+		var provider = services.GetRequiredService<ComboboxDataProvider>();
 
 		var actions = provider.GetActions();
 
@@ -38,8 +38,8 @@ public sealed class CoreTargetsTests
 		var (services, _) = CoreTestHelper.BuildCore();
 		using var __ = services as IDisposable;
 
-		var repo = services.GetRequiredService<IActionRepository>();
-		var provider = services.GetRequiredService<IComboboxDataProvider>();
+		var repo = services.GetRequiredService<ActionRepository>();
+		var provider = services.GetRequiredService<ComboboxDataProvider>();
 
 		var id = ActionNameHelper.GetActionIdOrThrow(repo, CloseActionName);
 		var result = provider.GetResultEnumOptions(id, TargetColumnKey);

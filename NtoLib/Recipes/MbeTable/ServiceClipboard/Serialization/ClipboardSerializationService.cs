@@ -12,7 +12,7 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Warnings;
 
 namespace NtoLib.Recipes.MbeTable.ServiceClipboard.Serialization;
 
-public sealed class ClipboardSerializationService : IClipboardSerializationService
+public sealed class ClipboardSerializationService
 {
 	public string SerializeSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns)
 	{

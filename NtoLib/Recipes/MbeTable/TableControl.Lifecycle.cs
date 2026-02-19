@@ -10,7 +10,6 @@ using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Abstractions;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
@@ -34,13 +33,20 @@ public partial class TableControl
 	private void InitializeServicesAndRuntime()
 	{
 		if (_runtimeInitialized)
+		{
 			return;
+		}
+
 		if (FBConnector.Fb is not MbeTableFB mbeTableFb)
+		{
 			return;
+		}
 
 		_serviceProvider = mbeTableFb.ServiceProvider;
 		if (_serviceProvider is null)
+		{
 			return;
+		}
 
 		try
 		{
@@ -73,35 +79,34 @@ public partial class TableControl
 
 	private void SubscribeGlobalServices()
 	{
-		var stateProvider = _serviceProvider!.GetRequiredService<IStateProvider>();
+		var stateProvider = _serviceProvider!.GetRequiredService<StateProvider>();
 		stateProvider.PermissionsChanged += OnPermissionsChanged;
 
 		// init debounce timer
 		_permissionsDebounceTimer = new Timer { Interval = 80 };
 		_permissionsDebounceTimer.Tick += PermissionsDebounceTimer_Tick;
 
-		var status = _serviceProvider!.GetRequiredService<IStatusService>();
+		var status = _serviceProvider!.GetRequiredService<StatusService>();
 		var scheme = _serviceProvider!.GetRequiredService<ColorScheme>();
 		status.AttachLabel(_labelStatus, scheme);
 	}
 
 	private void InitializeColorScheme()
 	{
-		_colorSchemeProvider = _serviceProvider!.GetRequiredService<IColorSchemeProvider>()
-			as DesignTimeColorSchemeProvider;
+		_colorSchemeProvider = _serviceProvider!.GetRequiredService<DesignTimeColorSchemeProvider>();
 
 		ApplyPendingColorMutations();
 	}
 
 	private void ConfigureRecipeTable()
 	{
-		var configurator = new TableConfigurator(
-			_table,
-			_serviceProvider!.GetRequiredService<IColorSchemeProvider>(),
-			_serviceProvider!.GetRequiredService<IReadOnlyList<ColumnDefinition>>(),
-			_serviceProvider!.GetRequiredService<FactoryColumnRegistry>());
+		var schemeProvider = _serviceProvider!.GetRequiredService<DesignTimeColorSchemeProvider>();
+		var columnDefinitions = _serviceProvider!.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
+		var columnRegistry = _serviceProvider!.GetRequiredService<FactoryColumnRegistry>();
 
-		configurator.Configure();
+		GridOptions.Init(_table);
+		GridStyle.Init(_table, schemeProvider.Current);
+		GridColumns.Init(_table, columnDefinitions, columnRegistry);
 	}
 
 	private void AttachBehaviorManager()
@@ -121,8 +126,12 @@ public partial class TableControl
 
 	private void InitializeInputManager()
 	{
-		if (_serviceProvider == null || _table == null || _table.IsDisposed)
+		if (_serviceProvider == null
+			|| _table == null
+			|| _table.IsDisposed)
+		{
 			return;
+		}
 
 		_inputManager = ActivatorUtilities.CreateInstance<TableInputManager>(_serviceProvider, _table);
 
@@ -171,13 +180,18 @@ public partial class TableControl
 	private void ApplyInitialPermissions()
 	{
 		if (!IsHandleCreated)
+		{
 			return;
+		}
+
 		try
 		{
 			_logger!.LogDebug("Applying initial permissions");
-			var stateProvider = _serviceProvider?.GetService<IStateProvider>();
+			var stateProvider = _serviceProvider?.GetService<StateProvider>();
 			if (stateProvider == null)
+			{
 				return;
+			}
 
 			var permissions = stateProvider.GetUiPermissions();
 			_logger!.LogDebug("Current permissions: {Permissions}", permissions);
@@ -236,17 +250,24 @@ public partial class TableControl
 	private void PermissionsDebounceTimer_Tick(object? sender, EventArgs e)
 	{
 		if (_permissionsDebounceTimer == null)
+		{
 			return;
+		}
+
 		_permissionsDebounceTimer.Stop();
 		if (_pendingPermissions != null)
+		{
 			ApplyPermissionsNow(_pendingPermissions);
+		}
 	}
 
 	private void ApplyPermissionsNow(UiPermissions permissions)
 	{
 		var scheme = _serviceProvider?.GetService<ColorScheme>();
 		if (scheme == null)
+		{
 			return;
+		}
 
 		ApplyButtonPermission(_buttonOpen, permissions.CanOpenFile, scheme);
 		ApplyButtonPermission(_buttonSave, permissions.CanSaveFile, scheme);
@@ -283,9 +304,9 @@ public partial class TableControl
 
 	private ITablePresenter CreatePresenter(ITableView view)
 	{
-		var app = _serviceProvider!.GetRequiredService<IRecipeApplicationService>();
-		var rowStateProvider = _serviceProvider!.GetRequiredService<IRowExecutionStateProvider>();
-		var busy = _serviceProvider!.GetRequiredService<IBusyStateManager>();
+		var app = _serviceProvider!.GetRequiredService<RecipeOperationService>();
+		var rowStateProvider = _serviceProvider!.GetRequiredService<ThreadSafeRowExecutionStateProvider>();
+		var busy = _serviceProvider!.GetRequiredService<BusyStateManager>();
 		var openDialog = _serviceProvider!.GetRequiredService<OpenFileDialog>();
 		var saveDialog = _serviceProvider!.GetRequiredService<SaveFileDialog>();
 
@@ -302,7 +323,9 @@ public partial class TableControl
 	{
 		base.put_DesignMode(bDesignMode);
 		if (FBConnector == null)
+		{
 			return;
+		}
 
 		if (!FBConnector.DesignMode)
 		{
@@ -340,7 +363,9 @@ public partial class TableControl
 		try
 		{
 			if (_serviceProvider == null)
+			{
 				return;
+			}
 
 			UnsubscribeGlobalServices();
 			DisposeRuntimeComponents();
@@ -355,7 +380,7 @@ public partial class TableControl
 
 	private void UnsubscribeGlobalServices()
 	{
-		var stateProvider = _serviceProvider!.GetService<IStateProvider>();
+		var stateProvider = _serviceProvider!.GetService<StateProvider>();
 		if (stateProvider != null)
 		{
 			stateProvider.PermissionsChanged -= OnPermissionsChanged;
@@ -387,7 +412,7 @@ public partial class TableControl
 			_permissionsDebounceTimer = null;
 		}
 
-		var status = _serviceProvider!.GetService<IStatusService>();
+		var status = _serviceProvider!.GetService<StatusService>();
 		try
 		{ status?.Detach(); }
 		catch
@@ -421,7 +446,9 @@ public partial class TableControl
 		try
 		{
 			if (!disposing)
+			{
 				return;
+			}
 
 			CleanupRuntimeState();
 			components?.Dispose();

@@ -6,12 +6,12 @@ namespace Tests.MbeTable.Core.Helpers;
 
 public static class CoreTestHelper
 {
-	public static (IServiceProvider Services, IRecipeFacade Facade) BuildCore()
+	public static (IServiceProvider Services, RecipeFacade Facade) BuildCore()
 	{
 		var dir = YamlTestDataHelper.PrepareYamlConfigDirectory();
 		var provider = new TestConfigProvider(dir);
 		var services = TestServiceProviderFactory.Create(provider.AppConfiguration, provider.CompiledFormulas);
-		var facade = services.GetRequiredService<IRecipeFacade>();
+		var facade = services.GetRequiredService<RecipeFacade>();
 		return (services, facade);
 	}
 }

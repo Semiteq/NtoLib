@@ -5,15 +5,12 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 
-/// <summary>
-/// Renderer for ComboBox-style cells that draws using final visual attributes.
-/// </summary>
-public sealed class ComboBoxCellRenderer : ICellRenderer
+public sealed class ComboBoxCellRenderer
 {
 	private const int TextPadding = 3;
-	private readonly IColorSchemeProvider _schemeProvider;
+	private readonly DesignTimeColorSchemeProvider _schemeProvider;
 
-	public ComboBoxCellRenderer(IColorSchemeProvider schemeProvider)
+	public ComboBoxCellRenderer(DesignTimeColorSchemeProvider schemeProvider)
 	{
 		_schemeProvider = schemeProvider;
 	}
@@ -30,13 +27,17 @@ public sealed class ComboBoxCellRenderer : ICellRenderer
 		DrawGridLines(ctx);
 
 		if (ctx.IsCurrent)
-			DrawFocus(ctx);
+		{
+			DrawFocus(ctx, _schemeProvider);
+		}
 	}
 
 	private static void DrawText(CellRenderContext ctx, string text)
 	{
 		if (string.IsNullOrEmpty(text))
+		{
 			return;
+		}
 
 		var rect = Rectangle.Inflate(ctx.Bounds, -TextPadding, -2);
 		TextRenderer.DrawText(
@@ -66,9 +67,9 @@ public sealed class ComboBoxCellRenderer : ICellRenderer
 			ctx.Bounds.Bottom - 1);
 	}
 
-	private void DrawFocus(CellRenderContext ctx)
+	private static void DrawFocus(CellRenderContext ctx, DesignTimeColorSchemeProvider schemeProvider)
 	{
-		var scheme = _schemeProvider.Current;
+		var scheme = schemeProvider.Current;
 		using var pen = new Pen(scheme.SelectedOutlineColor, scheme.SelectedOutlineThickness);
 
 		var rect = Rectangle.Inflate(ctx.Bounds, -1, -1);

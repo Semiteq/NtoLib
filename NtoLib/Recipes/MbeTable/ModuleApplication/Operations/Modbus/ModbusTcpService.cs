@@ -15,14 +15,14 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
 
 public sealed class ModbusTcpService : IModbusTcpService
 {
-	private readonly IRecipePlcService _plcService;
-	private readonly IModbusRecipeAssemblyService _assemblyService;
+	private readonly RecipePlcService _plcService;
+	private readonly ModbusRecipeAssemblyService _assemblyService;
 	private readonly RecipeComparator _comparator;
 	private readonly ILogger<ModbusTcpService> _logger;
 
 	public ModbusTcpService(
-		IRecipePlcService plcService,
-		IModbusRecipeAssemblyService assemblyService,
+		RecipePlcService plcService,
+		ModbusRecipeAssemblyService assemblyService,
 		RecipeComparator comparator,
 		ILogger<ModbusTcpService> logger)
 	{

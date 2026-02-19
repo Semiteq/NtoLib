@@ -15,16 +15,13 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 
-/// <summary>
-/// Formats Recipe objects to CSV string representation.
-/// </summary>
-public sealed class CsvDataFormatter : ICsvDataFormatter
+public sealed class CsvDataFormatter
 {
-	private readonly ICsvHelperFactory _csvHelperFactory;
+	private readonly CsvHelperFactory _csvHelperFactory;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
 
 	public CsvDataFormatter(
-		ICsvHelperFactory csvHelperFactory,
+		CsvHelperFactory csvHelperFactory,
 		IReadOnlyList<ColumnDefinition> columns)
 	{
 		_csvHelperFactory = csvHelperFactory ?? throw new ArgumentNullException(nameof(csvHelperFactory));

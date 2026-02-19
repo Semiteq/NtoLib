@@ -2,7 +2,7 @@
 
 namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 
-internal sealed class FbPinAccessor : IPinAccessor
+public sealed class FbPinAccessor
 {
 	private readonly MbeTableFB _fb;
 	public FbPinAccessor(MbeTableFB fb) => _fb = fb;

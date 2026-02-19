@@ -8,12 +8,12 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Loops;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
-public sealed class ForLoopNestingProvider : IForLoopNestingProvider
+public sealed class ForLoopNestingProvider
 {
-	private readonly IRecipeFacade _facade;
+	private readonly RecipeFacade _facade;
 	private readonly ILogger<ForLoopNestingProvider> _logger;
 
-	public ForLoopNestingProvider(IRecipeFacade facade, ILogger<ForLoopNestingProvider> logger)
+	public ForLoopNestingProvider(RecipeFacade facade, ILogger<ForLoopNestingProvider> logger)
 	{
 		_facade = facade ?? throw new ArgumentNullException(nameof(facade));
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));

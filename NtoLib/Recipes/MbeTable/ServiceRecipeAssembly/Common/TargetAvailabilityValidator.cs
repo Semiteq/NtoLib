@@ -20,7 +20,7 @@ public sealed class TargetAvailabilityValidator
 {
 	public Result Validate(
 		Recipe recipe,
-		IActionRepository actionRepository,
+		ActionRepository actionRepository,
 		IActionTargetProvider targetProvider)
 	{
 		var errors = new List<string>();
@@ -45,7 +45,7 @@ public sealed class TargetAvailabilityValidator
 	private static Result ValidateStep(
 		Step step,
 		int stepIndex,
-		IActionRepository actionRepository,
+		ActionRepository actionRepository,
 		IReadOnlyDictionary<string, IReadOnlyDictionary<short, string>> snapshot,
 		List<string> errors)
 	{

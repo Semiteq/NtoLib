@@ -11,9 +11,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Status;
 
 public sealed class StatusPresenter : IStatusPresenter
 {
-	private readonly IStatusService _status;
+	private readonly StatusService _status;
 
-	public StatusPresenter(IStatusService status)
+	public StatusPresenter(StatusService status)
 	{
 		_status = status ?? throw new ArgumentNullException(nameof(status));
 	}

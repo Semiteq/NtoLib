@@ -26,7 +26,7 @@ public sealed class CoreTimerEdgeCasesTests
 		var d = new RecipeTestDriver(facade);
 		d.AddWait(0).SetDuration(0, StepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -54,7 +54,7 @@ public sealed class CoreTimerEdgeCasesTests
 		var d = new RecipeTestDriver(facade);
 		d.AddWait(0).SetDuration(0, StepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -87,7 +87,7 @@ public sealed class CoreTimerEdgeCasesTests
 		d.AddWait(1).SetDuration(1, BodyDuration);
 		d.AddEndFor(2);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };
@@ -112,7 +112,7 @@ public sealed class CoreTimerEdgeCasesTests
 		var d = new RecipeTestDriver(facade);
 		d.AddWait(0).SetDuration(0, StepDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 5f), analysis);
@@ -136,7 +136,7 @@ public sealed class CoreTimerEdgeCasesTests
 		d.AddWait(0).SetDuration(0, StepDuration);
 		d.AddWait(1).SetDuration(1, 5f);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 9f), analysis);
@@ -156,7 +156,7 @@ public sealed class CoreTimerEdgeCasesTests
 		var (services, facade) = CoreTestHelper.BuildCore();
 		using var _ = services as IDisposable;
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 

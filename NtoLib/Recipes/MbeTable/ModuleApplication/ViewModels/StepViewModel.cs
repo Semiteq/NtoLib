@@ -13,12 +13,12 @@ public sealed class StepViewModel
 {
 	private Step _step;
 	private TimeSpan _startTime;
-	private readonly IComboboxDataProvider _comboboxDataProvider;
+	private readonly ComboboxDataProvider _comboboxDataProvider;
 
 	public StepViewModel(
 		Step step,
 		TimeSpan startTime,
-		IComboboxDataProvider comboboxDataProvider)
+		ComboboxDataProvider comboboxDataProvider)
 	{
 		_step = step ?? throw new ArgumentNullException(nameof(step));
 		_comboboxDataProvider = comboboxDataProvider ?? throw new ArgumentNullException(nameof(comboboxDataProvider));

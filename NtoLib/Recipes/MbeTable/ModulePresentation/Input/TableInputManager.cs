@@ -23,8 +23,8 @@ public sealed class TableInputManager : IDisposable
 
 	public TableInputManager(
 		DataGridView table,
-		IRecipeApplicationService applicationService,
-		IBusyStateManager busyStateManager)
+		RecipeOperationService applicationService,
+		BusyStateManager busyStateManager)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		var selectionService = new TableSelectionService(_table);
@@ -147,7 +147,7 @@ public sealed class TableInputManager : IDisposable
 				return;
 			}
 
-			_table.BeginInvoke(new Action(async () =>
+			_table.BeginInvoke(new Action(async void () =>
 			{
 				try
 				{

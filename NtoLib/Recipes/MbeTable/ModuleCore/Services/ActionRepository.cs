@@ -10,7 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
-public sealed class ActionRepository : IActionRepository
+public sealed class ActionRepository
 {
 	public ActionRepository(AppConfiguration configuration)
 	{

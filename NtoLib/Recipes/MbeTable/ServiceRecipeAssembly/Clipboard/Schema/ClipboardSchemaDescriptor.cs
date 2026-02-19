@@ -5,7 +5,7 @@ using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Schema;
 
-public sealed class ClipboardSchemaDescriptor : IClipboardSchemaDescriptor
+public sealed class ClipboardSchemaDescriptor
 {
 	public IReadOnlyList<ColumnIdentifier> TransferColumns { get; }
 

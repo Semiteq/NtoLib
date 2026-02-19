@@ -6,11 +6,7 @@ using CsvHelper.Configuration;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 
-/// <summary>
-/// A factory class responsible for creating instances of <see cref="CsvReader"/> and <see cref="CsvWriter"/>
-/// with predefined configurations for handling CSV data.
-/// </summary>
-public sealed class CsvHelperFactory : ICsvHelperFactory
+public sealed class CsvHelperFactory
 {
 	private const char Separator = ';';
 

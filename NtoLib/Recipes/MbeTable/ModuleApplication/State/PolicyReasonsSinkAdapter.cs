@@ -7,9 +7,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
 
 public sealed class PolicyReasonsSinkAdapter
 {
-	private readonly IStateProvider _state;
+	private readonly StateProvider _state;
 
-	public PolicyReasonsSinkAdapter(IStateProvider state)
+	public PolicyReasonsSinkAdapter(StateProvider state)
 	{
 		_state = state ?? throw new ArgumentNullException(nameof(state));
 	}

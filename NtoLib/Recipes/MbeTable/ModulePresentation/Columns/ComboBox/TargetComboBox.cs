@@ -11,8 +11,8 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 
 public sealed class TargetComboBox : FactoryColumnComboBoxBase
 {
-	public TargetComboBox(IServiceProvider serviceProvider, IColumnAlignmentResolver alignmentResolver)
-		: base(serviceProvider, alignmentResolver)
+	public TargetComboBox(IServiceProvider serviceProvider)
+		: base(serviceProvider)
 	{
 	}
 

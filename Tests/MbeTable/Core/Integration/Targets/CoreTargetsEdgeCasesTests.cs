@@ -25,7 +25,7 @@ public sealed class CoreTargetsEdgeCasesTests
 		var (services, _) = CoreTestHelper.BuildCore();
 		using var __ = services as IDisposable;
 
-		var repo = services.GetRequiredService<IActionRepository>();
+		var repo = services.GetRequiredService<ActionRepository>();
 
 		var result = repo.GetResultActionDefinitionByName(EmptyActionName);
 
@@ -38,7 +38,7 @@ public sealed class CoreTargetsEdgeCasesTests
 		var (services, _) = CoreTestHelper.BuildCore();
 		using var __ = services as IDisposable;
 
-		var repo = services.GetRequiredService<IActionRepository>();
+		var repo = services.GetRequiredService<ActionRepository>();
 
 		var result = repo.GetResultActionDefinitionByName(string.Empty);
 
@@ -51,8 +51,8 @@ public sealed class CoreTargetsEdgeCasesTests
 		var (services, _) = CoreTestHelper.BuildCore();
 		using var __ = services as IDisposable;
 
-		var repo = services.GetRequiredService<IActionRepository>();
-		var provider = services.GetRequiredService<IComboboxDataProvider>();
+		var repo = services.GetRequiredService<ActionRepository>();
+		var provider = services.GetRequiredService<ComboboxDataProvider>();
 
 		var actionId = ActionNameHelper.GetActionIdOrThrow(repo, CloseActionName);
 		var result = provider.GetResultEnumOptions(actionId, InvalidColumnKey);

@@ -15,8 +15,7 @@ public abstract class FactoryColumnComboBoxBase : FactoryColumnBase
 {
 	protected readonly IServiceProvider ServiceProvider;
 
-	protected FactoryColumnComboBoxBase(IServiceProvider serviceProvider,
-		IColumnAlignmentResolver alignmentResolver) : base(alignmentResolver)
+	protected FactoryColumnComboBoxBase(IServiceProvider serviceProvider)
 	{
 		ServiceProvider = serviceProvider;
 	}
@@ -42,7 +41,9 @@ public abstract class FactoryColumnComboBoxBase : FactoryColumnBase
 	protected override void ConfigureColumn(DataGridViewColumn column)
 	{
 		if (column is not DataGridViewComboBoxColumn combo)
+		{
 			return;
+		}
 
 		combo.DataSource = GetDataSource();
 		combo.DisplayMember = "Value";
@@ -57,7 +58,7 @@ public abstract class FactoryColumnComboBoxBase : FactoryColumnBase
 	{
 		var cell = new RecipeComboBoxCell();
 		AssignItemsProvider(cell);
-		cell.SetRenderer(ServiceProvider.GetRequiredService<ICellRenderer>());
+		cell.SetRenderer(ServiceProvider.GetRequiredService<ComboBoxCellRenderer>());
 		return cell;
 	}
 }

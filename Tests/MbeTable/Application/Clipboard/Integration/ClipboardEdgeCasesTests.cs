@@ -23,7 +23,7 @@ public sealed class ClipboardEdgeCasesTests
 		var (services, _, _) = ClipboardTestHelper.BuildApplication();
 		using var _ = services as IDisposable;
 
-		var schema = services.GetRequiredService<IClipboardSchemaDescriptor>();
+		var schema = services.GetRequiredService<ClipboardSchemaDescriptor>();
 		schema.TransferColumns.Count.Should().Be(7);
 	}
 

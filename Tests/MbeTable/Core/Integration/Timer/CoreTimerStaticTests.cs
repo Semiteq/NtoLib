@@ -21,7 +21,7 @@ public sealed class CoreTimerStaticTests
 		var (services, facade) = CoreTestHelper.BuildCore();
 		using var _ = services as IDisposable;
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -50,7 +50,7 @@ public sealed class CoreTimerStaticTests
 		d.AddWait(0).SetDuration(0, 10f);
 		d.AddWait(1).SetDuration(1, 5f);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -78,7 +78,7 @@ public sealed class CoreTimerStaticTests
 		var d = new RecipeTestDriver(facade);
 		d.AddWait(0).SetDuration(0, 10f);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		var analysis = facade.CurrentSnapshot;
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateInactive(), analysis);

@@ -15,14 +15,14 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
 
 public sealed class CsvService : ICsvService
 {
-	private readonly IRecipeFileService _fileService;
-	private readonly ICsvRecipeAssemblyService _assemblyService;
+	private readonly RecipeFileService _fileService;
+	private readonly CsvRecipeAssemblyService _assemblyService;
 	private readonly AssemblyValidator _validator;
 	private readonly ILogger<CsvService> _logger;
 
 	public CsvService(
-		IRecipeFileService fileService,
-		ICsvRecipeAssemblyService assemblyService,
+		RecipeFileService fileService,
+		CsvRecipeAssemblyService assemblyService,
 		AssemblyValidator validator,
 		ILogger<CsvService> logger)
 	{

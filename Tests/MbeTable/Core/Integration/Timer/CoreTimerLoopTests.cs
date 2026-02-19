@@ -29,7 +29,7 @@ public sealed class CoreTimerLoopTests
 		d.AddWait(1).SetDuration(1, BodyDuration);
 		d.AddEndFor(2);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -62,7 +62,7 @@ public sealed class CoreTimerLoopTests
 		d.AddWait(1).SetDuration(1, BodyDuration);
 		d.AddEndFor(2);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -101,7 +101,7 @@ public sealed class CoreTimerLoopTests
 		d.AddEndFor(3);
 		d.AddEndFor(4);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedStepLeft = TimeSpan.Zero;
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
@@ -134,7 +134,7 @@ public sealed class CoreTimerLoopTests
 		d.AddWait(1).SetDuration(1, BodyDuration);
 		d.AddEndFor(2);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };
@@ -162,7 +162,7 @@ public sealed class CoreTimerLoopTests
 		d.AddFor(0, Iterations);
 		d.AddWait(1).SetDuration(1, BodyDuration);
 
-		var timer = services.GetRequiredService<ITimerService>();
+		var timer = services.GetRequiredService<TimerService>();
 		TimeSpan capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };

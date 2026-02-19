@@ -5,9 +5,9 @@ namespace Tests.MbeTable.Application.Clipboard.Helpers;
 
 public sealed class ClipboardTestDriver
 {
-	private readonly IRecipeApplicationService _app;
+	private readonly RecipeOperationService _app;
 
-	public ClipboardTestDriver(IRecipeApplicationService app)
+	public ClipboardTestDriver(RecipeOperationService app)
 	{
 		_app = app;
 	}

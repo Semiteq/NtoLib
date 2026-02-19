@@ -1,14 +1,14 @@
 ﻿using System.Reflection;
 using System.Windows.Forms;
 
-namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
+namespace NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
 
 /// <summary>
 /// Applies common DataGridView options once during table initialization.
 /// </summary>
-internal static class GridOptionsApplier
+internal static class GridOptions
 {
-	public static void Apply(DataGridView grid)
+	public static void Init(DataGridView grid)
 	{
 		grid.VirtualMode = true;
 		grid.AutoGenerateColumns = false;

@@ -13,7 +13,7 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// Parses For / EndFor constructs producing provisional LoopNode list (status may be incomplete).
 /// Extracts iteration count from the 'task' property on For steps.
 /// </summary>
-public sealed class LoopParser : ILoopParser
+public sealed class LoopParser
 {
 	private const int ForLoopActionId = (int)ServiceActions.ForLoop;
 	private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;

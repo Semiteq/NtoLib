@@ -18,11 +18,11 @@ using Polly;
 
 namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 
-internal sealed class ModbusConnectionManager : IDisposable
+public sealed class ModbusConnectionManager : IDisposable
 {
 	private const int DefaultStalenessMs = 0;
 
-	private readonly IRuntimeOptionsProvider _optionsProvider;
+	private readonly FbRuntimeOptionsProvider _optionsProvider;
 	private readonly MagicNumberValidator _validator;
 	private readonly ILogger<ModbusConnectionManager> _logger;
 	private readonly SemaphoreSlim _connectionLock = new(1, 1);
@@ -34,7 +34,7 @@ internal sealed class ModbusConnectionManager : IDisposable
 	private ConnectionContext? _currentContext;
 
 	public ModbusConnectionManager(
-		IRuntimeOptionsProvider optionsProvider,
+		FbRuntimeOptionsProvider optionsProvider,
 		MagicNumberValidator validator,
 		ILogger<ModbusConnectionManager> logger)
 	{

@@ -14,18 +14,18 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Assembly;
 
-public sealed class ClipboardAssemblyService : IClipboardAssemblyService
+public sealed class ClipboardAssemblyService
 {
-	private readonly IClipboardService _clipboard;
-	private readonly IClipboardParser _parser;
-	private readonly IClipboardStepsTransformer _transformer;
+	private readonly ClipboardService _clipboard;
+	private readonly ClipboardParser _parser;
+	private readonly ClipboardStepsTransformer _transformer;
 	private readonly AssemblyValidator _validator;
 	private readonly ILogger<ClipboardAssemblyService> _logger;
 
 	public ClipboardAssemblyService(
-		IClipboardService clipboard,
-		IClipboardParser parser,
-		IClipboardStepsTransformer transformer,
+		ClipboardService clipboard,
+		ClipboardParser parser,
+		ClipboardStepsTransformer transformer,
 		AssemblyValidator validator,
 		ILogger<ClipboardAssemblyService> logger)
 	{

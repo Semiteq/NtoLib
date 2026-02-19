@@ -10,7 +10,7 @@ using NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 
-public sealed class StepVariableAdapter : IStepVariableAdapter
+public sealed class StepVariableAdapter
 {
 	public Result<IReadOnlyDictionary<string, double>> ExtractVariables(Step step, IReadOnlyList<string> variableNames)
 	{

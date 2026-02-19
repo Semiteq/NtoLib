@@ -2,11 +2,7 @@
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
 
-/// <summary>
-/// Simple adapter that exposes <see cref="RecipeViewModel"/> to presentation strategies.
-/// Lifetime – scoped together with RecipeViewModel.
-/// </summary>
-public sealed class CellDataContext : ICellDataContext
+public sealed class CellDataContext
 {
 	private readonly RecipeViewModel _recipeViewModel;
 

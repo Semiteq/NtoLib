@@ -11,13 +11,13 @@ using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
 /// <inheritdoc />
-public sealed class ComboboxDataProvider : IComboboxDataProvider
+public sealed class ComboboxDataProvider
 {
-	private readonly IActionRepository _actions;
+	private readonly ActionRepository _actions;
 	private readonly IActionTargetProvider _targets;
 
 	public ComboboxDataProvider(
-		IActionRepository actionRepository,
+		ActionRepository actionRepository,
 		IActionTargetProvider actionTargetProvider)
 	{
 		_actions = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));

@@ -15,12 +15,12 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
 public sealed class AssemblyValidator
 {
 	private readonly TargetAvailabilityValidator _targetValidator;
-	private readonly IActionRepository _actionRepository;
+	private readonly ActionRepository _actionRepository;
 	private readonly IActionTargetProvider _targetProvider;
 
 	public AssemblyValidator(
 		TargetAvailabilityValidator targetValidator,
-		IActionRepository actionRepository,
+		ActionRepository actionRepository,
 		IActionTargetProvider targetProvider)
 	{
 		_targetValidator = targetValidator ?? throw new ArgumentNullException(nameof(targetValidator));

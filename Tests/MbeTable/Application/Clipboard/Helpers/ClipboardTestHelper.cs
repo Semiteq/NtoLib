@@ -7,14 +7,14 @@ namespace Tests.MbeTable.Application.Clipboard.Helpers;
 
 public static class ClipboardTestHelper
 {
-	public static (IServiceProvider Services, IRecipeApplicationService App, FakeClipboardRawAccess Clipboard)
+	public static (IServiceProvider Services, RecipeOperationService App, FakeClipboardRawAccess Clipboard)
 		BuildApplication()
 	{
 		var dir = ClipboardYamlHelper.PrepareYamlConfigDirectory();
 		var provider = new ClipboardTestConfigProvider(dir);
 		var services =
 			ApplicationTestServiceProviderFactory.Create(provider.AppConfiguration, provider.CompiledFormulas);
-		var app = services.GetRequiredService<IRecipeApplicationService>();
+		var app = services.GetRequiredService<RecipeOperationService>();
 		var clipboard = services.GetRequiredService<IClipboardRawAccess>() as FakeClipboardRawAccess;
 
 		if (clipboard == null)

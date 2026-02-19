@@ -14,7 +14,7 @@ using NtoLib.Recipes.MbeTable.ResultsExtension;
 
 namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
 
-public sealed class StateProvider : IStateProvider
+public sealed class StateProvider
 {
 	private readonly object _lock = new();
 	private readonly ErrorPolicyRegistry _policyRegistry;

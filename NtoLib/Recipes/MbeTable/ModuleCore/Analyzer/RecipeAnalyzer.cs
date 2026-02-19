@@ -14,18 +14,18 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// <summary>
 /// Implements ordered analysis pipeline and validity rules.
 /// </summary>
-public sealed class RecipeAnalyzer : IRecipeAnalyzer
+public sealed class RecipeAnalyzer
 {
-	private readonly IStructureValidator _structureValidator;
-	private readonly ILoopParser _loopParser;
-	private readonly ILoopSemanticEvaluator _loopSemanticEvaluator;
-	private readonly ITimingCalculator _timingCalculator;
+	private readonly StructureValidator _structureValidator;
+	private readonly LoopParser _loopParser;
+	private readonly LoopSemanticEvaluator _loopSemanticEvaluator;
+	private readonly TimingCalculator _timingCalculator;
 
 	public RecipeAnalyzer(
-		IStructureValidator structureValidator,
-		ILoopParser loopParser,
-		ILoopSemanticEvaluator loopSemanticEvaluator,
-		ITimingCalculator timingCalculator)
+		StructureValidator structureValidator,
+		LoopParser loopParser,
+		LoopSemanticEvaluator loopSemanticEvaluator,
+		TimingCalculator timingCalculator)
 	{
 		_structureValidator = structureValidator;
 		_loopParser = loopParser;

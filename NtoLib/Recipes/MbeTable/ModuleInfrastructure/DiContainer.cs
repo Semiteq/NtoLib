@@ -30,7 +30,6 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
 using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
@@ -72,7 +71,7 @@ public static class MbeTableServiceConfigurator
 		var services = new ServiceCollection();
 
 		var runtimeOptionsProvider = new FbRuntimeOptionsProvider(mbeTableFb);
-		services.AddSingleton<IRuntimeOptionsProvider>(runtimeOptionsProvider);
+		services.AddSingleton(runtimeOptionsProvider);
 
 		RegisterLogging(services);
 		RegisterConfiguration(services, configurationState);
@@ -131,14 +130,14 @@ public static class MbeTableServiceConfigurator
 	{
 		services.AddSingleton(mbeTableFb);
 		services.AddSingleton(configurationState);
-		services.AddSingleton<IPinAccessor>(_ => new FbPinAccessor(mbeTableFb));
+		services.AddSingleton<FbPinAccessor>(_ => new FbPinAccessor(mbeTableFb));
 	}
 
 	private static void RegisterRuntimeState(IServiceCollection services, MbeTableFB fb)
 	{
-		services.AddSingleton<IRecipeRuntimeState>(sp =>
+		services.AddSingleton<RecipeRuntimeStatePoller>(sp =>
 		{
-			var accessor = sp.GetRequiredService<IPinAccessor>();
+			var accessor = sp.GetRequiredService<FbPinAccessor>();
 			return new RecipeRuntimeStatePoller(
 				accessor,
 				fb.Epsilon,
@@ -159,47 +158,47 @@ public static class MbeTableServiceConfigurator
 
 	private static void RegisterStatusService(IServiceCollection services)
 	{
-		services.AddSingleton<IStatusService, StatusService>();
+		services.AddSingleton<StatusService>();
 	}
 
 	private static void RegisterCoreServices(IServiceCollection services)
 	{
-		services.AddSingleton<IActionRepository, ActionRepository>();
-		services.AddSingleton<IComboboxDataProvider, ComboboxDataProvider>();
+		services.AddSingleton<ActionRepository>();
+		services.AddSingleton<ComboboxDataProvider>();
 		services.AddSingleton<PropertyDefinitionRegistry>();
 		services.AddSingleton<PropertyStateProvider>();
 		services.AddSingleton<RecipeMutator>();
-		services.AddSingleton<IFormulaEngine, FormulaEngine>();
-		services.AddSingleton<IStepVariableAdapter, StepVariableAdapter>();
+		services.AddSingleton<FormulaEngine>();
+		services.AddSingleton<StepVariableAdapter>();
 		services.AddSingleton<FormulaApplicationCoordinator>();
-		services.AddSingleton<IRecipeFacade, RecipeFacade>();
-		services.AddSingleton<ITimerService, TimerService>();
-		services.AddSingleton<IForLoopNestingProvider, ForLoopNestingProvider>();
+		services.AddSingleton<RecipeFacade>();
+		services.AddSingleton<TimerService>();
+		services.AddSingleton<ForLoopNestingProvider>();
 	}
 
 	private static void RegisterAnalyzerPipeline(IServiceCollection services)
 	{
-		services.AddSingleton<IStructureValidator, StructureValidator>();
-		services.AddSingleton<ILoopParser, LoopParser>();
-		services.AddSingleton<ILoopSemanticEvaluator, LoopSemanticEvaluator>();
-		services.AddSingleton<ITimingCalculator, TimingCalculator>();
-		services.AddSingleton<IRecipeAnalyzer, RecipeAnalyzer>();
-		services.AddSingleton<IRecipeStateManager, RecipeStateManager>();
+		services.AddSingleton<StructureValidator>();
+		services.AddSingleton<LoopParser>();
+		services.AddSingleton<LoopSemanticEvaluator>();
+		services.AddSingleton<TimingCalculator>();
+		services.AddSingleton<RecipeAnalyzer>();
+		services.AddSingleton<RecipeStateManager>();
 	}
 
 	private static void RegisterCsvServices(IServiceCollection services)
 	{
-		services.AddSingleton<ICsvHelperFactory, CsvHelperFactory>();
-		services.AddSingleton<ICsvDataExtractor, CsvDataExtractor>();
-		services.AddSingleton<ICsvDataFormatter, CsvDataFormatter>();
-		services.AddSingleton<ICsvHeaderBinder, CsvHeaderBinder>();
-		services.AddSingleton<IMetadataService, MetadataService>();
+		services.AddSingleton<CsvHelperFactory>();
+		services.AddSingleton<CsvDataExtractor>();
+		services.AddSingleton<CsvDataFormatter>();
+		services.AddSingleton<CsvHeaderBinder>();
+		services.AddSingleton<MetadataService>();
 		services.AddSingleton<RecipeFileMetadataSerializer>();
-		services.AddSingleton<IIntegrityService, IntegrityService>();
-		services.AddSingleton<IRecipeReader, RecipeReader>();
-		services.AddSingleton<IRecipeWriter, RecipeWriter>();
+		services.AddSingleton<IntegrityService>();
+		services.AddSingleton<RecipeReader>();
+		services.AddSingleton<RecipeWriter>();
 		services.AddSingleton<CsvAssemblyStrategy>();
-		services.AddSingleton<IRecipeFileService, RecipeFileService>();
+		services.AddSingleton<RecipeFileService>();
 	}
 
 	private static void RegisterInfrastructureServices(IServiceCollection services)
@@ -215,17 +214,17 @@ public static class MbeTableServiceConfigurator
 			return new RecipeColumnLayout(columns);
 		});
 
-		services.AddSingleton<IModbusChunkHandler, ModbusChunkHandler>();
+		services.AddSingleton<ModbusChunkHandler>();
 		services.AddSingleton<PlcCapacityCalculator>();
 		services.AddSingleton<RecipeComparator>();
 		services.AddSingleton<PlcRecipeSerializer>();
 		services.AddSingleton<MagicNumberValidator>();
 		services.AddSingleton<ModbusConnectionManager>();
-		services.AddSingleton<IModbusTransport, ModbusTransport>();
-		services.AddSingleton<IPlcReader, PlcReader>();
-		services.AddSingleton<IPlcWriter, PlcWriter>();
+		services.AddSingleton<ModbusTransport>();
+		services.AddSingleton<PlcReader>();
+		services.AddSingleton<PlcWriter>();
 		services.AddSingleton<IDisconnectStrategy, KeepAliveStrategy>();
-		services.AddSingleton<IRecipePlcService, RecipePlcService>();
+		services.AddSingleton<RecipePlcService>();
 	}
 
 	private static void RegisterRecipeAssemblyServices(IServiceCollection services)
@@ -233,32 +232,32 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<ModbusAssemblyStrategy>();
 		services.AddSingleton<AssemblyValidator>();
 		services.AddSingleton<TargetAvailabilityValidator>();
-		services.AddSingleton<IModbusRecipeAssemblyService, ModbusRecipeAssemblyService>();
-		services.AddSingleton<ICsvRecipeAssemblyService, CsvRecipeAssemblyService>();
+		services.AddSingleton<ModbusRecipeAssemblyService>();
+		services.AddSingleton<CsvRecipeAssemblyService>();
 
-		services.AddSingleton<IClipboardSchemaDescriptor>(sp =>
+		services.AddSingleton<ClipboardSchemaDescriptor>(sp =>
 		{
 			var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
 			return new ClipboardSchemaDescriptor(columns);
 		});
-		services.AddSingleton<IClipboardSchemaValidator, ClipboardSchemaValidator>();
-		services.AddSingleton<IClipboardParser, ClipboardParser>();
-		services.AddSingleton<IClipboardStepsTransformer, ClipboardStepsTransformer>();
-		services.AddSingleton<IClipboardAssemblyService, ClipboardAssemblyService>();
+		services.AddSingleton<ClipboardSchemaValidator>();
+		services.AddSingleton<ClipboardParser>();
+		services.AddSingleton<ClipboardStepsTransformer>();
+		services.AddSingleton<ClipboardAssemblyService>();
 	}
 
 	private static void RegisterApplicationServices(IServiceCollection services)
 	{
 		services.AddSingleton<ErrorPolicyRegistry>();
 		services.AddSingleton<PolicyEngine>();
-		services.AddSingleton<IStateProvider, StateProvider>();
+		services.AddSingleton<StateProvider>();
 		services.AddSingleton<PolicyReasonsSinkAdapter>();
 		services.AddSingleton<IStatusPresenter, StatusPresenter>();
 
 		// ServiceClipboard services
 		services.AddSingleton<IClipboardRawAccess, SystemClipboardRawAccess>();
-		services.AddSingleton<IClipboardSerializationService, ClipboardSerializationService>();
-		services.AddSingleton<IClipboardService, ClipboardService>();
+		services.AddSingleton<ClipboardSerializationService>();
+		services.AddSingleton<ClipboardService>();
 
 		services.AddSingleton<ActionComboBox>();
 		services.AddSingleton<TargetComboBox>();
@@ -268,23 +267,21 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<IModbusTcpService, ModbusTcpService>();
 		services.AddSingleton<ICsvService, CsvService>();
 		services.AddSingleton<OperationPipelineRunner>();
-		services.AddSingleton<IRecipeApplicationService, RecipeOperationService>();
+		services.AddSingleton<RecipeOperationService>();
 	}
 
 	private static void RegisterPresentationServices(IServiceCollection services)
 	{
-		services.AddSingleton<IBusyStateManager, BusyStateManager>();
-		services.AddSingleton<ICellStateResolver, CellStateResolver>();
-		services.AddSingleton<IRowExecutionStateProvider, ThreadSafeRowExecutionStateProvider>();
-		services.AddSingleton<IColumnAlignmentResolver, ColumnAlignmentResolver>();
-		services.AddSingleton<IAlignmentMapper, AlignmentMapper>();
-		services.AddSingleton<IColorSchemeProvider, DesignTimeColorSchemeProvider>();
+		services.AddSingleton<BusyStateManager>();
+		services.AddSingleton<CellStateResolver>();
+		services.AddSingleton<ThreadSafeRowExecutionStateProvider>();
+		services.AddSingleton<DesignTimeColorSchemeProvider>();
 		services.AddSingleton<ColorScheme>();
-		services.AddSingleton<ICellDataContext, CellDataContext>();
+		services.AddSingleton<CellDataContext>();
 		services.AddSingleton<ActionItemsProvider>();
 		services.AddSingleton<TargetItemsProvider>();
-		services.AddSingleton<ICellRenderer, ComboBoxCellRenderer>();
-		services.AddScoped<ITableRenderCoordinator, TableRenderCoordinator>();
+		services.AddSingleton<ComboBoxCellRenderer>();
+		services.AddScoped<TableRenderCoordinator>();
 		services.AddSingleton<FactoryColumnRegistry>();
 
 		services.AddSingleton(_ => new OpenFileDialog

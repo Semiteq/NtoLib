@@ -24,13 +24,13 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 /// </summary>
 public sealed class OperationPipelineRunner
 {
-	private readonly IStateProvider _state;
+	private readonly StateProvider _state;
 	private readonly PolicyEngine _policy;
 	private readonly IStatusPresenter _status;
 	private readonly ILogger<OperationPipelineRunner> _logger;
 
 	public OperationPipelineRunner(
-		IStateProvider state,
+		StateProvider state,
 		PolicyEngine policy,
 		IStatusPresenter status,
 		ILogger<OperationPipelineRunner> logger)

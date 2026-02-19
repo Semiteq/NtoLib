@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -106,7 +107,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 		_rowHeaderMenu = new ContextMenuStrip();
 		_rowHeaderMenu.Opening += OnRowHeaderMenuOpening;
 
-		_copyItem = new ToolStripMenuItem("Копировать", null, async (_, _) =>
+		_copyItem = new ToolStripMenuItem("Копировать", null, async void (_, _) =>
 		{
 			try
 			{
@@ -118,7 +119,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		_cutItem = new ToolStripMenuItem("Вырезать", null, async (_, _) =>
+		_cutItem = new ToolStripMenuItem("Вырезать", null, async void (_, _) =>
 		{
 			try
 			{
@@ -130,7 +131,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		_pasteItem = new ToolStripMenuItem("Вставить", null, async (_, _) =>
+		_pasteItem = new ToolStripMenuItem("Вставить", null, async void (_, _) =>
 		{
 			try
 			{
@@ -142,7 +143,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		_deleteItem = new ToolStripMenuItem("Удалить", null, async (_, _) =>
+		_deleteItem = new ToolStripMenuItem("Удалить", null, async void (_, _) =>
 		{
 			try
 			{
@@ -154,7 +155,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 			}
 		});
 
-		_newItem = new ToolStripMenuItem("Создать новую", null, async (_, _) =>
+		_newItem = new ToolStripMenuItem("Создать новую", null, async void (_, _) =>
 		{
 			try
 			{
@@ -178,7 +179,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 		});
 	}
 
-	private void OnRowHeaderMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+	private void OnRowHeaderMenuOpening(object? sender, CancelEventArgs e)
 	{
 		try
 		{

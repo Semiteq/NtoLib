@@ -40,7 +40,7 @@ public sealed class CorePropertyStateTests
 		var (services, facade) = CoreTestHelper.BuildCore();
 		using var _ = services as IDisposable;
 
-		var repo = services.GetRequiredService<IActionRepository>();
+		var repo = services.GetRequiredService<ActionRepository>();
 		var actionId = ActionNameHelper.GetActionIdOrThrow(repo, CloseActionName);
 
 		var d = new RecipeTestDriver(facade);

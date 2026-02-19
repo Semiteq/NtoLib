@@ -3,10 +3,7 @@ using System.IO;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.Metadata;
 
-/// <summary>
-/// Handles reading and writing of recipe file metadata.
-/// </summary>
-public sealed class MetadataService : IMetadataService
+public sealed class MetadataService
 {
 	private readonly RecipeFileMetadataSerializer _serializer;
 

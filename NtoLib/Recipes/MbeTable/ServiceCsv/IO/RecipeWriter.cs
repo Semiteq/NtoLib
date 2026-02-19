@@ -14,20 +14,17 @@ using NtoLib.Recipes.MbeTable.ServiceCsv.Metadata;
 
 namespace NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 
-/// <summary>
-/// Coordinates the recipe writing pipeline to CSV format.
-/// </summary>
-public sealed class RecipeWriter : IRecipeWriter
+public sealed class RecipeWriter
 {
-	private readonly ICsvDataFormatter _dataFormatter;
-	private readonly IMetadataService _metadataService;
-	private readonly IIntegrityService _integrityService;
+	private readonly CsvDataFormatter _dataFormatter;
+	private readonly MetadataService _metadataService;
+	private readonly IntegrityService _integrityService;
 	private readonly ILogger<RecipeWriter> _logger;
 
 	public RecipeWriter(
-		ICsvDataFormatter dataFormatter,
-		IMetadataService metadataService,
-		IIntegrityService integrityService,
+		CsvDataFormatter dataFormatter,
+		MetadataService metadataService,
+		IntegrityService integrityService,
 		ILogger<RecipeWriter> logger)
 	{
 		_dataFormatter = dataFormatter ?? throw new ArgumentNullException(nameof(dataFormatter));
@@ -52,7 +49,7 @@ public sealed class RecipeWriter : IRecipeWriter
 
 		_logger.LogDebug($"Formatted {dataRows.Count} data rows");
 
-		var bodyHash = _integrityService.CalculateHash(dataRows);
+		var bodyHash = IntegrityService.CalculateHash(dataRows);
 
 		var metadata = new RecipeFileMetadata
 		{

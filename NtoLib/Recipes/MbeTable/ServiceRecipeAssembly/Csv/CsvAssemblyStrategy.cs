@@ -23,17 +23,17 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
 
 public sealed class CsvAssemblyStrategy
 {
-	private readonly IActionRepository _actionRepository;
+	private readonly ActionRepository _actionRepository;
 	private readonly PropertyDefinitionRegistry _propertyRegistry;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
-	private readonly ICsvHeaderBinder _headerBinder;
+	private readonly CsvHeaderBinder _headerBinder;
 	private readonly ILogger<CsvAssemblyStrategy> _logger;
 
 	public CsvAssemblyStrategy(
-		IActionRepository actionRepository,
+		ActionRepository actionRepository,
 		PropertyDefinitionRegistry propertyRegistry,
 		IReadOnlyList<ColumnDefinition> columns,
-		ICsvHeaderBinder headerBinder,
+		CsvHeaderBinder headerBinder,
 		ILogger<CsvAssemblyStrategy> logger)
 	{
 		_actionRepository = actionRepository ?? throw new ArgumentNullException(nameof(actionRepository));

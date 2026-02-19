@@ -27,7 +27,7 @@ public sealed class ModbusAssemblyStrategy
 {
 	private readonly AppConfiguration _configuration;
 	private readonly PropertyDefinitionRegistry _propertyRegistry;
-	private readonly IRuntimeOptionsProvider _runtimeOptionsProvider;
+	private readonly FbRuntimeOptionsProvider _runtimeOptionsProvider;
 
 	private readonly int _intColumnCount;
 	private readonly int _floatColumnCount;
@@ -37,7 +37,7 @@ public sealed class ModbusAssemblyStrategy
 	public ModbusAssemblyStrategy(
 		AppConfiguration configuration,
 		PropertyDefinitionRegistry propertyRegistry,
-		IRuntimeOptionsProvider runtimeOptionsProvider)
+		FbRuntimeOptionsProvider runtimeOptionsProvider)
 	{
 		_configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 		_propertyRegistry = propertyRegistry ?? throw new ArgumentNullException(nameof(propertyRegistry));
