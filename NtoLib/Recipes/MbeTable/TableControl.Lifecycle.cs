@@ -19,10 +19,9 @@ namespace NtoLib.Recipes.MbeTable;
 
 public partial class TableControl
 {
-	[NonSerialized] private Timer? _permissionsDebounceTimer;
-	[NonSerialized] private UiPermissions? _pendingPermissions;
-
 	[NonSerialized] private TableInputManager? _inputManager;
+	[NonSerialized] private UiPermissions? _pendingPermissions;
+	[NonSerialized] private Timer? _permissionsDebounceTimer;
 	[NonSerialized] private TableControlServices? _services;
 
 	private void InitializeServicesAndRuntime()
@@ -219,6 +218,7 @@ public partial class TableControl
 		if (InvokeRequired)
 		{
 			BeginInvoke(new Action(() => OnPermissionsChanged(permissions)));
+
 			return;
 		}
 
@@ -231,7 +231,6 @@ public partial class TableControl
 		}
 		else
 		{
-			// Fallback: apply immediately if timer is not available
 			ApplyPermissionsNow(permissions);
 		}
 	}

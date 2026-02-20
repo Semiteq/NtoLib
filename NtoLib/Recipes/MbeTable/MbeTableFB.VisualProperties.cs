@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 
@@ -7,121 +6,32 @@ namespace NtoLib.Recipes.MbeTable;
 
 public partial class MbeTableFB
 {
+	private uint _controlBaseAddr = 8000;
+	private uint _floatBaseAddr = 8100;
+	private uint _floatAreaSize = 19600;
+	private uint _intBaseAddr = 27700;
+	private uint _intAreaSize = 1400;
+
+	private float _epsilon = 1e-4f;
+
 	private uint _controllerIp1 = 192;
 	private uint _controllerIp2 = 168;
 	private uint _controllerIp3 = 0;
 	private uint _controllerIp4 = 141;
 	private uint _controllerTcpPort = 502;
 	private uint _unitId = 69;
-	private uint _timeoutMs = 1000;
-	private uint _maxRetries = 3;
-	private uint _backoffDelayMs = 200;
-	private uint _magicNumber = 69;
-	private WordOrder _wordOrder = WordOrder.LowHigh;
-	private uint _controlBaseAddr = 8000;
-	private uint _floatBaseAddr = 8100;
-	private uint _floatAreaSize = 19600;
-	private uint _intBaseAddr = 27700;
-	private uint _intAreaSize = 1400;
-	private float _epsilon = 1e-4f;
-	private bool _logToFile = false;
-	private string _logDirPath = "C:\\DISTR\\Logs";
+
 	private string? _configDirPath = "C:\\DISTR\\Config\\NtoLibTableConfig";
 
-	[Category("Контроллер")]
-	[DisplayName("IP адрес контроллера байт 1")]
-	public uint UControllerIp1
-	{
-		get => _controllerIp1;
-		set => _controllerIp1 = value;
-	}
+	private bool _logToFile = false;
+	private string _logDirPath = "C:\\DISTR\\Logs";
 
-	[Category("Контроллер")]
-	[DisplayName("IP адрес контроллера байт 2")]
-	public uint UControllerIp2
-	{
-		get => _controllerIp2;
-		set => _controllerIp2 = value;
-	}
+	private uint _timeoutMs = 1000;
+	private uint _backoffDelayMs = 200;
+	private uint _maxRetries = 3;
 
-	[Category("Контроллер")]
-	[DisplayName("IP адрес контроллера байт 3")]
-	public uint UControllerIp3
-	{
-		get => _controllerIp3;
-		set => _controllerIp3 = value;
-	}
-
-	[Category("Контроллер")]
-	[DisplayName("IP адрес контроллера байт 4")]
-	public uint UControllerIp4
-	{
-		get => _controllerIp4;
-		set => _controllerIp4 = value;
-	}
-
-	[Category("Контроллер")]
-	[DisplayName("TCP порт")]
-	public uint ControllerTcpPort
-	{
-		get => _controllerTcpPort;
-		set => _controllerTcpPort = value;
-	}
-
-	[Category("Контроллер")]
-	[DisplayName("Unit ID")]
-	[Description("Идентификатор Modbus устройства")]
-	public uint UnitId
-	{
-		get => _unitId;
-		set => _unitId = value;
-	}
-
-	[Category("Обработка ошибок")]
-	[DisplayName("Задержка")]
-	[Description("Задержка при ошибке связи, мс")]
-	public uint TimeoutMs
-	{
-		get => _timeoutMs;
-		set => _timeoutMs = value;
-	}
-
-	[Category("Обработка ошибок")]
-	[DisplayName("Количество повторов")]
-	[Description("Количество повторов при ошибке связи")]
-	public uint MaxRetries
-	{
-		get => _maxRetries;
-		set => _maxRetries = value;
-	}
-
-	[Category("Обработка ошибок")]
-	[DisplayName("Задержка между повторами")]
-	[Description("Задержка между попытками повтора при ошибке связи, мс")]
-	public uint BackoffDelayMs
-	{
-		get => _backoffDelayMs;
-		set => _backoffDelayMs = value;
-	}
-
-	[Category("Протокол Modbus")]
-	[DisplayName("Magic Number")]
-	[Description("Магическое число для проверки связи. Должно совпадать с настройкой контроллера.")]
-	public uint MagicNumber
-	{
-		get => _magicNumber;
-		set => _magicNumber = value;
-	}
-
-	[Category("Протокол Modbus")]
-	[DisplayName("Порядок слов")]
-	[Description("Порядок байт при передаче 32-битных значений (Float, DWord)")]
-	[TypeConverter(typeof(WordOrderConverter))]
-	public WordOrder WordOrder
-	{
-		get => _wordOrder;
-		set => _wordOrder = value;
-	}
+	private uint _magicNumber = 69;
+	private WordOrder _wordOrder = WordOrder.LowHigh;
 
 	[Category("Адресация регистров")]
 	[DisplayName("Адрес системной области данных")]
@@ -177,6 +87,65 @@ public partial class MbeTableFB
 		set => _epsilon = value;
 	}
 
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 1")]
+	public uint UControllerIp1
+	{
+		get => _controllerIp1;
+		set => _controllerIp1 = value;
+	}
+
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 2")]
+	public uint UControllerIp2
+	{
+		get => _controllerIp2;
+		set => _controllerIp2 = value;
+	}
+
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 3")]
+	public uint UControllerIp3
+	{
+		get => _controllerIp3;
+		set => _controllerIp3 = value;
+	}
+
+	[Category("Контроллер")]
+	[DisplayName("IP адрес контроллера байт 4")]
+	public uint UControllerIp4
+	{
+		get => _controllerIp4;
+		set => _controllerIp4 = value;
+	}
+
+	[Category("Контроллер")]
+	[DisplayName("TCP порт")]
+	public uint ControllerTcpPort
+	{
+		get => _controllerTcpPort;
+		set => _controllerTcpPort = value;
+	}
+
+	[Category("Контроллер")]
+	[DisplayName("Unit ID")]
+	[Description("Идентификатор Modbus устройства")]
+	public uint UnitId
+	{
+		get => _unitId;
+		set => _unitId = value;
+	}
+
+	[Category("Конфигурация")]
+	[DisplayName("Путь к конфигурационному каталогу")]
+	[Description(
+		"Каталог, где хранятся файлы конфигурации таблицы рецептов. Изменения вступят в силу при следующей загрузке блока.")]
+	public string? ConfigDirPath
+	{
+		get => _configDirPath;
+		set => _configDirPath = value;
+	}
+
 	[Category("Логирование")]
 	[DisplayName("Записывать лог в файл")]
 	[Description("Если включено, все операции чтения/записи будут логироваться в файл.")]
@@ -195,12 +164,49 @@ public partial class MbeTableFB
 		set => _logDirPath = value;
 	}
 
-	[Category("Конфигурация")]
-	[DisplayName("Путь к конфигурационному каталогу")]
-	[Description("Каталог, где хранятся файлы конфигурации таблицы рецептов. Изменения вступят в силу при следующей загрузке блока.")]
-	public string ConfigDirPath
+	[Category("Обработка ошибок")]
+	[DisplayName("Задержка")]
+	[Description("Задержка при ошибке связи, мс")]
+	public uint TimeoutMs
 	{
-		get => _configDirPath;
-		set => _configDirPath = value;
+		get => _timeoutMs;
+		set => _timeoutMs = value;
+	}
+
+	[Category("Обработка ошибок")]
+	[DisplayName("Количество повторов")]
+	[Description("Количество повторов при ошибке связи")]
+	public uint MaxRetries
+	{
+		get => _maxRetries;
+		set => _maxRetries = value;
+	}
+
+	[Category("Обработка ошибок")]
+	[DisplayName("Задержка между повторами")]
+	[Description("Задержка между попытками повтора при ошибке связи, мс")]
+	public uint BackoffDelayMs
+	{
+		get => _backoffDelayMs;
+		set => _backoffDelayMs = value;
+	}
+
+	[Category("Протокол Modbus")]
+	[DisplayName("Magic Number")]
+	[Description("Магическое число для проверки связи. Должно совпадать с настройкой контроллера.")]
+	public uint MagicNumber
+	{
+		get => _magicNumber;
+		set => _magicNumber = value;
+	}
+
+	[Category("Протокол Modbus")]
+	[DisplayName("Порядок слов")]
+	[Description("Порядок байт при передаче 32-битных значений (Float, DWord)")]
+	[TypeConverter(typeof(WordOrderConverter))]
+	public WordOrder WordOrder
+	{
+		get => _wordOrder;
+		set => _wordOrder = value;
 	}
 }

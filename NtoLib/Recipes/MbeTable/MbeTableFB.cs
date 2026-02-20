@@ -16,10 +16,6 @@ using NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
 namespace NtoLib.Recipes.MbeTable;
 
-/// <summary>
-/// MBE recipe table function block for MasterSCADA 3.12.
-/// Manages recipe execution and communication with PLC.
-/// </summary>
 [CatID(CatIDs.CATID_OTHER)]
 [Guid("DFB05172-07CD-492C-925E-A091B197D8A8")]
 [FBOptions(FBOptions.EnableChangeConfigInRT)]
@@ -35,13 +31,12 @@ public partial class MbeTableFB : VisualFBBase
 	private const string DefaultPinGroupDefsFileName = "PinGroupDefs.yaml";
 	private const string DefaultActionsDefsFileName = "ActionsDefs.yaml";
 
-	[Browsable(false)]
-	public IServiceProvider? ServiceProvider => _serviceProvider;
-
 	[NonSerialized] private Lazy<AppConfiguration>? _appConfigurationLazy;
-	[NonSerialized] private IServiceProvider? _serviceProvider;
-	[NonSerialized] private RuntimeServiceHost? _runtimeServiceHost;
 	[NonSerialized] private IReadOnlyDictionary<short, CompiledFormula>? _compiledFormulas;
+	[NonSerialized] private RuntimeServiceHost? _runtimeServiceHost;
+	[NonSerialized] private IServiceProvider? _serviceProvider;
+
+	[Browsable(false)] public IServiceProvider? ServiceProvider => _serviceProvider;
 
 	protected override void ToDesign()
 	{
@@ -73,7 +68,9 @@ public partial class MbeTableFB : VisualFBBase
 			var state = EnsureConfigurationLoaded();
 
 			if (_compiledFormulas == null)
+			{
 				throw new InvalidOperationException("Compiled formulas cache was not initialized.");
+			}
 
 			_serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this, state, _compiledFormulas);
 			_runtimeServiceHost = new RuntimeServiceHost(_serviceProvider);
@@ -90,6 +87,7 @@ public partial class MbeTableFB : VisualFBBase
 			}
 
 			MessageBox.Show(fullMessage, @"Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
 			throw;
 		}
 	}
@@ -121,9 +119,6 @@ public partial class MbeTableFB : VisualFBBase
 		UpdateUiConnectionPins();
 	}
 
-	/// <summary>
-	/// Updates timer-related pins. Called by RuntimeServiceHost.
-	/// </summary>
 	internal void UpdateTimerPins(TimeSpan stepTimeLeft, TimeSpan totalTimeLeft)
 	{
 		if (GetPinQuality(IdLineTimeLeft) != OpcQuality.Good

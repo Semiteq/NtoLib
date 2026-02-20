@@ -23,10 +23,6 @@ public partial class MbeTableFB
 	private const int IdHmiIp4 = 1013;
 	private const int IdHmiPort = 1014;
 
-	/// <summary>
-	/// Creates pin map from configuration file definitions.
-	/// </summary>
-	/// <param name="newObject">True if creating pins for new object.</param>
 	protected override void CreatePinMap(bool newObject)
 	{
 		base.CreatePinMap(newObject);
@@ -35,10 +31,6 @@ public partial class MbeTableFB
 		FirePinSpaceChanged();
 	}
 
-	/// <summary>
-	/// Creates pins based on pin group definitions from configuration.
-	/// </summary>
-	/// <param name="state">Configuration state containing pin group definitions.</param>
 	private void CreatePinsFromConfiguration(AppConfiguration state)
 	{
 		foreach (var pinGroup in state.PinGroupData)
@@ -54,16 +46,10 @@ public partial class MbeTableFB
 		}
 	}
 
-	/// <summary>
-	/// Reads values from a group of pins.
-	/// </summary>
-	/// <param name="firstId">ID of the first pin in the group.</param>
-	/// <param name="quantity">Number of pins in the group.</param>
-	/// <returns>Dictionary mapping pin indices (1-based) to their string values.</returns>
 	private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
 	{
-		var initialPinOffset = 1;
-		var pinGroup = new Dictionary<int, string>(quantity + initialPinOffset);
+		const int InitialPinOffset = 1;
+		var pinGroup = new Dictionary<int, string>(quantity + InitialPinOffset);
 
 		for (var offset = 0; offset < quantity; offset++)
 		{
@@ -74,15 +60,12 @@ public partial class MbeTableFB
 			}
 
 			var value = GetPinValue<string>(pinId);
-			pinGroup[offset + initialPinOffset] = value;
+			pinGroup[offset + InitialPinOffset] = value;
 		}
 
 		return pinGroup;
 	}
 
-	/// <summary>
-	/// Updates UI connection parameter pins with current values.
-	/// </summary>
 	private void UpdateUiConnectionPins()
 	{
 		VisualPins.SetValue<uint>(IdHmiFloatBaseAddr, UFloatBaseAddr);

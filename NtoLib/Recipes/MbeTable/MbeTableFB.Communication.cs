@@ -15,5 +15,8 @@ public partial class MbeTableFB
 	internal const int IdLineTimeLeft = 102;
 	internal const int IdIsRecipeConsistent = 103;
 
-	private bool AreFloatsEqual(float a, float b) => Math.Abs(a - b) <= _epsilon;
+	private bool AreFloatsEqual(float a, float b)
+	{
+		return Math.Abs(a - b) <= _epsilon;
+	}
 }

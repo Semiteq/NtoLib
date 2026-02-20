@@ -19,6 +19,7 @@ public partial class MbeTableFB
 	public IReadOnlyCollection<string> GetDefinedGroupNames()
 	{
 		var state = EnsureConfigurationLoaded();
+
 		return state.PinGroupData
 			.Select(g => g.GroupName)
 			.ToArray();
@@ -27,7 +28,9 @@ public partial class MbeTableFB
 	public Dictionary<int, string> ReadTargets(string groupName)
 	{
 		if (string.IsNullOrWhiteSpace(groupName))
+		{
 			throw new ArgumentNullException(nameof(groupName));
+		}
 
 		var state = EnsureConfigurationLoaded();
 		var pinGroup = state.PinGroupData
@@ -42,6 +45,7 @@ public partial class MbeTableFB
 	{
 		_appConfigurationLazy ??=
 			new Lazy<AppConfiguration>(LoadConfigurationInternal, LazyThreadSafetyMode.ExecutionAndPublication);
+
 		return _appConfigurationLazy.Value;
 	}
 
@@ -75,18 +79,21 @@ public partial class MbeTableFB
 			}
 
 			_compiledFormulas = precompileResult.Value;
+
 			return config;
 		}
 		catch (ConfigException ex)
 		{
 			var fullMessage = BuildConfigExceptionMessage(ex);
 			MessageBox.Show(fullMessage, @"Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
 			throw;
 		}
 		catch (Exception ex)
 		{
 			var fullMessage = $"Unexpected configuration error: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}";
 			MessageBox.Show(fullMessage, @"Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
 			throw;
 		}
 	}

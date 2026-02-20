@@ -7,32 +7,27 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable;
 
-/// <summary>
-/// Design-time properties for MasterSCADA visual designer.
-/// All mutations are queued until runtime initialization.
-/// </summary>
 public partial class TableControl
 {
-	[NonSerialized] private Color? _controlBgColor;
-	[NonSerialized] private Color? _tableBgColor;
-	[NonSerialized] private Font? _headerFont;
-	[NonSerialized] private Color? _headerTextColor;
-	[NonSerialized] private Color? _headerBgColor;
-	[NonSerialized] private Font? _lineFont;
-	[NonSerialized] private Color? _lineTextColor;
-	[NonSerialized] private Color? _lineBgColor;
-	[NonSerialized] private Font? _selectedLineFont;
-	[NonSerialized] private Color? _selectedLineTextColor;
-	[NonSerialized] private Color? _selectedLineBgColor;
-	[NonSerialized] private Font? _passedLineFont;
-	[NonSerialized] private Color? _passedLineTextColor;
-	[NonSerialized] private Color? _passedLineBgColor;
+	[NonSerialized] private readonly List<Func<ColorScheme, ColorScheme>> _pendingColorMutations = new();
 	[NonSerialized] private Color? _blockedBgColor;
 	[NonSerialized] private Color? _buttonsColor;
+	[NonSerialized] private Color? _controlBgColor;
+	[NonSerialized] private Color? _headerBgColor;
+	[NonSerialized] private Font? _headerFont;
+	[NonSerialized] private Color? _headerTextColor;
+	[NonSerialized] private Color? _lineBgColor;
+	[NonSerialized] private Font? _lineFont;
+	[NonSerialized] private Color? _lineTextColor;
+	[NonSerialized] private Color? _passedLineBgColor;
+	[NonSerialized] private Font? _passedLineFont;
+	[NonSerialized] private Color? _passedLineTextColor;
 	[NonSerialized] private int? _rowHeight;
+	[NonSerialized] private Color? _selectedLineBgColor;
+	[NonSerialized] private Font? _selectedLineFont;
+	[NonSerialized] private Color? _selectedLineTextColor;
 	[NonSerialized] private Color? _statusBgColor;
-
-	[NonSerialized] private readonly List<Func<ColorScheme, ColorScheme>> _pendingColorMutations = new();
+	[NonSerialized] private Color? _tableBgColor;
 
 	// See the https://github.com/Semiteq/NtoLib/issues/80
 	public override Color BackColor
@@ -41,7 +36,10 @@ public partial class TableControl
 		set
 		{
 			if (value == Color.Transparent)
+			{
 				return;
+			}
+
 			base.BackColor = value;
 		}
 	}
@@ -53,10 +51,16 @@ public partial class TableControl
 		set
 		{
 			if (_rowHeight == value)
+			{
 				return;
+			}
+
 			_rowHeight = value;
 			if (_table != null)
+			{
 				_table.RowTemplate.Height = value;
+			}
+
 			RegisterColorMutation(scheme => scheme with { LineHeight = value });
 		}
 	}
@@ -68,7 +72,9 @@ public partial class TableControl
 		set
 		{
 			if (SetDesignTimeProperty(ref _controlBgColor, value, s => s with { ControlBackgroundColor = value }))
+			{
 				BackColor = value;
+			}
 		}
 	}
 
@@ -79,8 +85,12 @@ public partial class TableControl
 		set
 		{
 			if (SetDesignTimeProperty(ref _statusBgColor, value, s => s with { StatusBgColor = value }))
+			{
 				if (_labelStatus != null)
+				{
 					_labelStatus.BackColor = value;
+				}
+			}
 		}
 	}
 
@@ -91,8 +101,12 @@ public partial class TableControl
 		set
 		{
 			if (SetDesignTimeProperty(ref _tableBgColor, value, s => s with { TableBackgroundColor = value }))
+			{
 				if (_table != null)
+				{
 					_table.BackgroundColor = value;
+				}
+			}
 		}
 	}
 
@@ -103,21 +117,40 @@ public partial class TableControl
 		set
 		{
 			if (!SetDesignTimeProperty(ref _buttonsColor, value,
-				s => s with { ButtonsColor = value, BlockedButtonsColor = Darken(value) }))
+					s => s with { ButtonsColor = value, BlockedButtonsColor = Darken(value) }))
+			{
 				return;
+			}
 
 			if (_buttonOpen != null)
+			{
 				_buttonOpen.BackColor = value;
+			}
+
 			if (_buttonSave != null)
+			{
 				_buttonSave.BackColor = value;
+			}
+
 			if (_buttonAddBefore != null)
+			{
 				_buttonAddBefore.BackColor = value;
+			}
+
 			if (_buttonAddAfter != null)
+			{
 				_buttonAddAfter.BackColor = value;
+			}
+
 			if (_buttonDel != null)
+			{
 				_buttonDel.BackColor = value;
+			}
+
 			if (_buttonWrite != null)
+			{
 				_buttonWrite.BackColor = value;
+			}
 		}
 	}
 
@@ -212,14 +245,16 @@ public partial class TableControl
 		set => SetDesignTimeProperty(ref _blockedBgColor, value, s => s with { BlockedBgColor = value });
 	}
 
-
 	private bool SetDesignTimeProperty<T>(ref T? field, T value, Func<ColorScheme, ColorScheme> mutation)
 	{
 		if (EqualityComparer<T>.Default.Equals(field!, value!))
+		{
 			return false;
+		}
 
 		field = value;
 		RegisterColorMutation(mutation);
+
 		return true;
 	}
 
@@ -238,9 +273,14 @@ public partial class TableControl
 	private void ApplyPendingColorMutations()
 	{
 		if (_pendingColorMutations.Count == 0)
+		{
 			return;
+		}
+
 		if (_colorSchemeProvider == null)
+		{
 			return;
+		}
 
 		_colorSchemeProvider.Mutate(scheme =>
 		{
