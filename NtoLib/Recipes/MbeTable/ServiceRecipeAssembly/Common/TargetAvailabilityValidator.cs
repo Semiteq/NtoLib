@@ -36,7 +36,9 @@ public sealed class TargetAvailabilityValidator
 				errors);
 
 			if (stepValidationResult.IsFailed)
+			{
 				return stepValidationResult;
+			}
 		}
 
 		return BuildValidationResult(errors);
@@ -51,15 +53,21 @@ public sealed class TargetAvailabilityValidator
 	{
 		var actionIdResult = ExtractActionId(step);
 		if (actionIdResult.IsFailed)
+		{
 			return actionIdResult.ToResult();
+		}
 
 		var actionId = actionIdResult.Value;
 		if (actionId == 0)
+		{
 			return Result.Ok();
+		}
 
 		var actionResult = actionRepository.GetActionDefinitionById(actionId);
 		if (actionResult.IsFailed)
+		{
 			return Result.Ok();
+		}
 
 		var action = actionResult.Value;
 
@@ -75,7 +83,9 @@ public sealed class TargetAvailabilityValidator
 				errors);
 
 			if (columnValidationResult.IsFailed)
+			{
 				return columnValidationResult;
+			}
 		}
 
 		return Result.Ok();
@@ -84,7 +94,9 @@ public sealed class TargetAvailabilityValidator
 	private static Result<short> ExtractActionId(Step step)
 	{
 		if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty is null)
+		{
 			return Result.Ok((short)0);
+		}
 
 		return actionProperty.GetValue<short>();
 	}
@@ -99,7 +111,9 @@ public sealed class TargetAvailabilityValidator
 		List<string> errors)
 	{
 		if (!ShouldValidateColumn(column))
+		{
 			return Result.Ok();
+		}
 
 		var keyId = new ColumnIdentifier(column.Key);
 
@@ -107,12 +121,15 @@ public sealed class TargetAvailabilityValidator
 		{
 			errors.Add(new ValidationTargetValueEmptyError(stepIndex, actionId, actionName, column.Key,
 				column.GroupName!).Message);
+
 			return Result.Ok();
 		}
 
 		var targetIdResult = property.GetValue<short>();
 		if (targetIdResult.IsFailed)
+		{
 			return targetIdResult.ToResult();
+		}
 
 		var targetId = targetIdResult.Value;
 
@@ -123,10 +140,14 @@ public sealed class TargetAvailabilityValidator
 	private static bool ShouldValidateColumn(PropertyConfig column)
 	{
 		if (!string.Equals(column.PropertyTypeId, "Enum", StringComparison.OrdinalIgnoreCase))
+		{
 			return false;
+		}
 
 		if (string.IsNullOrWhiteSpace(column.GroupName))
+		{
 			return false;
+		}
 
 		return true;
 	}
@@ -136,10 +157,12 @@ public sealed class TargetAvailabilityValidator
 		if (step.Properties.TryGetValue(keyId, out var prop) && prop != null)
 		{
 			property = prop;
+
 			return true;
 		}
 
 		property = null!;
+
 		return false;
 	}
 
@@ -157,6 +180,7 @@ public sealed class TargetAvailabilityValidator
 		{
 			errors.Add(new ValidationTargetGroupNotAvailableError(stepIndex, actionId, actionName, columnKey, groupName)
 				.Message);
+
 			return Result.Ok();
 		}
 
@@ -164,6 +188,7 @@ public sealed class TargetAvailabilityValidator
 		{
 			errors.Add(new ValidationTargetGroupEmptyError(stepIndex, actionId, actionName, columnKey, groupName)
 				.Message);
+
 			return Result.Ok();
 		}
 

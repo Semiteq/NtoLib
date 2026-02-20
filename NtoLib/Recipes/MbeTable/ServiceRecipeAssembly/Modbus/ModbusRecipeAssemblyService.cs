@@ -9,12 +9,11 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
 
 namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Modbus;
 
-
 public sealed class ModbusRecipeAssemblyService
 {
+	private readonly ILogger<ModbusRecipeAssemblyService> _logger;
 	private readonly ModbusAssemblyStrategy _modbusStrategy;
 	private readonly AssemblyValidator _validator;
-	private readonly ILogger<ModbusRecipeAssemblyService> _logger;
 
 	public ModbusRecipeAssemblyService(
 		ModbusAssemblyStrategy modbusStrategy,

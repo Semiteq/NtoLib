@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyInvalidRowCountError : BilingualError
 {
-	public int RowCount { get; }
-
 	public AssemblyInvalidRowCountError(int rowCount)
 		: base(
 			$"Invalid row count: {rowCount}",
@@ -14,4 +12,6 @@ public sealed class AssemblyInvalidRowCountError : BilingualError
 		RowCount = rowCount;
 		Metadata["rowCount"] = rowCount;
 	}
+
+	public int RowCount { get; }
 }

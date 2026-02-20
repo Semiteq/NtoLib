@@ -4,12 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class ValidationTargetValueEmptyError : BilingualError
 {
-	public int Row { get; }
-	public short ActionId { get; }
-	public string ActionName { get; }
-	public string ColumnKey { get; }
-	public string GroupName { get; }
-
 	public ValidationTargetValueEmptyError(
 		int row,
 		short actionId,
@@ -32,4 +26,10 @@ public sealed class ValidationTargetValueEmptyError : BilingualError
 		Metadata["columnKey"] = columnKey;
 		Metadata["groupName"] = groupName;
 	}
+
+	public int Row { get; }
+	public short ActionId { get; }
+	public string ActionName { get; }
+	public string ColumnKey { get; }
+	public string GroupName { get; }
 }

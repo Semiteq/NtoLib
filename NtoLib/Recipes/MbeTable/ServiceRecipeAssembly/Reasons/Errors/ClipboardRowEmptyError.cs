@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class ClipboardRowEmptyError : BilingualError
 {
-	public int RowIndex { get; }
-
 	public ClipboardRowEmptyError(int rowIndex)
 		: base(
 			$"Clipboard row {rowIndex} is empty",
@@ -14,4 +12,6 @@ public sealed class ClipboardRowEmptyError : BilingualError
 		RowIndex = rowIndex;
 		Metadata["rowIndex"] = rowIndex;
 	}
+
+	public int RowIndex { get; }
 }

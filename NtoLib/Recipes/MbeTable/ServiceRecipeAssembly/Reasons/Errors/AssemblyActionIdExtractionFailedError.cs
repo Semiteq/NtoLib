@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyActionIdExtractionFailedError : BilingualError
 {
-	public int? LineNumber { get; }
-
 	public AssemblyActionIdExtractionFailedError(int? lineNumber = null)
 		: base(
 			lineNumber.HasValue
@@ -17,6 +15,10 @@ public sealed class AssemblyActionIdExtractionFailedError : BilingualError
 	{
 		LineNumber = lineNumber;
 		if (lineNumber.HasValue)
+		{
 			Metadata["lineNumber"] = lineNumber.Value;
+		}
 	}
+
+	public int? LineNumber { get; }
 }

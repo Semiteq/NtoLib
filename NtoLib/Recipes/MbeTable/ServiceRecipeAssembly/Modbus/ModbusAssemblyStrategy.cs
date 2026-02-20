@@ -25,13 +25,13 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Modbus;
 /// </summary>
 public sealed class ModbusAssemblyStrategy
 {
+	private readonly ColumnDefinition? _actionColumn;
 	private readonly AppConfiguration _configuration;
-	private readonly PropertyDefinitionRegistry _propertyRegistry;
-	private readonly FbRuntimeOptionsProvider _runtimeOptionsProvider;
+	private readonly int _floatColumnCount;
 
 	private readonly int _intColumnCount;
-	private readonly int _floatColumnCount;
-	private readonly ColumnDefinition? _actionColumn;
+	private readonly PropertyDefinitionRegistry _propertyRegistry;
+	private readonly FbRuntimeOptionsProvider _runtimeOptionsProvider;
 	private readonly ColumnDefinition? _stepDurationColumn;
 
 	public ModbusAssemblyStrategy(
@@ -55,14 +55,20 @@ public sealed class ModbusAssemblyStrategy
 	public Result<Recipe> AssembleFromModbusData(int[] intData, int[] floatData, int rowCount)
 	{
 		if (rowCount < 0)
+		{
 			return new AssemblyInvalidRowCountError(rowCount);
+		}
 
 		if (rowCount == 0)
+		{
 			return new Recipe(ImmutableList<Step>.Empty);
+		}
 
 		var validationResult = ValidateMandatoryColumns();
 		if (validationResult.IsFailed)
+		{
 			return validationResult.ToResult<Recipe>();
+		}
 
 		var steps = new List<Step>(rowCount);
 
@@ -70,7 +76,9 @@ public sealed class ModbusAssemblyStrategy
 		{
 			var stepResult = AssembleStep(intData, floatData, row);
 			if (stepResult.IsFailed)
+			{
 				return Result.Fail(new AssemblyStepFailedError(row)).WithErrors(stepResult.Errors);
+			}
 
 			steps.Add(stepResult.Value);
 		}
@@ -82,15 +90,21 @@ public sealed class ModbusAssemblyStrategy
 	{
 		var actionIdResult = ExtractActionId(intData, row);
 		if (actionIdResult.IsFailed)
+		{
 			return actionIdResult.ToResult<Step>();
+		}
 
 		var actionId = actionIdResult.Value;
 		if (!_configuration.Actions.TryGetValue(actionId, out var actionDef))
+		{
 			return new CoreActionNotFoundError(actionId);
+		}
 
 		var createBuilderResult = StepBuilder.Create(actionDef, _propertyRegistry, _configuration.Columns);
 		if (createBuilderResult.IsFailed)
+		{
 			return createBuilderResult.ToResult();
+		}
 
 		var builder = createBuilderResult.Value;
 
@@ -102,18 +116,24 @@ public sealed class ModbusAssemblyStrategy
 		foreach (var column in _configuration.Columns.Where(c => c.PlcMapping != null))
 		{
 			if (!builder.Supports(column.Key))
+			{
 				continue;
+			}
 
 			var valueResult = ExtractTypedValue(intData, floatData, row, column, registerOrder);
 			if (valueResult.IsFailed)
+			{
 				return valueResult.ToResult<Step>();
+			}
 
 			var value = valueResult.Value;
 			if (value != null)
 			{
 				var setResult = builder.WithOptionalDynamic(column.Key, value);
 				if (setResult.IsFailed)
+				{
 					return setResult.ToResult<Step>();
+				}
 			}
 		}
 
@@ -123,13 +143,17 @@ public sealed class ModbusAssemblyStrategy
 	private Result<short> ExtractActionId(int[] intData, int row)
 	{
 		if (_actionColumn?.PlcMapping == null)
+		{
 			return new AssemblyMissingPlcMappingError("Action");
+		}
 
 		var intBase = row * _intColumnCount;
 		var index = intBase + _actionColumn.PlcMapping.Index;
 
 		if (index < 0 || index >= intData.Length)
+		{
 			return new AssemblyPlcIndexOutOfRangeError(index, row, "Action", "Int");
+		}
 
 		return (short)intData[index];
 	}
@@ -151,15 +175,25 @@ public sealed class ModbusAssemblyStrategy
 				var intBase = row * _intColumnCount;
 				var index = intBase + mapping.Index;
 				if (index < 0 || index >= intData.Length)
+				{
 					return new AssemblyPlcIndexOutOfRangeError(index, row, column.Key.Value, "Int");
+				}
 
 				var raw = intData[index];
 				if (propDef.SystemType == typeof(short))
+				{
 					return (short)raw;
+				}
+
 				if (propDef.SystemType == typeof(float))
+				{
 					return (float)raw;
+				}
+
 				if (propDef.SystemType == typeof(string))
+				{
 					return raw.ToString(CultureInfo.InvariantCulture);
+				}
 
 				return new CsvInvalidDataError($"Unsupported target system type: {propDef.SystemType.Name}");
 			}
@@ -169,17 +203,27 @@ public sealed class ModbusAssemblyStrategy
 				var floatBase = row * _floatColumnCount * 2;
 				var index = floatBase + (mapping.Index * 2);
 				if (index < 0 || index + 1 >= floatData.Length)
+				{
 					return new AssemblyPlcIndexOutOfRangeError(index, row, column.Key.Value, "Float");
+				}
 
 				var registers = new[] { floatData[index], floatData[index + 1] };
 				var f = ModbusClient.ConvertRegistersToFloat(registers, registerOrder);
 
 				if (propDef.SystemType == typeof(float))
+				{
 					return f;
+				}
+
 				if (propDef.SystemType == typeof(short))
+				{
 					return (short)Math.Round(f);
+				}
+
 				if (propDef.SystemType == typeof(string))
+				{
 					return f.ToString(CultureInfo.InvariantCulture);
+				}
 
 				return new CsvInvalidDataError($"Unsupported target system type: {propDef.SystemType.Name}");
 			}
@@ -192,13 +236,19 @@ public sealed class ModbusAssemblyStrategy
 	private Result ValidateMandatoryColumns()
 	{
 		if (_actionColumn == null)
+		{
 			return new AssemblyMandatoryColumnMissingError("Action");
+		}
 
 		if (_actionColumn.PlcMapping == null)
+		{
 			return new AssemblyMissingPlcMappingError("Action");
+		}
 
 		if (_stepDurationColumn == null)
+		{
 			return new AssemblyMandatoryColumnMissingError("StepDuration");
+		}
 
 		return Result.Ok();
 	}

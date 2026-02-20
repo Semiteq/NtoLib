@@ -25,23 +25,29 @@ public sealed class ClipboardParser
 	public Result<IReadOnlyList<PortableStepDto>> Parse(IReadOnlyList<string[]> rows)
 	{
 		if (rows == null)
+		{
 			throw new ArgumentNullException(nameof(rows));
+		}
 
 		var list = new List<PortableStepDto>(rows.Count);
 
-		for (int i = 0; i < rows.Count; i++)
+		for (var i = 0; i < rows.Count; i++)
 		{
 			var rowCells = rows[i];
 			var validation = _validator.ValidateRow(i, rowCells);
 			if (validation.IsFailed)
+			{
 				return validation.ToResult<IReadOnlyList<PortableStepDto>>();
+			}
 
 			var actionStr = rowCells[0];
 			if (!short.TryParse(actionStr, out var actionId))
+			{
 				return Result.Fail<IReadOnlyList<PortableStepDto>>(new ClipboardActionIdInvalidError(i, actionStr));
+			}
 
 			var dict = new Dictionary<string, string>(rowCells.Length - 1, StringComparer.OrdinalIgnoreCase);
-			for (int c = 1; c < rowCells.Length; c++)
+			for (var c = 1; c < rowCells.Length; c++)
 			{
 				var key = _schema.TransferColumns[c].Value;
 				dict[key] = rowCells[c];

@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyUnknownPlcAreaError : BilingualError
 {
-	public string Area { get; }
-
 	public AssemblyUnknownPlcAreaError(string area)
 		: base(
 			$"Unknown PLC area: {area}",
@@ -14,4 +12,6 @@ public sealed class AssemblyUnknownPlcAreaError : BilingualError
 		Area = area;
 		Metadata["area"] = area;
 	}
+
+	public string Area { get; }
 }

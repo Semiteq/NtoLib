@@ -18,17 +18,29 @@ public sealed class LabelStatusSink : IStatusSink, IDisposable
 		_scheme = scheme ?? throw new ArgumentNullException(nameof(scheme));
 	}
 
+	public void Dispose()
+	{
+		_disposed = true;
+	}
+
 	public void Write(string message, StatusKind kind)
 	{
 		if (_disposed)
+		{
 			return;
+		}
+
 		if (!EnsureHandle())
+		{
 			return;
+		}
 
 		void Apply()
 		{
 			if (_disposed)
+			{
 				return;
+			}
 			_label.Text = message ?? string.Empty;
 			_label.BackColor = ResolveBackColor(kind);
 		}
@@ -39,24 +51,26 @@ public sealed class LabelStatusSink : IStatusSink, IDisposable
 	public void Clear()
 	{
 		if (_disposed)
+		{
 			return;
+		}
+
 		if (!EnsureHandle())
+		{
 			return;
+		}
 
 		void Apply()
 		{
 			if (_disposed)
+			{
 				return;
+			}
 			_label.Text = string.Empty;
 			_label.BackColor = _scheme.StatusBgColor;
 		}
 
 		TryInvoke(Apply);
-	}
-
-	public void Dispose()
-	{
-		_disposed = true;
 	}
 
 	private Color ResolveBackColor(StatusKind kind)
@@ -94,9 +108,13 @@ public sealed class LabelStatusSink : IStatusSink, IDisposable
 		try
 		{
 			if (_label.InvokeRequired)
+			{
 				_label.BeginInvoke(action);
+			}
 			else
+			{
 				action();
+			}
 		}
 		catch
 		{

@@ -17,10 +17,10 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Assembly;
 public sealed class ClipboardAssemblyService
 {
 	private readonly ClipboardService _clipboard;
+	private readonly ILogger<ClipboardAssemblyService> _logger;
 	private readonly ClipboardParser _parser;
 	private readonly ClipboardStepsTransformer _transformer;
 	private readonly AssemblyValidator _validator;
-	private readonly ILogger<ClipboardAssemblyService> _logger;
 
 	public ClipboardAssemblyService(
 		ClipboardService clipboard,
@@ -44,6 +44,7 @@ public sealed class ClipboardAssemblyService
 		if (readResult.IsFailed)
 		{
 			_logger.LogError("Clipboard ReadRows failed");
+
 			return readResult.ToResult<IReadOnlyList<Step>>();
 		}
 
@@ -53,7 +54,10 @@ public sealed class ClipboardAssemblyService
 			_logger.LogDebug("Clipboard has no rows");
 			var empty = Result.Ok<IReadOnlyList<Step>>(Array.Empty<Step>());
 			foreach (var r in readResult.Reasons)
+			{
 				empty = empty.WithReason(r);
+			}
+
 			return empty;
 		}
 
@@ -61,6 +65,7 @@ public sealed class ClipboardAssemblyService
 		if (parseResult.IsFailed)
 		{
 			_logger.LogError("Parsing clipboard rows failed");
+
 			return parseResult.ToResult<IReadOnlyList<Step>>();
 		}
 
@@ -70,6 +75,7 @@ public sealed class ClipboardAssemblyService
 		if (transformResult.IsFailed)
 		{
 			_logger.LogError("Transforming DTOs to Steps failed");
+
 			return transformResult;
 		}
 
@@ -80,16 +86,22 @@ public sealed class ClipboardAssemblyService
 		if (validationResult.IsFailed)
 		{
 			_logger.LogError("Environment validation failed");
+
 			return validationResult.ToResult<IReadOnlyList<Step>>();
 		}
 
 		var final = Result.Ok<IReadOnlyList<Step>>(steps);
 		if (readResult.Reasons.Count > 0)
+		{
 			final = final.WithReasons(readResult.Reasons);
+		}
 		if (validationResult.Reasons.Count > 0)
+		{
 			final = final.WithReasons(validationResult.Reasons);
+		}
 
 		_logger.LogDebug("Clipboard assembly completed successfully: {Count} steps", steps.Count);
+
 		return final;
 	}
 }

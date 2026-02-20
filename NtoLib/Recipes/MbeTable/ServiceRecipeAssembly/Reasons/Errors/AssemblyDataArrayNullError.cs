@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyDataArrayNullError : BilingualError
 {
-	public string ArrayName { get; }
-
 	public AssemblyDataArrayNullError(string arrayName)
 		: base(
 			$"{arrayName} data array is null",
@@ -14,4 +12,6 @@ public sealed class AssemblyDataArrayNullError : BilingualError
 		ArrayName = arrayName;
 		Metadata["arrayName"] = arrayName;
 	}
+
+	public string ArrayName { get; }
 }

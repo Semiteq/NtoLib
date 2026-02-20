@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyMissingPlcMappingError : BilingualError
 {
-	public string ColumnName { get; }
-
 	public AssemblyMissingPlcMappingError(string columnName)
 		: base(
 			$"{columnName} column has no PLC mapping",
@@ -14,4 +12,6 @@ public sealed class AssemblyMissingPlcMappingError : BilingualError
 		ColumnName = columnName;
 		Metadata["columnName"] = columnName;
 	}
+
+	public string ColumnName { get; }
 }

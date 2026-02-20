@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyUnsupportedTypeError : BilingualError
 {
-	public string TypeName { get; }
-
 	public AssemblyUnsupportedTypeError(string typeName)
 		: base(
 			$"Unsupported type: {typeName}",
@@ -14,4 +12,6 @@ public sealed class AssemblyUnsupportedTypeError : BilingualError
 		TypeName = typeName;
 		Metadata["typeName"] = typeName;
 	}
+
+	public string TypeName { get; }
 }

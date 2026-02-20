@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyMandatoryColumnMissingError : BilingualError
 {
-	public string ColumnName { get; }
-
 	public AssemblyMandatoryColumnMissingError(string columnName)
 		: base(
 			$"{columnName} column not found in configuration",
@@ -14,4 +12,6 @@ public sealed class AssemblyMandatoryColumnMissingError : BilingualError
 		ColumnName = columnName;
 		Metadata["columnName"] = columnName;
 	}
+
+	public string ColumnName { get; }
 }

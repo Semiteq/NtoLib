@@ -9,12 +9,18 @@ namespace NtoLib.Recipes.MbeTable.ServiceLogger;
 
 public sealed class LoggingBootstrapper : IDisposable
 {
-	private Logger? _serilogLogger;
 	private readonly LoggingOptions _loggingOptions;
+	private Logger? _serilogLogger;
 
 	public LoggingBootstrapper(LoggingOptions options)
 	{
 		_loggingOptions = options ?? throw new ArgumentNullException(nameof(options));
+	}
+
+	public void Dispose()
+	{
+		_serilogLogger?.Dispose();
+		Log.CloseAndFlush();
 	}
 
 	public void Initialize()
@@ -26,12 +32,6 @@ public sealed class LoggingBootstrapper : IDisposable
 
 		_serilogLogger = BuildSerilogLogger(_loggingOptions);
 		Log.Logger = _serilogLogger;
-	}
-
-	public void Dispose()
-	{
-		_serilogLogger?.Dispose();
-		Log.CloseAndFlush();
 	}
 
 	private static Logger BuildSerilogLogger(LoggingOptions options)

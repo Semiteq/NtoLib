@@ -15,8 +15,8 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Transform;
 public sealed class ClipboardStepsTransformer
 {
 	private readonly ActionRepository _actionRepository;
-	private readonly PropertyDefinitionRegistry _propertyRegistry;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
+	private readonly PropertyDefinitionRegistry _propertyRegistry;
 
 	public ClipboardStepsTransformer(
 		ActionRepository actionRepository,
@@ -32,22 +32,26 @@ public sealed class ClipboardStepsTransformer
 	{
 		var steps = new List<Step>(dtos.Count);
 
-		for (int i = 0; i < dtos.Count; i++)
+		for (var i = 0; i < dtos.Count; i++)
 		{
 			var dto = dtos[i];
 			var actionResult = _actionRepository.GetActionDefinitionById(dto.ActionId);
 			if (actionResult.IsFailed)
+			{
 				return Result
 					.Fail<IReadOnlyList<Step>>(
 						new ClipboardTransformFailedError(i, $"ActionId {dto.ActionId} not found"))
 					.WithErrors(actionResult.Errors);
+			}
 
 			var actionDef = actionResult.Value;
 
 			var builderResult = StepBuilder.Create(actionDef, _propertyRegistry, _columns);
 			if (builderResult.IsFailed)
+			{
 				return Result.Fail<IReadOnlyList<Step>>(new ClipboardTransformFailedError(i, "Builder creation failed"))
 					.WithErrors(builderResult.Errors);
+			}
 
 			var builder = builderResult.Value;
 
@@ -63,7 +67,9 @@ public sealed class ClipboardStepsTransformer
 
 				var columnId = new ColumnIdentifier(columnDef.Key);
 				if (!builder.Supports(columnId))
+				{
 					continue;
+				}
 
 				var propertyDef = _propertyRegistry.GetPropertyDefinition(columnDef.PropertyTypeId);
 				var parseResult = propertyDef.TryParse(kv.Value);

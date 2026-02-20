@@ -34,10 +34,25 @@ public sealed class StatusService
 		(old as IDisposable)?.Dispose();
 	}
 
-	public void ShowInfo(string message) => Write(message, StatusKind.Info);
-	public void ShowSuccess(string message) => Write(message, StatusKind.Success);
-	public void ShowWarning(string message) => Write(message, StatusKind.Warning);
-	public void ShowError(string message) => Write(message, StatusKind.Error);
+	public void ShowInfo(string message)
+	{
+		Write(message, StatusKind.Info);
+	}
+
+	public void ShowSuccess(string message)
+	{
+		Write(message, StatusKind.Success);
+	}
+
+	public void ShowWarning(string message)
+	{
+		Write(message, StatusKind.Warning);
+	}
+
+	public void ShowError(string message)
+	{
+		Write(message, StatusKind.Error);
+	}
 
 	public void Clear()
 	{
@@ -49,7 +64,9 @@ public sealed class StatusService
 	{
 		var sink = Volatile.Read(ref _sink);
 		if (sink == null)
+		{
 			return;
+		}
 
 		var formatted = _formatter.Format(message);
 		sink.Write(formatted, kind);

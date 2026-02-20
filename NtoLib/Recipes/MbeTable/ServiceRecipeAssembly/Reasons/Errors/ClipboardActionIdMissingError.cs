@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class ClipboardActionIdMissingError : BilingualError
 {
-	public int RowIndex { get; }
-
 	public ClipboardActionIdMissingError(int rowIndex)
 		: base(
 			$"Action ID missing at clipboard row {rowIndex}",
@@ -14,4 +12,6 @@ public sealed class ClipboardActionIdMissingError : BilingualError
 		RowIndex = rowIndex;
 		Metadata["rowIndex"] = rowIndex;
 	}
+
+	public int RowIndex { get; }
 }

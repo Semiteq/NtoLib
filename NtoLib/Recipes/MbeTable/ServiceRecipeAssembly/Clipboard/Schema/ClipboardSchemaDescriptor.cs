@@ -7,8 +7,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Clipboard.Schema;
 
 public sealed class ClipboardSchemaDescriptor
 {
-	public IReadOnlyList<ColumnIdentifier> TransferColumns { get; }
-
 	public ClipboardSchemaDescriptor(IReadOnlyList<ColumnDefinition> columns)
 	{
 		TransferColumns = columns
@@ -17,4 +15,6 @@ public sealed class ClipboardSchemaDescriptor
 			.ToList()
 			.AsReadOnly();
 	}
+
+	public IReadOnlyList<ColumnIdentifier> TransferColumns { get; }
 }

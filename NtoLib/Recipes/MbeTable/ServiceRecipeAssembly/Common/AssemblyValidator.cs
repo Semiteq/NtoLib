@@ -14,9 +14,9 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
 /// </summary>
 public sealed class AssemblyValidator
 {
-	private readonly TargetAvailabilityValidator _targetValidator;
 	private readonly ActionRepository _actionRepository;
 	private readonly IActionTargetProvider _targetProvider;
+	private readonly TargetAvailabilityValidator _targetValidator;
 
 	public AssemblyValidator(
 		TargetAvailabilityValidator targetValidator,

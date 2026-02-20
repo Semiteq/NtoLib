@@ -12,7 +12,9 @@ internal sealed class UtcTimestampEnricher : ILogEventEnricher
 	public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
 	{
 		if (logEvent == null)
+		{
 			return;
+		}
 		var prop = propertyFactory.CreateProperty(PropertyName, DateTimeOffset.UtcNow);
 		logEvent.AddOrUpdateProperty(prop);
 	}

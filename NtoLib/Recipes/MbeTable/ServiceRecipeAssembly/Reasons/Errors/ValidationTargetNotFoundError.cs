@@ -4,13 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class ValidationTargetNotFoundError : BilingualError
 {
-	public int Row { get; }
-	public short ActionId { get; }
-	public string ActionName { get; }
-	public string ColumnKey { get; }
-	public short TargetId { get; }
-	public string GroupName { get; }
-
 	public ValidationTargetNotFoundError(
 		int row,
 		short actionId,
@@ -36,4 +29,11 @@ public sealed class ValidationTargetNotFoundError : BilingualError
 		Metadata["targetId"] = targetId;
 		Metadata["groupName"] = groupName;
 	}
+
+	public int Row { get; }
+	public short ActionId { get; }
+	public string ActionName { get; }
+	public string ColumnKey { get; }
+	public short TargetId { get; }
+	public string GroupName { get; }
 }

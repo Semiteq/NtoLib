@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyStepFailedError : BilingualError
 {
-	public int StepIndex { get; }
-
 	public AssemblyStepFailedError(int stepIndex)
 		: base(
 			$"Failed to assemble step {stepIndex}",
@@ -14,4 +12,6 @@ public sealed class AssemblyStepFailedError : BilingualError
 		StepIndex = stepIndex;
 		Metadata["stepIndex"] = stepIndex;
 	}
+
+	public int StepIndex { get; }
 }

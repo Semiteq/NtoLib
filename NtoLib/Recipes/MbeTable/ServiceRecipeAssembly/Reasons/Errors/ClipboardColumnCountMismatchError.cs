@@ -4,10 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class ClipboardColumnCountMismatchError : BilingualError
 {
-	public int Actual { get; }
-	public int Expected { get; }
-	public int RowIndex { get; }
-
 	public ClipboardColumnCountMismatchError(int rowIndex, int actual, int expected)
 		: base(
 			$"Clipboard row {rowIndex} has {actual} columns, expected {expected}",
@@ -20,4 +16,8 @@ public sealed class ClipboardColumnCountMismatchError : BilingualError
 		Metadata["actual"] = actual;
 		Metadata["expected"] = expected;
 	}
+
+	public int Actual { get; }
+	public int Expected { get; }
+	public int RowIndex { get; }
 }

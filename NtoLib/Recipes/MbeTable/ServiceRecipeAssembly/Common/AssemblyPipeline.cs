@@ -22,6 +22,7 @@ internal static class AssemblyPipeline
 		if (assemblyResult.IsFailed)
 		{
 			logger.LogError("{SourceTag} assembly failed", sourceTag);
+
 			return assemblyResult;
 		}
 
@@ -32,16 +33,22 @@ internal static class AssemblyPipeline
 		if (validationResult.IsFailed)
 		{
 			logger.LogError("Recipe validation failed after {SourceTag} assembly", sourceTag);
+
 			return validationResult.ToResult<Recipe>();
 		}
 
 		var result = Result.Ok(recipe);
 		if (assemblyResult.Reasons.Count > 0)
+		{
 			result = result.WithReasons(assemblyResult.Reasons);
+		}
 		if (validationResult.Reasons.Count > 0)
+		{
 			result = result.WithReasons(validationResult.Reasons);
+		}
 
 		logger.LogDebug("{SourceTag} assembly completed successfully", sourceTag);
+
 		return result;
 	}
 }

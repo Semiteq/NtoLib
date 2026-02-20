@@ -4,11 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyColumnNotApplicableError : BilingualError
 {
-	public string ColumnCode { get; }
-	public string ActionName { get; }
-	public string Value { get; }
-	public int? LineNumber { get; }
-
 	public AssemblyColumnNotApplicableError(string columnCode, string actionName, string value, int? lineNumber = null)
 		: base(
 			lineNumber.HasValue
@@ -27,6 +22,13 @@ public sealed class AssemblyColumnNotApplicableError : BilingualError
 		Metadata["actionName"] = actionName;
 		Metadata["value"] = value;
 		if (lineNumber.HasValue)
+		{
 			Metadata["lineNumber"] = lineNumber.Value;
+		}
 	}
+
+	public string ColumnCode { get; }
+	public string ActionName { get; }
+	public string Value { get; }
+	public int? LineNumber { get; }
 }

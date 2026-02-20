@@ -4,11 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Reasons.Errors;
 
 public sealed class AssemblyPlcIndexOutOfRangeError : BilingualError
 {
-	public int Index { get; }
-	public int Row { get; }
-	public string ColumnKey { get; }
-	public string Area { get; }
-
 	public AssemblyPlcIndexOutOfRangeError(int index, int row, string columnKey, string area)
 		: base(
 			$"{area} index {index} out of range for row {row}, column '{columnKey}'",
@@ -23,4 +18,9 @@ public sealed class AssemblyPlcIndexOutOfRangeError : BilingualError
 		Metadata["columnKey"] = columnKey;
 		Metadata["area"] = area;
 	}
+
+	public int Index { get; }
+	public int Row { get; }
+	public string ColumnKey { get; }
+	public string Area { get; }
 }

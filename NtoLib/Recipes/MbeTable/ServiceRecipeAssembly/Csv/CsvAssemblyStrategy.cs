@@ -24,10 +24,10 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
 public sealed class CsvAssemblyStrategy
 {
 	private readonly ActionRepository _actionRepository;
-	private readonly PropertyDefinitionRegistry _propertyRegistry;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
 	private readonly CsvHeaderBinder _headerBinder;
 	private readonly ILogger<CsvAssemblyStrategy> _logger;
+	private readonly PropertyDefinitionRegistry _propertyRegistry;
 
 	public CsvAssemblyStrategy(
 		ActionRepository actionRepository,
@@ -46,13 +46,16 @@ public sealed class CsvAssemblyStrategy
 	public Result<Recipe> AssembleFromRawData(CsvRawData rawData)
 	{
 		if (rawData.Records.Count == 0)
+		{
 			return new Recipe(ImmutableList<Step>.Empty);
+		}
 
 		var bindingResult = _headerBinder.Bind(rawData.Headers.ToArray(), new TableColumns(_columns));
 		if (bindingResult.IsFailed)
 		{
 			_logger.LogError("Header binding failed: {Errors}",
 				string.Join("; ", bindingResult.Errors.Select(e => e.Message)));
+
 			return bindingResult.ToResult<Recipe>();
 		}
 
@@ -68,6 +71,7 @@ public sealed class CsvAssemblyStrategy
 			{
 				_logger.LogError("Step assembly failed at row {RowIndex}: {Errors}", rowIndex + 1,
 					string.Join("; ", stepResult.Errors.Select(e => e.Message)));
+
 				return stepResult.ToResult<Recipe>();
 			}
 
@@ -77,7 +81,9 @@ public sealed class CsvAssemblyStrategy
 		var result = Result.Ok(new Recipe(steps.ToImmutableList()));
 
 		if (notApplicableOccurrences.Count > 0)
+		{
 			result = result.WithReason(new AssemblyColumnNotApplicableWarning(notApplicableOccurrences));
+		}
 
 		return result;
 	}
@@ -90,18 +96,24 @@ public sealed class CsvAssemblyStrategy
 	{
 		var actionIdResult = ExtractActionId(record, binding);
 		if (actionIdResult.IsFailed)
+		{
 			return Result.Fail(new CsvInvalidDataError("Failed to extract action ID", lineNumber))
 				.WithErrors(actionIdResult.Errors);
+		}
 
 		var actionId = actionIdResult.Value;
 		var actionResult = _actionRepository.GetActionDefinitionById(actionId);
 		if (actionResult.IsFailed)
+		{
 			return new CoreActionNotFoundError(actionId);
+		}
 
 		var actionDefinition = actionResult.Value;
 		var createBuilderResult = StepBuilder.Create(actionDefinition, _propertyRegistry, _columns);
 		if (createBuilderResult.IsFailed)
+		{
 			return createBuilderResult.ToResult<Step>();
+		}
 
 		var builder = createBuilderResult.Value;
 
@@ -111,7 +123,9 @@ public sealed class CsvAssemblyStrategy
 			var columnDef = kvp.Value;
 
 			if (columnDef.Key == MandatoryColumns.Action || columnDef.Key == MandatoryColumns.StepStartTime)
+			{
 				continue;
+			}
 
 			var rawValue = fileIndex < record.Length ? record[fileIndex] : string.Empty;
 
@@ -133,17 +147,23 @@ public sealed class CsvAssemblyStrategy
 			}
 
 			if (string.IsNullOrWhiteSpace(rawValue))
+			{
 				continue;
+			}
 
 			var propertyDef = _propertyRegistry.GetPropertyDefinition(columnDef.PropertyTypeId);
 			var parseResult = propertyDef.TryParse(rawValue);
 			if (parseResult.IsFailed)
+			{
 				return Result.Fail(new CorePropertyConversionFailedError(rawValue, propertyDef.SystemType.Name))
 					.WithErrors(parseResult.Errors);
+			}
 
 			var setResult = builder.WithOptionalDynamic(columnDef.Key, parseResult.Value);
 			if (setResult.IsFailed)
+			{
 				return setResult.ToResult<Step>();
+			}
 		}
 
 		return builder.Build();
@@ -153,11 +173,15 @@ public sealed class CsvAssemblyStrategy
 	{
 		var actionIndex = FindColumnIndex(binding, MandatoryColumns.Action);
 		if (actionIndex < 0 || actionIndex >= record.Length)
+		{
 			return new AssemblyActionColumnOutOfRangeError();
+		}
 
 		var actionValue = record[actionIndex];
 		if (!short.TryParse(actionValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var actionId))
+		{
 			return new CorePropertyConversionFailedError(actionValue, "short");
+		}
 
 		return actionId;
 	}
@@ -167,7 +191,9 @@ public sealed class CsvAssemblyStrategy
 		foreach (var kvp in binding.FileIndexToColumn)
 		{
 			if (kvp.Value.Key == key)
+			{
 				return kvp.Key;
+			}
 		}
 
 		return -1;

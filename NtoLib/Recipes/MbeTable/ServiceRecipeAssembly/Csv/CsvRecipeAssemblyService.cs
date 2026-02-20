@@ -14,8 +14,8 @@ namespace NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
 public sealed class CsvRecipeAssemblyService
 {
 	private readonly CsvAssemblyStrategy _csvStrategy;
-	private readonly AssemblyValidator _validator;
 	private readonly ILogger<CsvRecipeAssemblyService> _logger;
+	private readonly AssemblyValidator _validator;
 
 	public CsvRecipeAssemblyService(
 		CsvAssemblyStrategy csvStrategy,
@@ -30,7 +30,9 @@ public sealed class CsvRecipeAssemblyService
 	public Result<Recipe> AssembleFromCsvData(object csvData)
 	{
 		if (csvData is not CsvRawData rawData)
+		{
 			return new AssemblyInvalidDataTypeError("CsvRawData", csvData?.GetType()?.Name ?? "null");
+		}
 
 		return AssemblyPipeline.Assemble(
 			"CSV",
