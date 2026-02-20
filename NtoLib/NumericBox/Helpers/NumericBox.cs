@@ -5,12 +5,12 @@ namespace NtoLib.NumericBox.Helpers;
 
 public partial class NumericBox : TextBox
 {
-	public event Action? ValidatingValue;
-
 	public NumericBox()
 	{
 		InitializeComponent();
 	}
+
+	public event Action? ValidatingValue;
 
 	protected override void OnKeyPress(KeyPressEventArgs e)
 	{
@@ -18,7 +18,9 @@ public partial class NumericBox : TextBox
 
 		if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '+' && e.KeyChar != '-' &&
 			e.KeyChar != ',' && e.KeyChar != '.' && e.KeyChar != 'E' && e.KeyChar != 'e')
+		{
 			e.Handled = true;
+		}
 	}
 
 	protected override void OnKeyDown(KeyEventArgs e)

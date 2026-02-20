@@ -42,20 +42,15 @@ public class NumericBoxFB : VisualFBBase
 
 	private readonly ValueArbiter _arbiter = new(DefaultPrecision, DefaultDebounceSeconds);
 
-	[NonSerialized]
-	private EventTrigger? _aboveMaxEvent;
+	[NonSerialized] private EventTrigger? _aboveMaxEvent;
 
-	[NonSerialized]
-	private EventTrigger? _belowMinEvent;
+	[NonSerialized] private EventTrigger? _belowMinEvent;
 
-	[NonSerialized]
-	private EventTrigger? _limitsInconsistentEvent;
+	[NonSerialized] private EventTrigger? _limitsInconsistentEvent;
 
-	[Browsable(false)]
-	public float OutputValue => _arbiter.OutputValue;
+	[Browsable(false)] public float OutputValue => _arbiter.OutputValue;
 
-	[Browsable(false)]
-	public bool IsLocked => GetPinValue<bool>(PinLockId);
+	[Browsable(false)] public bool IsLocked => GetPinValue<bool>(PinLockId);
 
 	public void ApplyUiValue(float value)
 	{
@@ -71,16 +66,19 @@ public class NumericBoxFB : VisualFBBase
 		if (min.HasValue && value < min.Value)
 		{
 			var limitText = min.Value.ToString(displayFormat);
+
 			return new Error($"Значение должно быть не менее {limitText}");
 		}
 
 		if (max.HasValue && value > max.Value)
 		{
 			var limitText = max.Value.ToString(displayFormat);
+
 			return new Error($"Значение должно быть не более {limitText}");
 		}
 
 		ApplyUiValue(value);
+
 		return Result.Ok();
 	}
 
@@ -172,6 +170,7 @@ public class NumericBoxFB : VisualFBBase
 		}
 
 		var connections = treePinHlp.GetConnections(EConnectionTypeMask.ctGeneric);
+
 		return connections.Length > 0;
 	}
 }

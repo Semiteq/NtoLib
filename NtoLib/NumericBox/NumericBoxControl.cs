@@ -20,272 +20,19 @@ namespace NtoLib.NumericBox;
 [DisplayName("Поле ввода")]
 public partial class NumericBoxControl : VisualControlBase
 {
-
-	#region  Visual properties
-
-	[DispId(10)]
-	[Category("Внешний вид")]
-	[DisplayName("Цвет границы")]
-	public override Color BackColor
-	{
-		get => base.BackColor;
-		set
-		{
-			if (value == Color.Transparent)
-			{
-				return;
-			}
-
-			base.BackColor = value;
-		}
-	}
-
-	private int _borderWidth = 1;
-
-	[DispId(11)]
-	[Category("Внешний вид")]
-	[DisplayName("Толщина границы")]
-	public int BorderWidth
-	{
-		get
-		{
-			return _borderWidth;
-		}
-		set
-		{
-			_borderWidth = value < 0 ? 0 : value;
-			UpdateBorderWidth();
-			UpdateFont();
-		}
-	}
-
-	private bool _userLock;
-
-	[DispId(20)]
-	[Category("Внешний вид")]
-	[DisplayName("Блокировка ввода")]
-	public bool UserLock
-	{
-		get
-		{
-			return _userLock;
-		}
-		set
-		{
-			_userLock = value;
-			UpdateLockBehaviour();
-		}
-	}
-
-	private Color _backColorUnlocked = Color.White;
-
-	[DispId(30)]
-	[Category("Внешний вид")]
-	[DisplayName("Цвет разблокированного")]
-	public Color BackColorUnlocked
-	{
-		get
-		{
-			return _backColorUnlocked;
-		}
-		set
-		{
-			if (_backColorUnlocked == Color.Transparent)
-			{
-				return;
-			}
-
-			_backColorUnlocked = value;
-			UpdateLockBehaviour();
-		}
-	}
-
-	private Color _backColorLocked = Color.LightYellow;
-
-	[DispId(40)]
-	[Category("Внешний вид")]
-	[DisplayName("Цвет заблокированного")]
-	public Color BackColorLocked
-	{
-		get
-		{
-			return _backColorLocked;
-		}
-		set
-		{
-			if (_backColorLocked == Color.Transparent)
-			{
-				return;
-			}
-
-			_backColorLocked = value;
-			UpdateLockBehaviour();
-		}
-	}
-
-	private string _textBefore = "";
-
-	[DispId(50)]
-	[Category("Внешний вид")]
-	[DisplayName("Текст до")]
-	public string TextBefore
-	{
-		get
-		{
-			return _textBefore;
-		}
-		set
-		{
-			_textBefore = value;
-			UpdateText();
-		}
-	}
-
-	private string _textAfter = "";
-
-	[DispId(60)]
-	[Category("Внешний вид")]
-	[DisplayName("Текст после")]
-	public string TextAfter
-	{
-		get
-		{
-			return _textAfter;
-		}
-		set
-		{
-			_textAfter = value;
-			UpdateText();
-		}
-	}
-
-	[DispId(70)]
-	[Category("Внешний вид")]
-	[DisplayName("Выравнивание")]
-	public HorizontalAlignment Alignment
-	{
-		get
-		{
-			return textBox.TextAlign;
-		}
-		set
-		{
-			textBox.TextAlign = value;
-
-			label.TextAlign = value switch
-			{
-				HorizontalAlignment.Left => ContentAlignment.MiddleLeft,
-				HorizontalAlignment.Right => ContentAlignment.MiddleRight,
-				_ => ContentAlignment.MiddleCenter
-			};
-		}
-	}
-
-	private bool _boldFont = true;
-
-	[DispId(75)]
-	[Category("Внешний вид")]
-	[DisplayName("Жирный шрифт")]
-	public bool BoldFont
-	{
-		get
-		{
-			return _boldFont;
-		}
-		set
-		{
-			_boldFont = value;
-			UpdateFont();
-		}
-	}
-
-	private DisplayFormat _displayFormat = DisplayFormat.TwoDecimals;
-
-	[DispId(80)]
-	[Category("Внешний вид")]
-	[DisplayName("Формат отображения")]
-	public DisplayFormat DisplayFormat
-	{
-		get
-		{
-			return _displayFormat;
-		}
-		set
-		{
-			_displayFormat = value;
-			_stringFormat = value.ToFormatString();
-			UpdateText();
-		}
-	}
-
-	private FontSizeMode _fontMode = FontSizeMode.Auto;
-
-	[DispId(95)]
-	[Category("Внешний вид")]
-	[DisplayName("Режим размера шрифта")]
-	public FontSizeMode FontMode
-	{
-		get
-		{
-			return _fontMode;
-		}
-		set
-		{
-			_fontMode = value;
-			UpdateFont();
-		}
-	}
-
-	private float _fixedFontSize = 12f;
-
-	[DispId(96)]
-	[Category("Внешний вид")]
-	[DisplayName("Фиксированный размер шрифта")]
-	public float FixedFontSize
-	{
-		get
-		{
-			return _fixedFontSize;
-		}
-		set
-		{
-			_fixedFontSize = value <= 1 ? 1 : value;
-			UpdateFont();
-		}
-	}
-
-	/// <summary>
-	/// Required for persisting font settings across restarts by MasterSCADA
-	/// </summary>
-	[Browsable(false)]
-	public Font TextBoxFont
-	{
-		get
-		{
-			return textBox.Font;
-		}
-		set
-		{
-			textBox.Font = value;
-			label.Font = value;
-		}
-	}
-
-	#endregion
-
-	private string _stringFormat;
-
 	private const int TextBoxOffset = 3;
 	private const int RedrawIntervalMs = 50;
 	private const float ValuePrecision = 0.001f;
-
-	private float _value;
+	private bool _editMode;
 
 	private bool _isInitialized;
-	private bool _editMode;
 	private bool _pinLock;
 
 	private Timer? _redrawTimer;
+
+	private string _stringFormat;
+
+	private float _value;
 
 	public NumericBoxControl()
 	{
@@ -373,7 +120,9 @@ public partial class NumericBoxControl : VisualControlBase
 			_value = newValue;
 
 			if (!_editMode)
+			{
 				UpdateText();
+			}
 		}
 
 		if (lockChanged)
@@ -509,7 +258,6 @@ public partial class NumericBoxControl : VisualControlBase
 		label.Text = text;
 	}
 
-
 	private void ReadAndValidateValue()
 	{
 		if (DesignMode
@@ -528,6 +276,7 @@ public partial class NumericBoxControl : VisualControlBase
 			message ??= "Ошибка при распознавании числа";
 			MessageBox.Show(message, @"MasterSCADA", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 			ToCommonMode();
+
 			return;
 		}
 
@@ -539,6 +288,7 @@ public partial class NumericBoxControl : VisualControlBase
 			message ??= "Недопустимое значение";
 			MessageBox.Show(message, @"MasterSCADA", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 			ToCommonMode();
+
 			return;
 		}
 
@@ -560,4 +310,220 @@ public partial class NumericBoxControl : VisualControlBase
 
 		return number;
 	}
+
+	#region Visual properties
+
+	[DispId(10)]
+	[Category("Внешний вид")]
+	[DisplayName("Цвет границы")]
+	public override Color BackColor
+	{
+		get => base.BackColor;
+		set
+		{
+			if (value == Color.Transparent)
+			{
+				return;
+			}
+
+			base.BackColor = value;
+		}
+	}
+
+	private int _borderWidth = 1;
+
+	[DispId(11)]
+	[Category("Внешний вид")]
+	[DisplayName("Толщина границы")]
+	public int BorderWidth
+	{
+		get => _borderWidth;
+		set
+		{
+			_borderWidth = value < 0 ? 0 : value;
+			UpdateBorderWidth();
+			UpdateFont();
+		}
+	}
+
+	private bool _userLock;
+
+	[DispId(20)]
+	[Category("Внешний вид")]
+	[DisplayName("Блокировка ввода")]
+	public bool UserLock
+	{
+		get => _userLock;
+		set
+		{
+			_userLock = value;
+			UpdateLockBehaviour();
+		}
+	}
+
+	private Color _backColorUnlocked = Color.White;
+
+	[DispId(30)]
+	[Category("Внешний вид")]
+	[DisplayName("Цвет разблокированного")]
+	public Color BackColorUnlocked
+	{
+		get => _backColorUnlocked;
+		set
+		{
+			if (_backColorUnlocked == Color.Transparent)
+			{
+				return;
+			}
+
+			_backColorUnlocked = value;
+			UpdateLockBehaviour();
+		}
+	}
+
+	private Color _backColorLocked = Color.LightYellow;
+
+	[DispId(40)]
+	[Category("Внешний вид")]
+	[DisplayName("Цвет заблокированного")]
+	public Color BackColorLocked
+	{
+		get => _backColorLocked;
+		set
+		{
+			if (_backColorLocked == Color.Transparent)
+			{
+				return;
+			}
+
+			_backColorLocked = value;
+			UpdateLockBehaviour();
+		}
+	}
+
+	private string _textBefore = "";
+
+	[DispId(50)]
+	[Category("Внешний вид")]
+	[DisplayName("Текст до")]
+	public string TextBefore
+	{
+		get => _textBefore;
+		set
+		{
+			_textBefore = value;
+			UpdateText();
+		}
+	}
+
+	private string _textAfter = "";
+
+	[DispId(60)]
+	[Category("Внешний вид")]
+	[DisplayName("Текст после")]
+	public string TextAfter
+	{
+		get => _textAfter;
+		set
+		{
+			_textAfter = value;
+			UpdateText();
+		}
+	}
+
+	[DispId(70)]
+	[Category("Внешний вид")]
+	[DisplayName("Выравнивание")]
+	public HorizontalAlignment Alignment
+	{
+		get => textBox.TextAlign;
+		set
+		{
+			textBox.TextAlign = value;
+
+			label.TextAlign = value switch
+			{
+				HorizontalAlignment.Left => ContentAlignment.MiddleLeft,
+				HorizontalAlignment.Right => ContentAlignment.MiddleRight,
+				_ => ContentAlignment.MiddleCenter
+			};
+		}
+	}
+
+	private bool _boldFont = true;
+
+	[DispId(75)]
+	[Category("Внешний вид")]
+	[DisplayName("Жирный шрифт")]
+	public bool BoldFont
+	{
+		get => _boldFont;
+		set
+		{
+			_boldFont = value;
+			UpdateFont();
+		}
+	}
+
+	private DisplayFormat _displayFormat = DisplayFormat.TwoDecimals;
+
+	[DispId(80)]
+	[Category("Внешний вид")]
+	[DisplayName("Формат отображения")]
+	public DisplayFormat DisplayFormat
+	{
+		get => _displayFormat;
+		set
+		{
+			_displayFormat = value;
+			_stringFormat = value.ToFormatString();
+			UpdateText();
+		}
+	}
+
+	private FontSizeMode _fontMode = FontSizeMode.Auto;
+
+	[DispId(95)]
+	[Category("Внешний вид")]
+	[DisplayName("Режим размера шрифта")]
+	public FontSizeMode FontMode
+	{
+		get => _fontMode;
+		set
+		{
+			_fontMode = value;
+			UpdateFont();
+		}
+	}
+
+	private float _fixedFontSize = 12f;
+
+	[DispId(96)]
+	[Category("Внешний вид")]
+	[DisplayName("Фиксированный размер шрифта")]
+	public float FixedFontSize
+	{
+		get => _fixedFontSize;
+		set
+		{
+			_fixedFontSize = value <= 1 ? 1 : value;
+			UpdateFont();
+		}
+	}
+
+	/// <summary>
+	/// Required for persisting font settings across restarts by MasterSCADA
+	/// </summary>
+	[Browsable(false)]
+	public Font TextBoxFont
+	{
+		get => textBox.Font;
+		set
+		{
+			textBox.Font = value;
+			label.Font = value;
+		}
+	}
+
+	#endregion
 }

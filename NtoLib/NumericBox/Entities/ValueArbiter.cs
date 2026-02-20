@@ -11,10 +11,8 @@ namespace NtoLib.NumericBox.Entities;
 [Serializable]
 public class ValueArbiter
 {
-	private readonly float _precision;
 	private readonly double _debounceSeconds;
-
-	private float _outputValue;
+	private readonly float _precision;
 	private DateTime _lastUiWriteTime;
 
 	public ValueArbiter(float precision, double debounceSeconds)
@@ -24,28 +22,28 @@ public class ValueArbiter
 		_lastUiWriteTime = DateTime.MinValue;
 	}
 
-	public float OutputValue => _outputValue;
+	public float OutputValue { get; private set; }
 
 	public void Initialize(float value)
 	{
-		_outputValue = value;
+		OutputValue = value;
 		_lastUiWriteTime = DateTime.MinValue;
 	}
 
 	public void ApplyUiValue(float value)
 	{
-		if (Math.Abs(value - _outputValue) <= _precision)
+		if (Math.Abs(value - OutputValue) <= _precision)
 		{
 			return;
 		}
 
-		_outputValue = value;
+		OutputValue = value;
 		_lastUiWriteTime = DateTime.UtcNow;
 	}
 
 	public bool TryApplyPinValue(float value)
 	{
-		var pinChanged = Math.Abs(value - _outputValue) > _precision;
+		var pinChanged = Math.Abs(value - OutputValue) > _precision;
 		if (!pinChanged)
 		{
 			return false;
@@ -57,7 +55,8 @@ public class ValueArbiter
 			return false;
 		}
 
-		_outputValue = value;
+		OutputValue = value;
+
 		return true;
 	}
 }
