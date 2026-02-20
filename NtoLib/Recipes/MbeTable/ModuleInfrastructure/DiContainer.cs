@@ -105,6 +105,7 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<ILogger>(sp =>
 		{
 			var factory = sp.GetRequiredService<ILoggerFactory>();
+
 			return factory.CreateLogger("NtoLib.Recipes.MbeTable");
 		});
 	}
@@ -139,6 +140,7 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<RecipeRuntimeStatePoller>(sp =>
 		{
 			var accessor = sp.GetRequiredService<FbPinAccessor>();
+
 			return new RecipeRuntimeStatePoller(
 				accessor,
 				fb.Epsilon,
@@ -212,6 +214,7 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<RecipeColumnLayout>(sp =>
 		{
 			var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
+
 			return new RecipeColumnLayout(columns);
 		});
 
@@ -239,6 +242,7 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<ClipboardSchemaDescriptor>(sp =>
 		{
 			var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
+
 			return new ClipboardSchemaDescriptor(columns);
 		});
 		services.AddSingleton<ClipboardSchemaValidator>();

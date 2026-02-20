@@ -18,11 +18,7 @@ public class WordOrderConverter : TypeConverter
 
 	public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
 	{
-		return new StandardValuesCollection(new[]
-		{
-			WordOrder.LowHigh,
-			WordOrder.HighLow
-		});
+		return new StandardValuesCollection(new[] { WordOrder.LowHigh, WordOrder.HighLow });
 	}
 
 	public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)

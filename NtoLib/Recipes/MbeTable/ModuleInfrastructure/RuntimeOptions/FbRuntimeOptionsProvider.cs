@@ -17,10 +17,7 @@ public sealed class FbRuntimeOptionsProvider
 	{
 		var ip = new IPAddress(new[]
 		{
-			(byte)_fb.UControllerIp1,
-			(byte)_fb.UControllerIp2,
-			(byte)_fb.UControllerIp3,
-			(byte)_fb.UControllerIp4
+			(byte)_fb.UControllerIp1, (byte)_fb.UControllerIp2, (byte)_fb.UControllerIp3, (byte)_fb.UControllerIp4
 		});
 
 		var verifyDelayMs = 200;

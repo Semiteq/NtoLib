@@ -11,16 +11,18 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
 internal sealed class RuntimeServiceHost : IDisposable
 {
-	private readonly TimerService _timerService;
+	private readonly MbeTableFB _owner;
 	private readonly RecipeFacade _recipeFacade;
 	private readonly RecipeRuntimeStatePoller _runtimeState;
 	private readonly StateProvider _stateProvider;
-	private readonly MbeTableFB _owner;
+	private readonly TimerService _timerService;
 
 	public RuntimeServiceHost(IServiceProvider serviceProvider)
 	{
 		if (serviceProvider == null)
+		{
 			throw new ArgumentNullException(nameof(serviceProvider));
+		}
 
 		_timerService = serviceProvider.GetRequiredService<TimerService>();
 		_recipeFacade = serviceProvider.GetRequiredService<RecipeFacade>();
@@ -35,6 +37,14 @@ internal sealed class RuntimeServiceHost : IDisposable
 
 		var snap = _stateProvider.GetSnapshot();
 		_owner.UpdateRecipeConsistentPin(snap.IsRecipeConsistent);
+	}
+
+	public void Dispose()
+	{
+		_timerService.TimesUpdated -= OnTimesUpdated;
+		_stateProvider.RecipeConsistencyChanged -= OnRecipeConsistentChanged;
+		_runtimeState.RecipeActiveChanged -= OnRecipeActiveChanged;
+		_runtimeState.SendEnabledChanged -= OnSendEnabledChanged;
 	}
 
 	public void Poll()
@@ -64,13 +74,5 @@ internal sealed class RuntimeServiceHost : IDisposable
 	{
 		var snapshot = _stateProvider.GetSnapshot();
 		_stateProvider.SetPlcFlags(sendEnabled, snapshot.RecipeActive);
-	}
-
-	public void Dispose()
-	{
-		_timerService.TimesUpdated -= OnTimesUpdated;
-		_stateProvider.RecipeConsistencyChanged -= OnRecipeConsistentChanged;
-		_runtimeState.RecipeActiveChanged -= OnRecipeActiveChanged;
-		_runtimeState.SendEnabledChanged -= OnSendEnabledChanged;
 	}
 }

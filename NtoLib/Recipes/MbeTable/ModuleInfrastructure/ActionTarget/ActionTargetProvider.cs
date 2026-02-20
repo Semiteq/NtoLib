@@ -22,18 +22,24 @@ public sealed class ActionTargetProvider : IActionTargetProvider
 	{
 		var targetsResult = GetFilteredGroupTargets(groupName);
 		if (targetsResult.IsFailed)
+		{
 			return targetsResult.ToResult();
+		}
 
 		var targets = targetsResult.Value;
 		if (targets.Count == 0)
+		{
 			return new InfrastructureTargetGroupEmptyError(groupName);
+		}
 
 		var nonEmptyValueTargets = targets
 			.Where(kvp => !string.IsNullOrEmpty(kvp.Value))
 			.ToDictionary(kv => (short)kv.Key, kv => kv.Value);
 
 		if (nonEmptyValueTargets.Count == 0)
+		{
 			return new InfrastructureTargetGroupNoNonEmptyError(groupName);
+		}
 
 		return nonEmptyValueTargets.Min(kvp => kvp.Key);
 	}
@@ -41,17 +47,22 @@ public sealed class ActionTargetProvider : IActionTargetProvider
 	public Result<IReadOnlyDictionary<short, string>> GetFilteredGroupTargets(string? groupName)
 	{
 		if (groupName == null)
+		{
 			throw new ArgumentNullException(nameof(groupName));
+		}
 
 		var groupExists = _mbeTableFb.GetDefinedGroupNames()
 			.Any(g => string.Equals(g, groupName, StringComparison.OrdinalIgnoreCase));
 
 		if (!groupExists)
+		{
 			return new InfrastructureTargetsNotDefinedError(groupName);
+		}
 
 		var targets = _mbeTableFb.ReadTargets(groupName);
 		var filteredTargets = targets.Where(kvp => !string.IsNullOrEmpty(kvp.Value))
 			.ToDictionary(kv => (short)kv.Key, kv => kv.Value);
+
 		return Result.Ok(CreateReadOnlyDictionary(filteredTargets));
 	}
 

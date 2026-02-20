@@ -10,26 +10,20 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.PinDataManager;
 /// </summary>
 public sealed class RecipeRuntimeStatePoller
 {
-	private readonly FbPinAccessor _pins;
 	private readonly float _epsilon;
-
-	private bool _initialized;
-	private bool _qualityOk;
-
-	public event Action<bool>? RecipeActiveChanged;
-	public event Action<bool>? SendEnabledChanged;
-	public event Action<StepPhase>? StepPhaseChanged;
-
-	public RecipeRuntimeSnapshot Current { get; private set; }
-
-	// Pin IDs injected via MbeTableFB (made internal there, or provide accessors)
-	private readonly int _idRecipeActive;
-	private readonly int _idSendEnabled;
 	private readonly int _idCurrentLine;
 	private readonly int _idFor1;
 	private readonly int _idFor2;
 	private readonly int _idFor3;
+
+	// Pin IDs injected via MbeTableFB (made internal there, or provide accessors)
+	private readonly int _idRecipeActive;
+	private readonly int _idSendEnabled;
 	private readonly int _idStepElapsed;
+	private readonly FbPinAccessor _pins;
+
+	private bool _initialized;
+	private bool _qualityOk;
 
 	public RecipeRuntimeStatePoller(
 		FbPinAccessor pins,
@@ -54,20 +48,27 @@ public sealed class RecipeRuntimeStatePoller
 		_idStepElapsed = idStepCurrentTime;
 	}
 
+	public RecipeRuntimeSnapshot Current { get; private set; }
+
+	public event Action<bool>? RecipeActiveChanged;
+	public event Action<bool>? SendEnabledChanged;
+	public event Action<StepPhase>? StepPhaseChanged;
+
 	public void Poll()
 	{
 		// 1. Check quality first (all required pins must be GOOD)
-		bool qualityGood =
+		var qualityGood =
 			AllGood(_idRecipeActive, _idSendEnabled, _idCurrentLine, _idFor1, _idFor2, _idFor3, _idStepElapsed);
 
 		if (!qualityGood)
 		{
 			_qualityOk = false;
+
 			return; // freeze, keep last snapshot
 		}
 
 		// Transition from bad → good: reinitialize events
-		bool recovered = !_qualityOk;
+		var recovered = !_qualityOk;
 		_qualityOk = true;
 
 		var newSnap = ReadSnapshot();
@@ -77,16 +78,17 @@ public sealed class RecipeRuntimeStatePoller
 			Current = newSnap;
 			_initialized = true;
 			FireAllInitial(newSnap);
+
 			return;
 		}
 
 		var prev = Current;
 
 		// Decide changes
-		bool recipeActiveChanged = prev.RecipeActive != newSnap.RecipeActive;
-		bool sendEnabledChanged = prev.SendEnabled != newSnap.SendEnabled;
+		var recipeActiveChanged = prev.RecipeActive != newSnap.RecipeActive;
+		var sendEnabledChanged = prev.SendEnabled != newSnap.SendEnabled;
 
-		bool phaseChanged =
+		var phaseChanged =
 			prev.StepIndex != newSnap.StepIndex
 			|| prev.ForLevel1Count != newSnap.ForLevel1Count
 			|| prev.ForLevel2Count != newSnap.ForLevel2Count
@@ -95,10 +97,14 @@ public sealed class RecipeRuntimeStatePoller
 		Current = newSnap;
 
 		if (recipeActiveChanged)
+		{
 			SafeInvoke(() => RecipeActiveChanged?.Invoke(newSnap.RecipeActive));
+		}
 
 		if (sendEnabledChanged)
+		{
 			SafeInvoke(() => SendEnabledChanged?.Invoke(newSnap.SendEnabled));
+		}
 
 		if (phaseChanged)
 		{
@@ -126,15 +132,28 @@ public sealed class RecipeRuntimeStatePoller
 		foreach (var id in ids)
 		{
 			if (_pins.GetQuality(id) != OpcQuality.Good)
+			{
 				return false;
+			}
 		}
 
 		return true;
 	}
 
-	private bool ReadBool(int id) => _pins.GetValue<bool>(id);
-	private int ReadInt(int id) => _pins.GetValue<int>(id);
-	private float ReadFloat(int id) => _pins.GetValue<float>(id);
+	private bool ReadBool(int id)
+	{
+		return _pins.GetValue<bool>(id);
+	}
+
+	private int ReadInt(int id)
+	{
+		return _pins.GetValue<int>(id);
+	}
+
+	private float ReadFloat(int id)
+	{
+		return _pins.GetValue<float>(id);
+	}
 
 	private void FireAllInitial(RecipeRuntimeSnapshot s)
 	{
@@ -147,7 +166,9 @@ public sealed class RecipeRuntimeStatePoller
 	private static void SafeInvoke(Action a)
 	{
 		try
-		{ a(); }
+		{
+			a();
+		}
 		catch
 		{
 			/* swallow or log via injected logger if needed */
