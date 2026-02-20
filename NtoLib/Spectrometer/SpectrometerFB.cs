@@ -1,251 +1,254 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 
 using Device.ATR.Devices;
+using Device.ATR.Model;
 using Device.ATR.Model.Spectrometer;
 
 using FB;
 
 using InSAT.Library.Interop;
 
-namespace NtoLib.Spectrometer
+namespace NtoLib.Spectrometer;
+
+[Serializable]
+[ComVisible(true)]
+[Guid("F191FFCB-A4F9-4A50-9922-9E77EA7C4C46")]
+[CatID(CatIDs.CATID_OTHER)]
+[DisplayName("Спектрометр ATP2000P")]
+public class SpectrometerFB : StaticFBBase
 {
-	[Serializable]
-	[ComVisible(true)]
-	[Guid("F191FFCB-A4F9-4A50-9922-9E77EA7C4C46")]
-	[CatID(CatIDs.CATID_OTHER)]
-	[DisplayName("Спектрометр ATP2000P")]
-	public class SpectrometerFB : StaticFBBase
+	private const int ConnectionOKID = 1;
+
+	private const int WaveLengthID = 10;
+	private const int DeltaID = 11;
+
+	private const int IntegrationTimeID = 12;
+	private const int IntervalID = 13;
+	private const int AverageID = 14;
+
+	private const int ComNumberID = 15;
+
+	private const int GetDarkID = 16;
+
+	private const int IntensityID = 20;
+	private int _average = 1;
+	[NonSerialized] private readonly WavelengthCalibrationCoeff _calibrationCoeff = new();
+
+	private int _comNumber = 0;
+	[NonSerialized] private readonly DeviceService _connection = new();
+
+	private bool _connectionOK = false;
+	[NonSerialized] private Spectrum _darkSpectrum = new();
+
+	private int _dataSize = 0;
+
+	private int _integrationTime = 10;
+	private double _intensity = 1;
+	private int _interval = 0;
+
+	[NonSerialized] private Dictionary<double, double> _normalizedSpectrum = new();
+
+	[NonSerialized] private Spectrum _spectrum = new();
+	[NonSerialized] private readonly AcquireParameter _spectrumParameter = new();
+
+	private double _waveLength = 670;
+	private int _width = 200;
+
+	protected override void UpdateData()
 	{
-		private const int ConnectionOKID = 1;
+		base.UpdateData();
 
-		private const int WaveLengthID = 10;
-		private const int DeltaID = 11;
+		SetPinValue(ConnectionOKID, _connectionOK);
 
-		private const int IntegrationTimeID = 12;
-		private const int IntervalID = 13;
-		private const int AverageID = 14;
+		UpdateSpectrumParameters();
 
-		private const int ComNumberID = 15;
-
-		private const int GetDarkID = 16;
-
-		private const int IntensityID = 20;
-
-		private int _integrationTime = 10;
-		private int _interval = 0;
-		private int _average = 1;
-
-		private int _comNumber = 0;
-
-		private double _waveLength = 670;
-		private double _intensity = 1;
-		private int _width = 200;
-
-		private bool _connectionOK = false;
-
-		private int _dataSize = 0;
-
-		[NonSerialized] private Spectrum _spectrum = new();
-		[NonSerialized] private Spectrum _darkSpectrum = new();
-		[NonSerialized] private WavelengthCalibrationCoeff _calibrationCoeff = new();
-		[NonSerialized] private DeviceService _connection = new();
-		[NonSerialized] private AcquireParameter _spectrumParameter = new();
-
-		[NonSerialized] private Dictionary<double, double> _normalizedSpectrum = new();
-
-		protected override void UpdateData()
+		var newComNumber = GetPinValue<int>(ComNumberID);
+		if (_comNumber != newComNumber)
 		{
-			//todo: переделать в стейт-машину
-			base.UpdateData();
-
-			SetPinValue(ConnectionOKID, _connectionOK);
-
-			UpdateSpectrumParameters();
-
-			int newComNumber = GetPinValue<int>(ComNumberID);
-			if (_comNumber != newComNumber)
-			{
-				_comNumber = newComNumber;
-				_connection.Close();
-				_connectionOK = false;
-			}
-
-			if (!_connectionOK)
-				TryOpenConnection();
-
-			if (GetPinValue<bool>(GetDarkID))
-			{
-				TryAcquireDarkSpectrum();
-				SetPinValue(GetDarkID, false);
-			}
-
-			if (_connectionOK)
-			{
-				TryAcquireSpectrum();
-			}
-
-			_waveLength = GetPinValue<int>(WaveLengthID);
-			_width = GetPinValue<int>(DeltaID);
+			_comNumber = newComNumber;
+			_connection.Close();
+			_connectionOK = false;
 		}
 
-		/// <summary>
-		/// Обновление параметров получения спектра (время интегрирования, интервал, усреднение).
-		/// </summary>
-		private void UpdateSpectrumParameters()
+		if (!_connectionOK)
 		{
-			int newIntegrationTime = GetPinValue<int>(IntegrationTimeID);
-			int newInterval = GetPinValue<int>(IntervalID);
-			int newAverage = GetPinValue<int>(AverageID);
-
-			if (_integrationTime != newIntegrationTime ||
-				_interval != newInterval ||
-				_average != newAverage)
-			{
-				_integrationTime = newIntegrationTime;
-				_interval = newInterval;
-				_average = newAverage;
-
-				_spectrumParameter.IntegrationTime = _integrationTime;
-				_spectrumParameter.Interval = _interval;
-				_spectrumParameter.Average = _average;
-			}
+			TryOpenConnection();
 		}
 
-		/// <summary>
-		/// Попытка установить соединение со спектрометром.
-		/// </summary>
-		private void TryOpenConnection()
+		if (GetPinValue<bool>(GetDarkID))
 		{
-			try
-			{
-				// Первое подключение
-				// Пытаемся открыть соединение с указанным COM-портом
-				_connectionOK = _connection.Open($"COM{_comNumber}").GetAwaiter().GetResult();
-				_dataSize = _connection.DeviceInfo.CcdSize;
-			}
-			catch (Exception ex)
-			{
-				_connectionOK = false;
-				HandleException(ex);
-			}
+			TryAcquireDarkSpectrum();
+			SetPinValue(GetDarkID, false);
 		}
 
-		/// <summary>
-		/// Попытка получить темновой спектр.
-		/// </summary>
-		private void TryAcquireDarkSpectrum()
+		if (_connectionOK)
 		{
-			try
-			{
-				_darkSpectrum = _connection.AcquireDark(_spectrumParameter).GetAwaiter().GetResult();
-			}
-			catch (Device.ATR.Model.AlertException ex)
-			{
-				// Ошибка при получении спектра
-				_connectionOK = false;
-				HandleException(ex);
-			}
-			catch (System.UnauthorizedAccessException ex)
-			{
-				// COM-порт занят
-				_connectionOK = false;
-				HandleException(ex);
-			}
-			catch (Exception ex)
-			{
-				_connectionOK = false;
-				HandleException(ex);
-			}
+			TryAcquireSpectrum();
 		}
 
-		/// <summary>
-		/// Попытка получить спектр.
-		/// </summary>
-		private void TryAcquireSpectrum()
-		{
-			try
-			{
-				_spectrum = _connection.Acquire(_spectrumParameter).GetAwaiter().GetResult();
+		_waveLength = GetPinValue<int>(WaveLengthID);
+		_width = GetPinValue<int>(DeltaID);
+	}
 
-				if (_spectrum != null)
-				{
-					double[] segmentData = GetSegmentData();
-					_intensity = segmentData.Average();
-					SetPinValue(IntensityID, _intensity);
-				}
-			}
-			catch (Device.ATR.Model.AlertException ex)
+	/// <summary>
+	/// Обновление параметров получения спектра (время интегрирования, интервал, усреднение).
+	/// </summary>
+	private void UpdateSpectrumParameters()
+	{
+		var newIntegrationTime = GetPinValue<int>(IntegrationTimeID);
+		var newInterval = GetPinValue<int>(IntervalID);
+		var newAverage = GetPinValue<int>(AverageID);
+
+		if (_integrationTime != newIntegrationTime ||
+			_interval != newInterval ||
+			_average != newAverage)
+		{
+			_integrationTime = newIntegrationTime;
+			_interval = newInterval;
+			_average = newAverage;
+
+			_spectrumParameter.IntegrationTime = _integrationTime;
+			_spectrumParameter.Interval = _interval;
+			_spectrumParameter.Average = _average;
+		}
+	}
+
+	/// <summary>
+	/// Попытка установить соединение со спектрометром.
+	/// </summary>
+	private void TryOpenConnection()
+	{
+		try
+		{
+			// Первое подключение
+			// Пытаемся открыть соединение с указанным COM-портом
+			_connectionOK = _connection.Open($"COM{_comNumber}").GetAwaiter().GetResult();
+			_dataSize = _connection.DeviceInfo.CcdSize;
+		}
+		catch (Exception ex)
+		{
+			_connectionOK = false;
+			HandleException(ex);
+		}
+	}
+
+	/// <summary>
+	/// Попытка получить темновой спектр.
+	/// </summary>
+	private void TryAcquireDarkSpectrum()
+	{
+		try
+		{
+			_darkSpectrum = _connection.AcquireDark(_spectrumParameter).GetAwaiter().GetResult();
+		}
+		catch (AlertException ex)
+		{
+			// Ошибка при получении спектра
+			_connectionOK = false;
+			HandleException(ex);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			// COM-порт занят
+			_connectionOK = false;
+			HandleException(ex);
+		}
+		catch (Exception ex)
+		{
+			_connectionOK = false;
+			HandleException(ex);
+		}
+	}
+
+	/// <summary>
+	/// Попытка получить спектр.
+	/// </summary>
+	private void TryAcquireSpectrum()
+	{
+		try
+		{
+			_spectrum = _connection.Acquire(_spectrumParameter).GetAwaiter().GetResult();
+
+			if (_spectrum != null)
 			{
-				// Ошибка при получении спектра
-				_connectionOK = false;
-				HandleException(ex);
+				var segmentData = GetSegmentData();
+				_intensity = segmentData.Average();
+				SetPinValue(IntensityID, _intensity);
 			}
-			catch (System.UnauthorizedAccessException ex)
+		}
+		catch (AlertException ex)
+		{
+			// Ошибка при получении спектра
+			_connectionOK = false;
+			HandleException(ex);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			// COM-порт занят
+			_connectionOK = false;
+			HandleException(ex);
+		}
+		catch (Exception ex)
+		{
+			_connectionOK = false;
+			HandleException(ex);
+		}
+	}
+
+	/// <summary>
+	/// Получает сегмент данных спектра в указанном диапазоне длин волн и вычитает темновой спектр.
+	/// </summary>
+	/// <returns>Массив значений интенсивности в заданном диапазоне.</returns>
+	private double[] GetSegmentData()
+	{
+		if (_darkSpectrum.Data != null)
+		{
+			for (var i = 0; i < _dataSize; i++)
 			{
-				// COM-порт занят
-				_connectionOK = false;
-				HandleException(ex);
-			}
-			catch (Exception ex)
-			{
-				_connectionOK = false;
-				HandleException(ex);
+				_spectrum.Data[i] -= _darkSpectrum.Data[i];
 			}
 		}
 
-		/// <summary>
-		/// Получает сегмент данных спектра в указанном диапазоне длин волн и вычитает темновой спектр.
-		/// </summary>
-		/// <returns>Массив значений интенсивности в заданном диапазоне.</returns>
-		private double[] GetSegmentData()
-		{
-			if (_darkSpectrum.Data != null)
-			{
-				for (int i = 0; i < _dataSize; i++)
-					_spectrum.Data[i] -= _darkSpectrum.Data[i];
-			}
+		// Заполнение словаря с нормализованным спектром
+		_normalizedSpectrum.Clear();
 
-			// Заполнение словаря с нормализованным спектром
-			_normalizedSpectrum.Clear();
+		var coeff = _connection.GetWavelengthCalibrationCoeff().GetAwaiter().GetResult();
+		_calibrationCoeff.Coeff = coeff.Coeff;
 
-			var coeff = _connection.GetWavelengthCalibrationCoeff().GetAwaiter().GetResult();
-			_calibrationCoeff.Coeff = coeff.Coeff;
+		// Пересчет пикселей в длины волн и создание словаря (длина волны, интенсивность)
+		_normalizedSpectrum = _calibrationCoeff.CalcWavelength(_dataSize)
+			.Zip(_spectrum.Data, (wave, intensity) => new { wave, intensity })
+			.ToDictionary(x => x.wave, x => x.intensity);
 
-			// Пересчет пикселей в длины волн и создание словаря (длина волны, интенсивность)
-			_normalizedSpectrum = _calibrationCoeff.CalcWavelength(_dataSize)
-				.Zip(_spectrum.Data, (wave, intensity) => new { wave, intensity })
-				.ToDictionary(x => x.wave, x => x.intensity);
+		// Поиск ближайшего ключа к заданной длине волны
+		var centerWavelength = _normalizedSpectrum.Keys.OrderBy(w => Math.Abs(w - _waveLength)).First();
 
+		//Определение границ спектра
+		var minWaveLength = _normalizedSpectrum.Keys.FirstOrDefault();
+		var maxWaveLength = _normalizedSpectrum.Keys.LastOrDefault();
 
-			// Поиск ближайшего ключа к заданной длине волны
-			double centerWavelength = _normalizedSpectrum.Keys.OrderBy(w => Math.Abs(w - _waveLength)).First();
+		// Определение границ диапазона
+		var halfRange = _width / 2.0;
+		var leftWavelength = _normalizedSpectrum.Keys.Where(w => w <= centerWavelength - halfRange)
+			.DefaultIfEmpty(minWaveLength).Max();
+		var rightWavelength = _normalizedSpectrum.Keys.Where(w => w >= centerWavelength + halfRange)
+			.DefaultIfEmpty(maxWaveLength).Min();
 
-			//Определение границ спектра
-			double minWaveLength = _normalizedSpectrum.Keys.FirstOrDefault();
-			double maxWaveLength = _normalizedSpectrum.Keys.LastOrDefault();
+		// Извлечение сегмента данных
+		var segmentData = _normalizedSpectrum
+			.Where(kv => kv.Key >= leftWavelength && kv.Key <= rightWavelength)
+			.Select(kv => kv.Value)
+			.ToArray();
 
-			// Определение границ диапазона
-			double halfRange = _width / 2.0;
-			double leftWavelength = _normalizedSpectrum.Keys.Where(w => w <= centerWavelength - halfRange).DefaultIfEmpty(minWaveLength).Max();
-			double rightWavelength = _normalizedSpectrum.Keys.Where(w => w >= centerWavelength + halfRange).DefaultIfEmpty(maxWaveLength).Min();
+		return segmentData;
+	}
 
-			// Извлечение сегмента данных
-			var segmentData = _normalizedSpectrum
-				.Where(kv => kv.Key >= leftWavelength && kv.Key <= rightWavelength)
-				.Select(kv => kv.Value)
-				.ToArray();
-
-			return segmentData;
-		}
-
-		private void HandleException(Exception ex)
-		{
-			//Debug.Write(ex.ToString());
-		}
+	private void HandleException(Exception ex)
+	{
+		//Debug.Write(ex.ToString());
 	}
 }
