@@ -4,7 +4,7 @@ namespace NtoLib.Devices.Valves.Settings;
 
 public partial class SettingsForm : Form
 {
-	private ValveControl _valveControl;
+	private readonly ValveControl _valveControl;
 
 	public SettingsForm(ValveControl valveControl)
 	{

@@ -31,13 +31,17 @@ internal class SlideGateRenderer : ValveBaseRenderer
 		var valveBounds = GetValveBounds(graphicsBounds);
 
 		if (IsBlocked(status))
+		{
 			DrawBlockRectangle(graphics, graphicsBounds);
+		}
 
 		DrawValve(graphics, valveBounds, status, isLight);
 		DrawGrooveAndGate(graphics, graphicsBounds, status, isLight);
 
 		if (status.AnyError)
+		{
 			DrawErrorRectangle(graphics, graphicsBounds, isLight);
+		}
 
 		return graphicsBounds;
 	}
@@ -70,7 +74,9 @@ internal class SlideGateRenderer : ValveBaseRenderer
 		var groovePoints = grooveBounds.GetPoints(-LineWidth / 2f);
 
 		using (var pen = new Pen(Colors.Lines, LineWidth))
+		{
 			graphics.DrawClosedCurve(pen, groovePoints, 0, FillMode.Alternate);
+		}
 
 		// Для клапанов без датчиков в ручном режиме не показываем положение задвижки
 		if (!(status.Manual && status.WithoutSensors))
@@ -78,7 +84,9 @@ internal class SlideGateRenderer : ValveBaseRenderer
 			var gateBounds = GetGateBounds(grooveBounds, status, isLight);
 
 			using (Brush brush = new SolidBrush(Colors.Lines))
+			{
 				graphics.FillRectangle(brush, gateBounds.ToRectangleF());
+			}
 		}
 	}
 

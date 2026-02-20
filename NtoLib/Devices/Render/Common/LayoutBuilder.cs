@@ -27,16 +27,24 @@ public static class LayoutBuilder
 			if (IsHorizontal(valveControl.Orientation))
 			{
 				if (valveControl.ButtonOrientation == ButtonOrientation.RightBottom)
+				{
 					buttonOrientation = Orientation.Bottom;
+				}
 				else
+				{
 					buttonOrientation = Orientation.Top;
+				}
 			}
 			else
 			{
 				if (valveControl.ButtonOrientation == ButtonOrientation.RightBottom)
+				{
 					buttonOrientation = Orientation.Right;
+				}
 				else
+				{
 					buttonOrientation = Orientation.Left;
+				}
 			}
 
 			(elementLocation, tableLocation) = CalculatePositions((elementSize, tableSize), buttonOrientation);
@@ -71,6 +79,7 @@ public static class LayoutBuilder
 			DeviceRectangle = new Rectangle(elementLocation, elementSize),
 			ButtonTableRectangle = new Rectangle(tableLocation, tableSize)
 		};
+
 		return layout;
 	}
 
@@ -79,7 +88,9 @@ public static class LayoutBuilder
 		if (orientation is Orientation.Top or Orientation.Bottom)
 		{
 			foreach (var t in buttons)
+			{
 				table.SetRow(t, 0);
+			}
 
 			table.RowCount = 1;
 			table.ColumnCount = buttons.Length;
@@ -94,7 +105,9 @@ public static class LayoutBuilder
 		else
 		{
 			foreach (var t in buttons)
+			{
 				table.SetColumn(t, 0);
+			}
 
 			table.ColumnCount = 1;
 			table.RowCount = buttons.Length;
@@ -108,7 +121,6 @@ public static class LayoutBuilder
 		}
 	}
 
-
 	private static (Size valveSize, Size tableSize) CalculateValveSize(ValveControl valve, bool noButtons)
 	{
 		var bounds = valve.Bounds;
@@ -120,6 +132,7 @@ public static class LayoutBuilder
 		{
 			valveSize = bounds.Size;
 			tableSize = new Size();
+
 			return (valveSize, tableSize);
 		}
 
@@ -184,6 +197,7 @@ public static class LayoutBuilder
 		if (noButtons)
 		{
 			tableSize = new Size();
+
 			return (pumpSize, tableSize);
 		}
 

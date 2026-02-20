@@ -26,12 +26,16 @@ internal class CommonValveRenderer : ValveBaseRenderer
 		var valveBounds = GetValveBounds(errorBounds);
 
 		if (IsBlocked(status))
+		{
 			DrawBlockRectangle(graphics, errorBounds);
+		}
 
 		DrawValve(graphics, valveBounds, status, isLight);
 
 		if (status.AnyError)
+		{
 			DrawErrorRectangle(graphics, errorBounds, isLight);
+		}
 
 		return graphicsBounds;
 	}

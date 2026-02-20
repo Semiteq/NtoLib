@@ -36,7 +36,9 @@ internal class SmoothValveRenderer : CommonValveRenderer
 		var circleBounds = GetCircleBounds(valveBounds);
 		var circleRect = circleBounds.ToRectangleF();
 		using (Brush brush = new SolidBrush(GetCircleColor(status)))
+		{
 			graphics.FillEllipse(brush, circleRect);
+		}
 
 		using (var pen = new Pen(Colors.Lines, LineWidth))
 		{

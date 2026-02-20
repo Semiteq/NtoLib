@@ -8,39 +8,9 @@ namespace NtoLib.Devices.Render.Common;
 
 public partial class Lamp : UserControl
 {
-	public Shape Shape { get; set; }
-
-	private Color _activeColor;
-
-	public Color ActiveColor
-	{
-		get => _activeColor;
-		set
-		{
-			_activeColor = value;
-
-			if (_active)
-				Invalidate();
-		}
-	}
-
-	public string TextOnLamp { get; set; } = string.Empty;
-
 	private bool _active;
 
-	public bool Active
-	{
-		get => _active;
-		set
-		{
-			if (_active != value)
-			{
-				_active = value;
-				Invalidate();
-			}
-		}
-	}
-
+	private Color _activeColor;
 
 	public Lamp()
 	{
@@ -54,6 +24,36 @@ public partial class Lamp : UserControl
 		InitializeComponent();
 	}
 
+	public Shape Shape { get; set; }
+
+	public Color ActiveColor
+	{
+		get => _activeColor;
+		set
+		{
+			_activeColor = value;
+
+			if (_active)
+			{
+				Invalidate();
+			}
+		}
+	}
+
+	public string TextOnLamp { get; set; } = string.Empty;
+
+	public bool Active
+	{
+		get => _active;
+		set
+		{
+			if (_active != value)
+			{
+				_active = value;
+				Invalidate();
+			}
+		}
+	}
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
@@ -82,7 +82,6 @@ public partial class Lamp : UserControl
 			e.Graphics.FillRectangle(brush, localBounds);
 			e.Graphics.DrawRectangle(pen, localBounds);
 		}
-
 
 		if (TextOnLamp != string.Empty)
 		{

@@ -93,6 +93,7 @@ public struct Bounds
 		var result = this;
 		result.Width *= sizeFactor;
 		result.Height *= sizeFactor;
+
 		return result;
 	}
 
@@ -105,6 +106,7 @@ public struct Bounds
 		var result = this;
 		result.Width *= widthFactor;
 		result.Height *= heightFactor;
+
 		return result;
 	}
 
@@ -140,6 +142,7 @@ public struct Bounds
 	public RectangleF ToRectangleF()
 	{
 		var rectangle = new RectangleF { X = Left, Y = Top, Width = Width, Height = Height };
+
 		return rectangle;
 	}
 }

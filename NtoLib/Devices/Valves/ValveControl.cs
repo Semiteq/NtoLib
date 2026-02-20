@@ -22,7 +22,46 @@ namespace NtoLib.Devices.Valves;
 [DisplayName("Клапан")]
 public partial class ValveControl : VisualControlBase
 {
+	private bool _animationClocker;
+
+	private Timer? _animationTimer;
+
+	private ButtonOrientation _buttonOrientation;
+	private int _currentCommand;
+
+	private Timer? _impulseTimer;
+
+	private bool _isSlideGate;
+
+	private bool _isSmoothValve = false;
+
+	private Timer? _mouseHoldTimer;
 	private bool _noButtons;
+
+	private Orientation _orientation;
+	private bool _previousSmoothValve;
+
+	private Timer? _redrawTimer;
+
+	private ValveBaseRenderer? _renderer;
+
+	private SettingsForm? _settingsForm;
+
+	private bool _smoothValvePreview;
+
+	internal Status Status;
+
+	public ValveControl()
+	{
+		SetStyle(ControlStyles.UserPaint, true);
+		SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+		SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+		UpdateStyles();
+
+		InitializeComponent();
+
+		_renderer = new CommonValveRenderer(this);
+	}
 
 	// See the https://github.com/Semiteq/NtoLib/issues/80
 	public override Color BackColor
@@ -31,7 +70,9 @@ public partial class ValveControl : VisualControlBase
 		set
 		{
 			if (value == Color.Transparent)
+			{
 				return;
+			}
 			base.BackColor = value;
 		}
 	}
@@ -46,11 +87,11 @@ public partial class ValveControl : VisualControlBase
 			var updateRequired = _noButtons != value;
 			_noButtons = value;
 			if (updateRequired)
+			{
 				UpdateLayout();
+			}
 		}
 	}
-
-	private Orientation _orientation;
 
 	[DisplayName("Ориентация клапана")]
 	public Orientation Orientation
@@ -59,16 +100,18 @@ public partial class ValveControl : VisualControlBase
 		set
 		{
 			if (Math.Abs((int)_orientation - (int)value) % 180 == 90)
+			{
 				(Width, Height) = (Height, Width);
+			}
 
 			var updateRequired = _orientation != value;
 			_orientation = value;
 			if (updateRequired)
+			{
 				UpdateLayout();
+			}
 		}
 	}
-
-	private ButtonOrientation _buttonOrientation;
 
 	[DisplayName("Ориентация кнопок")]
 	public ButtonOrientation ButtonOrientation
@@ -79,11 +122,11 @@ public partial class ValveControl : VisualControlBase
 			var updateRequired = _buttonOrientation != value;
 			_buttonOrientation = value;
 			if (updateRequired)
+			{
 				UpdateLayout();
+			}
 		}
 	}
-
-	private bool _isSlideGate;
 
 	[DisplayName("Шибер")]
 	[Description("Изменяет отображение на шибер. Имеет приоретет над плавным клапаном.")]
@@ -98,8 +141,6 @@ public partial class ValveControl : VisualControlBase
 		}
 	}
 
-	private bool _smoothValvePreview;
-
 	[DisplayName("Предпросмотр плавного клапана")]
 	[Description("Изменяет отображение на плавный клапан в DesignMode. В Runtime тип будет определятся из StatusWord.")]
 	public bool SmoothValvePreview
@@ -111,37 +152,6 @@ public partial class ValveControl : VisualControlBase
 			UpdateRenderer();
 			UpdateLayout();
 		}
-	}
-
-	internal Status Status;
-	private bool _previousSmoothValve;
-
-	private ValveBaseRenderer? _renderer;
-
-	private SettingsForm? _settingsForm;
-
-	private bool _isSmoothValve = false;
-
-	private Timer? _impulseTimer;
-	private int _currentCommand;
-
-	private Timer? _mouseHoldTimer;
-
-	private Timer? _animationTimer;
-	private bool _animationClocker;
-
-	private Timer? _redrawTimer;
-
-	public ValveControl()
-	{
-		SetStyle(ControlStyles.UserPaint, true);
-		SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-		SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-		UpdateStyles();
-
-		InitializeComponent();
-
-		_renderer = new CommonValveRenderer(this);
 	}
 
 	protected override void ToRuntime()
@@ -214,7 +224,9 @@ public partial class ValveControl : VisualControlBase
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		if (!FBConnector.DesignMode)
+		{
 			UpdateStatus();
+		}
 		UpdateSprite();
 	}
 
@@ -223,21 +235,31 @@ public partial class ValveControl : VisualControlBase
 		base.OnPinReceive(pinID, valueChanged);
 
 		if (pinID != ValveFB.UsedId + 1000)
+		{
 			return;
+		}
 
 		void Apply()
 		{
 			var used = FBConnector.GetPinValue<bool>(pinID);
 			if (Visible != used)
+			{
 				Visible = used;
+			}
 			if (used)
+			{
 				Invalidate();
+			}
 		}
 
 		if (InvokeRequired)
+		{
 			BeginInvoke((Action)Apply);
+		}
 		else
+		{
 			Apply();
+		}
 	}
 
 	private void UpdateAnimation(object sender, EventArgs e)
@@ -327,6 +349,7 @@ public partial class ValveControl : VisualControlBase
 		{
 			_mouseHoldTimer?.Stop();
 			_settingsForm?.Close();
+
 			return;
 		}
 
@@ -342,7 +365,9 @@ public partial class ValveControl : VisualControlBase
 	private void HandleMouseUp(object sender, MouseEventArgs e)
 	{
 		if (e.Button != MouseButtons.Right)
+		{
 			return;
+		}
 
 		_mouseHoldTimer?.Stop();
 		_settingsForm?.Close();
@@ -353,11 +378,12 @@ public partial class ValveControl : VisualControlBase
 		_mouseHoldTimer?.Stop();
 	}
 
-
 	private void HandleVisibleChanged(object sender, EventArgs e)
 	{
 		if (!Visible)
+		{
 			_settingsForm?.Close();
+		}
 	}
 
 	private void DisableCommandImpulse(object sender, EventArgs? e)
@@ -385,9 +411,13 @@ public partial class ValveControl : VisualControlBase
 		var formLocation = MousePosition;
 		var area = Screen.GetWorkingArea(formLocation);
 		if (formLocation.X + _settingsForm.Width > area.Right)
+		{
 			formLocation.X -= _settingsForm.Width;
+		}
 		if (formLocation.Y + _settingsForm.Height > area.Bottom)
+		{
 			formLocation.Y -= _settingsForm.Height;
+		}
 
 		_settingsForm.Location = formLocation;
 		_settingsForm.FormClosed += RemoveSettingsFormReference;
@@ -441,16 +471,21 @@ public partial class ValveControl : VisualControlBase
 		UpdateRenderer();
 
 		if (_isSmoothValve != _previousSmoothValve)
+		{
 			UpdateLayout();
+		}
 		_previousSmoothValve = _isSmoothValve;
-
 
 		if (_animationTimer != null)
 		{
 			if (!_animationTimer.Enabled && Status.AnimationNeeded)
+			{
 				_animationTimer.Start();
+			}
 			if (_animationTimer.Enabled && !Status.AnimationNeeded)
+			{
 				_animationTimer.Stop();
+			}
 		}
 
 		_settingsForm?.Invalidate();
@@ -461,27 +496,37 @@ public partial class ValveControl : VisualControlBase
 		if (IsSlideGate && Status.Manual && Status.WithoutSensors)
 		{
 			if (_renderer?.GetType() != typeof(ManualSlideGateRenderer))
+			{
 				_renderer = new ManualSlideGateRenderer(this);
+			}
 		}
 		else if (IsSlideGate)
 		{
 			if (_renderer?.GetType() != typeof(SlideGateRenderer))
+			{
 				_renderer = new SlideGateRenderer(this);
+			}
 		}
 		else if (_isSmoothValve || (DesignMode && SmoothValvePreview))
 		{
 			if (_renderer?.GetType() != typeof(SmoothValveRenderer))
+			{
 				_renderer = new SmoothValveRenderer(this);
+			}
 		}
 		else if (Status.Manual)
 		{
 			if (_renderer?.GetType() != typeof(ManualValveRenderer))
+			{
 				_renderer = new ManualValveRenderer(this);
+			}
 		}
 		else
 		{
 			if (_renderer?.GetType() != typeof(CommonValveRenderer))
+			{
 				_renderer = new CommonValveRenderer(this);
+			}
 		}
 	}
 

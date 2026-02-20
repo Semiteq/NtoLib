@@ -5,8 +5,8 @@ namespace NtoLib.Devices.Pumps.Settings;
 
 public partial class PumpSettingForm : Form
 {
-	private PumpControl _pumpControl;
-	private PumpType _pumpType;
+	private readonly PumpControl _pumpControl;
+	private readonly PumpType _pumpType;
 
 	public PumpSettingForm(PumpControl pumpControl)
 	{
@@ -14,9 +14,8 @@ public partial class PumpSettingForm : Form
 
 		InitializeComponent();
 
-		var pumpFb = _pumpControl.FBConnector.Fb as PumpFB;
 
-		if (pumpFb == null)
+		if (_pumpControl.FBConnector.Fb is not PumpFB pumpFb)
 		{
 			return;
 		}
@@ -80,12 +79,14 @@ public partial class PumpSettingForm : Form
 
 				voltageLabel.ValueText = $"{status.Voltage:F2} В";
 				currentLabel.ValueText = $"{status.Current:F2} А";
+
 				break;
 			}
 			case PumpType.Cryogen:
 			{
 				temperatureInLabel.ValueText = $"{status.TemperatureIn:F2} К";
 				temperatureOutLabel.ValueText = $"{status.TemperatureOut:F2} К";
+
 				break;
 			}
 		}
@@ -103,83 +104,125 @@ public partial class PumpSettingForm : Form
 	private static string GetStateString(PumpType pumpType, Status status)
 	{
 		if (!status.Use || !status.ConnectionOk)
+		{
 			return "нет данных";
+		}
 
 		switch (pumpType)
 		{
 			case PumpType.Forvacuum:
 			{
 				if (status.Accelerating)
+				{
 					return "разгон";
+				}
 
 				if (status.Decelerating)
+				{
 					return "замедление";
+				}
 
 				if (status.WorkOnNominalSpeed)
+				{
 					return "рабочий режим";
+				}
 
 				if (status.Stopped)
+				{
 					return "остановлен";
+				}
 
 				if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+				{
 					return "не определено";
+				}
 
 				throw new NotImplementedException();
 			}
 			case PumpType.Turbine:
 			{
 				if (status.Accelerating)
+				{
 					return "разгон";
+				}
 
 				if (status.Decelerating)
+				{
 					return "замедление";
+				}
 
 				if (status.WorkOnNominalSpeed)
+				{
 					return "рабочий режим";
+				}
 
 				if (status.Stopped)
+				{
 					return "остановлена";
+				}
 
 				if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+				{
 					return "не определено";
+				}
 
 				throw new NotImplementedException();
 			}
 			case PumpType.Ion:
 			{
 				if (status.Accelerating)
+				{
 					return "охлаждение";
+				}
 
 				if (status.Decelerating)
+				{
 					return "нагрев";
+				}
 
 				if (status.WorkOnNominalSpeed)
+				{
 					return "рабочий режим";
+				}
 
 				if (status.Stopped)
+				{
 					return "остановлен";
+				}
 
 				if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+				{
 					return "не определено";
+				}
 
 				throw new NotImplementedException();
 			}
 			case PumpType.Cryogen:
 			{
 				if (status.Accelerating)
+				{
 					return "повышение напряжения";
+				}
 
 				if (status.Decelerating)
+				{
 					return "выключение";
+				}
 
 				if (status.WorkOnNominalSpeed)
+				{
 					return "рабочий режим";
+				}
 
 				if (status.Stopped)
+				{
 					return "остановлен";
+				}
 
 				if (!status.Accelerating || status.Decelerating || !status.WorkOnNominalSpeed || !status.Stopped)
+				{
 					return "не определено";
+				}
 
 				throw new NotImplementedException();
 			}

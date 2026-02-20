@@ -19,6 +19,7 @@ internal class ManualSlideGateRenderer : ValveBaseRenderer
 		ErrorLineWidth = 2f;
 		ErrorOffset = 2f;
 	}
+
 	public override Bounds Draw(Graphics graphics, RectangleF boundsRect, Orientation orientation, bool isLight)
 	{
 		var graphicsBounds = ConfigureGraphics(graphics, boundsRect, orientation);

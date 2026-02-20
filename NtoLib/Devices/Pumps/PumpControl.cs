@@ -22,7 +22,39 @@ namespace NtoLib.Devices.Pumps;
 [DisplayName("Насос")]
 public partial class PumpControl : VisualControlBase
 {
+	private bool _animationClocker;
+
+	private Timer? _animationTimer;
+
+	private ButtonOrientation _buttonOrientation;
+	private int _currentCommand;
+
+	private Timer? _impulseTimer;
+
+	private Timer? _mouseHoldTimer;
 	private bool _noButtons;
+
+	private Orientation _orientation;
+
+	private Timer? _redrawTimer;
+
+	private PumpRenderer? _renderer;
+
+	private PumpSettingForm? _settingsForm;
+
+	internal Status Status;
+
+	public PumpControl()
+	{
+		SetStyle(ControlStyles.UserPaint, true);
+		SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+		SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+		UpdateStyles();
+
+		InitializeComponent();
+
+		_renderer = new PumpRenderer(this);
+	}
 
 	// See the https://github.com/Semiteq/NtoLib/issues/80
 	public override Color BackColor
@@ -31,7 +63,9 @@ public partial class PumpControl : VisualControlBase
 		set
 		{
 			if (value == Color.Transparent)
+			{
 				return;
+			}
 			base.BackColor = value;
 		}
 	}
@@ -51,8 +85,6 @@ public partial class PumpControl : VisualControlBase
 		}
 	}
 
-	private Orientation _orientation;
-
 	[DisplayName("Ориентация")]
 	public Orientation Orientation
 	{
@@ -68,8 +100,6 @@ public partial class PumpControl : VisualControlBase
 		}
 	}
 
-	private ButtonOrientation _buttonOrientation;
-
 	[DisplayName("Ориентация кнопок")]
 	public ButtonOrientation ButtonOrientation
 	{
@@ -84,36 +114,6 @@ public partial class PumpControl : VisualControlBase
 			}
 		}
 	}
-
-	internal Status Status;
-
-	private PumpRenderer? _renderer;
-
-	private PumpSettingForm? _settingsForm;
-
-	private Timer? _impulseTimer;
-	private int _currentCommand;
-
-	private Timer? _mouseHoldTimer;
-
-	private Timer? _animationTimer;
-	private bool _animationClocker;
-
-	private Timer? _redrawTimer;
-
-
-	public PumpControl()
-	{
-		SetStyle(ControlStyles.UserPaint, true);
-		SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-		SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-		UpdateStyles();
-
-		InitializeComponent();
-
-		_renderer = new PumpRenderer(this);
-	}
-
 
 	protected override void ToRuntime()
 	{
@@ -158,7 +158,6 @@ public partial class PumpControl : VisualControlBase
 		UpdateLayout();
 	}
 
-
 	private void HandleStartClick(object sender, EventArgs e)
 	{
 		if (!Status.UsedByAutoMode && !Status.BlockStart)
@@ -175,13 +174,14 @@ public partial class PumpControl : VisualControlBase
 		}
 	}
 
-
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		e.Graphics.Clear(BackColor);
 
 		if (!FBConnector.DesignMode)
+		{
 			UpdateStatus();
+		}
 
 		UpdateSprite();
 	}
@@ -191,21 +191,31 @@ public partial class PumpControl : VisualControlBase
 		base.OnPinReceive(pinID, valueChanged);
 
 		if (pinID != PumpFB.UsedId + 1000)
+		{
 			return;
+		}
 
 		void Apply()
 		{
 			var used = FBConnector.GetPinValue<bool>(pinID);
 			if (Visible != used)
+			{
 				Visible = used;
+			}
 			if (used)
+			{
 				Invalidate();
+			}
 		}
 
 		if (InvokeRequired)
+		{
 			BeginInvoke((Action)Apply);
+		}
 		else
+		{
 			Apply();
+		}
 	}
 
 	private void UpdateAnimation(object sender, EventArgs e)
@@ -263,13 +273,13 @@ public partial class PumpControl : VisualControlBase
 		return Bounds.Width >= Bounds.Height;
 	}
 
-
 	private void HandleMouseDown(object sender, MouseEventArgs e)
 	{
 		if (e.Button != MouseButtons.Right)
 		{
 			_mouseHoldTimer?.Stop();
 			_settingsForm?.Close();
+
 			return;
 		}
 
@@ -285,7 +295,9 @@ public partial class PumpControl : VisualControlBase
 	private void HandleMouseUp(object sender, MouseEventArgs e)
 	{
 		if (e.Button != MouseButtons.Right)
+		{
 			return;
+		}
 
 		_mouseHoldTimer?.Stop();
 		_settingsForm?.Close();
@@ -296,11 +308,12 @@ public partial class PumpControl : VisualControlBase
 		_mouseHoldTimer?.Stop();
 	}
 
-
 	private void HandleVisibleChanged(object sender, EventArgs e)
 	{
 		if (!Visible)
+		{
 			_settingsForm?.Close();
+		}
 	}
 
 	private void DisableCommandImpulse(object sender, EventArgs? e)
@@ -308,7 +321,6 @@ public partial class PumpControl : VisualControlBase
 		_impulseTimer?.Stop();
 		SetPinValue(_currentCommand, false);
 	}
-
 
 	private void SendCommand(int commandId)
 	{
@@ -329,9 +341,13 @@ public partial class PumpControl : VisualControlBase
 		var formLocation = MousePosition;
 		var area = Screen.GetWorkingArea(formLocation);
 		if (formLocation.X + _settingsForm.Width > area.Right)
+		{
 			formLocation.X -= _settingsForm.Width;
+		}
 		if (formLocation.Y + _settingsForm.Height > area.Bottom)
+		{
 			formLocation.Y -= _settingsForm.Height;
+		}
 
 		_settingsForm.Location = formLocation;
 		_settingsForm.FormClosed += RemoveSettingsFormReference;
@@ -344,7 +360,6 @@ public partial class PumpControl : VisualControlBase
 		form.FormClosed -= RemoveSettingsFormReference;
 		_settingsForm = null;
 	}
-
 
 	private void UpdateStatus()
 	{
@@ -367,11 +382,12 @@ public partial class PumpControl : VisualControlBase
 		buttonStart.Enabled = !Status.UsedByAutoMode && !Status.BlockStart && !Status.ForceStop;
 		buttonStop.Enabled = !Status.UsedByAutoMode && !Status.BlockStop;
 
-		var fb = FBConnector.Fb as PumpFB;
 		Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
 
-		if (fb == null)
+		if (FBConnector.Fb is not PumpFB fb)
+		{
 			return;
+		}
 
 		switch (fb.PumpType)
 		{
@@ -384,6 +400,7 @@ public partial class PumpControl : VisualControlBase
 				Status.Speed = GetPinValue<float>(PumpFB.TurbineSpeedId);
 
 				Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
+
 				break;
 			}
 			case PumpType.Ion:
@@ -392,12 +409,14 @@ public partial class PumpControl : VisualControlBase
 
 				Status.Voltage = GetPinValue<float>(PumpFB.IonPumpVoltage);
 				Status.Current = GetPinValue<float>(PumpFB.IonPumpCurrent);
+
 				break;
 			}
 			case PumpType.Cryogen:
 			{
 				Status.TemperatureIn = GetPinValue<float>(PumpFB.CryoInTemperature);
 				Status.TemperatureOut = GetPinValue<float>(PumpFB.CryoOutTemperature);
+
 				break;
 			}
 		}
@@ -407,9 +426,13 @@ public partial class PumpControl : VisualControlBase
 		if (_animationTimer != null)
 		{
 			if (!_animationTimer.Enabled && animationNeeded)
+			{
 				_animationTimer.Start();
+			}
 			if (_animationTimer.Enabled && !animationNeeded)
+			{
 				_animationTimer.Stop();
+			}
 		}
 
 		_settingsForm?.Invalidate();

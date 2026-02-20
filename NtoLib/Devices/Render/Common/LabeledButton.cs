@@ -9,10 +9,6 @@ namespace NtoLib.Devices.Render.Common;
 
 public partial class LabeledButton : Button
 {
-	public SymbolType SymbolOnButton { get; set; }
-
-	public bool IsButtonPressed { get; private set; }
-
 	private Color _enabledBackColor;
 	private Color _enabledForeColor;
 
@@ -26,6 +22,10 @@ public partial class LabeledButton : Button
 
 		EnabledChanged += HandleEnabledChanged;
 	}
+
+	public SymbolType SymbolOnButton { get; set; }
+
+	public bool IsButtonPressed { get; private set; }
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
@@ -57,19 +57,25 @@ public partial class LabeledButton : Button
 			{
 				bounds.Width = bounds.Height / 7f;
 				using (var brush = new SolidBrush(ForeColor))
+				{
 					e.Graphics.FillRectangle(brush, bounds.ToRectangleF());
+				}
 
 				break;
 			}
 			case SymbolType.Off:
 			{
 				using (var brush = new SolidBrush(ForeColor))
+				{
 					e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
+				}
 
 				var resizeFactor = 5f / 7f;
 				bounds = bounds.Resize(resizeFactor);
 				using (var brush = new SolidBrush(BackColor))
+				{
 					e.Graphics.FillEllipse(brush, bounds.ToRectangleF());
+				}
 
 				break;
 			}
@@ -77,7 +83,9 @@ public partial class LabeledButton : Button
 			{
 				bounds = bounds.Resize(0.75f);
 				using (var brush = new SolidBrush(ForeColor))
+				{
 					e.Graphics.FillRectangle(brush, bounds.ToRectangleF());
+				}
 
 				break;
 			}
@@ -87,7 +95,9 @@ public partial class LabeledButton : Button
 	private void OnPress(object sender, MouseEventArgs e)
 	{
 		if (e.Button != MouseButtons.Left)
+		{
 			return;
+		}
 
 		IsButtonPressed = true;
 	}
@@ -95,7 +105,9 @@ public partial class LabeledButton : Button
 	private void OnRelease(object sender, MouseEventArgs e)
 	{
 		if (e.Button != MouseButtons.Left)
+		{
 			return;
+		}
 
 		IsButtonPressed = false;
 		Invalidate();

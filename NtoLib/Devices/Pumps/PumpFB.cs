@@ -22,27 +22,6 @@ namespace NtoLib.Devices.Pumps;
 [VisualControls(typeof(PumpControl))]
 public class PumpFB : VisualFBBaseExtended
 {
-	private PumpType _pumpType;
-
-	[DisplayName("Тип насоса")]
-	public PumpType PumpType
-	{
-		get => _pumpType;
-		set
-		{
-			_pumpType = value;
-			RecreatePinMap();
-		}
-	}
-
-	[DisplayName("Показывать лампочку \"Нет соединения\"")]
-	[Description("Переключает отображение лампочки \"Нет соединения\" в окне параметров насоса")]
-	public bool UseNoConnectionLamp { get; set; }
-
-	[DisplayName("Отображать температуру")]
-	[Description("Переключает отображение температуры в окне параметров насоса")]
-	public bool UseTemperatureLabel { get; set; }
-
 	public const int StatusWordId = 1;
 	public const int CommandWordId = 5;
 
@@ -80,25 +59,45 @@ public class PumpFB : VisualFBBaseExtended
 	public const int StopCmdId = 101;
 
 	public const int ConnectionDisabledEventId = 5000;
-	private EventTrigger? _connectionDisabledEvent;
 
 	public const int AccelerationStartEventId = 5010;
-	private EventTrigger? _accelerationEvent;
 
 	public const int DecelerationStartEventId = 5011;
-	private EventTrigger? _decelerationEvent;
 
 	public const int ReachNominalSpeedEventId = 5012;
-	private EventTrigger? _nominalSpeedEvent;
 
 	public const int StopEventId = 5013;
-	private EventTrigger? _stopEvent;
 
 	public const int UserStartEventId = 5020;
 	public const int UserStopEventId = 5021;
+	private EventTrigger? _accelerationEvent;
+	private EventTrigger? _connectionDisabledEvent;
+	private EventTrigger? _decelerationEvent;
+	private EventTrigger? _nominalSpeedEvent;
 
 	private bool _prevStartCmd;
 	private bool _prevStopCmd;
+	private PumpType _pumpType;
+	private EventTrigger? _stopEvent;
+
+	[DisplayName("Тип насоса")]
+	public PumpType PumpType
+	{
+		get => _pumpType;
+		set
+		{
+			_pumpType = value;
+			RecreatePinMap();
+		}
+	}
+
+	[DisplayName("Показывать лампочку \"Нет соединения\"")]
+	[Description("Переключает отображение лампочки \"Нет соединения\" в окне параметров насоса")]
+	public bool UseNoConnectionLamp { get; set; }
+
+	[DisplayName("Отображать температуру")]
+	[Description("Переключает отображение температуры в окне параметров насоса")]
+	public bool UseTemperatureLabel { get; set; }
 
 	protected override void ToRuntime()
 	{
@@ -116,6 +115,7 @@ public class PumpFB : VisualFBBaseExtended
 				type[0] = "Форнасосом";
 				type[1] = "Форнасоса";
 				type[2] = "Форнасос";
+
 				break;
 			}
 			case PumpType.Turbine:
@@ -123,6 +123,7 @@ public class PumpFB : VisualFBBaseExtended
 				type[0] = "Турбиной";
 				type[1] = "Турбины";
 				type[2] = "Турбина";
+
 				break;
 			}
 			case PumpType.Ion:
@@ -130,6 +131,7 @@ public class PumpFB : VisualFBBaseExtended
 				type[0] = "Ионным насосом";
 				type[1] = "Ионного насоса";
 				type[2] = "Ионный насос";
+
 				break;
 			}
 			case PumpType.Cryogen:
@@ -137,6 +139,7 @@ public class PumpFB : VisualFBBaseExtended
 				type[0] = "Криогенным насосом";
 				type[1] = "Криогенного насоса";
 				type[2] = "Криогенный насос";
+
 				break;
 			}
 		}
@@ -165,7 +168,9 @@ public class PumpFB : VisualFBBaseExtended
 
 		var statusWord = 0;
 		if (GetPinQuality(StatusWordId) == OpcQuality.Ok)
+		{
 			statusWord = GetPinValue<int>(StatusWordId);
+		}
 
 		var connectionOk = statusWord.GetBit(ConnectionOkId);
 		SetVisualAndUiPin(ConnectionOkId, connectionOk);
@@ -201,6 +206,7 @@ public class PumpFB : VisualFBBaseExtended
 			case PumpType.Turbine:
 			{
 				SetVisualPin(TurbineSpeedId, GetPinValue<float>(TurbineSpeedId));
+
 				break;
 			}
 			case PumpType.Ion:
@@ -208,12 +214,14 @@ public class PumpFB : VisualFBBaseExtended
 				SetVisualPin(IonPumpVoltage, GetPinValue<float>(IonPumpVoltage));
 				SetVisualPin(IonPumpCurrent, GetPinValue<float>(IonPumpCurrent));
 				SetVisualPin(IonPumpPower, GetPinValue<float>(IonPumpPower));
+
 				break;
 			}
 			case PumpType.Cryogen:
 			{
 				SetVisualPin(CryoInTemperature, GetPinValue<float>(CryoInTemperature));
 				SetVisualPin(CryoOutTemperature, GetPinValue<float>(CryoOutTemperature));
+
 				break;
 			}
 		}
@@ -263,6 +271,7 @@ public class PumpFB : VisualFBBaseExtended
 			case PumpType.Turbine:
 			{
 				group.AddPinWithID(TurbineSpeedId, "Speed", PinType.Pin, typeof(float), 0d);
+
 				break;
 			}
 			case PumpType.Ion:
@@ -270,12 +279,14 @@ public class PumpFB : VisualFBBaseExtended
 				group.AddPinWithID(IonPumpVoltage, "Voltage", PinType.Pin, typeof(float), 0d);
 				group.AddPinWithID(IonPumpCurrent, "Current", PinType.Pin, typeof(float), 0d);
 				group.AddPinWithID(IonPumpPower, "Power", PinType.Pin, typeof(float), 0d);
+
 				break;
 			}
 			case PumpType.Cryogen:
 			{
 				group.AddPinWithID(CryoInTemperature, "TemperatureIn", PinType.Pin, typeof(float), 0d);
 				group.AddPinWithID(CryoOutTemperature, "TemperatureOut", PinType.Pin, typeof(float), 0d);
+
 				break;
 			}
 		}

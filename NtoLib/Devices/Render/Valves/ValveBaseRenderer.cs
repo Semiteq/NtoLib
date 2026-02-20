@@ -8,13 +8,13 @@ namespace NtoLib.Devices.Render.Valves;
 
 internal abstract class ValveBaseRenderer : BaseRenderer
 {
-	/// <summary>Экземпляр ValveControl, к которому привязан данный Renderer</summary>
-	protected ValveControl Control { get; private set; }
-
 	protected ValveBaseRenderer(ValveControl valveControl)
 	{
 		Control = valveControl;
 	}
+
+	/// <summary>Экземпляр ValveControl, к которому привязан данный Renderer</summary>
+	protected ValveControl Control { get; private set; }
 
 	/// <summary>
 	/// Возвращает цвета первого и второго треугольника в зависимости от статуса
@@ -66,13 +66,20 @@ internal abstract class ValveBaseRenderer : BaseRenderer
 	protected bool IsBlocked(Status status)
 	{
 		if (status.Opened && status.BlockClosing)
+		{
 			return true;
+		}
+
 		if (status.Closed && (status.BlockOpening || status.ForceClose))
+		{
 			return true;
+		}
+
 		if (status.OpenedSmoothly && (status.BlockClosing || status.BlockOpening))
+		{
 			return true;
+		}
 
 		return false;
 	}
-
 }

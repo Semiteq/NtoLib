@@ -4,6 +4,11 @@ namespace NtoLib.Devices.Render.Common;
 
 public partial class LabeledValue : UserControl
 {
+	public LabeledValue()
+	{
+		InitializeComponent();
+	}
+
 	public string LabelText
 	{
 		get => label.Text;
@@ -14,10 +19,5 @@ public partial class LabeledValue : UserControl
 	{
 		get => valueLabel.Text;
 		set => valueLabel.Text = value;
-	}
-
-	public LabeledValue()
-	{
-		InitializeComponent();
 	}
 }

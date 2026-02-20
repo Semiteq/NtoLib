@@ -46,30 +46,30 @@ public class ValveFB : VisualFBBaseExtended
 	public const int OpenSmoothlyCmdId = 102;
 
 	public const int CollistionEventId = 5000;
-	private EventTrigger? _collisionEvent;
 
 	public const int NotOpenedEventId = 5001;
-	private EventTrigger? _notOpenedEvent;
 
 	public const int NotClosedEventId = 5002;
-	private EventTrigger? _notClosedEvent;
 
 	public const int OpenedEventId = 5010;
-	private EventTrigger? _openedEvent;
 
 	public const int OpenedSmoothlyEventId = 5011;
-	private EventTrigger? _openedSmoothlyEvent;
 
 	public const int ClosedEventId = 5012;
-	private EventTrigger? _closedEvent;
 
 	public const int UserOpenEventId = 5020;
 	public const int UserOpenSmoothlyEventId = 5021;
 	public const int UserCloseEventId = 5022;
+	private EventTrigger? _closedEvent;
+	private EventTrigger? _collisionEvent;
+	private EventTrigger? _notClosedEvent;
+	private EventTrigger? _notOpenedEvent;
+	private EventTrigger? _openedEvent;
+	private EventTrigger? _openedSmoothlyEvent;
+	private bool _prevCloseCmd;
 
 	private bool _prevOpenCmd;
 	private bool _prevOpenSmoothlyCmd;
-	private bool _prevCloseCmd;
 
 	protected override void ToRuntime()
 	{

@@ -5,6 +5,11 @@ namespace NtoLib.Devices.Render.Common;
 
 public partial class LabeledLamp : UserControl
 {
+	public LabeledLamp()
+	{
+		InitializeComponent();
+	}
+
 	public Color ActiveColor
 	{
 		get => lamp1.ActiveColor;
@@ -21,11 +26,5 @@ public partial class LabeledLamp : UserControl
 	{
 		get => lamp1.Active;
 		set => lamp1.Active = value;
-	}
-
-
-	public LabeledLamp()
-	{
-		InitializeComponent();
 	}
 }

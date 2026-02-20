@@ -15,7 +15,6 @@ public abstract class VisualFBBaseExtended : VisualFBBase
 	[NonSerialized] private Timer? _connectionCheckTimer;
 	[NonSerialized] private OpcQuality _previousOpcQuality;
 
-
 	protected override void ToRuntime()
 	{
 		_connectionCheckTimer = new Timer();
@@ -34,16 +33,16 @@ public abstract class VisualFBBaseExtended : VisualFBBase
 
 	protected abstract OpcQuality GetConnectionQuality();
 
-
 	private void UpdateIfQualityChanged(object sender, EventArgs e)
 	{
 		var quality = GetConnectionQuality();
 		if (quality != _previousOpcQuality)
+		{
 			UpdateData();
+		}
 
 		_previousOpcQuality = quality;
 	}
-
 
 	protected void SetVisualAndUiPin(int id, object value)
 	{

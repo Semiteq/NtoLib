@@ -16,6 +16,7 @@ internal class ManualValveRenderer : CommonValveRenderer
 	{
 		var graphicsBounds = base.Draw(graphics, boundsRect, orientation, isLight);
 		DrawManualHandle(graphics, graphicsBounds);
+
 		return graphicsBounds;
 	}
 

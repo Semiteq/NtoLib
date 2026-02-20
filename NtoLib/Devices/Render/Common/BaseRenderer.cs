@@ -41,7 +41,9 @@ public abstract class BaseRenderer
 		transform.Dispose();
 
 		if (orientation == Orientation.Bottom || orientation == Orientation.Top)
+		{
 			(graphicsBounds.Width, graphicsBounds.Height) = (graphicsBounds.Height, graphicsBounds.Width);
+		}
 
 		return graphicsBounds;
 	}

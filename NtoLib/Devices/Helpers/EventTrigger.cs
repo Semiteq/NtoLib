@@ -7,16 +7,15 @@ namespace NtoLib.Devices.Helpers;
 [Serializable]
 public class EventTrigger
 {
-	private readonly FBDesignBase _owner;
+	private readonly bool _autoDeactivate;
 	private readonly int _eventId;
 	private readonly string _eventMessage;
-	private readonly bool _autoDeactivate;
 	private readonly TimeSpan _initialInactivityInterval;
+	private readonly FBDesignBase _owner;
 	private readonly DateTime _startTime;
 
 	private bool _isInitialInactivityPeriod = true;
 	private bool _previousState;
-
 
 	public EventTrigger(FBDesignBase owner, int eventId, string eventMessage, bool autoDeactivate = false)
 		: this(owner, eventId, eventMessage, TimeSpan.Zero, autoDeactivate)
@@ -33,7 +32,6 @@ public class EventTrigger
 		_startTime = DateTime.Now;
 		_initialInactivityInterval = initialInactivity;
 	}
-
 
 	public void Update(bool currentState)
 	{
@@ -59,6 +57,7 @@ public class EventTrigger
 		}
 
 		_isInitialInactivityPeriod = false;
+
 		return false;
 	}
 

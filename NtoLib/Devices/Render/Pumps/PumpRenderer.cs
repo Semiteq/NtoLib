@@ -10,7 +10,7 @@ namespace NtoLib.Devices.Render.Pumps;
 public class PumpRenderer : BaseRenderer
 {
 	/// <summary>Экземпляр ValveControl, к которому привязан данный Renderer</summary>
-	private PumpControl _control;
+	private readonly PumpControl _control;
 
 	public PumpRenderer(PumpControl control)
 	{
@@ -33,19 +33,26 @@ public class PumpRenderer : BaseRenderer
 		var triangleBounds = GetMainTriangleBounds(pumpBounds);
 
 		if (IsBlocked(status))
+		{
 			DrawBlockRectangle(graphics, errorBounds);
+		}
 
 		var pumpColor = GetCircleColor(status);
 		var triangleColors = GetPumpTriangleColors(status, isLight);
 		var points = GetPumpTrianglePoints(triangleBounds);
 
 		using (var brush = new SolidBrush(pumpColor))
+		{
 			graphics.FillEllipse(brush, pumpRect);
+		}
 		using (var brush = new SolidBrush(triangleColors[0]))
+		{
 			graphics.FillClosedCurve(brush, points[0], FillMode.Alternate, 0);
+		}
 		using (var brush = new SolidBrush(triangleColors[1]))
+		{
 			graphics.FillClosedCurve(brush, points[1], FillMode.Alternate, 0);
-
+		}
 
 		var trianglePoints = GetMainTrianglePoints(triangleBounds);
 		using (var pen = new Pen(Colors.Lines, LineWidth))
@@ -57,10 +64,14 @@ public class PumpRenderer : BaseRenderer
 		if (status.Use)
 		{
 			if (status.AnyError)
+			{
 				DrawErrorRectangle(graphics, errorBounds, isLight);
+			}
 
 			if (status.Warning)
+			{
 				DrawWarningRectangle(graphics, errorBounds);
+			}
 		}
 
 		return graphicsBounds;
@@ -168,7 +179,9 @@ public class PumpRenderer : BaseRenderer
 	private static bool IsBlocked(Status status)
 	{
 		if ((status.Stopped || status.Decelerating) && (status.BlockStart || status.ForceStop))
+		{
 			return true;
+		}
 
 		return (status.WorkOnNominalSpeed || status.Accelerating) && status.BlockStop;
 	}
