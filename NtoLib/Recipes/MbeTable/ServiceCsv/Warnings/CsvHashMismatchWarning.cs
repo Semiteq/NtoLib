@@ -8,6 +8,5 @@ public sealed class CsvHashMismatchWarning : BilingualWarning
 		$"CSV file was modified externally. Hash didn't match.",
 		$"CSV файл был изменен вне приложения. Хэш не совпал.")
 	{
-
 	}
 }

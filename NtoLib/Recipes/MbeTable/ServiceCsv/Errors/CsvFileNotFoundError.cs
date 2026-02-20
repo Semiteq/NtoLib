@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 
 public sealed class CsvFileNotFoundError : BilingualError
 {
-	public string FilePath { get; }
-
 	public CsvFileNotFoundError(string filePath)
 		: base(
 			$"File not found: {filePath}",
@@ -14,4 +12,6 @@ public sealed class CsvFileNotFoundError : BilingualError
 		FilePath = filePath;
 		Metadata["filePath"] = filePath;
 	}
+
+	public string FilePath { get; }
 }

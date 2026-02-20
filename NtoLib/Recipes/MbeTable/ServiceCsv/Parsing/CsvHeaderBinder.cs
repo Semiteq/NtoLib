@@ -12,29 +12,30 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Parsing;
 
 public sealed class CsvHeaderBinder
 {
-	public sealed record Binding(
-		IReadOnlyList<string> FileTokens,
-		IReadOnlyDictionary<short, ColumnDefinition> FileIndexToColumn
-	);
-
 	public Result<Binding> Bind(string[] headerTokens, TableColumns columns)
 	{
 		var validationResult = ValidateHeaderTokens(headerTokens);
 		if (validationResult.IsFailed)
+		{
 			return validationResult.ToResult<Binding>();
+		}
 
 		var byCode = BuildColumnLookup(columns);
 		var expected = GetExpectedColumnCodes(columns);
 
 		var mapResult = MapHeaderTokensToColumns(headerTokens, byCode, expected);
 		if (mapResult.IsFailed)
+		{
 			return mapResult.ToResult<Binding>();
+		}
 
 		var (map, tokens) = mapResult.Value;
 
 		var sequenceResult = ValidateHeaderSequence(expected, tokens);
 		if (sequenceResult.IsFailed)
+		{
 			return sequenceResult.ToResult<Binding>();
+		}
 
 		return new Binding(tokens, map);
 	}
@@ -73,7 +74,9 @@ public sealed class CsvHeaderBinder
 			var token = headerTokens[i].Trim();
 
 			if (!byCode.TryGetValue(token, out var def))
+			{
 				return new CsvHeaderMismatchError(expected, headerTokens);
+			}
 
 			map[i] = def;
 			tokens.Add(token);
@@ -88,4 +91,9 @@ public sealed class CsvHeaderBinder
 			? Result.Ok()
 			: new CsvHeaderMismatchError(expected, actual.ToArray());
 	}
+
+	public sealed record Binding(
+		IReadOnlyList<string> FileTokens,
+		IReadOnlyDictionary<short, ColumnDefinition> FileIndexToColumn
+	);
 }

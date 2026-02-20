@@ -15,9 +15,9 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 public sealed class RecipeReader
 {
 	private readonly CsvDataExtractor _dataExtractor;
-	private readonly MetadataService _metadataService;
 	private readonly IntegrityService _integrityService;
 	private readonly ILogger<RecipeReader> _logger;
+	private readonly MetadataService _metadataService;
 
 	public RecipeReader(
 		CsvDataExtractor dataExtractor,
@@ -43,12 +43,15 @@ public sealed class RecipeReader
 
 		var extractResult = _dataExtractor.ExtractRawData(bodyReader);
 		if (extractResult.IsFailed)
+		{
 			return extractResult;
+		}
 
 		var raw = extractResult.Value;
 		raw.Metadata = metadata;
 
 		var integrity = VerifyIntegrity(metadata, raw);
+
 		return integrity.IsFailed ? integrity.ToResult<CsvRawData>() : Result.Ok(raw);
 	}
 
@@ -56,7 +59,10 @@ public sealed class RecipeReader
 	{
 		using var sr = new StringReader(fullText);
 		for (var i = 0; i < metaLines; i++)
+		{
 			sr.ReadLine();
+		}
+
 		return sr.ReadToEnd() ?? string.Empty;
 	}
 
@@ -66,6 +72,7 @@ public sealed class RecipeReader
 		{
 			_logger.LogWarning("CSV row count mismatch: expected {Expected}, actual {Actual}", meta.Rows,
 				data.Rows.Count);
+
 			return Result.Ok().WithReason(new CsvRowCountMismatchWarning(meta.Rows, data.Rows.Count));
 		}
 
@@ -77,6 +84,7 @@ public sealed class RecipeReader
 			{
 				_logger.LogWarning("CSV body hash mismatch: expected {ExpectedHash}, actual {ActualHash}",
 					check.ExpectedHash, check.ActualHash);
+
 				return Result.Ok().WithReason(new CsvHashMismatchWarning());
 			}
 		}

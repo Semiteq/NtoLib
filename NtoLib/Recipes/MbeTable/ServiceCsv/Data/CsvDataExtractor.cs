@@ -14,9 +14,9 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 
 public sealed class CsvDataExtractor
 {
+	private readonly IReadOnlyList<ColumnDefinition> _columns;
 	private readonly CsvHelperFactory _csvHelperFactory;
 	private readonly CsvHeaderBinder _headerBinder;
-	private readonly IReadOnlyList<ColumnDefinition> _columns;
 
 	public CsvDataExtractor(
 		CsvHelperFactory csvHelperFactory,
@@ -33,14 +33,17 @@ public sealed class CsvDataExtractor
 		using var csvReader = _csvHelperFactory.CreateReader(reader);
 
 		if (!csvReader.Read())
+		{
 			return new CsvInvalidDataError("Missing header");
-
+		}
 
 		csvReader.ReadHeader();
 		var headers = csvReader.HeaderRecord ?? Array.Empty<string>();
 
 		if (headers.Length == 0)
+		{
 			return new CsvEmptyHeaderError();
+		}
 
 		var bindingResult = _headerBinder.Bind(headers, new TableColumns(_columns));
 		if (bindingResult.IsFailed)
@@ -60,12 +63,7 @@ public sealed class CsvDataExtractor
 			records.Add(record);
 		}
 
-		return Result.Ok(new CsvRawData
-		{
-			Headers = headers,
-			Rows = rows,
-			Records = records
-		});
+		return Result.Ok(new CsvRawData { Headers = headers, Rows = rows, Records = records });
 	}
 
 	private string BuildCanonicalRow(string[] record)

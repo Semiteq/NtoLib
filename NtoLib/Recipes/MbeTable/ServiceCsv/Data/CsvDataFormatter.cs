@@ -17,8 +17,8 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Data;
 
 public sealed class CsvDataFormatter
 {
-	private readonly CsvHelperFactory _csvHelperFactory;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
+	private readonly CsvHelperFactory _csvHelperFactory;
 
 	public CsvDataFormatter(
 		CsvHelperFactory csvHelperFactory,

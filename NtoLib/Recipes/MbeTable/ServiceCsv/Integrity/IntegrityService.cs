@@ -28,11 +28,6 @@ public sealed class IntegrityService
 	{
 		var isValid = string.Equals(expectedHash, actualHash, StringComparison.Ordinal);
 
-		return new IntegrityCheckResult
-		{
-			IsValid = isValid,
-			ExpectedHash = expectedHash,
-			ActualHash = actualHash
-		};
+		return new IntegrityCheckResult { IsValid = isValid, ExpectedHash = expectedHash, ActualHash = actualHash };
 	}
 }

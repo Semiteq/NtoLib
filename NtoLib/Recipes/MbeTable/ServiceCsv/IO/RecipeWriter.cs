@@ -17,9 +17,9 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.IO;
 public sealed class RecipeWriter
 {
 	private readonly CsvDataFormatter _dataFormatter;
-	private readonly MetadataService _metadataService;
 	private readonly IntegrityService _integrityService;
 	private readonly ILogger<RecipeWriter> _logger;
+	private readonly MetadataService _metadataService;
 
 	public RecipeWriter(
 		CsvDataFormatter dataFormatter,
@@ -41,6 +41,7 @@ public sealed class RecipeWriter
 		if (formatResult.IsFailed)
 		{
 			_logger.LogError("Failed to format recipe to CSV");
+
 			return formatResult.ToResult();
 		}
 
@@ -56,10 +57,7 @@ public sealed class RecipeWriter
 			Separator = ';',
 			Rows = dataRows.Count,
 			BodyHashBase64 = bodyHash,
-			Extras = new Dictionary<string, string>
-			{
-				["ExportedAtLocalTime"] = DateTime.Now.ToString("O")
-			}
+			Extras = new Dictionary<string, string> { ["ExportedAtLocalTime"] = DateTime.Now.ToString("O") }
 		};
 
 		_metadataService.WriteMetadata(writer, metadata);

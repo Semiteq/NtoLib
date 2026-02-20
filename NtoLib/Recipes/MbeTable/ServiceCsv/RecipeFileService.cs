@@ -20,11 +20,11 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv;
 public sealed class RecipeFileService
 {
 	private readonly CsvDataExtractor _dataExtractor;
-	private readonly RecipeWriter _writer;
-	private readonly MetadataService _metadataService;
+	private readonly object _fileLock = new();
 	private readonly IntegrityService _integrityService;
 	private readonly ILogger<RecipeFileService> _logger;
-	private readonly object _fileLock = new();
+	private readonly MetadataService _metadataService;
+	private readonly RecipeWriter _writer;
 
 	public RecipeFileService(
 		CsvDataExtractor dataExtractor,
@@ -43,8 +43,9 @@ public sealed class RecipeFileService
 	public async Task<Result<CsvRawData>> ReadRawDataAndCheckIntegrityAsync(string filePath, Encoding? encoding = null)
 	{
 		if (string.IsNullOrWhiteSpace(filePath))
+		{
 			return new CsvFilePathEmptyError();
-
+		}
 
 		return await Task.Run(() =>
 		{
@@ -77,6 +78,7 @@ public sealed class RecipeFileService
 		{
 			var error = new CsvFileNotFoundError(filePath);
 			_logger.LogError("Read failed - file not found: {FilePath}", filePath);
+
 			return Result.Fail(error);
 		}
 
@@ -97,7 +99,9 @@ public sealed class RecipeFileService
 
 			var extractedRawData = _dataExtractor.ExtractRawData(bodyReader);
 			if (extractedRawData.IsFailed)
+			{
 				return extractedRawData;
+			}
 
 			var integrityResult = VerifyIntegrity(metadata, extractedRawData.Value);
 
@@ -106,6 +110,7 @@ public sealed class RecipeFileService
 		catch (Exception ex)
 		{
 			_logger.LogCritical(ex, "Failed to read file: {FilePath}", filePath);
+
 			return Result.Fail(new CsvReadFailedError(ex.Message)).WithError(ex.Message);
 		}
 	}
@@ -140,11 +145,13 @@ public sealed class RecipeFileService
 			ReplaceFile(tempPath, filePath);
 
 			_logger.LogDebug("Successfully wrote recipe to: {FilePath}", filePath);
+
 			return Result.Ok();
 		}
 		catch (Exception ex)
 		{
 			_logger.LogCritical(ex, "Failed to write file: {FilePath}", filePath);
+
 			return Result.Fail(new CsvWriteFailedError(ex.Message)).WithError(ex.Message);
 		}
 		finally

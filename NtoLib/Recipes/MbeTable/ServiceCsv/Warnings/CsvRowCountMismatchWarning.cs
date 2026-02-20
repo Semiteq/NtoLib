@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Warnings;
 
 public sealed class CsvRowCountMismatchWarning : BilingualWarning
 {
-	public int Expected { get; }
-	public int Actual { get; }
-
 	public CsvRowCountMismatchWarning(int expected, int actual)
 		: base(
 			$"Row count mismatch: expected {expected}, got {actual}",
@@ -15,4 +12,7 @@ public sealed class CsvRowCountMismatchWarning : BilingualWarning
 		Expected = expected;
 		Actual = actual;
 	}
+
+	public int Expected { get; }
+	public int Actual { get; }
 }

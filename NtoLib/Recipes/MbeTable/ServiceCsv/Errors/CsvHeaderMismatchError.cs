@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 
 public sealed class CsvHeaderMismatchError : BilingualError
 {
-	public string[] Expected { get; }
-	public string[] Actual { get; }
-
 	public CsvHeaderMismatchError(string[] expected, string[] actual)
 		: base(
 			$"Header mismatch: expected [{string.Join(", ", expected)}], got [{string.Join(", ", actual)}]",
@@ -15,4 +12,7 @@ public sealed class CsvHeaderMismatchError : BilingualError
 		Expected = expected;
 		Actual = actual;
 	}
+
+	public string[] Expected { get; }
+	public string[] Actual { get; }
 }

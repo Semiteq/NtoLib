@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 
 public sealed class CsvReadFailedError : BilingualError
 {
-	public string Details { get; }
-
 	public CsvReadFailedError(string details)
 		: base(
 			$"Failed to read file: {details}",
@@ -14,4 +12,6 @@ public sealed class CsvReadFailedError : BilingualError
 		Details = details;
 		Metadata["details"] = details;
 	}
+
+	public string Details { get; }
 }

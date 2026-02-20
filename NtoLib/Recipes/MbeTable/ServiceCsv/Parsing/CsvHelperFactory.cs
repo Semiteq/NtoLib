@@ -10,12 +10,12 @@ public sealed class CsvHelperFactory
 {
 	private const char Separator = ';';
 
-	public CultureInfo Culture { get; }
-
 	public CsvHelperFactory(CultureInfo? culture = null)
 	{
 		Culture = culture ?? CultureInfo.InvariantCulture;
 	}
+
+	public CultureInfo Culture { get; }
 
 	public CsvReader CreateReader(TextReader reader)
 	{
@@ -27,17 +27,15 @@ public sealed class CsvHelperFactory
 			MissingFieldFound = null,
 			TrimOptions = TrimOptions.Trim
 		};
+
 		return new CsvReader(reader, cfg);
 	}
 
 	public CsvWriter CreateWriter(TextWriter writer)
 	{
 		writer.NewLine = "\r\n";
-		var cfg = new CsvConfiguration(Culture)
-		{
-			HasHeaderRecord = true,
-			Delimiter = Separator.ToString()
-		};
+		var cfg = new CsvConfiguration(Culture) { HasHeaderRecord = true, Delimiter = Separator.ToString() };
+
 		return new CsvWriter(writer, cfg);
 	}
 }

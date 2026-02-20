@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceCsv.Errors;
 
 public sealed class CsvInvalidDataError : BilingualError
 {
-	public string Reason { get; }
-	public int? LineNumber { get; }
-
 	public CsvInvalidDataError(string reason, int? lineNumber = null)
 		: base(
 			lineNumber.HasValue
@@ -19,4 +16,7 @@ public sealed class CsvInvalidDataError : BilingualError
 		Reason = reason;
 		LineNumber = lineNumber;
 	}
+
+	public string Reason { get; }
+	public int? LineNumber { get; }
 }
