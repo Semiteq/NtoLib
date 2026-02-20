@@ -10,24 +10,17 @@ namespace Installer;
 
 public sealed class InstallerService
 {
-	private static readonly string[] _requiredZipEntries =
-	{
-		"NtoLib.dll",
-		"NtoLib_reg.bat"
-	};
+	private const string DefaultConfigFolderName = "DefaultConfig";
+	private const string ZoneIdentifierSuffix = ":Zone.Identifier";
+	private static readonly string[] _requiredZipEntries = { "NtoLib.dll", "NtoLib_reg.bat" };
 
 	private static readonly string[] _dllArtifacts =
 	{
-		"NtoLib.dll",
-		"System.Resources.Extensions.dll",
-		"NtoLib_reg.bat"
+		"NtoLib.dll", "System.Resources.Extensions.dll", "NtoLib_reg.bat"
 	};
-
-	private const string DefaultConfigFolderName = "DefaultConfig";
-	private const string ZoneIdentifierSuffix = ":Zone.Identifier";
+	private readonly InstallationPaths _paths;
 
 	private readonly IProgress<InstallationProgress> _progress;
-	private readonly InstallationPaths _paths;
 
 	public InstallerService(InstallationPaths paths, IProgress<InstallationProgress> progress)
 	{

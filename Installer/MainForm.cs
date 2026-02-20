@@ -10,25 +10,24 @@ namespace Installer;
 
 public sealed class MainForm : Form
 {
-	private readonly TextBox _zipPathTextBox;
-	private readonly Button _zipBrowseButton;
-	private readonly TextBox _dllDirTextBox;
-	private readonly Button _dllDirBrowseButton;
-	private readonly TextBox _configDirTextBox;
-	private readonly Button _configDirBrowseButton;
-	private readonly CheckBox _backupCheckBox;
-	private readonly Button _installButton;
-	private readonly ProgressBar _progressBar;
-	private readonly RichTextBox _logTextBox;
-	private readonly Button _closeButton;
-
-	private CancellationTokenSource? _cancellationTokenSource;
-
 	private const int FieldWidth = 470;
 	private const int BrowseButtonWidth = 80;
 
 	private const string ReleasesUrl = "https://github.com/SteTeam/NtoLib/releases/latest";
 	private const string DocsUrl = "https://github.com/SteTeam/NtoLib/blob/master/Docs/readme.md";
+	private readonly CheckBox _backupCheckBox;
+	private readonly Button _closeButton;
+	private readonly Button _configDirBrowseButton;
+	private readonly TextBox _configDirTextBox;
+	private readonly Button _dllDirBrowseButton;
+	private readonly TextBox _dllDirTextBox;
+	private readonly Button _installButton;
+	private readonly RichTextBox _logTextBox;
+	private readonly ProgressBar _progressBar;
+	private readonly Button _zipBrowseButton;
+	private readonly TextBox _zipPathTextBox;
+
+	private CancellationTokenSource? _cancellationTokenSource;
 
 	public MainForm()
 	{
@@ -108,11 +107,7 @@ public sealed class MainForm : Form
 		var zipLabel = new Label { Text = "Archive:", Location = new Point(12, currentY), AutoSize = true };
 		currentY += 22;
 
-		zipPathTextBox = new TextBox
-		{
-			Location = new Point(12, currentY),
-			Size = new Size(FieldWidth, 23)
-		};
+		zipPathTextBox = new TextBox { Location = new Point(12, currentY), Size = new Size(FieldWidth, 23) };
 
 		zipBrowseButton = new Button
 		{
@@ -124,12 +119,7 @@ public sealed class MainForm : Form
 		currentY += 32;
 
 		// DLL directory
-		var dllDirLabel = new Label
-		{
-			Text = "DLL destination:",
-			Location = new Point(12, currentY),
-			AutoSize = true
-		};
+		var dllDirLabel = new Label { Text = "DLL destination:", Location = new Point(12, currentY), AutoSize = true };
 		currentY += 22;
 
 		dllDirTextBox = new TextBox
@@ -217,12 +207,9 @@ public sealed class MainForm : Form
 
 		Controls.AddRange(new Control[]
 		{
-			titleLabel, releasesLink, docsLink,
-			zipLabel, zipPathTextBox, zipBrowseButton,
-			dllDirLabel, dllDirTextBox, dllDirBrowseButton,
-			configDirLabel, configDirTextBox, configDirBrowseButton,
-			backupCheckBox, installButton, closeButton,
-			progressBar, logTextBox
+			titleLabel, releasesLink, docsLink, zipLabel, zipPathTextBox, zipBrowseButton, dllDirLabel,
+			dllDirTextBox, dllDirBrowseButton, configDirLabel, configDirTextBox, configDirBrowseButton,
+			backupCheckBox, installButton, closeButton, progressBar, logTextBox
 		});
 
 		ResumeLayout(false);
@@ -235,7 +222,9 @@ public sealed class MainForm : Form
 		{
 			var exePath = Assembly.GetExecutingAssembly().Location;
 			if (File.Exists(exePath))
+			{
 				Icon = Icon.ExtractAssociatedIcon(exePath);
+			}
 		}
 		catch
 		{
@@ -245,11 +234,7 @@ public sealed class MainForm : Form
 
 	private static void OpenUrl(string url)
 	{
-		Process.Start(new ProcessStartInfo
-		{
-			FileName = url,
-			UseShellExecute = true
-		});
+		Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
 	}
 
 	private void DetectZipArchive()
@@ -278,7 +263,9 @@ public sealed class MainForm : Form
 		};
 
 		if (dialog.ShowDialog() == DialogResult.OK)
+		{
 			_zipPathTextBox.Text = dialog.FileName;
+		}
 	}
 
 	private void BrowseForDirectory(TextBox targetTextBox)
@@ -290,7 +277,9 @@ public sealed class MainForm : Form
 		};
 
 		if (dialog.ShowDialog() == DialogResult.OK)
+		{
 			targetTextBox.Text = dialog.SelectedPath;
+		}
 	}
 
 	private InstallationPaths BuildPathsFromForm()
@@ -308,6 +297,7 @@ public sealed class MainForm : Form
 		if (string.IsNullOrWhiteSpace(zipPath) || !File.Exists(zipPath))
 		{
 			AppendLog("No valid archive selected.", Color.OrangeRed);
+
 			return;
 		}
 
@@ -374,6 +364,7 @@ public sealed class MainForm : Form
 		if (InvokeRequired)
 		{
 			Invoke(new Action(() => AppendLog(message, color)));
+
 			return;
 		}
 
