@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceClipboard.Reasons.Errors;
 
 public sealed class ClipboardWriteError : BilingualError
 {
-	public string Details { get; }
-
 	public ClipboardWriteError(string details)
 		: base(
 			$"Failed to write to clipboard: {details}",
@@ -14,4 +12,6 @@ public sealed class ClipboardWriteError : BilingualError
 		Details = details;
 		Metadata["details"] = details;
 	}
+
+	public string Details { get; }
 }

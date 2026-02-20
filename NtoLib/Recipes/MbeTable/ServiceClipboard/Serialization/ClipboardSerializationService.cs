@@ -17,9 +17,14 @@ public sealed class ClipboardSerializationService
 	public string SerializeSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns)
 	{
 		if (steps == null)
+		{
 			throw new ArgumentNullException(nameof(steps));
+		}
+
 		if (columns == null)
+		{
 			throw new ArgumentNullException(nameof(columns));
+		}
 
 		var sb = new StringBuilder();
 
@@ -49,7 +54,9 @@ public sealed class ClipboardSerializationService
 
 			sb.Append(string.Join("\t", cellValues));
 			if (i < steps.Count - 1)
+			{
 				sb.Append('\n');
+			}
 		}
 
 		return sb.ToString();
@@ -58,20 +65,26 @@ public sealed class ClipboardSerializationService
 	public Result<IReadOnlyList<string[]>> SplitRows(string? tsv)
 	{
 		if (string.IsNullOrWhiteSpace(tsv))
+		{
 			return Result.Ok<IReadOnlyList<string[]>>(Array.Empty<string[]>())
 				.WithReason(new ClipboardEmptyWarning());
+		}
 
 		var lines = tsv!.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
 		var result = lines
 			.Select((line, idx) =>
 			{
 				var cells = line.Split('\t');
-				for (int c = 0; c < cells.Length; c++)
+				for (var c = 0; c < cells.Length; c++)
+				{
 					cells[c] = ClipboardSanitizer.SanitizeForCell(cells[c]);
+				}
+
 				return cells;
 			})
 			.ToList()
 			.AsReadOnly();
+
 		return Result.Ok<IReadOnlyList<string[]>>(result);
 	}
 }

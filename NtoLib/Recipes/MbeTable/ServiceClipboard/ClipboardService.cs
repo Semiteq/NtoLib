@@ -25,12 +25,14 @@ public sealed class ClipboardService
 	public Result WriteSteps(IReadOnlyList<Step> steps, IReadOnlyList<ColumnIdentifier> columns)
 	{
 		var tsv = _serialization.SerializeSteps(steps, columns);
+
 		return _rawAccess.WriteText(tsv);
 	}
 
 	public Result<IReadOnlyList<string[]>> ReadRows()
 	{
 		var text = _rawAccess.ReadText();
+
 		return _serialization.SplitRows(text);
 	}
 }

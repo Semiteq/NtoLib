@@ -24,10 +24,13 @@ public sealed class SystemClipboardRawAccess : IClipboardRawAccess
 	public Result WriteText(string text)
 	{
 		if (text == null)
+		{
 			throw new ArgumentNullException(nameof(text));
+		}
 		try
 		{
 			Clipboard.SetText(text);
+
 			return Result.Ok();
 		}
 		catch (Exception ex)
