@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreStepActionNullError : BilingualError
 {
-	public int StepIndex { get; }
-
 	public CoreStepActionNullError(int stepIndex)
 		: base(
 			$"Step at index {stepIndex} has null Action property",
@@ -13,4 +11,6 @@ public sealed class CoreStepActionNullError : BilingualError
 	{
 		StepIndex = stepIndex;
 	}
+
+	public int StepIndex { get; }
 }

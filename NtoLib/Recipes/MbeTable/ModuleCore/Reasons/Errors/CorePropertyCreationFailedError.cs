@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CorePropertyCreationFailedError : BilingualError
 {
-	public string ColumnKey { get; }
-
 	public CorePropertyCreationFailedError(string columnKey)
 		: base(
 			$"Failed to create property for column '{columnKey}'",
@@ -13,4 +11,6 @@ public sealed class CorePropertyCreationFailedError : BilingualError
 	{
 		ColumnKey = columnKey;
 	}
+
+	public string ColumnKey { get; }
 }

@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Warnings;
 
 public sealed class CoreForLoopMaxDepthExceededWarning : BilingualWarning
 {
-	public int StepIndex { get; }
-	public int MaxDepth { get; }
-
 	public CoreForLoopMaxDepthExceededWarning(int stepIndex, int maxDepth = 3)
 		: base(
 			$"ForLoop exceeds maximum nesting depth ({maxDepth}) at step {stepIndex}",
@@ -17,4 +14,7 @@ public sealed class CoreForLoopMaxDepthExceededWarning : BilingualWarning
 		Metadata["stepIndex"] = stepIndex;
 		Metadata["maxDepth"] = maxDepth;
 	}
+
+	public int StepIndex { get; }
+	public int MaxDepth { get; }
 }

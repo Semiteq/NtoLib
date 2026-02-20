@@ -10,7 +10,6 @@ using NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 
 namespace NtoLib.Recipes.MbeTable.ModuleCore.Services;
 
-/// <inheritdoc />
 public sealed class ComboboxDataProvider
 {
 	private readonly ActionRepository _actions;
@@ -24,28 +23,35 @@ public sealed class ComboboxDataProvider
 		_targets = actionTargetProvider ?? throw new ArgumentNullException(nameof(actionTargetProvider));
 	}
 
-	/// <inheritdoc />
 	public Result<IReadOnlyDictionary<short, string>> GetResultEnumOptions(short actionId, string columnKey)
 	{
 		var actionResult = _actions.GetActionDefinitionById(actionId);
 		if (actionResult.IsFailed)
+		{
 			return actionResult.ToResult();
+		}
 
 		var columnResult = GetColumn(actionResult.Value, columnKey);
 		if (columnResult.IsFailed)
+		{
 			return columnResult.ToResult();
+		}
 
 		var validationResult = ValidateColumn(columnResult.Value);
 		if (validationResult.IsFailed)
+		{
 			return validationResult.ToResult();
+		}
 
 		var groupName = columnResult.Value.GroupName!;
+
 		return _targets.GetFilteredGroupTargets(groupName);
 	}
 
-	/// <inheritdoc />
 	public IReadOnlyDictionary<short, string> GetActions()
-		=> _actions.Actions.Values.ToDictionary(a => a.Id, a => a.Name);
+	{
+		return _actions.Actions.Values.ToDictionary(a => a.Id, a => a.Name);
+	}
 
 	private static Result<PropertyConfig> GetColumn(ActionDefinition action, string columnKey)
 	{

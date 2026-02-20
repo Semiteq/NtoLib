@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CorePropertyParsingFailedError : BilingualError
 {
-	public string DefaultValue { get; }
-	public string ColumnKey { get; }
-
 	public CorePropertyParsingFailedError(string defaultValue, string columnKey)
 		: base(
 			$"Failed to parse default value '{defaultValue}' for column '{columnKey}'",
@@ -15,4 +12,7 @@ public sealed class CorePropertyParsingFailedError : BilingualError
 		DefaultValue = defaultValue;
 		ColumnKey = columnKey;
 	}
+
+	public string DefaultValue { get; }
+	public string ColumnKey { get; }
 }

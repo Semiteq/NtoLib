@@ -13,6 +13,14 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 /// </summary>
 public sealed record Step
 {
+	public Step(
+		ImmutableDictionary<ColumnIdentifier, Property?> properties,
+		DeployDuration deployDuration)
+	{
+		Properties = properties;
+		DeployDuration = deployDuration;
+	}
+
 	/// <summary>
 	/// A dictionary of all properties for this step, keyed by their column identifier.
 	/// Properties not applicable to this step's action have a null value.
@@ -24,18 +32,12 @@ public sealed record Step
 	/// </summary>
 	public DeployDuration DeployDuration { get; init; }
 
-	public Step(
-		ImmutableDictionary<ColumnIdentifier, Property?> properties,
-		DeployDuration deployDuration)
-	{
-		Properties = properties;
-		DeployDuration = deployDuration;
-	}
-
 	public Result<Property> GetProperty(ColumnIdentifier columnId)
 	{
 		if (Properties.TryGetValue(columnId, out var property) && property != null)
+		{
 			return property;
+		}
 
 		return new CoreStepColumnNotFoundError();
 	}

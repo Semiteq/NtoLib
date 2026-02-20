@@ -39,7 +39,9 @@ public sealed class StepBuilder
 	{
 		var propertiesResult = InitializeProperties(actionDefinition, propertyRegistry, tableColumns);
 		if (propertiesResult.IsFailed)
+		{
 			return propertiesResult.ToResult();
+		}
 
 		return new StepBuilder(actionDefinition, propertiesResult.Value);
 	}
@@ -47,7 +49,10 @@ public sealed class StepBuilder
 	/// <summary>
 	/// Constructs and returns the final immutable Step object.
 	/// </summary>
-	public Step Build() => new(_properties, _actionDefinition.DeployDuration);
+	public Step Build()
+	{
+		return new(_properties, _actionDefinition.DeployDuration);
+	}
 
 	/// <summary>
 	/// Checks whether a specific column is supported (applicable) for the current action.
@@ -55,7 +60,10 @@ public sealed class StepBuilder
 	public bool Supports(ColumnIdentifier key)
 	{
 		if (key == MandatoryColumns.Action)
+		{
 			return true;
+		}
+
 		return _actionDefinition.Columns.Any(c => c.Key.Equals(key.Value, StringComparison.OrdinalIgnoreCase));
 	}
 
@@ -65,16 +73,23 @@ public sealed class StepBuilder
 	public Result<StepBuilder> WithOptionalDynamic(ColumnIdentifier key, object value)
 	{
 		if (!Supports(key))
+		{
 			return this;
+		}
 
 		if (!_properties.TryGetValue(key, out var existingProperty) || existingProperty == null)
+		{
 			return this;
+		}
 
 		var propertyResult = existingProperty.WithValue(value);
 		if (propertyResult.IsFailed)
+		{
 			return propertyResult.WithError(new CorePropertyDefaultValueFailedError(key.Value)).ToResult();
+		}
 
 		_properties = _properties.SetItem(key, propertyResult.Value);
+
 		return this;
 	}
 
@@ -87,11 +102,15 @@ public sealed class StepBuilder
 
 		var actionResult = AddActionProperty(properties, actionDefinition, propertyRegistry);
 		if (actionResult.IsFailed)
+		{
 			return actionResult;
+		}
 
 		var columnsResult = AddColumnProperties(actionResult.Value, actionDefinition, propertyRegistry);
 		if (columnsResult.IsFailed)
+		{
 			return columnsResult;
+		}
 
 		return columnsResult.Value;
 	}
@@ -101,7 +120,10 @@ public sealed class StepBuilder
 	{
 		var builder = ImmutableDictionary.CreateBuilder<ColumnIdentifier, Property?>();
 		foreach (var column in tableColumns)
+		{
 			builder[column.Key] = null;
+		}
+
 		return builder.ToImmutable();
 	}
 
@@ -112,6 +134,7 @@ public sealed class StepBuilder
 	{
 		var propertyDefinition = propertyRegistry.GetPropertyDefinition("Enum");
 		var propertyResult = Property.Create(actionDefinition.Id, propertyDefinition);
+
 		return propertyResult.IsFailed
 			? propertyResult.WithError(new CoreActionPropertyCreationFailedError(actionDefinition.Id)).ToResult()
 			: properties.SetItem(MandatoryColumns.Action, propertyResult.Value);
@@ -128,7 +151,9 @@ public sealed class StepBuilder
 		{
 			var result = AddColumnProperty(current, column, propertyRegistry);
 			if (result.IsFailed)
+			{
 				return result;
+			}
 			current = result.Value;
 		}
 
@@ -147,18 +172,22 @@ public sealed class StepBuilder
 		{
 			var parseResult = propertyDefinition.TryParse(column.DefaultValue);
 			if (parseResult.IsFailed)
+			{
 				return parseResult.WithError(new CorePropertyParsingFailedError(column.DefaultValue, column.Key))
 					.ToResult();
+			}
 
 			defaultValue = parseResult.Value;
 		}
 
 		var propertyResult = Property.Create(defaultValue, propertyDefinition);
 		if (propertyResult.IsFailed)
+		{
 			return propertyResult.WithError(new CorePropertyCreationFailedError(column.Key)).ToResult();
-
+		}
 
 		var key = new ColumnIdentifier(column.Key);
+
 		return properties.SetItem(key, propertyResult.Value);
 	}
 }

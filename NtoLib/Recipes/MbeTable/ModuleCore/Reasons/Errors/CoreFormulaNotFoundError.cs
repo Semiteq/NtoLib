@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreFormulaNotFoundError : BilingualError
 {
-	public short ActionId { get; }
-
 	public CoreFormulaNotFoundError(short actionId)
 		: base(
 			$"No compiled formula found for action ID {actionId}",
@@ -13,4 +11,6 @@ public sealed class CoreFormulaNotFoundError : BilingualError
 	{
 		ActionId = actionId;
 	}
+
+	public short ActionId { get; }
 }

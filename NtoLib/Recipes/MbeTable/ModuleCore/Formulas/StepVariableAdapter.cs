@@ -21,11 +21,15 @@ public sealed class StepVariableAdapter
 			var columnKey = new ColumnIdentifier(variableName);
 			var propertyResult = step.GetProperty(columnKey);
 			if (propertyResult.IsFailed)
+			{
 				return new CoreFormulaVariableNotFoundError(variableName);
+			}
 
 			var doubleValueResult = propertyResult.Value.GetNumeric();
 			if (doubleValueResult.IsFailed)
+			{
 				return new CoreFormulaVariableNonNumericError(variableName);
+			}
 
 			values[variableName] = doubleValueResult.Value;
 		}
@@ -42,15 +46,21 @@ public sealed class StepVariableAdapter
 			var columnKey = new ColumnIdentifier(variableUpdate.Key);
 
 			if (!originalStep.Properties.TryGetValue(columnKey, out var oldProperty) || oldProperty == null)
+			{
 				continue;
+			}
 
 			var convertedValue = ConvertFromDouble(variableUpdate.Value, oldProperty);
 			if (convertedValue.IsFailed)
+			{
 				return convertedValue.ToResult();
+			}
 
 			var newPropertyResult = oldProperty.WithValue(convertedValue.Value);
 			if (newPropertyResult.IsFailed)
+			{
 				return newPropertyResult.ToResult<Step>();
+			}
 
 			updatedProperties = updatedProperties.SetItem(columnKey, newPropertyResult.Value);
 		}

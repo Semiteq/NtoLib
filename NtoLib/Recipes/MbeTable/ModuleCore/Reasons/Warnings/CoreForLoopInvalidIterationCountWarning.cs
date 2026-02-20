@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Warnings;
 
 public sealed class CoreForLoopInvalidIterationCountWarning : BilingualWarning
 {
-	public int StepIndex { get; }
-	public int IterationCount { get; }
-
 	public CoreForLoopInvalidIterationCountWarning(int stepIndex, int iterationCount)
 		: base(
 			$"Invalid iteration count ({iterationCount}) at step {stepIndex}",
@@ -17,4 +14,7 @@ public sealed class CoreForLoopInvalidIterationCountWarning : BilingualWarning
 		Metadata["stepIndex"] = stepIndex;
 		Metadata["iterations"] = iterationCount;
 	}
+
+	public int StepIndex { get; }
+	public int IterationCount { get; }
 }

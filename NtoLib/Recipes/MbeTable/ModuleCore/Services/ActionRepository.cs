@@ -29,13 +29,17 @@ public sealed class ActionRepository
 	public Result<ActionDefinition> GetResultActionDefinitionByName(string name)
 	{
 		if (string.IsNullOrWhiteSpace(name))
+		{
 			return new CoreActionNameEmptyError();
+		}
 
 		var action = Actions.Values.FirstOrDefault(a =>
 			string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase));
 
 		if (action != null)
+		{
 			return Result.Ok(action);
+		}
 
 		return new CoreActionNameNotFoundError(name);
 	}
@@ -43,6 +47,7 @@ public sealed class ActionRepository
 	public Result<short> GetResultDefaultActionId()
 	{
 		var first = Actions.Values.FirstOrDefault();
+
 		return first is null
 			? new CoreNoActionsInConfigError()
 			: Result.Ok(first.Id);

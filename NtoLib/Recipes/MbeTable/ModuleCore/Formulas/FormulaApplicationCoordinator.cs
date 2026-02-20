@@ -11,8 +11,8 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 
 public sealed class FormulaApplicationCoordinator
 {
-	private readonly FormulaEngine _engine;
 	private readonly StepVariableAdapter _adapter;
+	private readonly FormulaEngine _engine;
 
 	public FormulaApplicationCoordinator(FormulaEngine engine, StepVariableAdapter adapter)
 	{
@@ -23,20 +23,28 @@ public sealed class FormulaApplicationCoordinator
 	public Result<Step> ApplyIfExists(Step step, ActionDefinition action, ColumnIdentifier changedColumn)
 	{
 		if (action.Formula == null)
+		{
 			return Result.Ok(step);
+		}
 
 		var formulaDefinition = action.Formula;
 
 		if (!IsFormulaNeeded(changedColumn, formulaDefinition))
+		{
 			return Result.Ok(step);
+		}
 
 		var variablesResult = _adapter.ExtractVariables(step, formulaDefinition.RecalcOrder);
 		if (variablesResult.IsFailed)
+		{
 			return variablesResult.ToResult<Step>();
+		}
 
 		var calculationResult = _engine.Calculate(action.Id, changedColumn.Value, variablesResult.Value);
 		if (calculationResult.IsFailed)
+		{
 			return calculationResult.ToResult<Step>();
+		}
 
 		return _adapter.ApplyChanges(step, calculationResult.Value);
 	}

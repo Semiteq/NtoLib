@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CorePropertyDefaultValueFailedError : BilingualError
 {
-	public string ColumnValue { get; }
-
 	public CorePropertyDefaultValueFailedError(string columnValue)
 		: base(
 			$"Failed to set default value for column '{columnValue}'",
@@ -13,4 +11,6 @@ public sealed class CorePropertyDefaultValueFailedError : BilingualError
 	{
 		ColumnValue = columnValue;
 	}
+
+	public string ColumnValue { get; }
 }

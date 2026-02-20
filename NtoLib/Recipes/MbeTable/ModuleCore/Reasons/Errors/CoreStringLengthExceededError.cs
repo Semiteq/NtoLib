@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreStringLengthExceededError : BilingualError
 {
-	public int CurrentLength { get; }
-	public int MaxLength { get; }
-
 	public CoreStringLengthExceededError(int currentLength, int maxLength)
 		: base(
 			$"String length {currentLength} exceeds maximum allowed length of {maxLength}",
@@ -15,4 +12,7 @@ public sealed class CoreStringLengthExceededError : BilingualError
 		CurrentLength = currentLength;
 		MaxLength = maxLength;
 	}
+
+	public int CurrentLength { get; }
+	public int MaxLength { get; }
 }

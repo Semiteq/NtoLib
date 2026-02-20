@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Warnings;
 
 public sealed class CoreStepDurationNegativeWarning : BilingualWarning
 {
-	public int StepIndex { get; }
-	public float Duration { get; }
-
 	public CoreStepDurationNegativeWarning(int stepIndex, float duration)
 		: base(
 			$"Negative step duration ({duration}s) at step {stepIndex}, using 0",
@@ -17,4 +14,7 @@ public sealed class CoreStepDurationNegativeWarning : BilingualWarning
 		Metadata["stepIndex"] = stepIndex;
 		Metadata["duration"] = duration;
 	}
+
+	public int StepIndex { get; }
+	public float Duration { get; }
 }

@@ -16,6 +16,11 @@ public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
 	private const int DefaultMaxLength = 255;
 	private readonly int _maxLength;
 
+	public ConfigurableStringDefinition(YamlPropertyDefinition dto)
+	{
+		_maxLength = Math.Max(0, dto.MaxLength ?? DefaultMaxLength);
+	}
+
 	/// <inheritdoc/>
 	public string Units => string.Empty;
 
@@ -23,7 +28,10 @@ public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
 	public bool NonNegative => false;
 
 	/// <inheritdoc/>
-	public Result<object> GetNonNegativeValue(object value) => value;
+	public Result<object> GetNonNegativeValue(object value)
+	{
+		return value;
+	}
 
 	/// <inheritdoc/>
 	public Type SystemType => typeof(string);
@@ -34,23 +42,25 @@ public sealed class ConfigurableStringDefinition : IPropertyTypeDefinition
 	/// <inheritdoc/>
 	public object DefaultValue => string.Empty;
 
-	public ConfigurableStringDefinition(YamlPropertyDefinition dto)
-	{
-		_maxLength = Math.Max(0, dto.MaxLength ?? DefaultMaxLength);
-	}
-
 	/// <inheritdoc/>
 	public Result TryValidate(object value)
 	{
 		var s = value?.ToString() ?? string.Empty;
+
 		return s.Length > _maxLength
 			? new CoreStringLengthExceededError(s.Length, _maxLength)
 			: Result.Ok();
 	}
 
 	/// <inheritdoc/>
-	public string FormatValue(object value) => value?.ToString() ?? string.Empty;
+	public string FormatValue(object value)
+	{
+		return value?.ToString() ?? string.Empty;
+	}
 
 	/// <inheritdoc/>
-	public Result<object> TryParse(string input) => Result.Ok<object>(input ?? string.Empty);
+	public Result<object> TryParse(string input)
+	{
+		return Result.Ok<object>(input ?? string.Empty);
+	}
 }

@@ -17,5 +17,8 @@ public sealed class TableColumns
 		_columns = columns ?? throw new ArgumentNullException(nameof(columns));
 	}
 
-	public IEnumerable<ColumnDefinition> GetColumns() => _columns;
+	public IEnumerable<ColumnDefinition> GetColumns()
+	{
+		return _columns;
+	}
 }

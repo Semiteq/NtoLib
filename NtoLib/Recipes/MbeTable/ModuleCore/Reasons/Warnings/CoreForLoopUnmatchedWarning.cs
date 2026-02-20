@@ -4,12 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Warnings;
 
 public sealed class CoreForLoopUnmatchedWarning : BilingualWarning
 {
-	public int StepIndex { get; }
-	public string Details { get; }
-
-	public int? StartIndex { get; }
-	public int? EndIndex { get; }
-
 	public CoreForLoopUnmatchedWarning(int stepIndex, string details = "")
 		: base(
 			string.IsNullOrEmpty(details)
@@ -23,7 +17,9 @@ public sealed class CoreForLoopUnmatchedWarning : BilingualWarning
 		Details = details;
 		Metadata["stepIndex"] = stepIndex;
 		if (!string.IsNullOrEmpty(details))
+		{
 			Metadata["details"] = details;
+		}
 	}
 
 	public CoreForLoopUnmatchedWarning(int stepIndex, int? startIndex, int? endIndex, string details = "")
@@ -42,10 +38,22 @@ public sealed class CoreForLoopUnmatchedWarning : BilingualWarning
 
 		Metadata["stepIndex"] = stepIndex;
 		if (startIndex.HasValue)
+		{
 			Metadata["startIndex"] = startIndex.Value;
+		}
 		if (endIndex.HasValue)
+		{
 			Metadata["endIndex"] = endIndex.Value;
+		}
 		if (!string.IsNullOrEmpty(details))
+		{
 			Metadata["details"] = details;
+		}
 	}
+
+	public int StepIndex { get; }
+	public string Details { get; }
+
+	public int? StartIndex { get; }
+	public int? EndIndex { get; }
 }

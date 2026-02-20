@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreActionPropertyCreationFailedError : BilingualError
 {
-	public short ActionId { get; }
-
 	public CoreActionPropertyCreationFailedError(short actionId)
 		: base(
 			$"Failed to create action property for action ID {actionId}",
@@ -13,4 +11,6 @@ public sealed class CoreActionPropertyCreationFailedError : BilingualError
 	{
 		ActionId = actionId;
 	}
+
+	public short ActionId { get; }
 }

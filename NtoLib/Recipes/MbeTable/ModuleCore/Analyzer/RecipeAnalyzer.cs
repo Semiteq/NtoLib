@@ -16,9 +16,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Analyzer;
 /// </summary>
 public sealed class RecipeAnalyzer
 {
-	private readonly StructureValidator _structureValidator;
 	private readonly LoopParser _loopParser;
 	private readonly LoopSemanticEvaluator _loopSemanticEvaluator;
+	private readonly StructureValidator _structureValidator;
 	private readonly TimingCalculator _timingCalculator;
 
 	public RecipeAnalyzer(
@@ -38,7 +38,7 @@ public sealed class RecipeAnalyzer
 		var allReasons = new List<IReason>();
 		var flags = AnalysisFlags.None;
 
-		bool empty = recipe.Steps.Count == 0;
+		var empty = recipe.Steps.Count == 0;
 		if (empty)
 		{
 			flags = flags with { EmptyRecipe = true };
@@ -55,9 +55,13 @@ public sealed class RecipeAnalyzer
 		allReasons.AddRange(semantics.Reasons);
 
 		if (semantics.LoopIntegrityCompromised)
+		{
 			flags = flags with { LoopIntegrityCompromised = true };
+		}
 		if (semantics.MaxDepthExceeded)
+		{
 			flags = flags with { MaxDepthExceeded = true };
+		}
 
 		var timing = _timingCalculator.Calculate(recipe, semantics);
 

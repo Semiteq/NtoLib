@@ -20,7 +20,9 @@ public sealed class FormulaEngine
 	{
 		_compiledFormulas = compiledFormulas ?? throw new ArgumentNullException(nameof(compiledFormulas));
 		if (logger == null)
+		{
 			throw new ArgumentNullException(nameof(logger));
+		}
 
 		logger.LogDebug("Received {Count} compiled formulas.", _compiledFormulas.Count);
 		logger.LogTrace("Formulas are: {formulas}",
@@ -34,9 +36,12 @@ public sealed class FormulaEngine
 	{
 		var formulaResult = GetCompiledFormula(actionId);
 		if (formulaResult.IsFailed)
+		{
 			return formulaResult.ToResult<IReadOnlyDictionary<string, double>>();
+		}
 
 		var calculationResult = formulaResult.Value.ApplyRecalculation(changedVariable, currentValues);
+
 		return calculationResult;
 	}
 

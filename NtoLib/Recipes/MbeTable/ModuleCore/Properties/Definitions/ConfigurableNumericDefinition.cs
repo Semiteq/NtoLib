@@ -17,9 +17,21 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 {
 	private const int Precision = 3;
+	private readonly float? _max;
 
 	private readonly float? _min;
-	private readonly float? _max;
+
+	public ConfigurableNumericDefinition(YamlPropertyDefinition dto)
+	{
+		SystemType = Type.GetType(dto.SystemType, throwOnError: true, ignoreCase: true)!;
+		Units = dto.Units;
+		NonNegative = dto.NonNegative;
+		_min = dto.Min;
+		_max = dto.Max;
+		FormatKind = Enum.TryParse<FormatKind>(dto.FormatKind, ignoreCase: true, out var parsed)
+			? parsed
+			: FormatKind.Numeric;
+	}
 
 	/// <inheritdoc/>
 	public FormatKind FormatKind { get; }
@@ -42,11 +54,14 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 		var numeric = ToFloat(value);
 
 		if (!numeric.HasValue)
+		{
 			return new CorePropertyNonNumericError();
+		}
 
 		if (numeric.Value < 0)
 		{
 			var absoluteValue = Math.Abs(numeric.Value);
+
 			return SystemType == typeof(short)
 				? Result.Ok<object>((short)absoluteValue)
 				: Result.Ok<object>(absoluteValue);
@@ -55,31 +70,25 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 		return Result.Ok(value);
 	}
 
-	public ConfigurableNumericDefinition(YamlPropertyDefinition dto)
-	{
-		SystemType = Type.GetType(dto.SystemType, throwOnError: true, ignoreCase: true)!;
-		Units = dto.Units;
-		NonNegative = dto.NonNegative;
-		_min = dto.Min;
-		_max = dto.Max;
-		FormatKind = Enum.TryParse<FormatKind>(dto.FormatKind, ignoreCase: true, out var parsed)
-			? parsed
-			: FormatKind.Numeric;
-	}
-
 	/// <inheritdoc/>
 	public virtual Result TryValidate(object value)
 	{
 		var numeric = ToFloat(value);
 
 		if (!numeric.HasValue)
+		{
 			return new CorePropertyValidationFailedError($"expected numeric value, got {value.GetType().Name}");
+		}
 
 		if (_min.HasValue && numeric.Value < _min.Value)
+		{
 			return new CoreNumericValueOutOfRangeError(numeric.Value, _min, _max);
+		}
 
 		if (_max.HasValue && numeric.Value > _max.Value)
+		{
 			return new CoreNumericValueOutOfRangeError(numeric.Value, _min, _max);
+		}
 
 		return Result.Ok();
 	}
@@ -90,7 +99,9 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 		var numeric = ToFloat(value);
 
 		if (!numeric.HasValue)
+		{
 			return value.ToString() ?? string.Empty;
+		}
 
 		return FormatKind switch
 		{
@@ -111,12 +122,15 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 			: ParseAsFloat(sanitized, input);
 	}
 
-	protected static float? ToFloat(object value) => value switch
+	protected static float? ToFloat(object value)
 	{
-		short shortValue => shortValue,
-		float floatValue => floatValue,
-		_ => null
-	};
+		return value switch
+		{
+			short shortValue => shortValue,
+			float floatValue => floatValue,
+			_ => null
+		};
+	}
 
 	private static string SanitizeNumericInput(string input)
 	{
@@ -130,10 +144,14 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 	private static Result<object> ParseAsShort(string sanitized, string originalInput)
 	{
 		if (short.TryParse(sanitized, NumberStyles.Integer, CultureInfo.InvariantCulture, out var shortValue))
+		{
 			return Result.Ok<object>(shortValue);
+		}
 
 		if (float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
+		{
 			return Result.Ok<object>((short)floatValue);
+		}
 
 		return new CorePropertyConversionFailedError(originalInput, "Int16");
 	}
@@ -141,12 +159,18 @@ public class ConfigurableNumericDefinition : IPropertyTypeDefinition
 	private Result<object> ParseAsFloat(string sanitized, string originalInput)
 	{
 		if (!float.TryParse(sanitized, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
+		{
 			return new CorePropertyConversionFailedError(originalInput, "Single");
+		}
 
 		if (FormatKind == FormatKind.Int)
+		{
 			floatValue = (float)Math.Truncate(floatValue);
+		}
 		else
+		{
 			floatValue = (float)Math.Round(floatValue, Precision, MidpointRounding.AwayFromZero);
+		}
 
 		return Result.Ok<object>(floatValue);
 	}

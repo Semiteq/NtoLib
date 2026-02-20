@@ -17,11 +17,6 @@ public interface IPropertyTypeDefinition
 	bool NonNegative { get; }
 
 	/// <summary>
-	/// Gets the non-negative value for the given value.
-	/// </summary>
-	Result<object> GetNonNegativeValue(object value);
-
-	/// <summary>
 	/// Gets the system type associated with the property.
 	/// </summary>
 	Type SystemType { get; }
@@ -30,6 +25,16 @@ public interface IPropertyTypeDefinition
 	/// Gets the formatting strategy for this property type.
 	/// </summary>
 	FormatKind FormatKind { get; }
+
+	/// <summary>
+	/// Default non-null value for this property type.
+	/// </summary>
+	object DefaultValue { get; }
+
+	/// <summary>
+	/// Gets the non-negative value for the given value.
+	/// </summary>
+	Result<object> GetNonNegativeValue(object value);
 
 	/// <summary>
 	/// Validates the given value against the rules defined by the property type implementation.
@@ -45,9 +50,4 @@ public interface IPropertyTypeDefinition
 	/// Attempts to parse the input string into an object.
 	/// </summary>
 	Result<object> TryParse(string input);
-
-	/// <summary>
-	/// Default non-null value for this property type.
-	/// </summary>
-	object DefaultValue { get; }
 }

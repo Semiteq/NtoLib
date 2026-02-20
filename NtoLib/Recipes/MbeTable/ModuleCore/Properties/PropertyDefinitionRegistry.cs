@@ -29,7 +29,9 @@ public sealed class PropertyDefinitionRegistry
 	public IPropertyTypeDefinition GetPropertyDefinition(string propertyTypeId)
 	{
 		if (_definitions.TryGetValue(propertyTypeId, out var d))
+		{
 			return d;
+		}
 
 		throw new KeyNotFoundException($"No definition registered for PropertyTypeId: '{propertyTypeId}'.");
 	}

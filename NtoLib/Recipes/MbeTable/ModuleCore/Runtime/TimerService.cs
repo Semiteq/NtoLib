@@ -14,16 +14,16 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Runtime;
 public sealed class TimerService
 {
 	private readonly ILogger<TimerService> _logger;
-	private TimeSpan _lastTotalElapsed = TimeSpan.Zero;
 	private int _lastStepIndex = -1;
+	private TimeSpan _lastTotalElapsed = TimeSpan.Zero;
 	private bool _staticMode = true;
-
-	public event Action<TimeSpan, TimeSpan>? TimesUpdated;
 
 	public TimerService(ILogger<TimerService> logger)
 	{
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
+
+	public event Action<TimeSpan, TimeSpan>? TimesUpdated;
 
 	public void Reset()
 	{
@@ -46,10 +46,12 @@ public sealed class TimerService
 			if (startTimes.Count == 0)
 			{
 				TimesUpdated?.Invoke(TimeSpan.Zero, TimeSpan.Zero);
+
 				return;
 			}
 
 			TimesUpdated?.Invoke(TimeSpan.Zero, total);
+
 			return;
 		}
 
@@ -63,6 +65,7 @@ public sealed class TimerService
 		if (startTimes.Count == 0)
 		{
 			TimesUpdated?.Invoke(TimeSpan.Zero, TimeSpan.Zero);
+
 			return;
 		}
 
@@ -71,6 +74,7 @@ public sealed class TimerService
 			|| !startTimes.TryGetValue(runtimeSnapshot.StepIndex, out var baseStart))
 		{
 			TimesUpdated?.Invoke(TimeSpan.Zero, TimeSpan.Zero);
+
 			return;
 		}
 
@@ -113,12 +117,16 @@ public sealed class TimerService
 		foreach (var loop in loops)
 		{
 			if (loop.SingleIterationDuration is null || loop.EffectiveIterationCount <= 0)
+			{
 				continue;
+			}
 
 			var completedIterations = Math.Max(0, GetCompletedIterations(snapshot, loop.NestingDepth));
 
 			if (completedIterations >= loop.EffectiveIterationCount)
+			{
 				completedIterations = loop.EffectiveIterationCount - 1;
+			}
 
 			offset += TimeSpan.FromTicks(loop.SingleIterationDuration.Value.Ticks * completedIterations);
 		}
@@ -126,12 +134,14 @@ public sealed class TimerService
 		return offset;
 	}
 
-	private static int GetCompletedIterations(RecipeRuntimeSnapshot snapshot, int nestingDepth) =>
-		nestingDepth switch
+	private static int GetCompletedIterations(RecipeRuntimeSnapshot snapshot, int nestingDepth)
+	{
+		return nestingDepth switch
 		{
 			1 => snapshot.ForLevel1Count,
 			2 => snapshot.ForLevel2Count,
 			3 => snapshot.ForLevel3Count,
 			_ => 0
 		};
+	}
 }

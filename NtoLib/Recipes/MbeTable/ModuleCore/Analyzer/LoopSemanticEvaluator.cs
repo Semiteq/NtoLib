@@ -19,17 +19,19 @@ public sealed class LoopSemanticEvaluator
 	public LoopSemanticsResult Evaluate(LoopParseResult parseResult)
 	{
 		var reasons = new List<IReason>();
-		bool loopIntegrity = false;
-		bool maxDepthExceeded = false;
+		var loopIntegrity = false;
+		var maxDepthExceeded = false;
 		var enriched = new List<LoopNode>();
 
 		foreach (var node in parseResult.Nodes)
 		{
 			var status = node.Status;
 			if (status == LoopStatus.Incomplete || status == LoopStatus.OrphanEnd)
+			{
 				loopIntegrity = true;
+			}
 
-			int effectiveIterations = node.IterationCountRaw <= 0 ? 1 : node.IterationCountRaw;
+			var effectiveIterations = node.IterationCountRaw <= 0 ? 1 : node.IterationCountRaw;
 
 			if (node.NestingDepth > MaxDepth)
 			{
@@ -37,10 +39,7 @@ public sealed class LoopSemanticEvaluator
 				reasons.Add(new CoreForLoopMaxDepthExceededWarning(node.StartIndex, MaxDepth));
 			}
 
-			var enrichedNode = node with
-			{
-				EffectiveIterationCount = effectiveIterations
-			};
+			var enrichedNode = node with { EffectiveIterationCount = effectiveIterations };
 
 			enriched.Add(enrichedNode);
 		}

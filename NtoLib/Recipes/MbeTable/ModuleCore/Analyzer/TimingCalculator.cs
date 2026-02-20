@@ -21,10 +21,12 @@ public sealed class TimingCalculator
 		foreach (var node in loopSemantics.Nodes)
 		{
 			if (node.EndIndex.HasValue && node.Status == LoopStatus.Valid)
+			{
 				loopByEnd[node.EndIndex.Value] = node;
+			}
 		}
 
-		for (int i = 0; i < recipe.Steps.Count; i++)
+		for (var i = 0; i < recipe.Steps.Count; i++)
 		{
 			startTimes[i] = accumulated;
 
@@ -48,7 +50,9 @@ public sealed class TimingCalculator
 				var bodyStart = startTimes[loopNode.BodyStartIndex];
 				var singleDuration = accumulated - bodyStart;
 				if (singleDuration.Ticks < 0)
+				{
 					singleDuration = TimeSpan.Zero;
+				}
 
 				var extraIterations = loopNode.EffectiveIterationCount - 1;
 				if (extraIterations > 0)
@@ -68,7 +72,9 @@ public sealed class TimingCalculator
 				var bodyEndStartTime = startTimes[node.EndIndex.Value];
 				var singleDuration = bodyEndStartTime - bodyStart;
 				if (singleDuration.Ticks < 0)
+				{
 					singleDuration = TimeSpan.Zero;
+				}
 
 				updatedNodes.Add(node with { SingleIterationDuration = singleDuration });
 			}

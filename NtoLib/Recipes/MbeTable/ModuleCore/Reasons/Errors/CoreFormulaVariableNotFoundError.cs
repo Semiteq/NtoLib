@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreFormulaVariableNotFoundError : BilingualError
 {
-	public string VariableName { get; }
-
 	public CoreFormulaVariableNotFoundError(string variableName)
 		: base(
 			$"Formula variable '{variableName}' not found in step properties",
@@ -13,4 +11,6 @@ public sealed class CoreFormulaVariableNotFoundError : BilingualError
 	{
 		VariableName = variableName;
 	}
+
+	public string VariableName { get; }
 }

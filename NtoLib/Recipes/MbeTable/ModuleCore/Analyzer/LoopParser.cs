@@ -18,21 +18,20 @@ public sealed class LoopParser
 	private const int ForLoopActionId = (int)ServiceActions.ForLoop;
 	private const int EndForLoopActionId = (int)ServiceActions.EndForLoop;
 
-	private sealed record ForFrame(int StartIndex, int IterationCountRaw, int NestingDepth);
-
 	public LoopParseResult Parse(Recipe recipe)
 	{
 		var nodes = new List<LoopNode>();
 		var reasons = new List<IReason>();
 		var stack = new Stack<ForFrame>();
 
-		for (int i = 0; i < recipe.Steps.Count; i++)
+		for (var i = 0; i < recipe.Steps.Count; i++)
 		{
 			var step = recipe.Steps[i];
 			var actionIdResult = ExtractActionId(step);
 			if (actionIdResult.IsFailed)
 			{
 				reasons.AddRange(actionIdResult.Errors);
+
 				continue;
 			}
 
@@ -41,7 +40,7 @@ public sealed class LoopParser
 			if (actionId == ForLoopActionId)
 			{
 				// Extract iteration count from task property (if present). Default to 1.
-				int iterations = ExtractIterationCount(step);
+				var iterations = ExtractIterationCount(step);
 
 				// Nesting depth = current stack count + 1 (1-based)
 				var depth = stack.Count + 1;
@@ -109,25 +108,37 @@ public sealed class LoopParser
 	private static int ExtractIterationCount(Step step)
 	{
 		if (!step.Properties.TryGetValue(MandatoryColumns.Task, out var taskProperty) || taskProperty == null)
+		{
 			return 1;
+		}
 
 		var getValueResult = taskProperty.GetValue<float>();
 		if (getValueResult.IsFailed)
+		{
 			return 1;
+		}
 
 		// Convert float to int similarly to previous implementation
 		var raw = (int)getValueResult.Value;
+
 		return raw;
 	}
 
 	private static Result<int> ExtractActionId(Step step)
 	{
 		if (!step.Properties.TryGetValue(MandatoryColumns.Action, out var actionProperty) || actionProperty == null)
+		{
 			return Result.Fail(new CoreStepNoActionPropertyError());
+		}
 
 		var g = actionProperty.GetValue<short>();
 		if (g.IsFailed)
+		{
 			return g.ToResult<int>();
+		}
+
 		return g.Value;
 	}
+
+	private sealed record ForFrame(int StartIndex, int IterationCountRaw, int NestingDepth);
 }

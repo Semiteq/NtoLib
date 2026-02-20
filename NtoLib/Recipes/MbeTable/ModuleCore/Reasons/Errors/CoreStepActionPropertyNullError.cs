@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreStepActionPropertyNullError : BilingualError
 {
-	public int RowIndex { get; }
-
 	public CoreStepActionPropertyNullError(int rowIndex)
 		: base(
 			$"Action property is null at row {rowIndex}",
@@ -13,4 +11,6 @@ public sealed class CoreStepActionPropertyNullError : BilingualError
 	{
 		RowIndex = rowIndex;
 	}
+
+	public int RowIndex { get; }
 }

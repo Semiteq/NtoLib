@@ -17,20 +17,24 @@ public sealed class StructureValidator
 		var reasons = new List<IReason>();
 
 		if (recipe.Steps.Count == 0)
+		{
 			return new StructureResult(reasons);
+		}
 
-		for (int i = 0; i < recipe.Steps.Count; i++)
+		for (var i = 0; i < recipe.Steps.Count; i++)
 		{
 			var step = recipe.Steps[i];
 			if (step == null)
 			{
 				reasons.Add(new CoreStepNullError(i));
+
 				continue;
 			}
 
 			if (!step.Properties.ContainsKey(MandatoryColumns.Action))
 			{
 				reasons.Add(new CoreStepMissingActionError(i));
+
 				continue;
 			}
 

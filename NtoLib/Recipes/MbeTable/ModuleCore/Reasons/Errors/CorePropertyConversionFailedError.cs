@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CorePropertyConversionFailedError : BilingualError
 {
-	public string Input { get; }
-	public string TargetType { get; }
-
 	public CorePropertyConversionFailedError(string input, string targetType)
 		: base(
 			$"Unable to parse '{input}' as {targetType}",
@@ -15,4 +12,7 @@ public sealed class CorePropertyConversionFailedError : BilingualError
 		Input = input;
 		TargetType = targetType;
 	}
+
+	public string Input { get; }
+	public string TargetType { get; }
 }

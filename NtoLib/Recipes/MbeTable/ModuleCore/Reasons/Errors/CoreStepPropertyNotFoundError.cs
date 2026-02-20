@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreStepPropertyNotFoundError : BilingualError
 {
-	public string PropertyKey { get; }
-	public int RowIndex { get; }
-
 	public CoreStepPropertyNotFoundError(string propertyKey, int rowIndex)
 		: base(
 			$"Property '{propertyKey}' not found in step at row {rowIndex}",
@@ -15,4 +12,7 @@ public sealed class CoreStepPropertyNotFoundError : BilingualError
 		PropertyKey = propertyKey;
 		RowIndex = rowIndex;
 	}
+
+	public string PropertyKey { get; }
+	public int RowIndex { get; }
 }

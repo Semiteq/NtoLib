@@ -10,10 +10,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Loops;
 /// </summary>
 public sealed record LoopTree
 {
-	public IReadOnlyList<LoopNode> Nodes { get; }
-	public IReadOnlyDictionary<int, LoopNode> ByStartIndex { get; }
-	public IReadOnlyDictionary<int, IReadOnlyList<LoopNode>> EnclosingLoopsForStep { get; }
-
 	public LoopTree(
 		IReadOnlyList<LoopNode> nodes,
 		IReadOnlyDictionary<int, LoopNode> byStartIndex,
@@ -23,6 +19,10 @@ public sealed record LoopTree
 		ByStartIndex = byStartIndex;
 		EnclosingLoopsForStep = enclosingLoopsForStep;
 	}
+
+	public IReadOnlyList<LoopNode> Nodes { get; }
+	public IReadOnlyDictionary<int, LoopNode> ByStartIndex { get; }
+	public IReadOnlyDictionary<int, IReadOnlyList<LoopNode>> EnclosingLoopsForStep { get; }
 
 	public static LoopTree Empty =>
 		new(
@@ -37,6 +37,7 @@ public sealed record LoopTree
 			.ToDictionary(n => n.StartIndex, n => n);
 
 		var enclosing = BuildEnclosingMap(nodes);
+
 		return new LoopTree(nodes, byStart, enclosing);
 	}
 
@@ -49,7 +50,7 @@ public sealed record LoopTree
 			var start = loop.StartIndex;
 			var end = loop.EndIndex!.Value;
 
-			for (int i = start + 1; i < end; i++)
+			for (var i = start + 1; i < end; i++)
 			{
 				if (!builder.TryGetValue(i, out var list))
 				{

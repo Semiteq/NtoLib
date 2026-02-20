@@ -26,7 +26,9 @@ public sealed class ForLoopNestingProvider
 			var snapshot = _facade.CurrentSnapshot;
 			var stepCount = snapshot.StepCount;
 			if (stepIndex < 0 || stepIndex >= stepCount)
+			{
 				return 0;
+			}
 
 			var loopTree = snapshot.LoopTree;
 
@@ -48,7 +50,9 @@ public sealed class ForLoopNestingProvider
 			if (loopTree.EnclosingLoopsForStep.TryGetValue(stepIndex, out var containing))
 			{
 				if (containing.Count > 0)
+				{
 					return NormalizeDepth(containing[containing.Count - 1].NestingDepth);
+				}
 			}
 
 			// 4) Inside incomplete loops (unclosed For) -> treat as enclosed
@@ -57,11 +61,13 @@ public sealed class ForLoopNestingProvider
 				.Select(n => n.NestingDepth)
 				.DefaultIfEmpty(0)
 				.Max();
+
 			return NormalizeDepth(incompleteDepth);
 		}
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Failed to compute loop nesting for step {Index}", stepIndex);
+
 			return 0;
 		}
 	}
@@ -69,9 +75,15 @@ public sealed class ForLoopNestingProvider
 	private static int NormalizeDepth(int depth)
 	{
 		if (depth < 0)
+		{
 			return 0;
+		}
+
 		if (depth > 3)
+		{
 			return 3;
+		}
+
 		return depth;
 	}
 }

@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreActionNotFoundError : BilingualError
 {
-	public short ActionId { get; }
-
 	public CoreActionNotFoundError(short actionId)
 		: base(
 			$"Action with ID {actionId} not found",
@@ -13,4 +11,6 @@ public sealed class CoreActionNotFoundError : BilingualError
 	{
 		ActionId = actionId;
 	}
+
+	public short ActionId { get; }
 }

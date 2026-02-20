@@ -21,9 +21,9 @@ public sealed class RecipeMutator
 {
 	private readonly ActionRepository _actionRepository;
 	private readonly IActionTargetProvider _actionTargetProvider;
+	private readonly ILogger<RecipeMutator> _logger;
 	private readonly PropertyDefinitionRegistry _propertyRegistry;
 	private readonly IReadOnlyList<ColumnDefinition> _tableColumns;
-	private readonly ILogger<RecipeMutator> _logger;
 
 	public RecipeMutator(
 		ActionRepository actionRepository,
@@ -43,13 +43,18 @@ public sealed class RecipeMutator
 	{
 		var actionResult = _actionRepository.GetResultDefaultActionId();
 		if (actionResult.IsFailed)
+		{
 			return actionResult.ToResult();
+		}
 
 		var stepResult = CreateDefaultStep(actionResult.Value);
 		if (stepResult.IsFailed)
+		{
 			return stepResult.ToResult();
+		}
 
 		var clampedIndex = Math.Max(0, Math.Min(rowIndex, recipe.Steps.Count));
+
 		return Result.Ok(new Recipe(recipe.Steps.Insert(clampedIndex, stepResult.Value)));
 	}
 
@@ -63,26 +68,35 @@ public sealed class RecipeMutator
 	public Result<Recipe> UpdateStepProperty(Recipe recipe, int rowIndex, ColumnIdentifier key, object value)
 	{
 		if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
+		{
 			return new CoreIndexOutOfRangeError(rowIndex, recipe.Steps.Count);
+		}
 
 		var step = recipe.Steps[rowIndex];
 
 		if (!step.Properties.TryGetValue(key, out var property) || property == null)
+		{
 			return new CoreStepPropertyNotFoundError(key.Value, rowIndex);
+		}
 
 		var newPropertyResult = property.WithValue(value);
 		if (newPropertyResult.IsFailed)
+		{
 			return newPropertyResult.ToResult().WithError(new CoreStepPropertyUpdateFailedError(rowIndex, key.Value));
+		}
 
 		var updatedProperties = step.Properties.SetItem(key, newPropertyResult.Value);
 		var updatedStep = step with { Properties = updatedProperties };
+
 		return new Recipe(recipe.Steps.SetItem(rowIndex, updatedStep));
 	}
 
 	public Result<Recipe> ReplaceStepAction(Recipe recipe, int rowIndex, short newActionId)
 	{
 		if (rowIndex < 0 || rowIndex >= recipe.Steps.Count)
+		{
 			return new CoreIndexOutOfRangeError(rowIndex, recipe.Steps.Count);
+		}
 
 		var stepResult = CreateDefaultStep(newActionId);
 		if (stepResult.IsFailed)
@@ -91,22 +105,26 @@ public sealed class RecipeMutator
 				"Failed to create default step for action ID {ActionId} when replacing step at index {RowIndex}",
 				newActionId,
 				rowIndex);
+
 			return stepResult.ToResult();
 		}
 
 		return new Recipe(recipe.Steps.SetItem(rowIndex, stepResult.Value));
 	}
 
-
 	private Result<Step> CreateDefaultStep(short actionId)
 	{
 		var actionResult = _actionRepository.GetActionDefinitionById(actionId);
 		if (actionResult.IsFailed)
+		{
 			return actionResult.ToResult();
+		}
 
 		var builderResult = StepBuilder.Create(actionResult.Value, _propertyRegistry, _tableColumns);
 		if (builderResult.IsFailed)
+		{
 			return builderResult.ToResult();
+		}
 		var builder = builderResult.Value;
 
 		foreach (var col in actionResult.Value.Columns.Where(c =>
@@ -115,12 +133,16 @@ public sealed class RecipeMutator
 		{
 			var key = new ColumnIdentifier(col.Key);
 			if (!builder.Supports(key))
+			{
 				continue;
+			}
 
 			var minimalTargetResult = _actionTargetProvider.GetMinimalTargetId(col.GroupName!);
 			if (minimalTargetResult.IsFailed)
+			{
 				return Result.Fail(new CoreStepFailedToSetDefaultTarget(col.Key))
 					.WithErrors(minimalTargetResult.Errors);
+			}
 
 			var targetId = minimalTargetResult.Value;
 			var setResult = builder.WithOptionalDynamic(key, targetId);
@@ -129,6 +151,7 @@ public sealed class RecipeMutator
 				_logger.LogError(new InvalidOperationException(setResult.Errors.First().Message),
 					"Failed to set default target for column '{ColumnKey}'",
 					col.Key);
+
 				return new CoreStepFailedToSetDefaultTarget(col.Key);
 			}
 		}
@@ -139,11 +162,19 @@ public sealed class RecipeMutator
 	public Result<Recipe> InsertSteps(Recipe recipe, int index, IReadOnlyList<Step> steps)
 	{
 		if (recipe == null)
+		{
 			throw new ArgumentNullException(nameof(recipe));
+		}
+
 		if (steps == null)
+		{
 			throw new ArgumentNullException(nameof(steps));
+		}
+
 		if (steps.Count == 0)
+		{
 			return recipe;
+		}
 
 		var clampedIndex = Math.Max(0, Math.Min(index, recipe.Steps.Count));
 		var updatedSteps = recipe.Steps;
@@ -160,11 +191,19 @@ public sealed class RecipeMutator
 	public Result<Recipe> RemoveSteps(Recipe recipe, IReadOnlyCollection<int> indices)
 	{
 		if (recipe == null)
+		{
 			throw new ArgumentNullException(nameof(recipe));
+		}
+
 		if (indices == null)
+		{
 			throw new ArgumentNullException(nameof(indices));
+		}
+
 		if (indices.Count == 0)
+		{
 			return recipe;
+		}
 
 		var sortedIndices = indices
 			.Where(i => i >= 0 && i < recipe.Steps.Count)
@@ -172,7 +211,9 @@ public sealed class RecipeMutator
 			.ToList();
 
 		if (sortedIndices.Count == 0)
+		{
 			return recipe;
+		}
 
 		var updatedSteps = recipe.Steps;
 

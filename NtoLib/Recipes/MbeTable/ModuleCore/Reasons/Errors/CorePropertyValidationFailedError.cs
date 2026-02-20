@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CorePropertyValidationFailedError : BilingualError
 {
-	public string Reason { get; }
-
 	public CorePropertyValidationFailedError(string reason)
 		: base(
 			$"Validation failed: {reason}",
@@ -13,4 +11,6 @@ public sealed class CorePropertyValidationFailedError : BilingualError
 	{
 		Reason = reason;
 	}
+
+	public string Reason { get; }
 }

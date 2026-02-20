@@ -11,6 +11,11 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Properties.Definitions;
 
 public sealed class ConfigurableEnumDefinition : IPropertyTypeDefinition
 {
+	public ConfigurableEnumDefinition(YamlPropertyDefinition dto)
+	{
+		Units = dto.Units;
+	}
+
 	/// <inheritdoc/>
 	public string Units { get; }
 
@@ -27,21 +32,24 @@ public sealed class ConfigurableEnumDefinition : IPropertyTypeDefinition
 	public bool NonNegative => false;
 
 	/// <inheritdoc/>
-	public Result<object> GetNonNegativeValue(object value) => value;
-
-	public ConfigurableEnumDefinition(YamlPropertyDefinition dto)
+	public Result<object> GetNonNegativeValue(object value)
 	{
-		Units = dto.Units;
+		return value;
 	}
 
 	/// <inheritdoc/>
 	public Result TryValidate(object value)
-		=> value is short
-			? Result.Ok()
-			: new CorePropertyValidationFailedError("value must be Int16");
+	{
+		return value is short
+				? Result.Ok()
+				: new CorePropertyValidationFailedError("value must be Int16");
+	}
 
 	/// <inheritdoc/>
-	public string FormatValue(object value) => value.ToString();
+	public string FormatValue(object value)
+	{
+		return value.ToString();
+	}
 
 	/// <inheritdoc/>
 	public Result<object> TryParse(string input)

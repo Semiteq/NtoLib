@@ -4,10 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreNumericValueOutOfRangeError : BilingualError
 {
-	public float Value { get; }
-	public float? Min { get; }
-	public float? Max { get; }
-
 	public CoreNumericValueOutOfRangeError(float value, float? min, float? max)
 		: base(
 			$"Value {value} is out of allowed range [{min ?? float.MinValue}, {max ?? float.MaxValue}]",
@@ -17,4 +13,8 @@ public sealed class CoreNumericValueOutOfRangeError : BilingualError
 		Min = min;
 		Max = max;
 	}
+
+	public float Value { get; }
+	public float? Min { get; }
+	public float? Max { get; }
 }

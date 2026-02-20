@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Reasons.Errors;
 
 public sealed class CoreFormulaVariableNonNumericError : BilingualError
 {
-	public string VariableName { get; }
-
 	public CoreFormulaVariableNonNumericError(string variableName)
 		: base(
 			$"Formula variable '{variableName}' has a non-numeric type",
@@ -13,4 +11,6 @@ public sealed class CoreFormulaVariableNonNumericError : BilingualError
 	{
 		VariableName = variableName;
 	}
+
+	public string VariableName { get; }
 }

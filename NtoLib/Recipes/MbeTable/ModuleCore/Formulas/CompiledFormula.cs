@@ -16,8 +16,8 @@ namespace NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 public sealed class CompiledFormula
 {
 	private readonly IReadOnlyList<string> _recalcOrder;
-	private readonly IReadOnlyList<string> _variables;
 	private readonly IReadOnlyDictionary<string, Func<Dictionary<string, double>, double>> _solvers;
+	private readonly IReadOnlyList<string> _variables;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="CompiledFormula"/> class.
@@ -47,29 +47,36 @@ public sealed class CompiledFormula
 	{
 		var preparationResult = PrepareCalculation(changedVariable);
 		if (preparationResult.IsFailed)
+		{
 			return preparationResult.ToResult<IReadOnlyDictionary<string, double>>();
+		}
 
 		var targetVariable = preparationResult.Value;
 
 		var computationResult = ComputeTargetValue(targetVariable, currentValues);
 		if (computationResult.IsFailed)
+		{
 			return computationResult.ToResult<IReadOnlyDictionary<string, double>>();
+		}
 
 		return CreateCalculationResult(changedVariable, currentValues[changedVariable], targetVariable,
 			computationResult.Value);
 	}
-
 
 	private Result<string> PrepareCalculation(
 		string changedVariable)
 	{
 		var validationResult = EnsureVariableIsKnown(changedVariable);
 		if (validationResult.IsFailed)
+		{
 			return validationResult.ToResult<string>();
+		}
 
 		var targetVariable = DetermineTarget(changedVariable);
 		if (targetVariable == null)
+		{
 			return new CoreFormulaTargetNotFoundError();
+		}
 
 		return Result.Ok(targetVariable);
 	}
@@ -89,11 +96,14 @@ public sealed class CompiledFormula
 	private Result<double> ComputeTargetValue(string targetVariable, IReadOnlyDictionary<string, double> values)
 	{
 		if (!_solvers.TryGetValue(targetVariable, out var solver))
+		{
 			return new CoreFormulaTargetNotFoundError();
+		}
 
 		try
 		{
 			var calculatedValue = solver((Dictionary<string, double>)values);
+
 			return ValidateCalculationResult(calculatedValue);
 		}
 		catch (CannotEvalException ex)
@@ -138,6 +148,7 @@ public sealed class CompiledFormula
 	{
 		var variablesStr = string.Join(", ", _variables);
 		var orderStr = string.Join(" -> ", _recalcOrder);
+
 		return $"Variables: [{variablesStr}], Order: [{orderStr}]";
 	}
 }
