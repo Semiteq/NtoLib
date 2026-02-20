@@ -20,6 +20,18 @@ public sealed class ThreadSafeRowExecutionStateProvider : IDisposable
 
 	private int CurrentLineIndex => Volatile.Read(ref _currentStepIndex);
 
+	public void Dispose()
+	{
+		try
+		{
+			_runtimeState.StepPhaseChanged -= OnPhaseChanged;
+		}
+		catch
+		{
+			/* ignored */
+		}
+	}
+
 	public RowExecutionState GetState(int rowIndex)
 	{
 		var current = CurrentLineIndex;
@@ -49,18 +61,6 @@ public sealed class ThreadSafeRowExecutionStateProvider : IDisposable
 		if (old != phase.StepIndex)
 		{
 			CurrentLineChanged?.Invoke(old, phase.StepIndex);
-		}
-	}
-
-	public void Dispose()
-	{
-		try
-		{
-			_runtimeState.StepPhaseChanged -= OnPhaseChanged;
-		}
-		catch
-		{
-			/* ignored */
 		}
 	}
 }

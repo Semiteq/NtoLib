@@ -20,16 +20,16 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 /// </summary>
 public sealed class TableRenderCoordinator : IDisposable
 {
-	private readonly DataGridView _table;
-	private readonly ThreadSafeRowExecutionStateProvider _rowExecutionStateProvider;
 	private readonly DesignTimeColorSchemeProvider _colorSchemeProvider;
-	private readonly ILogger<TableRenderCoordinator> _logger;
-
-	private readonly CellFormattingEngine _formattingEngine;
 	private readonly EditGatingCoordinator _editGating;
 
-	private bool _initialized;
+	private readonly CellFormattingEngine _formattingEngine;
+	private readonly ILogger<TableRenderCoordinator> _logger;
+	private readonly ThreadSafeRowExecutionStateProvider _rowExecutionStateProvider;
+	private readonly DataGridView _table;
 	private bool _disposed;
+
+	private bool _initialized;
 
 	public TableRenderCoordinator(
 		DataGridView table,
@@ -53,18 +53,6 @@ public sealed class TableRenderCoordinator : IDisposable
 		_editGating = new EditGatingCoordinator(table, recipeViewModel, logger);
 	}
 
-	public void Initialize()
-	{
-		if (_initialized || _disposed)
-		{
-			return;
-		}
-
-		AttachEventHandlers();
-		_initialized = true;
-		ForceInitialFormatting();
-	}
-
 	public void Dispose()
 	{
 		if (_disposed)
@@ -78,6 +66,18 @@ public sealed class TableRenderCoordinator : IDisposable
 		{
 			DetachEventHandlers();
 		}
+	}
+
+	public void Initialize()
+	{
+		if (_initialized || _disposed)
+		{
+			return;
+		}
+
+		AttachEventHandlers();
+		_initialized = true;
+		ForceInitialFormatting();
 	}
 
 	private void AttachEventHandlers()

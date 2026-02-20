@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
@@ -14,6 +13,7 @@ public abstract class FactoryColumnBase : IFactoryColumn
 		var column = CreateColumnInstance(definition);
 		ColumnStyleMapper.Map(column, definition, scheme);
 		ConfigureColumn(column);
+
 		return column;
 	}
 

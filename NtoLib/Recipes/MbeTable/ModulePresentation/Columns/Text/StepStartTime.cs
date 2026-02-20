@@ -10,8 +10,10 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
 /// </summary>
 public sealed class StepStartTime : FactoryColumnBase
 {
-	protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition) =>
-		new DataGridViewTextBoxColumn();
+	protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition)
+	{
+		return new DataGridViewTextBoxColumn();
+	}
 
 	protected override void ConfigureColumn(DataGridViewColumn column)
 	{

@@ -6,6 +6,8 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.Text;
 
 public sealed class TextBoxExtension : FactoryColumnBase
 {
-	protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition) =>
-		new DataGridViewTextBoxColumn();
+	protected override DataGridViewColumn CreateColumnInstance(ColumnDefinition definition)
+	{
+		return new DataGridViewTextBoxColumn();
+	}
 }

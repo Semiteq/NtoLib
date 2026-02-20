@@ -12,12 +12,12 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation;
 
 public sealed class TablePresenter : IDisposable
 {
-	private readonly ITableView _view;
 	private readonly RecipeOperationService _app;
-	private readonly ThreadSafeRowExecutionStateProvider _rowStateProvider;
 	private readonly BusyStateManager _busy;
 	private readonly OpenFileDialog _openDialog;
+	private readonly ThreadSafeRowExecutionStateProvider _rowStateProvider;
 	private readonly SaveFileDialog _saveDialog;
+	private readonly ITableView _view;
 
 	public TablePresenter(
 		ITableView view,
@@ -35,6 +35,14 @@ public sealed class TablePresenter : IDisposable
 		_saveDialog = saveDialog;
 
 		_rowStateProvider.CurrentLineChanged += OnCurrentLineChanged;
+	}
+
+	public void Dispose()
+	{
+		_view.CellValueNeeded -= OnCellValueNeeded;
+		_view.CellValuePushed -= OnCellValuePushed;
+		_app.RecipeStructureChanged -= OnRecipeStructureChanged;
+		_rowStateProvider.CurrentLineChanged -= OnCurrentLineChanged;
 	}
 
 	public void Initialize()
@@ -106,6 +114,7 @@ public sealed class TablePresenter : IDisposable
 		}
 
 		_app.AddStep(insert);
+
 		return Task.CompletedTask;
 	}
 
@@ -120,6 +129,7 @@ public sealed class TablePresenter : IDisposable
 		}
 
 		_app.AddStep(insert);
+
 		return Task.CompletedTask;
 	}
 
@@ -133,15 +143,8 @@ public sealed class TablePresenter : IDisposable
 		}
 
 		_app.RemoveStep(current);
-		return Task.CompletedTask;
-	}
 
-	public void Dispose()
-	{
-		_view.CellValueNeeded -= OnCellValueNeeded;
-		_view.CellValuePushed -= OnCellValuePushed;
-		_app.RecipeStructureChanged -= OnRecipeStructureChanged;
-		_rowStateProvider.CurrentLineChanged -= OnCurrentLineChanged;
+		return Task.CompletedTask;
 	}
 
 	private void OnCellValueNeeded(object? _, CellValueEventArgs e)
@@ -150,6 +153,7 @@ public sealed class TablePresenter : IDisposable
 		if (e.RowIndex < 0 || e.RowIndex >= totalRows)
 		{
 			e.Value = null;
+
 			return;
 		}
 
@@ -202,6 +206,7 @@ public sealed class TablePresenter : IDisposable
 
 		var leftString = left.ToString();
 		var rightString = right.ToString();
+
 		return string.Equals(leftString, rightString, StringComparison.Ordinal);
 	}
 

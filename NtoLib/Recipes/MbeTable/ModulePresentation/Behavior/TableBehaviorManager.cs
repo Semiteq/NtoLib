@@ -9,8 +9,8 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 
 public sealed class TableBehaviorManager : IDisposable
 {
-	private readonly DataGridView _table;
 	private readonly ITableGridBehavior[] _behaviors;
+	private readonly DataGridView _table;
 
 	private bool _attached;
 	private bool _disposed;
@@ -28,13 +28,31 @@ public sealed class TableBehaviorManager : IDisposable
 
 		_behaviors = new ITableGridBehavior[]
 		{
-			new TableCellPaintingBehavior(_table, colorScheme),
-			new TableRowNumberingBehavior(_table),
-			new TableEditingControlBehavior(_table),
-			new TableCellValidationBehavior(_table),
-			new TableEditModeBehavior(_table),
-			new TableDataErrorBehavior(_table, statusManager)
+			new TableCellPaintingBehavior(_table, colorScheme), new TableRowNumberingBehavior(_table),
+			new TableEditingControlBehavior(_table), new TableCellValidationBehavior(_table),
+			new TableEditModeBehavior(_table), new TableDataErrorBehavior(_table, statusManager)
 		};
+	}
+
+	public void Dispose()
+	{
+		if (_disposed)
+		{
+			return;
+		}
+
+		_disposed = true;
+
+		SafeDisposal.RunAll(Detach);
+
+		var disposeActions = new Action[_behaviors.Length];
+		for (var i = 0; i < _behaviors.Length; i++)
+		{
+			var behavior = _behaviors[i];
+			disposeActions[i] = () => behavior.Dispose();
+		}
+
+		SafeDisposal.RunAll(disposeActions);
 	}
 
 	public void Attach()
@@ -71,27 +89,6 @@ public sealed class TableBehaviorManager : IDisposable
 
 		SafeDisposal.RunAll(actions);
 		_attached = false;
-	}
-
-	public void Dispose()
-	{
-		if (_disposed)
-		{
-			return;
-		}
-
-		_disposed = true;
-
-		SafeDisposal.RunAll(Detach);
-
-		var disposeActions = new Action[_behaviors.Length];
-		for (var i = 0; i < _behaviors.Length; i++)
-		{
-			var behavior = _behaviors[i];
-			disposeActions[i] = () => behavior.Dispose();
-		}
-
-		SafeDisposal.RunAll(disposeActions);
 	}
 
 	private void OnTableDisposed(object? sender, EventArgs e)

@@ -7,8 +7,8 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 
 internal sealed class TableDataErrorBehavior : ITableGridBehavior
 {
-	private readonly DataGridView _table;
 	private readonly StatusService? _statusService;
+	private readonly DataGridView _table;
 	private bool _attached;
 
 	public TableDataErrorBehavior(DataGridView table, StatusService? statusService)
@@ -65,6 +65,7 @@ internal sealed class TableDataErrorBehavior : ITableGridBehavior
 		{
 			e.ThrowException = false;
 			e.Cancel = true;
+
 			return;
 		}
 
@@ -74,6 +75,7 @@ internal sealed class TableDataErrorBehavior : ITableGridBehavior
 		{
 			e.ThrowException = false;
 			e.Cancel = false;
+
 			return;
 		}
 

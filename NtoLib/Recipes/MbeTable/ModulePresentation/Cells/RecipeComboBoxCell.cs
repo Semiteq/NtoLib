@@ -27,14 +27,22 @@ public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
 		DisplayStyleForCurrentCellOnly = true;
 	}
 
-	public void SetItemsProvider(IComboBoxItemsProvider itemsProvider) => _itemsProvider = itemsProvider;
-	public void SetRenderer(ComboBoxCellRenderer renderer) => _renderer = renderer;
+	public void SetItemsProvider(IComboBoxItemsProvider itemsProvider)
+	{
+		_itemsProvider = itemsProvider;
+	}
+
+	public void SetRenderer(ComboBoxCellRenderer renderer)
+	{
+		_renderer = renderer;
+	}
 
 	public override object Clone()
 	{
 		var clone = (RecipeComboBoxCell)base.Clone();
 		clone._itemsProvider = _itemsProvider;
 		clone._renderer = _renderer;
+
 		return clone;
 	}
 
@@ -158,6 +166,7 @@ public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
 				FormattedValue: text);
 
 			_renderer.Render(ctx);
+
 			return; // do not call base.Paint to prevent white background
 		}
 
@@ -256,7 +265,6 @@ public sealed class RecipeComboBoxCell : DataGridViewComboBoxCell
 		}
 
 		return items.Count > 0 ? (short?)items[0].Key : null;
-
 	}
 
 	protected override object? GetFormattedValue(

@@ -6,14 +6,19 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 
 internal sealed class TableShortcutHandler : IDisposable
 {
-	private readonly DataGridView _table;
 	private readonly TableInputActions _actions;
+	private readonly DataGridView _table;
 	private bool _attached;
 
 	public TableShortcutHandler(DataGridView table, TableInputActions actions)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		_actions = actions ?? throw new ArgumentNullException(nameof(actions));
+	}
+
+	public void Dispose()
+	{
+		Detach();
 	}
 
 	public void Attach()
@@ -44,11 +49,6 @@ internal sealed class TableShortcutHandler : IDisposable
 		}
 
 		_attached = false;
-	}
-
-	public void Dispose()
-	{
-		Detach();
 	}
 
 	private async void OnTableKeyDown(object? sender, KeyEventArgs e)

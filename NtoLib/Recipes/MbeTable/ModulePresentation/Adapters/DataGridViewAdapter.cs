@@ -9,8 +9,6 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 public sealed class DataGridViewAdapter : ITableView, IDisposable
 {
 	private readonly DataGridView _grid;
-	public event EventHandler<CellValueEventArgs>? CellValueNeeded;
-	public event EventHandler<CellValueEventArgs>? CellValuePushed;
 
 	public DataGridViewAdapter(DataGridView grid)
 	{
@@ -19,13 +17,26 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 		_grid.CellValuePushed += OnCellValuePushedInternal;
 	}
 
+	public void Dispose()
+	{
+		SafeDisposal.RunAll(
+			() => _grid.CellValueNeeded -= OnCellValueNeededInternal,
+			() => _grid.CellValuePushed -= OnCellValuePushedInternal);
+	}
+
+	public event EventHandler<CellValueEventArgs>? CellValueNeeded;
+	public event EventHandler<CellValueEventArgs>? CellValuePushed;
+
 	public int RowCount
 	{
 		get => _grid.RowCount;
 		set => RunOnGrid(() => _grid.RowCount = value);
 	}
 
-	public void Invalidate() => RunOnGrid(() => _grid.Invalidate());
+	public void Invalidate()
+	{
+		RunOnGrid(() => _grid.Invalidate());
+	}
 
 	public void InvalidateRow(int rowIndex)
 	{
@@ -39,22 +50,6 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 			if (rowIndex < _grid.RowCount)
 			{
 				_grid.InvalidateRow(rowIndex);
-			}
-		});
-	}
-
-	public void InvalidateCell(int columnIndex, int rowIndex)
-	{
-		if (rowIndex < 0 || columnIndex < 0)
-		{
-			return;
-		}
-
-		RunOnGrid(() =>
-		{
-			if (rowIndex < _grid.RowCount && columnIndex < _grid.ColumnCount)
-			{
-				_grid.InvalidateCell(columnIndex, rowIndex);
 			}
 		});
 	}
@@ -90,29 +85,6 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 		});
 	}
 
-	private void RunOnGrid(Action action)
-	{
-		if (_grid.IsDisposed)
-		{
-			return;
-		}
-
-		if (_grid.InvokeRequired)
-		{
-			try
-			{
-				_grid.BeginInvoke(action);
-			}
-			catch
-			{
-				/* Grid disposed between check and invoke */
-			}
-			return;
-		}
-
-		action();
-	}
-
 	public int CurrentRowIndex => _grid.CurrentCell?.RowIndex ?? -1;
 
 	public ColumnIdentifier? GetColumnKey(int columnIndex)
@@ -130,6 +102,46 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 		return key;
 	}
 
+	public void InvalidateCell(int columnIndex, int rowIndex)
+	{
+		if (rowIndex < 0 || columnIndex < 0)
+		{
+			return;
+		}
+
+		RunOnGrid(() =>
+		{
+			if (rowIndex < _grid.RowCount && columnIndex < _grid.ColumnCount)
+			{
+				_grid.InvalidateCell(columnIndex, rowIndex);
+			}
+		});
+	}
+
+	private void RunOnGrid(Action action)
+	{
+		if (_grid.IsDisposed)
+		{
+			return;
+		}
+
+		if (_grid.InvokeRequired)
+		{
+			try
+			{
+				_grid.BeginInvoke(action);
+			}
+			catch
+			{
+				/* Grid disposed between check and invoke */
+			}
+
+			return;
+		}
+
+		action();
+	}
+
 	private void OnCellValueNeededInternal(object? sender, DataGridViewCellValueEventArgs e)
 	{
 		var args = new CellValueEventArgs(e.RowIndex, e.ColumnIndex);
@@ -141,13 +153,5 @@ public sealed class DataGridViewAdapter : ITableView, IDisposable
 	{
 		var args = new CellValueEventArgs(e.RowIndex, e.ColumnIndex, e.Value);
 		CellValuePushed?.Invoke(this, args);
-	}
-
-
-	public void Dispose()
-	{
-		SafeDisposal.RunAll(
-			() => _grid.CellValueNeeded -= OnCellValueNeededInternal,
-			() => _grid.CellValuePushed -= OnCellValuePushedInternal);
 	}
 }

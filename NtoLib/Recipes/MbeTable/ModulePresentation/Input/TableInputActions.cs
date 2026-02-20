@@ -10,10 +10,10 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 
 internal sealed class TableInputActions
 {
-	private readonly DataGridView _table;
 	private readonly RecipeOperationService _applicationService;
-	private readonly TableSelectionService _selectionService;
 	private readonly BusyStateManager _busy;
+	private readonly TableSelectionService _selectionService;
+	private readonly DataGridView _table;
 
 	public TableInputActions(
 		DataGridView table,
@@ -27,20 +27,45 @@ internal sealed class TableInputActions
 		_busy = busy ?? throw new ArgumentNullException(nameof(busy));
 	}
 
-	public bool CanCopy() => CanOperateOnSelection();
-	public bool CanCut() => CanOperateOnSelection();
-	public bool CanDelete() => CanOperateOnSelection();
-	public bool CanPaste() => !_table.IsCurrentCellInEditMode && !_busy.IsBusy;
-	public bool CanInsert() => !_busy.IsBusy;
+	public bool CanCopy()
+	{
+		return CanOperateOnSelection();
+	}
 
-	public Task<bool> TryCopyAsync() =>
-		TryOperateOnSelectionAsync(indices => _applicationService.CopyRowsAsync(indices));
+	public bool CanCut()
+	{
+		return CanOperateOnSelection();
+	}
 
-	public Task<bool> TryCutAsync() =>
-		TryOperateOnSelectionAsync(indices => _applicationService.CutRowsAsync(indices));
+	public bool CanDelete()
+	{
+		return CanOperateOnSelection();
+	}
 
-	public Task<bool> TryDeleteAsync() =>
-		TryOperateOnSelectionAsync(indices => _applicationService.DeleteRowsAsync(indices));
+	public bool CanPaste()
+	{
+		return !_table.IsCurrentCellInEditMode && !_busy.IsBusy;
+	}
+
+	public bool CanInsert()
+	{
+		return !_busy.IsBusy;
+	}
+
+	public Task<bool> TryCopyAsync()
+	{
+		return TryOperateOnSelectionAsync(indices => _applicationService.CopyRowsAsync(indices));
+	}
+
+	public Task<bool> TryCutAsync()
+	{
+		return TryOperateOnSelectionAsync(indices => _applicationService.CutRowsAsync(indices));
+	}
+
+	public Task<bool> TryDeleteAsync()
+	{
+		return TryOperateOnSelectionAsync(indices => _applicationService.DeleteRowsAsync(indices));
+	}
 
 	public async Task<bool> TryPasteAsync()
 	{
@@ -53,6 +78,7 @@ internal sealed class TableInputActions
 		var insertIndex = _selectionService.GetInsertionIndexAfterSelection(rowCount);
 
 		await _applicationService.PasteRowsAsync(insertIndex).ConfigureAwait(true);
+
 		return true;
 	}
 
@@ -67,11 +93,14 @@ internal sealed class TableInputActions
 		var insertIndex = _selectionService.GetInsertionIndexAfterSelection(rowCount);
 
 		_applicationService.AddStep(insertIndex);
+
 		return Task.FromResult(true);
 	}
 
-	private bool CanOperateOnSelection() =>
-		_selectionService.GetSelectedRowIndices().Count > 0 && !_busy.IsBusy;
+	private bool CanOperateOnSelection()
+	{
+		return _selectionService.GetSelectedRowIndices().Count > 0 && !_busy.IsBusy;
+	}
 
 	private async Task<bool> TryOperateOnSelectionAsync(Func<IReadOnlyList<int>, Task> operation)
 	{
@@ -82,6 +111,7 @@ internal sealed class TableInputActions
 		}
 
 		await operation(indices).ConfigureAwait(true);
+
 		return true;
 	}
 }

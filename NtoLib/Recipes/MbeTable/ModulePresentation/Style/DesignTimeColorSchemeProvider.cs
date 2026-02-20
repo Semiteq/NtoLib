@@ -7,8 +7,6 @@ public sealed class DesignTimeColorSchemeProvider
 	private readonly object _lock = new();
 	private ColorScheme _current = ColorScheme.Default;
 
-	public event Action<ColorScheme>? Changed;
-
 	public ColorScheme Current
 	{
 		get
@@ -20,10 +18,14 @@ public sealed class DesignTimeColorSchemeProvider
 		}
 	}
 
+	public event Action<ColorScheme>? Changed;
+
 	public void Mutate(Func<ColorScheme, ColorScheme> mutate)
 	{
 		if (mutate == null)
+		{
 			throw new ArgumentNullException(nameof(mutate));
+		}
 
 		ColorScheme updated;
 		lock (_lock)

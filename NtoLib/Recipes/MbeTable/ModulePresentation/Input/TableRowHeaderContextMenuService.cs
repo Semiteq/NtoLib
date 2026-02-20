@@ -7,21 +7,26 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 
 internal sealed class TableRowHeaderContextMenuService : IDisposable
 {
-	private readonly DataGridView _table;
 	private readonly TableInputActions _actions;
-
-	private ContextMenuStrip? _rowHeaderMenu;
+	private readonly DataGridView _table;
+	private bool _attached;
 	private ToolStripMenuItem? _copyItem;
 	private ToolStripMenuItem? _cutItem;
-	private ToolStripMenuItem? _pasteItem;
 	private ToolStripMenuItem? _deleteItem;
 	private ToolStripMenuItem? _newItem;
-	private bool _attached;
+	private ToolStripMenuItem? _pasteItem;
+
+	private ContextMenuStrip? _rowHeaderMenu;
 
 	public TableRowHeaderContextMenuService(DataGridView table, TableInputActions actions)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		_actions = actions ?? throw new ArgumentNullException(nameof(actions));
+	}
+
+	public void Dispose()
+	{
+		Detach();
 	}
 
 	public void Attach()
@@ -81,11 +86,6 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 		}
 
 		_attached = false;
-	}
-
-	public void Dispose()
-	{
-		Detach();
 	}
 
 	private void OnRowHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
@@ -169,12 +169,7 @@ internal sealed class TableRowHeaderContextMenuService : IDisposable
 
 		_rowHeaderMenu.Items.AddRange(new ToolStripItem[]
 		{
-			_copyItem,
-			_cutItem,
-			_pasteItem,
-			new ToolStripSeparator(),
-			_deleteItem,
-			new ToolStripSeparator(),
+			_copyItem, _cutItem, _pasteItem, new ToolStripSeparator(), _deleteItem, new ToolStripSeparator(),
 			_newItem
 		});
 	}

@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
@@ -59,6 +58,7 @@ public abstract class FactoryColumnComboBoxBase : FactoryColumnBase
 		var cell = new RecipeComboBoxCell();
 		AssignItemsProvider(cell);
 		cell.SetRenderer(ServiceProvider.GetRequiredService<ComboBoxCellRenderer>());
+
 		return cell;
 	}
 }

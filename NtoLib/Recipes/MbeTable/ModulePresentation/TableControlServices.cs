@@ -21,19 +21,6 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation;
 /// </summary>
 internal sealed class TableControlServices
 {
-	public ILogger<TableControl> Logger { get; }
-	public DesignTimeColorSchemeProvider ColorSchemeProvider { get; }
-	public StateProvider StateProvider { get; }
-	public StatusService StatusService { get; }
-	public ColorScheme ColorScheme { get; }
-	public IReadOnlyList<ColumnDefinition> ColumnDefinitions { get; }
-	public FactoryColumnRegistry ColumnRegistry { get; }
-	public RecipeOperationService RecipeOperationService { get; }
-	public ThreadSafeRowExecutionStateProvider RowStateProvider { get; }
-	public BusyStateManager BusyStateManager { get; }
-	public OpenFileDialog OpenFileDialog { get; }
-	public SaveFileDialog SaveFileDialog { get; }
-
 	public TableControlServices(
 		ILogger<TableControl> logger,
 		DesignTimeColorSchemeProvider colorSchemeProvider,
@@ -61,4 +48,17 @@ internal sealed class TableControlServices
 		OpenFileDialog = openFileDialog;
 		SaveFileDialog = saveFileDialog;
 	}
+
+	public ILogger<TableControl> Logger { get; }
+	public DesignTimeColorSchemeProvider ColorSchemeProvider { get; }
+	public StateProvider StateProvider { get; }
+	public StatusService StatusService { get; }
+	public ColorScheme ColorScheme { get; }
+	public IReadOnlyList<ColumnDefinition> ColumnDefinitions { get; }
+	public FactoryColumnRegistry ColumnRegistry { get; }
+	public RecipeOperationService RecipeOperationService { get; }
+	public ThreadSafeRowExecutionStateProvider RowStateProvider { get; }
+	public BusyStateManager BusyStateManager { get; }
+	public OpenFileDialog OpenFileDialog { get; }
+	public SaveFileDialog SaveFileDialog { get; }
 }

@@ -13,13 +13,13 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 /// </summary>
 public sealed class TableInputManager : IDisposable
 {
-	private readonly DataGridView _table;
 	private readonly TableInputActions _actions;
-	private readonly TableShortcutHandler _shortcutHandler;
 	private readonly TableRowHeaderContextMenuService _rowHeaderMenuService;
+	private readonly TableShortcutHandler _shortcutHandler;
+	private readonly DataGridView _table;
+	private bool _attached;
 
 	private CtrlNHotkeyHook? _ctrlNHotkeyHook;
-	private bool _attached;
 
 	public TableInputManager(
 		DataGridView table,
@@ -36,6 +36,11 @@ public sealed class TableInputManager : IDisposable
 
 		_shortcutHandler = new TableShortcutHandler(_table, _actions);
 		_rowHeaderMenuService = new TableRowHeaderContextMenuService(_table, _actions);
+	}
+
+	public void Dispose()
+	{
+		Detach();
 	}
 
 	public void Attach()
@@ -70,11 +75,6 @@ public sealed class TableInputManager : IDisposable
 	}
 
 	private void OnTableDisposed(object? sender, EventArgs e)
-	{
-		Detach();
-	}
-
-	public void Dispose()
 	{
 		Detach();
 	}

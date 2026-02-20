@@ -15,15 +15,23 @@ public sealed class BusyStateManager
 	public IDisposable Enter()
 	{
 		Interlocked.Increment(ref _counter);
+
 		return new Scope(this);
 	}
 
-	private void Exit() => Interlocked.Decrement(ref _counter);
+	private void Exit()
+	{
+		Interlocked.Decrement(ref _counter);
+	}
 
 	private sealed class Scope : IDisposable
 	{
 		private BusyStateManager? _owner;
-		public Scope(BusyStateManager owner) => _owner = owner;
+
+		public Scope(BusyStateManager owner)
+		{
+			_owner = owner;
+		}
 
 		public void Dispose()
 		{

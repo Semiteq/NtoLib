@@ -9,8 +9,8 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Behavior;
 
 internal sealed class TableCellPaintingBehavior : ITableGridBehavior
 {
-	private readonly DataGridView _table;
 	private readonly ColorScheme _colorScheme;
+	private readonly DataGridView _table;
 	private bool _attached;
 
 	public TableCellPaintingBehavior(DataGridView table, ColorScheme colorScheme)

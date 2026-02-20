@@ -17,12 +17,12 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 /// </summary>
 internal sealed class CellFormattingEngine
 {
-	private readonly DataGridView _table;
 	private readonly CellStateResolver _cellStateResolver;
-	private readonly RecipeViewModel _recipeViewModel;
-	private readonly ThreadSafeRowExecutionStateProvider _rowExecutionStateProvider;
 	private readonly DesignTimeColorSchemeProvider _colorSchemeProvider;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
+	private readonly RecipeViewModel _recipeViewModel;
+	private readonly ThreadSafeRowExecutionStateProvider _rowExecutionStateProvider;
+	private readonly DataGridView _table;
 
 	public CellFormattingEngine(
 		DataGridView table,
@@ -146,9 +146,11 @@ internal sealed class CellFormattingEngine
 		{
 			case RecipeComboBoxCell recipeCombo:
 				recipeCombo.DisplayStyle = displayStyle;
+
 				break;
 			case DataGridViewComboBoxCell combo:
 				combo.DisplayStyle = displayStyle;
+
 				break;
 		}
 	}

@@ -17,9 +17,9 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 /// </summary>
 internal sealed class EditGatingCoordinator
 {
-	private readonly DataGridView _table;
-	private readonly RecipeViewModel _recipeViewModel;
 	private readonly ILogger _logger;
+	private readonly RecipeViewModel _recipeViewModel;
+	private readonly DataGridView _table;
 
 	public EditGatingCoordinator(
 		DataGridView table,
@@ -51,6 +51,7 @@ internal sealed class EditGatingCoordinator
 		if (IsCellDisabled(cell.RowIndex, cell.ColumnIndex))
 		{
 			_table.CancelEdit();
+
 			return;
 		}
 
@@ -90,6 +91,7 @@ internal sealed class EditGatingCoordinator
 		{
 			_logger.LogError(ex, "Failed to validate edit permissions for cell [{Row},{Column}]", rowIndex,
 				columnIndex);
+
 			return true;
 		}
 	}
@@ -97,12 +99,14 @@ internal sealed class EditGatingCoordinator
 	private bool IsCellReadOnlyByVisualState(int rowIndex, int columnIndex)
 	{
 		var cell = _table.Rows[rowIndex].Cells[columnIndex];
+
 		return cell.Tag is CellVisualState visual && visual.IsReadOnly;
 	}
 
 	private bool IsCellDisabled(int rowIndex, int columnIndex)
 	{
 		var state = _recipeViewModel.GetCellState(rowIndex, columnIndex);
+
 		return state == PropertyState.Disabled;
 	}
 }

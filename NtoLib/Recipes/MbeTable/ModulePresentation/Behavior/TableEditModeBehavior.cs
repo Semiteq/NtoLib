@@ -64,9 +64,11 @@ internal sealed class TableEditModeBehavior : ITableGridBehavior
 		{
 			case -1:
 				_table.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
+
 				return;
 			case >= 0:
 				_table.EditMode = DataGridViewEditMode.EditOnEnter;
+
 				break;
 		}
 	}

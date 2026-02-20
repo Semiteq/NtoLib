@@ -8,6 +8,74 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 /// </summary>
 public record ColorScheme
 {
+	public ColorScheme()
+	{
+		// Background colors
+		ControlBackgroundColor = SystemColors.Control;
+		TableBackgroundColor = SystemColors.Window;
+
+		// Fonts
+		HeaderFont = new Font("Arial", 14f, FontStyle.Bold);
+		LineFont = new Font("Arial", 12f);
+		SelectedLineFont = new Font("Arial", 12f, FontStyle.Bold);
+		PassedLineFont = new Font("Arial", 12f);
+		BlockedFont = new Font("Arial", 12f);
+
+		// Header colors
+		HeaderBgColor = SystemColors.ControlLight;
+		HeaderTextColor = Color.Black;
+
+		// Normal line colors
+		LineBgColor = SystemColors.Window;
+		LineTextColor = Color.Black;
+
+		// Selected (current execution) line colors
+		SelectedLineBgColor = Color.DeepSkyBlue;
+		SelectedLineTextColor = Color.White;
+
+		// Passed line colors
+		PassedLineBgColor = Color.Transparent;
+		PassedLineTextColor = Color.Black;
+
+		// Blocked/disabled colors
+		BlockedBgColor = Color.LightGray;
+		BlockedTextColor = Color.Black;
+
+		// Button colors
+		ButtonsColor = SystemColors.Control;
+		BlockedButtonsColor = Color.LightGray;
+
+		// Sizing
+		LineHeight = 25;
+
+		// Selection outline
+		SelectedOutlineColor = Color.DeepSkyBlue;
+		SelectedOutlineThickness = 1;
+
+		// Status colorscheme
+		StatusInfoColor = ControlBackgroundColor;
+		StatusSuccessColor = Color.LightGreen;
+		StatusWarningColor = Color.Gold;
+		StatusErrorColor = Color.LightCoral;
+		StatusBgColor = SystemColors.ControlLight;
+
+		// User row selection (tinted variant of normal line color)
+		RowSelectionBgColor = ColorStyleHelpers.Blend(LineBgColor, SelectedLineBgColor, 0.3f);
+		RowSelectionTextColor = LineTextColor;
+
+		LoopLevel1BgColor = Color.FromArgb(0x4B, 0x00, 0x82); // Royal Purple
+		LoopLevel2BgColor = Color.FromArgb(0x64, 0x41, 0xA5); // Twitch Purple (approx)
+		LoopLevel3BgColor = Color.FromArgb(0xBF, 0x40, 0xBF); // Bright Purple
+
+		// Tint weights
+		LoopLevel1TintWeight = 0.25f;
+		LoopLevel2TintWeight = 0.45f;
+		LoopLevel3TintWeight = 0.65f;
+
+		CurrentExecutionTintWeight = 0.55f;
+		PassedExecutionTintWeight = 0.40f;
+	}
+
 	public static ColorScheme Default { get; } = new();
 
 	// Background colors
@@ -76,72 +144,4 @@ public record ColorScheme
 	// Execution tint weights
 	public float CurrentExecutionTintWeight { get; init; }
 	public float PassedExecutionTintWeight { get; init; }
-
-	public ColorScheme()
-	{
-		// Background colors
-		ControlBackgroundColor = SystemColors.Control;
-		TableBackgroundColor = SystemColors.Window;
-
-		// Fonts
-		HeaderFont = new Font("Arial", 14f, FontStyle.Bold);
-		LineFont = new Font("Arial", 12f);
-		SelectedLineFont = new Font("Arial", 12f, FontStyle.Bold);
-		PassedLineFont = new Font("Arial", 12f);
-		BlockedFont = new Font("Arial", 12f);
-
-		// Header colors
-		HeaderBgColor = SystemColors.ControlLight;
-		HeaderTextColor = Color.Black;
-
-		// Normal line colors
-		LineBgColor = SystemColors.Window;
-		LineTextColor = Color.Black;
-
-		// Selected (current execution) line colors
-		SelectedLineBgColor = Color.DeepSkyBlue;
-		SelectedLineTextColor = Color.White;
-
-		// Passed line colors
-		PassedLineBgColor = Color.Transparent;
-		PassedLineTextColor = Color.Black;
-
-		// Blocked/disabled colors
-		BlockedBgColor = Color.LightGray;
-		BlockedTextColor = Color.Black;
-
-		// Button colors
-		ButtonsColor = SystemColors.Control;
-		BlockedButtonsColor = Color.LightGray;
-
-		// Sizing
-		LineHeight = 25;
-
-		// Selection outline
-		SelectedOutlineColor = Color.DeepSkyBlue;
-		SelectedOutlineThickness = 1;
-
-		// Status colorscheme
-		StatusInfoColor = ControlBackgroundColor;
-		StatusSuccessColor = Color.LightGreen;
-		StatusWarningColor = Color.Gold;
-		StatusErrorColor = Color.LightCoral;
-		StatusBgColor = SystemColors.ControlLight;
-
-		// User row selection (tinted variant of normal line color)
-		RowSelectionBgColor = ColorStyleHelpers.Blend(LineBgColor, SelectedLineBgColor, 0.3f);
-		RowSelectionTextColor = LineTextColor;
-
-		LoopLevel1BgColor = Color.FromArgb(0x4B, 0x00, 0x82); // Royal Purple
-		LoopLevel2BgColor = Color.FromArgb(0x64, 0x41, 0xA5); // Twitch Purple (approx)
-		LoopLevel3BgColor = Color.FromArgb(0xBF, 0x40, 0xBF); // Bright Purple
-
-		// Tint weights
-		LoopLevel1TintWeight = 0.25f;
-		LoopLevel2TintWeight = 0.45f;
-		LoopLevel3TintWeight = 0.65f;
-
-		CurrentExecutionTintWeight = 0.55f;
-		PassedExecutionTintWeight = 0.40f;
-	}
 }

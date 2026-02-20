@@ -11,14 +11,10 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns;
 
-/// <summary>
-/// DI-driven registry that maps YAML <c>column_type</c> strings to concrete
-/// <see cref="IFactoryColumn"/> implementations.
-/// </summary>
 public sealed class FactoryColumnRegistry
 {
-	private readonly IServiceProvider _serviceProvider;
 	private readonly ConcurrentDictionary<string, Type> _mapping = new(StringComparer.OrdinalIgnoreCase);
+	private readonly IServiceProvider _serviceProvider;
 
 	public FactoryColumnRegistry(IServiceProvider serviceProvider)
 	{
@@ -35,7 +31,6 @@ public sealed class FactoryColumnRegistry
 		_mapping["text_field"] = typeof(TextBoxExtension);
 	}
 
-
 	public DataGridViewColumn CreateColumn(ColumnDefinition definition)
 	{
 		if (!_mapping.TryGetValue(definition.ColumnType, out var factoryType))
@@ -45,6 +40,7 @@ public sealed class FactoryColumnRegistry
 
 		var factory = (IFactoryColumn)_serviceProvider.GetRequiredService(factoryType);
 		var scheme = _serviceProvider.GetRequiredService<DesignTimeColorSchemeProvider>().Current;
+
 		return factory.CreateColumn(definition, scheme);
 	}
 }

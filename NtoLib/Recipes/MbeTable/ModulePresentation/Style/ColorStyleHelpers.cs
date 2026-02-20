@@ -10,7 +10,9 @@ internal static class ColorStyleHelpers
 	public static Color ApplyLoopTint(Color baseColor, int depth, bool isRestricted, ColorScheme scheme)
 	{
 		if (depth <= 0)
+		{
 			return baseColor;
+		}
 
 		var weight = depth switch
 		{
@@ -21,7 +23,9 @@ internal static class ColorStyleHelpers
 		};
 
 		if (isRestricted)
+		{
 			weight *= 0.6f;
+		}
 
 		var accent = depth switch
 		{
@@ -45,10 +49,14 @@ internal static class ColorStyleHelpers
 		};
 
 		if (weight <= 0f)
+		{
 			return baseColor;
+		}
 
 		if (isRestricted)
+		{
 			weight *= 0.6f;
+		}
 
 		var accent = state switch
 		{
@@ -63,7 +71,9 @@ internal static class ColorStyleHelpers
 	public static Color Blend(Color baseColor, Color accentColor, float weight)
 	{
 		if (accentColor == Color.Transparent || accentColor == Color.Empty)
+		{
 			return baseColor;
+		}
 
 		switch (weight)
 		{
@@ -71,6 +81,7 @@ internal static class ColorStyleHelpers
 				return baseColor;
 			case > 1f:
 				weight = 1f;
+
 				break;
 		}
 
@@ -89,7 +100,9 @@ internal static class ColorStyleHelpers
 		var lumFore = (int)(0.299 * foreColor.R + 0.587 * foreColor.G + 0.114 * foreColor.B);
 
 		if (Math.Abs(lumBack - lumFore) > 60)
+		{
 			return foreColor;
+		}
 
 		return lumBack < 128 ? Color.White : Color.Black;
 	}

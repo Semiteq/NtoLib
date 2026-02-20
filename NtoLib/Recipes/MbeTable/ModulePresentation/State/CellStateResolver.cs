@@ -42,5 +42,4 @@ public sealed class CellStateResolver
 			IsReadOnly: true,
 			ComboDisplayStyle: DataGridViewComboBoxDisplayStyle.Nothing);
 	}
-
 }

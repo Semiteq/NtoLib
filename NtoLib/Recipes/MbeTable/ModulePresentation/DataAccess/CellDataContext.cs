@@ -11,12 +11,12 @@ public sealed class CellDataContext
 		_recipeViewModel = recipeViewModel;
 	}
 
+	public int RowCount => _recipeViewModel.ViewModels.Count;
+
 	public StepViewModel? GetStepViewModel(int rowIndex)
 	{
 		return rowIndex >= 0 && rowIndex < _recipeViewModel.ViewModels.Count
 			? _recipeViewModel.ViewModels[rowIndex]
 			: null;
 	}
-
-	public int RowCount => _recipeViewModel.ViewModels.Count;
 }

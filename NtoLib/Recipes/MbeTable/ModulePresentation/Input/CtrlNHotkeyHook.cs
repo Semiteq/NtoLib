@@ -15,7 +15,10 @@ internal sealed class CtrlNHotkeyHook : IMessageFilter, IDisposable
 	public CtrlNHotkeyHook(Control focusRoot, Action onCtrlN)
 	{
 		if (focusRoot == null)
+		{
 			throw new ArgumentNullException(nameof(focusRoot));
+		}
+
 		_onCtrlN = onCtrlN ?? throw new ArgumentNullException(nameof(onCtrlN));
 
 		_focusRoot = new WeakReference<Control>(focusRoot);
@@ -33,7 +36,9 @@ internal sealed class CtrlNHotkeyHook : IMessageFilter, IDisposable
 	public void Dispose()
 	{
 		if (_isDisposed)
+		{
 			return;
+		}
 
 		_isDisposed = true;
 
@@ -73,6 +78,7 @@ internal sealed class CtrlNHotkeyHook : IMessageFilter, IDisposable
 		if (!_focusRoot.TryGetTarget(out var focusRoot))
 		{
 			TrySelfRemove();
+
 			return false;
 		}
 

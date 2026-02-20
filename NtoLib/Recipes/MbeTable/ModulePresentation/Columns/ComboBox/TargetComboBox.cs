@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using NtoLib.Recipes.MbeTable.ModulePresentation.Cells;
 using NtoLib.Recipes.MbeTable.ModulePresentation.DataAccess;
-using NtoLib.Recipes.MbeTable.ModulePresentation.Mapping;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.Columns.ComboBox;
 
@@ -16,9 +15,13 @@ public sealed class TargetComboBox : FactoryColumnComboBoxBase
 	{
 	}
 
-	protected override IList<KeyValuePair<short, string>> GetDataSource() =>
-		new List<KeyValuePair<short, string>>();
+	protected override IList<KeyValuePair<short, string>> GetDataSource()
+	{
+		return new List<KeyValuePair<short, string>>();
+	}
 
-	protected override void AssignItemsProvider(RecipeComboBoxCell cell) =>
+	protected override void AssignItemsProvider(RecipeComboBoxCell cell)
+	{
 		cell.SetItemsProvider(ServiceProvider.GetRequiredService<TargetItemsProvider>());
+	}
 }
