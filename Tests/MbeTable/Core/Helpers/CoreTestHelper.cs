@@ -12,6 +12,7 @@ public static class CoreTestHelper
 		var provider = new TestConfigProvider(dir);
 		var services = TestServiceProviderFactory.Create(provider.AppConfiguration, provider.CompiledFormulas);
 		var facade = services.GetRequiredService<RecipeFacade>();
+
 		return (services, facade);
 	}
 }

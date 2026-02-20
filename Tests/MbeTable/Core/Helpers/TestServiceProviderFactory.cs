@@ -20,10 +20,14 @@ public static class TestServiceProviderFactory
 		IReadOnlyDictionary<short, CompiledFormula> compiledFormulas, ILoggerFactory? loggerFactory = null)
 	{
 		if (config == null)
+		{
 			throw new ArgumentNullException(nameof(config));
+		}
 
 		if (compiledFormulas == null)
+		{
 			throw new ArgumentNullException(nameof(compiledFormulas));
+		}
 
 		var services = new ServiceCollection();
 

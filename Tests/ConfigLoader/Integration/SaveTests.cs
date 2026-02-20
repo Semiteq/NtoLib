@@ -84,11 +84,17 @@ public sealed class SaveTests
 			new string[16]);
 
 		for (var i = 0; i < dto.Sources.Length; i++)
+		{
 			dto.Sources[i] = "";
+		}
 		for (var i = 0; i < dto.ChamberHeaters.Length; i++)
+		{
 			dto.ChamberHeaters[i] = "";
+		}
 		for (var i = 0; i < dto.WaterChannels.Length; i++)
+		{
 			dto.WaterChannels[i] = "";
+		}
 
 		var result = service.Save(filePath, dto);
 

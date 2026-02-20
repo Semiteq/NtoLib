@@ -2,8 +2,6 @@
 
 public sealed class TempTestDirectory : IDisposable
 {
-	public string Path { get; }
-
 	public TempTestDirectory()
 	{
 		Path = System.IO.Path.Combine(
@@ -13,6 +11,8 @@ public sealed class TempTestDirectory : IDisposable
 
 		Directory.CreateDirectory(Path);
 	}
+
+	public string Path { get; }
 
 	public void Dispose()
 	{

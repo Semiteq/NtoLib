@@ -2,8 +2,6 @@
 
 public sealed class TempDirectory : IDisposable
 {
-	public string Path { get; }
-
 	public TempDirectory(string? name = null)
 	{
 		var baseDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "NtoLib.ConfigTests");
@@ -12,6 +10,8 @@ public sealed class TempDirectory : IDisposable
 		Path = System.IO.Path.Combine(baseDir, name ?? Guid.NewGuid().ToString("N"));
 		Directory.CreateDirectory(Path);
 	}
+
+	public string Path { get; }
 
 	public void Dispose()
 	{

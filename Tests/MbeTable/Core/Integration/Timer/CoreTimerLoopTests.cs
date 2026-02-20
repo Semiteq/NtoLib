@@ -30,8 +30,8 @@ public sealed class CoreTimerLoopTests
 		d.AddEndFor(2);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -63,8 +63,8 @@ public sealed class CoreTimerLoopTests
 		d.AddEndFor(2);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -102,8 +102,8 @@ public sealed class CoreTimerLoopTests
 		d.AddEndFor(4);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -135,9 +135,9 @@ public sealed class CoreTimerLoopTests
 		d.AddEndFor(2);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
-		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };
+		timer.TimesUpdated += (stepLeft, totalLeft) => capturedTotalLeft = totalLeft;
 
 		var analysis = facade.CurrentSnapshot;
 		var runtime = RuntimeSnapshotBuilder.CreateActive(
@@ -163,9 +163,9 @@ public sealed class CoreTimerLoopTests
 		d.AddWait(1).SetDuration(1, BodyDuration);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
-		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };
+		timer.TimesUpdated += (stepLeft, totalLeft) => capturedTotalLeft = totalLeft;
 
 		var analysis = facade.CurrentSnapshot;
 		var runtime = RuntimeSnapshotBuilder.CreateActive(

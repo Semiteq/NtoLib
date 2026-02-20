@@ -15,10 +15,11 @@ public static class ClipboardTestHelper
 		var services =
 			ApplicationTestServiceProviderFactory.Create(provider.AppConfiguration, provider.CompiledFormulas);
 		var app = services.GetRequiredService<RecipeOperationService>();
-		var clipboard = services.GetRequiredService<IClipboardRawAccess>() as FakeClipboardRawAccess;
 
-		if (clipboard == null)
+		if (services.GetRequiredService<IClipboardRawAccess>() is not FakeClipboardRawAccess clipboard)
+		{
 			throw new InvalidOperationException("Expected FakeClipboardRawAccess in DI container");
+		}
 
 		return (services, app, clipboard);
 	}

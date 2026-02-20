@@ -9,36 +9,48 @@ public static class TestDataCopier
 	public static TempDirectory PrepareValidCase(string caseRelativePath)
 	{
 		if (string.IsNullOrWhiteSpace(caseRelativePath))
+		{
 			throw new ArgumentNullException(nameof(caseRelativePath));
+		}
 
 		var testDataRoot = GetTestDataRoot();
 		var sourceDir = Path.Combine(testDataRoot, ValidSubfolder, caseRelativePath);
 		if (!Directory.Exists(sourceDir))
+		{
 			throw new DirectoryNotFoundException($"Valid case not found: {sourceDir}");
+		}
 
 		var tempDir = new TempDirectory();
 		CopyDirectory(sourceDir, tempDir.Path);
+
 		return tempDir;
 	}
 
 	public static TempDirectory PrepareInvalidCase(string caseNameUnderInvalid)
 	{
 		if (string.IsNullOrWhiteSpace(caseNameUnderInvalid))
+		{
 			throw new ArgumentNullException(nameof(caseNameUnderInvalid));
+		}
 
 		var testDataRoot = GetTestDataRoot();
 		var baselineDir = Path.Combine(testDataRoot, ValidSubfolder, BaselineFolderName);
 		if (!Directory.Exists(baselineDir))
+		{
 			throw new DirectoryNotFoundException($"Baseline not found: {baselineDir}");
+		}
 
 		var tempDir = new TempDirectory();
 		CopyDirectory(baselineDir, tempDir.Path);
 
 		var invalidDir = Path.Combine(testDataRoot, InvalidSubfolder, caseNameUnderInvalid);
 		if (!Directory.Exists(invalidDir))
+		{
 			throw new DirectoryNotFoundException($"Invalid case not found: {invalidDir}");
+		}
 
 		CopyDirectory(invalidDir, tempDir.Path);
+
 		return tempDir;
 	}
 
@@ -49,11 +61,15 @@ public static class TestDataCopier
 		{
 			var probe1 = Path.Combine(dir, "MbeTable", "Config", "TestData");
 			if (Directory.Exists(probe1))
+			{
 				return probe1;
+			}
 
 			var probe2 = Path.Combine(dir, "Config", "TestData");
 			if (Directory.Exists(probe2))
+			{
 				return probe2;
+			}
 
 			dir = Directory.GetParent(dir)?.FullName ?? string.Empty;
 		}
@@ -77,7 +93,9 @@ public static class TestDataCopier
 			var target = Path.Combine(destDir, rel);
 			var targetDir = Path.GetDirectoryName(target);
 			if (!string.IsNullOrEmpty(targetDir))
+			{
 				Directory.CreateDirectory(targetDir);
+			}
 
 			File.Copy(filePath, target, overwrite: true);
 		}
@@ -90,7 +108,9 @@ public static class TestDataCopier
 			: baseDir + Path.DirectorySeparatorChar;
 
 		if (fullPath.StartsWith(normBase, StringComparison.OrdinalIgnoreCase))
+		{
 			return fullPath.Substring(normBase.Length);
+		}
 
 		return Path.GetFileName(fullPath) ?? string.Empty;
 	}

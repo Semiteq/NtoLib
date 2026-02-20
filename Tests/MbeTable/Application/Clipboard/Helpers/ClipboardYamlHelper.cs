@@ -9,6 +9,7 @@ public static class ClipboardYamlHelper
 		Directory.CreateDirectory(tempDir);
 
 		CopyDirectory(testDataRoot, tempDir);
+
 		return tempDir;
 	}
 
@@ -19,7 +20,9 @@ public static class ClipboardYamlHelper
 		{
 			var probe = Path.Combine(dir, "MbeTable", "YamlConfigs");
 			if (Directory.Exists(probe))
+			{
 				return probe;
+			}
 
 			dir = Directory.GetParent(dir)?.FullName ?? string.Empty;
 		}
@@ -43,7 +46,9 @@ public static class ClipboardYamlHelper
 			var target = Path.Combine(destDir, rel);
 			var targetDir = Path.GetDirectoryName(target);
 			if (!string.IsNullOrEmpty(targetDir))
+			{
 				Directory.CreateDirectory(targetDir);
+			}
 
 			File.Copy(filePath, target, overwrite: true);
 		}
@@ -56,7 +61,9 @@ public static class ClipboardYamlHelper
 			: baseDir + Path.DirectorySeparatorChar;
 
 		if (fullPath.StartsWith(normBase, StringComparison.OrdinalIgnoreCase))
+		{
 			return fullPath.Substring(normBase.Length);
+		}
 
 		return Path.GetFileName(fullPath) ?? string.Empty;
 	}

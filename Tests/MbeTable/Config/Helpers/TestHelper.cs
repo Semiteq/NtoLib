@@ -26,6 +26,7 @@ public static class TestHelper
 		var config = loader.LoadConfiguration(tempDir.Path, PropertyFile, ColumnFile, PinGroupFile, ActionFile);
 
 		EnsurePrecompiledOrThrow(config);
+
 		return config;
 	}
 
@@ -45,11 +46,13 @@ public static class TestHelper
 			ex.Should().NotBeNull("Expected precompile to fail for invalid case.");
 
 			ex!.ShouldContainError(expectedSection, expectedContextContains);
+
 			return ex;
 		}
 		catch (ConfigException ex)
 		{
 			ex.ShouldContainError(expectedSection, expectedContextContains);
+
 			return ex;
 		}
 	}
@@ -99,7 +102,9 @@ public static class TestHelper
 		var precompileResult = precompiler.Precompile(config.Actions);
 
 		if (precompileResult.IsSuccess)
+		{
 			return null;
+		}
 
 		var configErrors = precompileResult.Errors
 			.Select(e => e as ConfigError ?? new ConfigError(e.Message, "ActionsDefs.yaml", "formula-precompile"))

@@ -16,6 +16,7 @@ public sealed class RecipeTestDriver
 	public RecipeTestDriver AddDefaultStep(int index)
 	{
 		_facade.AddStep(index);
+
 		return this;
 	}
 
@@ -23,6 +24,7 @@ public sealed class RecipeTestDriver
 	{
 		_facade.AddStep(index);
 		_facade.ReplaceAction(index, (short)ServiceActions.Wait);
+
 		return this;
 	}
 
@@ -31,6 +33,7 @@ public sealed class RecipeTestDriver
 		_facade.AddStep(index);
 		_facade.ReplaceAction(index, (short)ServiceActions.ForLoop);
 		_facade.UpdateProperty(index, MandatoryColumns.Task, (float)iterations);
+
 		return this;
 	}
 
@@ -38,24 +41,28 @@ public sealed class RecipeTestDriver
 	{
 		_facade.AddStep(index);
 		_facade.ReplaceAction(index, (short)ServiceActions.EndForLoop);
+
 		return this;
 	}
 
 	public RecipeTestDriver SetDuration(int index, float seconds)
 	{
 		_facade.UpdateProperty(index, MandatoryColumns.StepDuration, seconds);
+
 		return this;
 	}
 
 	public RecipeTestDriver SetTask(int index, float value)
 	{
 		_facade.UpdateProperty(index, MandatoryColumns.Task, value);
+
 		return this;
 	}
 
 	public RecipeTestDriver ReplaceAction(int index, short actionId)
 	{
 		_facade.ReplaceAction(index, actionId);
+
 		return this;
 	}
 
@@ -63,6 +70,7 @@ public sealed class RecipeTestDriver
 	{
 		var col = new ColumnIdentifier("speed");
 		_facade.UpdateProperty(index, col, value);
+
 		return this;
 	}
 }

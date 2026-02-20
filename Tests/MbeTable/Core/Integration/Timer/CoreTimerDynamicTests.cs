@@ -46,7 +46,7 @@ public sealed class CoreTimerDynamicTests
 		capturedValues[1].totalLeft.Should().Be(TimeSpan.FromSeconds(4));
 		capturedValues[2].totalLeft.Should().Be(TimeSpan.FromSeconds(1));
 
-		for (int i = 1; i < capturedValues.Count; i++)
+		for (var i = 1; i < capturedValues.Count; i++)
 		{
 			capturedValues[i].totalLeft.Should().BeLessThan(capturedValues[i - 1].totalLeft);
 		}
@@ -82,7 +82,7 @@ public sealed class CoreTimerDynamicTests
 		capturedValues[1].Should().Be(TimeSpan.FromSeconds(6));
 		capturedValues[2].Should().Be(TimeSpan.FromSeconds(1));
 
-		for (int i = 1; i < capturedValues.Count; i++)
+		for (var i = 1; i < capturedValues.Count; i++)
 		{
 			capturedValues[i].Should().BeLessThan(capturedValues[i - 1]);
 		}
@@ -141,7 +141,7 @@ public sealed class CoreTimerDynamicTests
 		capturedStepLeft[2].Should().Be(TimeSpan.FromSeconds(5));
 		capturedStepLeft[3].Should().Be(TimeSpan.FromSeconds(1));
 
-		for (int i = 1; i < capturedStepLeft.Count; i++)
+		for (var i = 1; i < capturedStepLeft.Count; i++)
 		{
 			capturedStepLeft[i].Should().BeLessThan(capturedStepLeft[i - 1]);
 		}
@@ -182,7 +182,7 @@ public sealed class CoreTimerDynamicTests
 		capturedValues[2].Should().Be(TimeSpan.FromSeconds(10));
 		capturedValues[3].Should().Be(TimeSpan.FromSeconds(5));
 
-		for (int i = 1; i < capturedValues.Count; i++)
+		for (var i = 1; i < capturedValues.Count; i++)
 		{
 			capturedValues[i].Should().BeLessThan(capturedValues[i - 1]);
 		}

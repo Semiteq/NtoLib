@@ -16,6 +16,7 @@ public sealed class FakeClipboardRawAccess : IClipboardRawAccess
 	public Result WriteText(string text)
 	{
 		WrittenText = text;
+
 		return Result.Ok();
 	}
 

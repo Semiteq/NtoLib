@@ -27,8 +27,8 @@ public sealed class CoreTimerEdgeCasesTests
 		d.AddWait(0).SetDuration(0, StepDuration);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -55,8 +55,8 @@ public sealed class CoreTimerEdgeCasesTests
 		d.AddWait(0).SetDuration(0, StepDuration);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -88,9 +88,9 @@ public sealed class CoreTimerEdgeCasesTests
 		d.AddEndFor(2);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
-		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };
+		timer.TimesUpdated += (stepLeft, totalLeft) => capturedTotalLeft = totalLeft;
 
 		var analysis = facade.CurrentSnapshot;
 		var runtime = RuntimeSnapshotBuilder.CreateActive(
@@ -117,9 +117,9 @@ public sealed class CoreTimerEdgeCasesTests
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 5f), analysis);
 
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
-		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };
+		timer.TimesUpdated += (stepLeft, totalLeft) => capturedTotalLeft = totalLeft;
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 3f), analysis);
 
@@ -141,9 +141,9 @@ public sealed class CoreTimerEdgeCasesTests
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 9f), analysis);
 
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
-		timer.TimesUpdated += (stepLeft, totalLeft) => { capturedTotalLeft = totalLeft; };
+		timer.TimesUpdated += (stepLeft, totalLeft) => capturedTotalLeft = totalLeft;
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(1, 0f), analysis);
 
@@ -157,8 +157,8 @@ public sealed class CoreTimerEdgeCasesTests
 		using var _ = services as IDisposable;
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{

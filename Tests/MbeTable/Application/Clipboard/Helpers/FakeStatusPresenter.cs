@@ -4,6 +4,14 @@ namespace Tests.MbeTable.Application.Clipboard.Helpers;
 
 public sealed class FakeStatusPresenter : IStatusPresenter
 {
+	public enum StatusKind
+	{
+		Success,
+		Warning,
+		Error,
+		Info
+	}
+
 	public string? LastMessage { get; private set; }
 	public StatusKind? LastKind { get; private set; }
 
@@ -35,13 +43,5 @@ public sealed class FakeStatusPresenter : IStatusPresenter
 	{
 		LastMessage = message;
 		LastKind = StatusKind.Info;
-	}
-
-	public enum StatusKind
-	{
-		Success,
-		Warning,
-		Error,
-		Info
 	}
 }

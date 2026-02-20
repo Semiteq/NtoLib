@@ -30,8 +30,8 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -59,8 +59,8 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -88,8 +88,8 @@ public sealed class CoreTimerLinearTests
 		d.AddWait(1).SetDuration(1, SecondStepDuration);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -121,8 +121,8 @@ public sealed class CoreTimerLinearTests
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 9f), analysis);
 
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -147,8 +147,8 @@ public sealed class CoreTimerLinearTests
 		d.AddFor(1, 1);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{

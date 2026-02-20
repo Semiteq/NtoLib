@@ -16,6 +16,7 @@ public sealed class ClipboardTestDriver
 	{
 		_app.AddStep(index);
 		_app.SetCellValueAsync(index, MandatoryColumns.Action, (short)ServiceActions.Wait).GetAwaiter().GetResult();
+
 		return this;
 	}
 
@@ -23,12 +24,14 @@ public sealed class ClipboardTestDriver
 	{
 		_app.AddStep(index);
 		_app.SetCellValueAsync(index, MandatoryColumns.Action, actionId).GetAwaiter().GetResult();
+
 		return this;
 	}
 
 	public ClipboardTestDriver SetDuration(int index, float seconds)
 	{
 		_app.SetCellValueAsync(index, MandatoryColumns.StepDuration, seconds).GetAwaiter().GetResult();
+
 		return this;
 	}
 }

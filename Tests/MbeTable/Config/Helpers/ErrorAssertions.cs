@@ -13,6 +13,7 @@ public static class ErrorAssertions
 			(e.Context?.IndexOf(contextContains, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0);
 
 		error.Should().NotBeNull($"Expected error in section '{section}' with context containing '{contextContains}'.");
+
 		return error!;
 	}
 

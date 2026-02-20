@@ -12,15 +12,21 @@ public static class ActionNameHelper
 	public static short GetActionIdOrThrow(ActionRepository repo, string name)
 	{
 		if (repo == null)
+		{
 			throw new ArgumentNullException(nameof(repo));
+		}
 
 		if (string.IsNullOrWhiteSpace(name))
+		{
 			throw new ArgumentNullException(nameof(name));
+		}
 
 		var result = repo.GetResultActionDefinitionByName(name);
 		if (result.IsFailed)
+		{
 			throw new InvalidOperationException(
 				$"Action '{name}' not found. Errors: {string.Join(", ", result.Errors)}");
+		}
 
 		return result.Value.Id;
 	}

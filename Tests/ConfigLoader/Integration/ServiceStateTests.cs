@@ -94,7 +94,7 @@ public sealed class ServiceStateTests
 		var service = ConfigLoaderTestHelper.CreateService();
 
 		var invalidPath = ConfigLoaderTestHelper.GetConfigFilePath(invalidTempDir);
-		System.IO.File.WriteAllText(invalidPath, "invalid yaml content {{{{");
+		File.WriteAllText(invalidPath, "invalid yaml content {{{{");
 		service.Load(invalidPath);
 		service.IsLoaded.Should().BeFalse();
 		service.LastError.Should().NotBeEmpty();

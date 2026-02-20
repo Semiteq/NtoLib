@@ -33,6 +33,7 @@ public static class TrendPensTestHelper
 				if (!ch.HasUsedPin)
 				{
 					warnings.Add($"Channel {ch.FullName} has no 'Used' pin, skipped");
+
 					continue;
 				}
 

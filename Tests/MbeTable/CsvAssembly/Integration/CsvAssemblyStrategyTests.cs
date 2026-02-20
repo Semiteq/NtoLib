@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -27,7 +24,9 @@ namespace Tests.MbeTable.CsvAssembly.Integration;
 public sealed class CsvAssemblyStrategyTests
 {
 	private static readonly string[] _csvHeaders =
-		{ "action", "target", "initial_value", "task", "speed", "step_duration", "comment" };
+	{
+		"action", "target", "initial_value", "task", "speed", "step_duration", "comment"
+	};
 
 	private static CsvAssemblyStrategy BuildStrategy(IServiceProvider services)
 	{
@@ -135,9 +134,9 @@ public sealed class CsvAssemblyStrategyTests
 
 		var strategy = BuildStrategy(services);
 		var rawData = BuildRawData(
-			new[] { "10", "1", "", "", "", "10", "" },    // row 2: extra "target"
-			new[] { "10", "", "500", "", "", "10", "" },  // row 3: extra "initial_value"
-			new[] { "10", "", "", "100", "", "10", "" }   // row 4: extra "task"
+			new[] { "10", "1", "", "", "", "10", "" }, // row 2: extra "target"
+			new[] { "10", "", "500", "", "", "10", "" }, // row 3: extra "initial_value"
+			new[] { "10", "", "", "100", "", "10", "" } // row 4: extra "task"
 		);
 
 		var result = strategy.AssembleFromRawData(rawData);
@@ -168,10 +167,10 @@ public sealed class CsvAssemblyStrategyTests
 
 		var strategy = BuildStrategy(services);
 		var rawData = BuildRawData(
-			new[] { "10", "", "", "", "", "10", "" },     // row 2: clean (Ждать)
-			new[] { "10", "1", "", "", "", "10", "" },    // row 3: extra "target"
-			new[] { "50", "1", "", "", "", "", "" },      // row 4: clean (Закрыть with target)
-			new[] { "10", "", "", "99", "", "10", "" }    // row 5: extra "task"
+			new[] { "10", "", "", "", "", "10", "" }, // row 2: clean (Ждать)
+			new[] { "10", "1", "", "", "", "10", "" }, // row 3: extra "target"
+			new[] { "50", "1", "", "", "", "", "" }, // row 4: clean (Закрыть with target)
+			new[] { "10", "", "", "99", "", "10", "" } // row 5: extra "task"
 		);
 
 		var result = strategy.AssembleFromRawData(rawData);

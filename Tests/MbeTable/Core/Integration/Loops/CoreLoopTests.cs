@@ -61,14 +61,14 @@ public sealed class CoreLoopTests
 
 		var d = new RecipeTestDriver(facade);
 
-		for (int i = 0; i <= MaxAllowedNestingDepth; i++)
+		for (var i = 0; i <= MaxAllowedNestingDepth; i++)
 		{
 			d.AddFor(i, 1);
 		}
 
 		d.AddWait(MaxAllowedNestingDepth + 1).SetDuration(MaxAllowedNestingDepth + 1, 2f);
 
-		for (int i = MaxAllowedNestingDepth + 2; i <= (MaxAllowedNestingDepth * 2) + 2; i++)
+		for (var i = MaxAllowedNestingDepth + 2; i <= (MaxAllowedNestingDepth * 2) + 2; i++)
 		{
 			d.AddEndFor(i);
 		}

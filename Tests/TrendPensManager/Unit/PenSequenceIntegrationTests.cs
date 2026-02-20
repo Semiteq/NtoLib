@@ -60,6 +60,7 @@ public sealed class PenSequenceIntegrationTests
 
 		var expectedConfigName = configResult.Value[ServiceType.Heaters][channel.ChannelNumber - 1];
 		expectedConfigName.Should().Be("Source1");
-		sequence.All(p => p.PenDisplayName.EndsWith(" " + expectedConfigName, StringComparison.Ordinal)).Should().BeTrue();
+		sequence.All(p => p.PenDisplayName.EndsWith(" " + expectedConfigName, StringComparison.Ordinal)).Should()
+			.BeTrue();
 	}
 }

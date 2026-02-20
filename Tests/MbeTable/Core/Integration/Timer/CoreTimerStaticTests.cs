@@ -22,8 +22,8 @@ public sealed class CoreTimerStaticTests
 		using var _ = services as IDisposable;
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -51,8 +51,8 @@ public sealed class CoreTimerStaticTests
 		d.AddWait(1).SetDuration(1, 5f);
 
 		var timer = services.GetRequiredService<TimerService>();
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{
@@ -85,8 +85,8 @@ public sealed class CoreTimerStaticTests
 
 		timer.UpdateRuntime(RuntimeSnapshotBuilder.CreateActive(0, 0f), analysis);
 
-		TimeSpan capturedStepLeft = TimeSpan.Zero;
-		TimeSpan capturedTotalLeft = TimeSpan.Zero;
+		var capturedStepLeft = TimeSpan.Zero;
+		var capturedTotalLeft = TimeSpan.Zero;
 
 		timer.TimesUpdated += (stepLeft, totalLeft) =>
 		{

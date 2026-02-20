@@ -20,6 +20,7 @@ public static class ConfigLoaderTestHelper
 	{
 		var tempDir = CopyTestCase(ValidSubfolder, caseName);
 		var service = CreateService();
+
 		return (service, tempDir);
 	}
 
@@ -27,6 +28,7 @@ public static class ConfigLoaderTestHelper
 	{
 		var tempDir = CopyTestCase(InvalidSubfolder, caseName);
 		var service = CreateService();
+
 		return (service, tempDir);
 	}
 
@@ -52,6 +54,7 @@ public static class ConfigLoaderTestHelper
 
 		var tempDir = new TempTestDirectory();
 		CopyDirectory(sourceDir, tempDir.Path);
+
 		return tempDir;
 	}
 

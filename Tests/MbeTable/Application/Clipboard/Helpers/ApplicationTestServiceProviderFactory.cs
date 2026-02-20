@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
-using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
 using NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
@@ -43,9 +42,14 @@ public static class ApplicationTestServiceProviderFactory
 		IReadOnlyDictionary<short, CompiledFormula> compiledFormulas)
 	{
 		if (config == null)
+		{
 			throw new ArgumentNullException(nameof(config));
+		}
+
 		if (compiledFormulas == null)
+		{
 			throw new ArgumentNullException(nameof(compiledFormulas));
+		}
 
 		var services = new ServiceCollection();
 
@@ -92,6 +96,7 @@ public static class ApplicationTestServiceProviderFactory
 		services.AddSingleton<ClipboardSchemaDescriptor>(sp =>
 		{
 			var columns = sp.GetRequiredService<IReadOnlyList<ColumnDefinition>>();
+
 			return new ClipboardSchemaDescriptor(columns);
 		});
 		services.AddSingleton<ClipboardSchemaValidator>();
@@ -121,18 +126,26 @@ public static class ApplicationTestServiceProviderFactory
 	private sealed class FakeCsvService : ICsvService
 	{
 		public Task<Result<Recipe>> ReadCsvAsync(string filePath)
-			=> Task.FromResult(Result.Ok(Recipe.Empty));
+		{
+			return Task.FromResult(Result.Ok(Recipe.Empty));
+		}
 
 		public Task<Result> WriteCsvAsync(Recipe recipe, string filePath)
-			=> Task.FromResult(Result.Ok());
+		{
+			return Task.FromResult(Result.Ok());
+		}
 	}
 
 	private sealed class FakeModbusTcpService : IModbusTcpService
 	{
 		public Task<Result> SendRecipeAsync(Recipe recipe)
-			=> Task.FromResult(Result.Ok());
+		{
+			return Task.FromResult(Result.Ok());
+		}
 
 		public Task<Result<Recipe>> ReceiveRecipeAsync()
-			=> Task.FromResult(Result.Ok(Recipe.Empty));
+		{
+			return Task.FromResult(Result.Ok(Recipe.Empty));
+		}
 	}
 }
