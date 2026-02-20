@@ -16,9 +16,14 @@ internal static class PollyPolicyFactory
 	public static AsyncRetryPolicy CreateConnectionPolicy(int maxAttempts, int backoffDelayMs, ILogger logger)
 	{
 		if (maxAttempts < 1)
+		{
 			throw new ArgumentOutOfRangeException(nameof(maxAttempts));
+		}
+
 		if (backoffDelayMs < 0)
+		{
 			throw new ArgumentOutOfRangeException(nameof(backoffDelayMs));
+		}
 
 		return Policy
 			.Handle<IOException>()
@@ -36,9 +41,14 @@ internal static class PollyPolicyFactory
 	public static AsyncRetryPolicy CreateOperationPolicy(int maxAttempts, int backoffDelayMs, ILogger logger)
 	{
 		if (maxAttempts < 1)
+		{
 			throw new ArgumentOutOfRangeException(nameof(maxAttempts));
+		}
+
 		if (backoffDelayMs < 0)
+		{
 			throw new ArgumentOutOfRangeException(nameof(backoffDelayMs));
+		}
 
 		return Policy
 			.Handle<IOException>()

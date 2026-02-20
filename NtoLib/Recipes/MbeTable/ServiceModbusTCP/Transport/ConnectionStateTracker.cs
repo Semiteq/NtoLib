@@ -5,18 +5,21 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 internal sealed class ConnectionStateTracker
 {
 	private DateTime? _lastValidatedUtc;
-	private DateTime? _lastOperationUtc;
 
 	public DateTime? LastValidatedUtc => _lastValidatedUtc;
-	public DateTime? LastOperationUtc => _lastOperationUtc;
+	public DateTime? LastOperationUtc { get; private set; }
 
 	public bool IsStale(TimeSpan threshold)
 	{
 		if (_lastValidatedUtc == null)
+		{
 			return true;
+		}
 
 		if (threshold == TimeSpan.Zero)
+		{
 			return true;
+		}
 
 		return DateTime.UtcNow - _lastValidatedUtc.Value > threshold;
 	}
@@ -28,12 +31,12 @@ internal sealed class ConnectionStateTracker
 
 	public void MarkOperation()
 	{
-		_lastOperationUtc = DateTime.UtcNow;
+		LastOperationUtc = DateTime.UtcNow;
 	}
 
 	public void Reset()
 	{
 		_lastValidatedUtc = null;
-		_lastOperationUtc = null;
+		LastOperationUtc = null;
 	}
 }

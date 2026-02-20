@@ -15,11 +15,11 @@ public sealed class PlcWriter
 {
 	private const int ChunkSize = 123;
 	private const int OffsetRowCount = 1;
+	private readonly ModbusChunkHandler _chunkHandler;
+	private readonly ILogger<PlcWriter> _logger;
+	private readonly FbRuntimeOptionsProvider _optionsProvider;
 
 	private readonly ModbusTransport _transport;
-	private readonly ModbusChunkHandler _chunkHandler;
-	private readonly FbRuntimeOptionsProvider _optionsProvider;
-	private readonly ILogger<PlcWriter> _logger;
 
 	public PlcWriter(
 		ModbusTransport transport,
@@ -51,7 +51,9 @@ public sealed class PlcWriter
 				.ConfigureAwait(false);
 
 			if (result.IsFailed)
+			{
 				return result;
+			}
 		}
 
 		_logger.LogTrace("Float data length: {Length}", floatData.Length);
@@ -65,7 +67,9 @@ public sealed class PlcWriter
 				.ConfigureAwait(false);
 
 			if (result.IsFailed)
+			{
 				return result;
+			}
 		}
 
 		_logger.LogTrace("Writing row count {RowCount} to address {Address}",

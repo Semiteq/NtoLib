@@ -20,9 +20,9 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 public sealed class ModbusTransport : IDisposable
 {
 	private readonly ModbusConnectionManager _connectionManager;
-	private readonly FbRuntimeOptionsProvider _optionsProvider;
 	private readonly ILogger<ModbusTransport> _logger;
 	private readonly SemaphoreSlim _operationLock = new(1, 1);
+	private readonly FbRuntimeOptionsProvider _optionsProvider;
 
 	private AsyncPolicy? _operationRetryPolicy;
 
@@ -34,6 +34,12 @@ public sealed class ModbusTransport : IDisposable
 		_connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
 		_optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+	}
+
+	public void Dispose()
+	{
+		_connectionManager.Dispose();
+		_operationLock.Dispose();
 	}
 
 	public async Task<Result> EnsureConnectedAsync(CancellationToken ct)
@@ -74,6 +80,7 @@ public sealed class ModbusTransport : IDisposable
 			var res = await ExecuteWithRetryAsync(() =>
 			{
 				_connectionManager.Client!.WriteMultipleRegisters(address, data);
+
 				return true;
 			}, address, data.Length, "Write", ct).ConfigureAwait(false);
 
@@ -85,12 +92,9 @@ public sealed class ModbusTransport : IDisposable
 		}
 	}
 
-	public void Disconnect() => _connectionManager.Disconnect("manual");
-
-	public void Dispose()
+	public void Disconnect()
 	{
-		_connectionManager.Dispose();
-		_operationLock.Dispose();
+		_connectionManager.Disconnect("manual");
 	}
 
 	private async Task<Result<T>> ExecuteWithRetryAsync<T>(
@@ -110,6 +114,7 @@ public sealed class ModbusTransport : IDisposable
 			_logger.LogError(
 				"Operation [{OperationId}] failed during ensure connected: {Type} addr={Address} size={Size}",
 				opContext.OperationId, opContext.Type, opContext.Address, opContext.Size);
+
 			return ensure.ToResult<T>();
 		}
 
@@ -131,6 +136,7 @@ public sealed class ModbusTransport : IDisposable
 		try
 		{
 			var result = await Task.Run(operation, ct).ConfigureAwait(false);
+
 			return Result.Ok(result);
 		}
 		catch (Exception ex) when (ex is IOException or SocketException or ConnectionException)
@@ -142,6 +148,7 @@ public sealed class ModbusTransport : IDisposable
 				opContext.ConnectionId, ex.GetType().Name);
 
 			var settings = _optionsProvider.GetCurrent();
+
 			return Result.Fail(new ModbusTcpTimeoutError(opContext.Type, settings.TimeoutMs)).WithError(ex.Message)
 				.ToResult<T>();
 		}

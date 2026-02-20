@@ -21,17 +21,16 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Transport;
 public sealed class ModbusConnectionManager : IDisposable
 {
 	private const int DefaultStalenessMs = 0;
+	private readonly SemaphoreSlim _connectionLock = new(1, 1);
+	private readonly ILogger<ModbusConnectionManager> _logger;
 
 	private readonly FbRuntimeOptionsProvider _optionsProvider;
-	private readonly MagicNumberValidator _validator;
-	private readonly ILogger<ModbusConnectionManager> _logger;
-	private readonly SemaphoreSlim _connectionLock = new(1, 1);
 	private readonly ConnectionStateTracker _stateTracker = new();
+	private readonly MagicNumberValidator _validator;
 
 	private AsyncPolicy? _connectRetryPolicy;
-	private ModbusClient? _client;
-	private string? _lastConnectionString;
 	private ConnectionContext? _currentContext;
+	private string? _lastConnectionString;
 
 	public ModbusConnectionManager(
 		FbRuntimeOptionsProvider optionsProvider,
@@ -43,8 +42,15 @@ public sealed class ModbusConnectionManager : IDisposable
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public ModbusClient? Client => _client;
+	public ModbusClient? Client { get; private set; }
+
 	public Guid? CurrentConnectionId => _currentContext?.ConnectionId;
+
+	public void Dispose()
+	{
+		DisconnectInternal("dispose");
+		_connectionLock.Dispose();
+	}
 
 	public async Task<Result> EnsureConnectedAsync(CancellationToken ct)
 	{
@@ -62,18 +68,19 @@ public sealed class ModbusConnectionManager : IDisposable
 
 			var stalenessThreshold = TimeSpan.FromMilliseconds(DefaultStalenessMs);
 
-			if (_client?.Connected == true)
+			if (Client?.Connected == true)
 			{
 				if (_stateTracker.IsStale(stalenessThreshold))
 				{
 					_logger.LogDebug("Connection is stale, validating");
 					var validateRes = await _validator
-						.ValidateAsync(_client, settings, "stale_check", ct)
+						.ValidateAsync(Client, settings, "stale_check", ct)
 						.ConfigureAwait(false);
 
 					if (validateRes.IsSuccess)
 					{
 						_stateTracker.MarkValidated();
+
 						return Result.Ok();
 					}
 
@@ -83,6 +90,7 @@ public sealed class ModbusConnectionManager : IDisposable
 				else
 				{
 					_logger.LogTrace("Reusing existing connection [{ConnectionId}]", _currentContext?.ConnectionId);
+
 					return Result.Ok();
 				}
 			}
@@ -96,6 +104,7 @@ public sealed class ModbusConnectionManager : IDisposable
 			_lastConnectionString = currentConnectionString;
 
 			var reason = _currentContext == null ? "first_connect" : "reconnect";
+
 			return await _connectRetryPolicy
 				.ExecuteAsync(_ => ConnectAndValidateAsync(settings, currentConnectionString, reason, ct), ct)
 				.ConfigureAwait(false);
@@ -111,15 +120,9 @@ public sealed class ModbusConnectionManager : IDisposable
 		DisconnectInternal(reason);
 	}
 
-	public void Dispose()
-	{
-		DisconnectInternal("dispose");
-		_connectionLock.Dispose();
-	}
-
 	private void InitializeClient(RuntimeOptions settings)
 	{
-		_client = new ModbusClient(settings.IpAddress.ToString(), settings.Port)
+		Client = new ModbusClient(settings.IpAddress.ToString(), settings.Port)
 		{
 			UnitIdentifier = settings.UnitId,
 			ConnectionTimeout = settings.TimeoutMs
@@ -134,7 +137,7 @@ public sealed class ModbusConnectionManager : IDisposable
 	{
 		try
 		{
-			await Task.Run(_client!.Connect, ct).ConfigureAwait(false);
+			await Task.Run(Client!.Connect, ct).ConfigureAwait(false);
 
 			_currentContext = new ConnectionContext(connectionString, reason);
 			_stateTracker.Reset();
@@ -146,25 +149,28 @@ public sealed class ModbusConnectionManager : IDisposable
 				settings.Port);
 
 			var validateResult = await _validator
-				.ValidateAsync(_client, settings, "on_connect", ct)
+				.ValidateAsync(Client, settings, "on_connect", ct)
 				.ConfigureAwait(false);
 
 			if (validateResult.IsSuccess)
 			{
 				_stateTracker.MarkValidated();
 				_logger.LogDebug("Magic number validation successful on connect.");
+
 				return Result.Ok();
 			}
 
 			_logger.LogError("Magic number validation failed on connect: {Errors}. Disconnecting.",
 				validateResult.Errors);
 			DisconnectInternal("validation_failed");
+
 			return validateResult;
 		}
 		catch (Exception ex) when (ex is IOException or SocketException or ConnectionException)
 		{
 			DisconnectInternal("connect_error");
 			_logger.LogError(ex, "Communication error during PLC connection: {ExceptionType}", ex.GetType().Name);
+
 			return Result.Fail(new ModbusTcpConnectionFailedError(
 				settings.IpAddress.ToString(),
 				settings.Port,
@@ -174,6 +180,7 @@ public sealed class ModbusConnectionManager : IDisposable
 		{
 			DisconnectInternal("connect_error");
 			_logger.LogError(mex, "PLC connection failed");
+
 			return Result.Fail(new ModbusTcpConnectionFailedError(
 				settings.IpAddress.ToString(),
 				settings.Port,
@@ -185,9 +192,9 @@ public sealed class ModbusConnectionManager : IDisposable
 	{
 		try
 		{
-			if (_client?.Connected == true)
+			if (Client?.Connected == true)
 			{
-				_client.Disconnect();
+				Client.Disconnect();
 				_logger.LogDebug("PLC disconnected, reason: {Reason}, connection: [{ConnectionId}]",
 					reason,
 					_currentContext?.ConnectionId);
@@ -199,7 +206,7 @@ public sealed class ModbusConnectionManager : IDisposable
 		}
 		finally
 		{
-			_client = null;
+			Client = null;
 			_lastConnectionString = null;
 			_currentContext = null;
 			_stateTracker.Reset();

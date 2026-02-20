@@ -2,5 +2,8 @@
 
 public sealed class KeepAliveStrategy : IDisconnectStrategy
 {
-	public bool ShouldDisconnect(string operationType) => false;
+	public bool ShouldDisconnect(string operationType)
+	{
+		return false;
+	}
 }

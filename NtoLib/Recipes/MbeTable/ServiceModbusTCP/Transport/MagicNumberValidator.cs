@@ -32,9 +32,14 @@ public sealed class MagicNumberValidator
 		CancellationToken ct)
 	{
 		if (client is null)
+		{
 			throw new ArgumentNullException(nameof(client));
+		}
+
 		if (settings is null)
+		{
 			throw new ArgumentNullException(nameof(settings));
+		}
 
 		_logger.LogTrace("Validating PLC magic number, reason: {Reason}", reason);
 
@@ -59,11 +64,13 @@ public sealed class MagicNumberValidator
 		catch (Exception ex) when (ex is IOException or SocketException or ConnectionException)
 		{
 			_logger.LogError(ex, "Communication error during PLC validation");
+
 			return Result.Fail(new ModbusTcpTimeoutError("magic validation", settings.TimeoutMs)).WithError(ex.Message);
 		}
 		catch (ModbusException mex)
 		{
 			_logger.LogError(mex, "PLC validation failed");
+
 			return Result.Fail(new ModbusTcpReadFailedError(settings.ControlRegister, 1, mex.Message))
 				.WithError(mex.Message);
 		}

@@ -11,10 +11,14 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Domain;
 /// </summary>
 public sealed class RecipeColumnLayout
 {
+	private readonly ColumnDefinition[] _mappedColumns;
+
 	public RecipeColumnLayout(IReadOnlyList<ColumnDefinition> tableColumns)
 	{
 		if (tableColumns is null)
+		{
 			throw new ArgumentNullException(nameof(tableColumns));
+		}
 
 		_mappedColumns = tableColumns
 			.Where(c => c.PlcMapping is not null)
@@ -28,10 +32,10 @@ public sealed class RecipeColumnLayout
 	public int FloatColumnCount { get; }
 	public IReadOnlyList<ColumnDefinition> MappedColumns => _mappedColumns;
 
-	private readonly ColumnDefinition[] _mappedColumns;
-
-	private int CountForArea(string area) =>
-		(_mappedColumns
+	private int CountForArea(string area)
+	{
+		return (_mappedColumns
 			.Where(c => c.PlcMapping!.Area.Equals(area, StringComparison.OrdinalIgnoreCase))
 			.Max(c => (int?)c.PlcMapping!.Index) ?? -1) + 1;
+	}
 }

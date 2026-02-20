@@ -4,10 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 public sealed class ModbusTcpCapacityExceededError : BilingualError
 {
-	public string AreaType { get; }
-	public int Required { get; }
-	public int Available { get; }
-
 	public ModbusTcpCapacityExceededError(string areaType, int required, int available)
 		: base(
 			$"PLC {areaType} area capacity exceeded: required {required}, available {available}",
@@ -17,4 +13,8 @@ public sealed class ModbusTcpCapacityExceededError : BilingualError
 		Required = required;
 		Available = available;
 	}
+
+	public string AreaType { get; }
+	public int Required { get; }
+	public int Available { get; }
 }

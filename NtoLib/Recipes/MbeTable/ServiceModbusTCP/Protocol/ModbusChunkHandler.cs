@@ -30,11 +30,19 @@ public sealed class ModbusChunkHandler
 		CancellationToken ct)
 	{
 		if (transport is null)
+		{
 			throw new ArgumentNullException(nameof(transport));
+		}
+
 		if (data is null)
+		{
 			throw new ArgumentNullException(nameof(data));
+		}
+
 		if (chunkSize <= 0)
+		{
 			throw new ArgumentOutOfRangeException(nameof(chunkSize));
+		}
 
 		var offset = 0;
 		while (offset < data.Length)
@@ -50,11 +58,14 @@ public sealed class ModbusChunkHandler
 				.ConfigureAwait(false);
 
 			if (result.IsFailed)
+			{
 				return result;
+			}
 			offset += size;
 		}
 
 		_logger.LogTrace("Successfully wrote {TotalRegisters} registers in chunks", data.Length);
+
 		return Result.Ok();
 	}
 
@@ -66,11 +77,19 @@ public sealed class ModbusChunkHandler
 		CancellationToken ct)
 	{
 		if (transport is null)
+		{
 			throw new ArgumentNullException(nameof(transport));
+		}
+
 		if (totalRegisters <= 0)
+		{
 			return Result.Ok(Array.Empty<int>());
+		}
+
 		if (chunkSize <= 0)
+		{
 			throw new ArgumentOutOfRangeException(nameof(chunkSize));
+		}
 
 		var result = new int[totalRegisters];
 		var offset = 0;
@@ -86,13 +105,16 @@ public sealed class ModbusChunkHandler
 				.ConfigureAwait(false);
 
 			if (readResult.IsFailed)
+			{
 				return readResult.ToResult<int[]>();
+			}
 
 			Array.Copy(readResult.Value, 0, result, offset, size);
 			offset += size;
 		}
 
 		_logger.LogTrace("Successfully read {TotalRegisters} registers in chunks", totalRegisters);
+
 		return Result.Ok(result);
 	}
 }

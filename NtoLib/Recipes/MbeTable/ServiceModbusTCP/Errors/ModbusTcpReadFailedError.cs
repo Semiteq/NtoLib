@@ -4,10 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP.Errors;
 
 public sealed class ModbusTcpReadFailedError : BilingualError
 {
-	public int Address { get; }
-	public int Length { get; }
-	public string? Reason { get; }
-
 	public ModbusTcpReadFailedError(int address, int length, string? reason = null)
 		: base(
 			$"Failed to read {length} registers from address {address}" + (reason != null ? $": {reason}" : ""),
@@ -17,4 +13,8 @@ public sealed class ModbusTcpReadFailedError : BilingualError
 		Length = length;
 		Reason = reason;
 	}
+
+	public int Address { get; }
+	public int Length { get; }
+	public string? Reason { get; }
 }

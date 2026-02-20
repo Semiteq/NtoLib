@@ -19,15 +19,15 @@ namespace NtoLib.Recipes.MbeTable.ServiceModbusTCP;
 
 public sealed class RecipePlcService
 {
-	private readonly PlcWriter _writer;
-	private readonly PlcReader _reader;
-	private readonly ModbusTransport _transport;
-	private readonly PlcRecipeSerializer _serializer;
 	private readonly PlcCapacityCalculator _capacity;
-	private readonly RecipeColumnLayout _layout;
-	private readonly FbRuntimeOptionsProvider _runtimeOptionsProvider;
 	private readonly IDisconnectStrategy _disconnectStrategy;
+	private readonly RecipeColumnLayout _layout;
 	private readonly ILogger<RecipePlcService> _logger;
+	private readonly PlcReader _reader;
+	private readonly FbRuntimeOptionsProvider _runtimeOptionsProvider;
+	private readonly PlcRecipeSerializer _serializer;
+	private readonly ModbusTransport _transport;
+	private readonly PlcWriter _writer;
 
 	public RecipePlcService(
 		PlcWriter writer,
@@ -68,12 +68,15 @@ public sealed class RecipePlcService
 			if (capacityCheck.IsFailed)
 			{
 				_logger.LogError("PLC capacity check failed: {Errors}", capacityCheck.Errors);
+
 				return capacityCheck;
 			}
 
 			var serializeResult = _serializer.ToRegisters(recipe.Steps);
 			if (serializeResult.IsFailed)
+			{
 				return serializeResult.ToResult();
+			}
 			var (intArr, floatArr) = serializeResult.Value;
 
 			var writeResult = await _writer
@@ -83,6 +86,7 @@ public sealed class RecipePlcService
 			if (writeResult.IsFailed)
 			{
 				_logger.LogError("Writing to PLC failed: {Errors}", writeResult.Errors);
+
 				return writeResult;
 			}
 
@@ -97,11 +101,13 @@ public sealed class RecipePlcService
 		catch (OperationCanceledException)
 		{
 			_logger.LogWarning("Send operation was cancelled.");
+
 			return Result.Fail(new BilingualError("Operation cancelled", "Операция отменена"));
 		}
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "An unexpected error occurred during recipe serialization or sending.");
+
 			return Result.Fail(new ModbusTcpUnexpectedError(ex.Message));
 		}
 		finally
@@ -123,12 +129,15 @@ public sealed class RecipePlcService
 
 			var rowResult = await _reader.ReadRowCountAsync(ct).ConfigureAwait(false);
 			if (rowResult.IsFailed)
+			{
 				return rowResult.ToResult<(int[], int[], int)>();
+			}
 
 			var rows = rowResult.Value;
 			if (rows == 0)
 			{
 				_logger.LogDebug("No rows in PLC. Nothing to read");
+
 				return Result.Ok((Array.Empty<int>(), Array.Empty<int>(), 0))
 					.WithReason(new ModbusTcpZeroRowsWarning());
 			}
@@ -137,18 +146,24 @@ public sealed class RecipePlcService
 
 			var validationResult = _capacity.ValidateReadCapacity(rows);
 			if (validationResult.IsFailed)
+			{
 				return validationResult.ToResult<(int[], int[], int)>();
+			}
 
 			var intSize = _layout.IntColumnCount * rows;
 			var floatSize = _layout.FloatColumnCount * 2 * rows;
 
 			var intResult = await _reader.ReadIntAreaAsync(intSize, ct).ConfigureAwait(false);
 			if (intResult.IsFailed)
+			{
 				return intResult.ToResult<(int[], int[], int)>();
+			}
 
 			var floatResult = await _reader.ReadFloatAreaAsync(floatSize, ct).ConfigureAwait(false);
 			if (floatResult.IsFailed)
+			{
 				return floatResult.ToResult<(int[], int[], int)>();
+			}
 
 			return Result.Ok((intResult.Value, floatResult.Value, rows));
 		}

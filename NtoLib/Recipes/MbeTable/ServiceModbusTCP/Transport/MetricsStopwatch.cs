@@ -21,12 +21,14 @@ internal sealed class MetricsStopwatch : IDisposable
 		_sw = Stopwatch.StartNew();
 	}
 
-	public static MetricsStopwatch Start(string operation, ILogger logger) =>
-		new(operation, logger);
-
 	public void Dispose()
 	{
 		_sw.Stop();
 		_logger.LogDebug("{Operation} completed in {ElapsedMilliseconds} ms", _operation, _sw.ElapsedMilliseconds);
+	}
+
+	public static MetricsStopwatch Start(string operation, ILogger logger)
+	{
+		return new(operation, logger);
 	}
 }

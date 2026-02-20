@@ -16,11 +16,11 @@ public sealed class PlcReader
 {
 	private const int ChunkSize = 123;
 	private const int OffsetRowCount = 1;
+	private readonly ModbusChunkHandler _chunkHandler;
+	private readonly ILogger<PlcReader> _logger;
+	private readonly FbRuntimeOptionsProvider _optionsProvider;
 
 	private readonly ModbusTransport _transport;
-	private readonly ModbusChunkHandler _chunkHandler;
-	private readonly FbRuntimeOptionsProvider _optionsProvider;
-	private readonly ILogger<PlcReader> _logger;
 
 	public PlcReader(
 		ModbusTransport transport,
@@ -46,7 +46,9 @@ public sealed class PlcReader
 			.ConfigureAwait(false);
 
 		if (result.IsFailed)
+		{
 			return result.ToResult<int>();
+		}
 
 		var value = result.Value[0];
 		_logger.LogTrace("Read row count: {RowCount}", value);
@@ -59,7 +61,9 @@ public sealed class PlcReader
 	public async Task<Result<int[]>> ReadIntAreaAsync(int registers, CancellationToken ct)
 	{
 		if (registers == 0)
+		{
 			return Result.Ok(Array.Empty<int>());
+		}
 
 		var settings = _optionsProvider.GetCurrent();
 		_logger.LogTrace("Reading {Registers} int registers from address {Address}",
@@ -73,7 +77,9 @@ public sealed class PlcReader
 	public async Task<Result<int[]>> ReadFloatAreaAsync(int registers, CancellationToken ct)
 	{
 		if (registers == 0)
+		{
 			return Result.Ok(Array.Empty<int>());
+		}
 
 		var settings = _optionsProvider.GetCurrent();
 		_logger.LogTrace("Reading {Registers} float registers from address {Address}",
