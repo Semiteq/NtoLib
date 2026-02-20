@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 
 public sealed class ApplicationValidationFailedError : BilingualError
 {
-	public string Reason { get; }
-
 	public ApplicationValidationFailedError(string reason)
 		: base(
 			$"Validation failed: {reason}",
@@ -14,4 +12,6 @@ public sealed class ApplicationValidationFailedError : BilingualError
 		Reason = reason;
 		Metadata["reason"] = reason;
 	}
+
+	public string Reason { get; }
 }

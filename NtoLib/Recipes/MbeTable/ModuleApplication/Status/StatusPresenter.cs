@@ -18,13 +18,17 @@ public sealed class StatusPresenter : IStatusPresenter
 		_status = status ?? throw new ArgumentNullException(nameof(status));
 	}
 
-	public void Clear() => _status.Clear();
+	public void Clear()
+	{
+		_status.Clear();
+	}
 
 	public void ShowSuccess(string message)
 	{
 		if (string.IsNullOrWhiteSpace(message))
 		{
 			_status.Clear();
+
 			return;
 		}
 
@@ -36,6 +40,7 @@ public sealed class StatusPresenter : IStatusPresenter
 		if (string.IsNullOrWhiteSpace(message))
 		{
 			_status.Clear();
+
 			return;
 		}
 
@@ -47,6 +52,7 @@ public sealed class StatusPresenter : IStatusPresenter
 		if (string.IsNullOrWhiteSpace(message))
 		{
 			_status.Clear();
+
 			return;
 		}
 
@@ -58,6 +64,7 @@ public sealed class StatusPresenter : IStatusPresenter
 		if (string.IsNullOrWhiteSpace(message))
 		{
 			_status.Clear();
+
 			return;
 		}
 
@@ -98,7 +105,9 @@ public sealed class StatusPresenter : IStatusPresenter
 			.ToList();
 
 		if (bilingualErrors.Count > 0)
+		{
 			return $"Не удалось {operationRu}: {string.Join(" → ", bilingualErrors)}";
+		}
 
 		var genericErrors = reasons
 			.OfType<IError>()
@@ -108,13 +117,17 @@ public sealed class StatusPresenter : IStatusPresenter
 			.ToList();
 
 		var final = genericErrors.Count > 0 ? string.Join(" → ", genericErrors) : "Неизвестная ошибка";
+
 		return $"Не удалось {operationRu}: {final}";
 	}
 
 	private static string ToSentence(string text)
 	{
 		if (string.IsNullOrWhiteSpace(text))
+		{
 			return "Операция";
+		}
+
 		return char.ToUpperInvariant(text[0]) + text.Substring(1);
 	}
 }

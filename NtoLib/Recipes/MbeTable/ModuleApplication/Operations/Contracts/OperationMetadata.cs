@@ -7,32 +7,6 @@
 /// </summary>
 public sealed class OperationMetadata
 {
-	public OperationId Id { get; }
-	public OperationKind Kind { get; }
-	public string DisplayNameRu { get; }
-	public CompletionMessageKind CompletionMessage { get; }
-	public bool IsLongRunning { get; }
-	public bool UpdatesPolicyReasons { get; }
-	public ConsistencyEffect ConsistencyEffect { get; }
-
-	private OperationMetadata(
-		OperationId id,
-		OperationKind kind,
-		string displayNameRu,
-		CompletionMessageKind completionMessage,
-		bool isLongRunning,
-		bool updatesPolicyReasons,
-		ConsistencyEffect consistencyEffect)
-	{
-		Id = id;
-		Kind = kind;
-		DisplayNameRu = displayNameRu;
-		CompletionMessage = completionMessage;
-		IsLongRunning = isLongRunning;
-		UpdatesPolicyReasons = updatesPolicyReasons;
-		ConsistencyEffect = consistencyEffect;
-	}
-
 	public static readonly OperationMetadata Load = new(
 		OperationId.Load, OperationKind.Loading,
 		"загрузка рецепта", CompletionMessageKind.Success,
@@ -98,4 +72,30 @@ public sealed class OperationMetadata
 		"удаление нескольких строк", CompletionMessageKind.Info,
 		isLongRunning: false, updatesPolicyReasons: true,
 		ConsistencyEffect.MarkInconsistent);
+
+	private OperationMetadata(
+		OperationId id,
+		OperationKind kind,
+		string displayNameRu,
+		CompletionMessageKind completionMessage,
+		bool isLongRunning,
+		bool updatesPolicyReasons,
+		ConsistencyEffect consistencyEffect)
+	{
+		Id = id;
+		Kind = kind;
+		DisplayNameRu = displayNameRu;
+		CompletionMessage = completionMessage;
+		IsLongRunning = isLongRunning;
+		UpdatesPolicyReasons = updatesPolicyReasons;
+		ConsistencyEffect = consistencyEffect;
+	}
+
+	public OperationId Id { get; }
+	public OperationKind Kind { get; }
+	public string DisplayNameRu { get; }
+	public CompletionMessageKind CompletionMessage { get; }
+	public bool IsLongRunning { get; }
+	public bool UpdatesPolicyReasons { get; }
+	public ConsistencyEffect ConsistencyEffect { get; }
 }

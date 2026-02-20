@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 
 public sealed class ApplicationInvalidColumnIndexError : BilingualError
 {
-	public int ColumnIndex { get; }
-
 	public ApplicationInvalidColumnIndexError(int columnIndex)
 		: base(
 			$"Invalid column index: {columnIndex}",
@@ -14,4 +12,6 @@ public sealed class ApplicationInvalidColumnIndexError : BilingualError
 		ColumnIndex = columnIndex;
 		Metadata["columnIndex"] = columnIndex;
 	}
+
+	public int ColumnIndex { get; }
 }

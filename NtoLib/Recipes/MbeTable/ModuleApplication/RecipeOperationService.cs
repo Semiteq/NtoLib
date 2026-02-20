@@ -27,20 +27,15 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication;
 
 public sealed class RecipeOperationService
 {
-	private readonly RecipeFacade _recipeFacade;
-	private readonly TimerService _timer;
-	private readonly OperationPipelineRunner _pipeline;
-	private readonly ICsvService _csv;
-	private readonly IModbusTcpService _modbus;
 	private readonly ClipboardService _clipboard;
-	private readonly ClipboardSchemaDescriptor _schema;
 	private readonly ClipboardAssemblyService _clipboardAssembly;
+	private readonly ICsvService _csv;
 	private readonly ILogger<RecipeOperationService> _logger;
-
-	public RecipeViewModel ViewModel { get; }
-
-	public event Action? RecipeStructureChanged;
-	public event Action<int>? StepDataChanged;
+	private readonly IModbusTcpService _modbus;
+	private readonly OperationPipelineRunner _pipeline;
+	private readonly RecipeFacade _recipeFacade;
+	private readonly ClipboardSchemaDescriptor _schema;
+	private readonly TimerService _timer;
 
 	public RecipeOperationService(
 		RecipeFacade recipeFacade,
@@ -66,7 +61,15 @@ public sealed class RecipeOperationService
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public int GetRowCount() => _recipeFacade.CurrentSnapshot.Recipe.Steps.Count;
+	public RecipeViewModel ViewModel { get; }
+
+	public event Action? RecipeStructureChanged;
+	public event Action<int>? StepDataChanged;
+
+	public int GetRowCount()
+	{
+		return _recipeFacade.CurrentSnapshot.Recipe.Steps.Count;
+	}
 
 	public async Task<Result> SetCellValueAsync(int rowIndex, ColumnIdentifier columnKey, object value)
 	{
@@ -92,6 +95,7 @@ public sealed class RecipeOperationService
 		if (rowIndex < 0 || rowIndex >= stepCount)
 		{
 			_logger.LogWarning("EditCell validation failed: rowIndex={RowIndex}", rowIndex);
+
 			return Task.FromResult(
 				Result.Fail<RecipeAnalysisSnapshot>(new ApplicationInvalidRowIndexError(rowIndex)));
 		}
@@ -174,6 +178,7 @@ public sealed class RecipeOperationService
 		catch (Exception ex)
 		{
 			_logger.LogCritical(ex, "Unexpected error during load operation");
+
 			return Result.Fail<RecipeAnalysisSnapshot>(new ApplicationUnexpectedIoReadError());
 		}
 	}
@@ -196,11 +201,13 @@ public sealed class RecipeOperationService
 		try
 		{
 			var currentRecipe = _recipeFacade.LastValidSnapshot!.Recipe;
+
 			return await _csv.WriteCsvAsync(currentRecipe, filePath).ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{
 			_logger.LogCritical(ex, "Unexpected error during save operation");
+
 			return Result.Fail(new ApplicationUnexpectedIoWriteError());
 		}
 	}
@@ -212,6 +219,7 @@ public sealed class RecipeOperationService
 			() =>
 			{
 				var current = _recipeFacade.CurrentSnapshot.Recipe;
+
 				return _modbus.SendRecipeAsync(current);
 			},
 			successMessage: "Рецепт успешно отправлен в контроллер");
@@ -253,6 +261,7 @@ public sealed class RecipeOperationService
 		catch (Exception ex)
 		{
 			_logger.LogCritical(ex, "Unexpected error during receive operation");
+
 			return Result.Fail<RecipeAnalysisSnapshot>(new ApplicationUnexpectedIoReadError());
 		}
 	}
@@ -277,6 +286,7 @@ public sealed class RecipeOperationService
 		}
 
 		var steps = valid.Select(i => recipe.Steps[i]).ToList();
+
 		return _clipboard.WriteSteps(steps, _schema.TransferColumns);
 	}
 

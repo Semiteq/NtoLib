@@ -13,14 +13,13 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 
 public sealed class RecipeViewModel
 {
-	public IReadOnlyList<StepViewModel> ViewModels => _viewModels;
+	private readonly ComboboxDataProvider _comboboxDataProvider;
+	private readonly ForLoopNestingProvider _loopNestingProvider;
+	private readonly PropertyStateProvider _propertyStateProvider;
+	private readonly RecipeFacade _recipeService;
+	private readonly IReadOnlyList<ColumnDefinition> _tableColumns;
 
 	private readonly List<StepViewModel> _viewModels = new();
-	private readonly IReadOnlyList<ColumnDefinition> _tableColumns;
-	private readonly RecipeFacade _recipeService;
-	private readonly ComboboxDataProvider _comboboxDataProvider;
-	private readonly PropertyStateProvider _propertyStateProvider;
-	private readonly ForLoopNestingProvider _loopNestingProvider;
 
 	public RecipeViewModel(
 		RecipeFacade recipeService,
@@ -39,7 +38,12 @@ public sealed class RecipeViewModel
 		RebuildViewModels();
 	}
 
-	public void OnRecipeStructureChanged() => RebuildViewModels();
+	public IReadOnlyList<StepViewModel> ViewModels => _viewModels;
+
+	public void OnRecipeStructureChanged()
+	{
+		RebuildViewModels();
+	}
 
 	public void OnTimeRecalculated(int fromStepIndex)
 	{
@@ -77,6 +81,7 @@ public sealed class RecipeViewModel
 		}
 
 		var columnKey = _tableColumns[columnIndex].Key;
+
 		return _viewModels[rowIndex].GetPropertyValue(columnKey);
 	}
 

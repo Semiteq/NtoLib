@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 
 public sealed class ApplicationClipboardColumnCountMismatchError : BilingualError
 {
-	public int Actual { get; }
-	public int Expected { get; }
-
 	public ApplicationClipboardColumnCountMismatchError(int actual, int expected)
 		: base(
 			$"Clipboard column count mismatch: expected {expected}, got {actual}",
@@ -15,4 +12,7 @@ public sealed class ApplicationClipboardColumnCountMismatchError : BilingualErro
 		Actual = actual;
 		Expected = expected;
 	}
+
+	public int Actual { get; }
+	public int Expected { get; }
 }

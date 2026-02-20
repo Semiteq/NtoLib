@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 
 public sealed class ApplicationInvalidOperationError : BilingualError
 {
-	public string Details { get; }
-
 	public ApplicationInvalidOperationError(string details)
 		: base(
 			$"Invalid operation: {details}",
@@ -14,4 +12,6 @@ public sealed class ApplicationInvalidOperationError : BilingualError
 		Details = details;
 		Metadata["details"] = details;
 	}
+
+	public string Details { get; }
 }

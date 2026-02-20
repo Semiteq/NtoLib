@@ -20,7 +20,6 @@ public sealed class ErrorPolicyRegistry
 		RegisterCorePolicies();
 	}
 
-
 	private void RegisterModbusTcpPolicies()
 	{
 		Register<ModbusTcpZeroRowsWarning>(ErrorSeverity.Warning, BlockingScope.SaveAndSend);
@@ -47,9 +46,12 @@ public sealed class ErrorPolicyRegistry
 	public ErrorPolicy GetPolicy(IReason reason)
 	{
 		if (reason == null)
+		{
 			throw new ArgumentNullException(nameof(reason));
+		}
 
 		var type = reason.GetType();
+
 		return _policies.TryGetValue(type, out var policy)
 			? policy
 			: new ErrorPolicy(ErrorSeverity.Info, BlockingScope.None);
@@ -58,6 +60,7 @@ public sealed class ErrorPolicyRegistry
 	public bool Blocks(IReason reason, BlockingScope scope)
 	{
 		var policy = GetPolicy(reason);
+
 		return (policy.BlockingScope & scope) != 0;
 	}
 

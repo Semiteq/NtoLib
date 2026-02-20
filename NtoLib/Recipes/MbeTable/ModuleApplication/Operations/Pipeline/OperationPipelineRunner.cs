@@ -24,10 +24,10 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Pipeline;
 /// </summary>
 public sealed class OperationPipelineRunner
 {
-	private readonly StateProvider _state;
-	private readonly PolicyEngine _policy;
-	private readonly IStatusPresenter _status;
 	private readonly ILogger<OperationPipelineRunner> _logger;
+	private readonly PolicyEngine _policy;
+	private readonly StateProvider _state;
+	private readonly IStatusPresenter _status;
 
 	public OperationPipelineRunner(
 		StateProvider state,
@@ -49,6 +49,7 @@ public sealed class OperationPipelineRunner
 		return RunCoreAsync(op, async () =>
 		{
 			var result = await execute().ConfigureAwait(false);
+
 			return new OperationOutcome(result, MergeReasons(result));
 		}, successMessage);
 	}
@@ -61,6 +62,7 @@ public sealed class OperationPipelineRunner
 		return RunCoreAsync(op, async () =>
 		{
 			var result = await execute().ConfigureAwait(false);
+
 			return new OperationOutcome(result.ToResult(), MergeReasons(result));
 		}, successMessage);
 	}
@@ -73,6 +75,7 @@ public sealed class OperationPipelineRunner
 		return RunCoreAsync(op, () =>
 		{
 			var result = execute();
+
 			return Task.FromResult(new OperationOutcome(result.ToResult(), MergeReasons(result)));
 		}, successMessage).GetAwaiter().GetResult();
 	}
@@ -87,6 +90,7 @@ public sealed class OperationPipelineRunner
 		{
 			_logger.LogInformation("Operation [{Operation}] blocked before start", op.Id);
 			ShowBlocked(decision, op);
+
 			return ToBlockedResult(decision);
 		}
 
@@ -95,6 +99,7 @@ public sealed class OperationPipelineRunner
 		{
 			_logger.LogInformation("Operation [{Operation}] blocked by concurrency gate", op.Id);
 			ShowError(gateResult.ToResult(), op);
+
 			return gateResult.ToResult();
 		}
 
@@ -111,13 +116,16 @@ public sealed class OperationPipelineRunner
 					_logger.LogWarning(
 						"Operation [{Operation}] finished with error reasons, forcing failure", op.Id);
 					ShowError(outcome.BaseResult, op, outcome.Reasons);
+
 					return BuildFailedResult(outcome.Reasons);
 				}
 
 				PresentCompletion(op, outcome.BaseResult, outcome.Reasons, successMessage);
 
 				if (outcome.BaseResult.IsSuccess)
+				{
 					ApplyPostSuccessEffects(op, outcome.Reasons);
+				}
 
 				return outcome.BaseResult;
 			}
@@ -146,12 +154,14 @@ public sealed class OperationPipelineRunner
 		if (decision.Kind == DecisionKind.BlockedError)
 		{
 			ShowError(baseResult, op, reasons);
+
 			return;
 		}
 
 		if (decision.Kind == DecisionKind.BlockedWarning)
 		{
 			ShowWarning(baseResult, op, reasons);
+
 			return;
 		}
 
@@ -159,6 +169,7 @@ public sealed class OperationPipelineRunner
 		if (hasWarnings)
 		{
 			ShowWarning(baseResult, op, reasons);
+
 			return;
 		}
 
@@ -171,8 +182,11 @@ public sealed class OperationPipelineRunner
 		{
 			var r = Result.Ok();
 			if (decision.PrimaryReason != null)
+			{
 				r = r.WithReason(decision.PrimaryReason);
+			}
 			ShowWarning(r, op);
+
 			return;
 		}
 
@@ -187,10 +201,13 @@ public sealed class OperationPipelineRunner
 			{
 				r = Result.Fail(new ApplicationInvalidOperationError("Operation not allowed"));
 				if (decision.PrimaryReason != null)
+				{
 					r = r.WithReason(decision.PrimaryReason);
+				}
 			}
 
 			ShowError(r, op);
+
 			return;
 		}
 
@@ -214,12 +231,14 @@ public sealed class OperationPipelineRunner
 		if (op.CompletionMessage == CompletionMessageKind.Success && !string.IsNullOrWhiteSpace(successMessage))
 		{
 			_status.ShowSuccess(successMessage!);
+
 			return;
 		}
 
 		if (op.CompletionMessage == CompletionMessageKind.Info && !string.IsNullOrWhiteSpace(successMessage))
 		{
 			_status.ShowInfo(successMessage!);
+
 			return;
 		}
 
@@ -229,15 +248,19 @@ public sealed class OperationPipelineRunner
 	private void ApplyPostSuccessEffects(OperationMetadata op, IReadOnlyList<IReason> reasons)
 	{
 		if (op.UpdatesPolicyReasons)
+		{
 			_state.SetPolicyReasons(reasons);
+		}
 
 		switch (op.ConsistencyEffect)
 		{
 			case ConsistencyEffect.MarkConsistent:
 				_state.SetRecipeConsistent(true);
+
 				break;
 			case ConsistencyEffect.MarkInconsistent:
 				_state.SetRecipeConsistent(false);
+
 				break;
 		}
 	}
@@ -248,6 +271,7 @@ public sealed class OperationPipelineRunner
 		var error = new ApplicationUnexpectedOperationError(ex.Message).CausedBy(ex);
 		var msg = StatusPresenter.BuildErrorMessage(error, op.DisplayNameRu);
 		_status.ShowError(msg);
+
 		return error;
 	}
 
@@ -261,7 +285,9 @@ public sealed class OperationPipelineRunner
 		var own = result.Reasons ?? (IReadOnlyList<IReason>)Array.Empty<IReason>();
 
 		if (result.IsSuccess && result.Value is RecipeAnalysisSnapshot snapshot)
+		{
 			return own.Concat(snapshot.Reasons).ToList();
+		}
 
 		return own is List<IReason> list ? list : own.ToList();
 	}
@@ -271,14 +297,18 @@ public sealed class OperationPipelineRunner
 		for (var i = 0; i < reasons.Count; i++)
 		{
 			if (reasons[i] is IError)
+			{
 				return true;
+			}
 		}
+
 		return false;
 	}
 
 	private static Result BuildFailedResult(IReadOnlyList<IReason> reasons)
 	{
 		var errors = reasons.OfType<IError>().ToArray();
+
 		return Result.Fail(errors);
 	}
 
@@ -287,13 +317,17 @@ public sealed class OperationPipelineRunner
 		if (decision.Kind == DecisionKind.BlockedError)
 		{
 			if (decision.PrimaryReason is IError err)
+			{
 				return Result.Fail(err);
+			}
 
 			var res = Result.Fail(new ApplicationInvalidOperationError("Operation not allowed"));
+
 			return decision.PrimaryReason != null ? res.WithReason(decision.PrimaryReason) : res;
 		}
 
 		var ok = Result.Ok();
+
 		return decision.PrimaryReason != null ? ok.WithReason(decision.PrimaryReason) : ok;
 	}
 

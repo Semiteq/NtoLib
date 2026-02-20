@@ -4,8 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 
 public sealed class ApplicationClipboardActionIdInvalidError : BilingualError
 {
-	public string Value { get; }
-
 	public ApplicationClipboardActionIdInvalidError(string value)
 		: base(
 			$"Invalid action ID in clipboard: '{value}'",
@@ -13,4 +11,6 @@ public sealed class ApplicationClipboardActionIdInvalidError : BilingualError
 	{
 		Value = value;
 	}
+
+	public string Value { get; }
 }

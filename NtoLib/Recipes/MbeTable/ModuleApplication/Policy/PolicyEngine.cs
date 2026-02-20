@@ -28,7 +28,9 @@ public sealed class PolicyEngine
 		foreach (var r in reasons)
 		{
 			if (!_registry.Blocks(r, scope))
+			{
 				continue;
+			}
 
 			var severity = _registry.GetSeverity(r);
 			if (severity == ErrorSeverity.Error || severity == ErrorSeverity.Critical)
@@ -41,13 +43,21 @@ public sealed class PolicyEngine
 			}
 
 			if (blockingError != null)
+			{
 				break;
+			}
 		}
 
 		if (blockingError != null)
+		{
 			return OperationDecision.BlockedError(blockingError);
+		}
+
 		if (blockingWarning != null)
+		{
 			return OperationDecision.BlockedWarning(blockingWarning);
+		}
+
 		return OperationDecision.Allowed();
 	}
 }

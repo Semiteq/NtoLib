@@ -11,9 +11,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 
 public sealed class StepViewModel
 {
-	private Step _step;
-	private TimeSpan _startTime;
 	private readonly ComboboxDataProvider _comboboxDataProvider;
+	private TimeSpan _startTime;
+	private Step _step;
 
 	public StepViewModel(
 		Step step,
@@ -30,6 +30,7 @@ public sealed class StepViewModel
 	public Result<IReadOnlyDictionary<short, string>> GetComboItems(ColumnIdentifier key)
 	{
 		var actionIdResult = GetCurrentActionId();
+
 		return actionIdResult.IsFailed
 			? actionIdResult.ToResult()
 			: _comboboxDataProvider.GetResultEnumOptions(actionIdResult.Value, key.Value);
@@ -82,5 +83,8 @@ public sealed class StepViewModel
 		_startTime = newStartTime;
 	}
 
-	private static string FormatTime(TimeSpan time) => time.ToString(@"hh\:mm\:ss");
+	private static string FormatTime(TimeSpan time)
+	{
+		return time.ToString(@"hh\:mm\:ss");
+	}
 }

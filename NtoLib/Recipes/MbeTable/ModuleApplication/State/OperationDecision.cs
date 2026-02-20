@@ -7,12 +7,18 @@ public sealed record OperationDecision(
 	IReason? PrimaryReason
 )
 {
-	public static OperationDecision Allowed() =>
-		new(DecisionKind.Allowed, null);
+	public static OperationDecision Allowed()
+	{
+		return new(DecisionKind.Allowed, null);
+	}
 
-	public static OperationDecision BlockedWarning(IReason reason) =>
-		new(DecisionKind.BlockedWarning, reason);
+	public static OperationDecision BlockedWarning(IReason reason)
+	{
+		return new(DecisionKind.BlockedWarning, reason);
+	}
 
-	public static OperationDecision BlockedError(IReason reason) =>
-		new(DecisionKind.BlockedError, reason);
+	public static OperationDecision BlockedError(IReason reason)
+	{
+		return new(DecisionKind.BlockedError, reason);
+	}
 }

@@ -8,12 +8,12 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Schema;
 
 public sealed class RecipeSchemaDescriptor : IRecipeSchemaDescriptor
 {
-	public IReadOnlyList<ColumnIdentifier> TransferColumns { get; }
-
 	public RecipeSchemaDescriptor(IReadOnlyList<ColumnDefinition> columns)
 	{
 		if (columns == null)
+		{
 			throw new ArgumentNullException(nameof(columns));
+		}
 
 		TransferColumns = columns
 			.Where(c => c.SaveToCsv)
@@ -21,4 +21,6 @@ public sealed class RecipeSchemaDescriptor : IRecipeSchemaDescriptor
 			.ToList()
 			.AsReadOnly();
 	}
+
+	public IReadOnlyList<ColumnIdentifier> TransferColumns { get; }
 }

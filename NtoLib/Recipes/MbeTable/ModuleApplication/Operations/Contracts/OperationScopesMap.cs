@@ -4,8 +4,9 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Contracts;
 
 public static class OperationScopesMap
 {
-	public static BlockingScope Map(OperationId operation) =>
-		operation switch
+	public static BlockingScope Map(OperationId operation)
+	{
+		return operation switch
 		{
 			OperationId.Save => BlockingScope.Save,
 			OperationId.Send => BlockingScope.Send,
@@ -21,4 +22,5 @@ public static class OperationScopesMap
 			OperationId.InsertRows => BlockingScope.Edit,
 			_ => BlockingScope.None
 		};
+	}
 }

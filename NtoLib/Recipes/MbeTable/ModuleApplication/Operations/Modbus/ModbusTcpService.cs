@@ -15,10 +15,10 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Modbus;
 
 public sealed class ModbusTcpService : IModbusTcpService
 {
-	private readonly RecipePlcService _plcService;
 	private readonly ModbusRecipeAssemblyService _assemblyService;
 	private readonly RecipeComparator _comparator;
 	private readonly ILogger<ModbusTcpService> _logger;
+	private readonly RecipePlcService _plcService;
 
 	public ModbusTcpService(
 		RecipePlcService plcService,
@@ -40,6 +40,7 @@ public sealed class ModbusTcpService : IModbusTcpService
 		if (sendResult.IsFailed)
 		{
 			_logger.LogError("Sending to PLC failed: {Errors}", sendResult.Errors);
+
 			return sendResult;
 		}
 
@@ -51,6 +52,7 @@ public sealed class ModbusTcpService : IModbusTcpService
 		if (receiveResult.IsFailed)
 		{
 			_logger.LogError("Read-back from PLC failed: {Errors}", receiveResult.Errors);
+
 			return receiveResult.ToResult();
 		}
 
@@ -60,6 +62,7 @@ public sealed class ModbusTcpService : IModbusTcpService
 		if (rowCount == 0)
 		{
 			_logger.LogWarning("Read-back returned zero rows. Recipe not verified.");
+
 			return receiveResult.ToResult();
 		}
 
@@ -69,12 +72,14 @@ public sealed class ModbusTcpService : IModbusTcpService
 		if (assembleResult.IsFailed)
 		{
 			_logger.LogError("Assembling recipe from read-back data failed: {Errors}", assembleResult.Errors);
+
 			return assembleResult.ToResult();
 		}
 
 		_logger.LogTrace("Comparing original recipe with data read back from PLC.");
 		var compareResult = _comparator.Compare(recipe, assembleResult.Value);
 		_logger.LogTrace("Recipe comparison result: {Result}", compareResult.IsSuccess ? "OK" : "FAILED");
+
 		return compareResult;
 	}
 
@@ -82,7 +87,9 @@ public sealed class ModbusTcpService : IModbusTcpService
 	{
 		var readResult = await _plcService.ReceiveAsync(CancellationToken.None);
 		if (readResult.IsFailed)
+		{
 			return readResult.ToResult();
+		}
 
 		var (intData, floatData, rowCount) = readResult.Value;
 
@@ -90,11 +97,15 @@ public sealed class ModbusTcpService : IModbusTcpService
 		{
 			var result = Result.Ok(Recipe.Empty);
 			if (readResult.Reasons.Count > 0)
+			{
 				result = result.WithReasons(readResult.Reasons);
+			}
+
 			return result;
 		}
 
 		var assembleResult = _assemblyService.AssembleFromModbusData(intData, floatData, rowCount);
+
 		return assembleResult;
 	}
 }

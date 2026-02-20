@@ -15,10 +15,10 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Operations.Csv;
 
 public sealed class CsvService : ICsvService
 {
-	private readonly RecipeFileService _fileService;
 	private readonly CsvRecipeAssemblyService _assemblyService;
-	private readonly AssemblyValidator _validator;
+	private readonly RecipeFileService _fileService;
 	private readonly ILogger<CsvService> _logger;
+	private readonly AssemblyValidator _validator;
 
 	public CsvService(
 		RecipeFileService fileService,
@@ -35,44 +35,59 @@ public sealed class CsvService : ICsvService
 	public async Task<Result<Recipe>> ReadCsvAsync(string filePath)
 	{
 		if (string.IsNullOrWhiteSpace(filePath))
+		{
 			return new ApplicationFilePathEmptyError();
+		}
 
 		try
 		{
 			var rawDataResult = await _fileService.ReadRawDataAndCheckIntegrityAsync(filePath);
 			if (rawDataResult.IsFailed)
+			{
 				return rawDataResult.ToResult();
+			}
 
 			var rawData = rawDataResult.Value;
 			_logger.LogDebug("Read {RecordsCount} rows from CSV", rawData.Records.Count);
 
 			var assemblyResult = _assemblyService.AssembleFromCsvData(rawData);
 			if (assemblyResult.IsFailed)
+			{
 				return assemblyResult;
+			}
 
 			var recipe = assemblyResult.Value;
 			_logger.LogDebug("Assembled recipe with {StepsCount} steps", recipe.Steps.Count);
 
 			var validationResult = _validator.ValidateRecipe(recipe);
 			if (validationResult.IsFailed)
+			{
 				return validationResult.ToResult<Recipe>();
+			}
 
 			var result = Result.Ok(recipe);
 
 			if (rawDataResult.Reasons.Count > 0)
+			{
 				result = result.WithReasons(rawDataResult.Reasons);
+			}
 
 			if (assemblyResult.Reasons.Count > 0)
+			{
 				result = result.WithReasons(assemblyResult.Reasons);
+			}
 
 			if (validationResult.Reasons.Count > 0)
+			{
 				result = result.WithReasons(validationResult.Reasons);
+			}
 
 			return result;
 		}
 		catch (Exception ex)
 		{
 			_logger.LogCritical(ex, "Unexpected error reading CSV from {FilePath}", filePath);
+
 			return Result.Fail(new ApplicationUnexpectedIoReadError()).WithError(ex.Message);
 		}
 	}
@@ -80,20 +95,28 @@ public sealed class CsvService : ICsvService
 	public async Task<Result> WriteCsvAsync(Recipe recipe, string filePath)
 	{
 		if (string.IsNullOrWhiteSpace(filePath))
+		{
 			return new ApplicationFilePathEmptyError();
+		}
 
 		try
 		{
 			var validationResult = _validator.ValidateRecipe(recipe);
 			if (validationResult.IsFailed)
+			{
 				return validationResult;
+			}
 
 			var writeResult = await _fileService.WriteRecipeAsync(recipe, filePath);
 			if (writeResult.IsFailed)
+			{
 				return writeResult;
+			}
 
 			if (validationResult.Reasons.Count > 0)
+			{
 				writeResult = writeResult.WithReasons(validationResult.Reasons);
+			}
 
 			return writeResult;
 		}
@@ -101,6 +124,7 @@ public sealed class CsvService : ICsvService
 		{
 			_logger.LogCritical(ex, "Unexpected error writing CSV to {FilePath}. Step count: {StepCount}", filePath,
 				recipe.Steps.Count);
+
 			return Result.Fail(new ApplicationUnexpectedIoWriteError()).WithError(ex.Message);
 		}
 	}

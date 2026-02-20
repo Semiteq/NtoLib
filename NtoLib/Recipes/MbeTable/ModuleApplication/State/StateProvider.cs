@@ -17,19 +17,16 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.State;
 public sealed class StateProvider
 {
 	private readonly object _lock = new();
-	private readonly ErrorPolicyRegistry _policyRegistry;
 	private readonly ILogger<StateProvider> _logger;
-
-	private int _stepCount;
-	private bool _enaSendOk;
-	private bool _recipeActive;
-	private bool _isRecipeConsistent;
+	private readonly ErrorPolicyRegistry _policyRegistry;
 	private OperationKind? _activeOperation;
+	private bool _enaSendOk;
+	private bool _isRecipeConsistent;
 
 	private IReadOnlyList<IReason> _policyReasons = Array.Empty<IReason>();
+	private bool _recipeActive;
 
-	public event Action<UiPermissions>? PermissionsChanged;
-	public event Action<bool>? RecipeConsistencyChanged;
+	private int _stepCount;
 
 	public StateProvider(ErrorPolicyRegistry policyRegistry, ILogger<StateProvider> logger)
 	{
@@ -38,6 +35,9 @@ public sealed class StateProvider
 
 		_isRecipeConsistent = false;
 	}
+
+	public event Action<UiPermissions>? PermissionsChanged;
+	public event Action<bool>? RecipeConsistencyChanged;
 
 	public UiPermissions GetUiPermissions()
 	{
@@ -90,11 +90,14 @@ public sealed class StateProvider
 					operation, decision.PrimaryReason?.GetType().Name, currentState);
 
 				if (decision.PrimaryReason is BilingualError error)
+				{
 					return Result.Fail<IDisposable>(error);
+				}
 
 				if (decision.PrimaryReason is BilingualWarning warning)
 				{
 					var fail = Result.Fail<IDisposable>(new ApplicationInvalidOperationError("Operation not allowed"));
+
 					return fail.WithReason(warning);
 				}
 
@@ -106,6 +109,7 @@ public sealed class StateProvider
 				_logger.LogWarning(
 					"Operation evaluation: [{Operation}] -> BLOCKED. Active: {ActiveOperation}. State: {State}",
 					operation, _activeOperation, currentState);
+
 				return Result.Fail<IDisposable>(new ApplicationAnotherOperationActiveError());
 			}
 
@@ -116,6 +120,7 @@ public sealed class StateProvider
 		}
 
 		RaisePermissionsChanged();
+
 		return Result.Ok<IDisposable>(new Gate(this));
 	}
 
@@ -132,7 +137,9 @@ public sealed class StateProvider
 		}
 
 		if (changed)
+		{
 			RaisePermissionsChanged();
+		}
 	}
 
 	public void SetStepCount(int stepCount)
@@ -192,7 +199,9 @@ public sealed class StateProvider
 		}
 
 		if (changed)
+		{
 			RaisePermissionsChanged();
+		}
 	}
 
 	public void SetRecipeConsistent(bool isConsistent)
@@ -247,9 +256,12 @@ public sealed class StateProvider
 		foreach (var r in _policyReasons)
 		{
 			if (!_policyRegistry.Blocks(r, scope))
+			{
 				continue;
+			}
 
 			var severity = _policyRegistry.GetSeverity(r);
+
 			return severity == ErrorSeverity.Warning
 				? OperationDecision.BlockedWarning(r)
 				: OperationDecision.BlockedError(r);
@@ -283,7 +295,9 @@ public sealed class StateProvider
 		public void Dispose()
 		{
 			if (Interlocked.Exchange(ref _disposed, 1) != 0)
+			{
 				return;
+			}
 			_owner.EndOperation();
 		}
 	}

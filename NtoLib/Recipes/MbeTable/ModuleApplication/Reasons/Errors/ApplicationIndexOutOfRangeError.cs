@@ -4,9 +4,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleApplication.Reasons.Errors;
 
 public sealed class ApplicationIndexOutOfRangeError : BilingualError
 {
-	public int Index { get; }
-	public int Count { get; }
-
 	public ApplicationIndexOutOfRangeError(int index, int count)
 		: base(
 			$"Index {index} is out of range (total: {count})",
@@ -15,4 +12,7 @@ public sealed class ApplicationIndexOutOfRangeError : BilingualError
 		Index = index;
 		Count = count;
 	}
+
+	public int Index { get; }
+	public int Count { get; }
 }
