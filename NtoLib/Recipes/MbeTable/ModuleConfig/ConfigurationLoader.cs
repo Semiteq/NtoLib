@@ -28,14 +28,14 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 	private const string DefaultColumnDefsFileName = "ColumnDefs.yaml";
 	private const string DefaultPinGroupDefsFileName = "PinGroupDefs.yaml";
 	private const string DefaultActionsDefsFileName = "ActionsDefs.yaml";
-
-	private readonly IYamlDeserializer _yamlDeserializer;
+	private readonly ActionDefinitionMapper _actionMapper;
+	private readonly ColumnDefinitionMapper _columnMapper;
 	private readonly CrossReferenceValidator _crossReferenceValidator;
 	private readonly FormulaDefsValidator _formulaDefsValidator;
-	private readonly PropertyDefinitionMapper _propertyMapper;
-	private readonly ColumnDefinitionMapper _columnMapper;
-	private readonly ActionDefinitionMapper _actionMapper;
 	private readonly PinGroupDataMapper _pinGroupMapper;
+	private readonly PropertyDefinitionMapper _propertyMapper;
+
+	private readonly IYamlDeserializer _yamlDeserializer;
 
 	public ConfigurationLoader()
 		: this(
@@ -72,7 +72,9 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 	{
 		var result = TryLoadConfiguration(configurationDirectory, fileNames);
 		if (result.IsSuccess)
+		{
 			return result.Value;
+		}
 
 		var errors = result.Errors.OfType<ConfigError>().ToArray();
 		if (errors.Length == 0)
@@ -87,22 +89,28 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 	}
 
 	public AppConfiguration LoadConfiguration(string configurationDirectory)
-		=> LoadConfiguration(
-			configurationDirectory,
-			DefaultPropertyDefsFileName,
-			DefaultColumnDefsFileName,
-			DefaultPinGroupDefsFileName,
-			DefaultActionsDefsFileName);
+	{
+		return LoadConfiguration(
+				configurationDirectory,
+				DefaultPropertyDefsFileName,
+				DefaultColumnDefsFileName,
+				DefaultPinGroupDefsFileName,
+				DefaultActionsDefsFileName);
+	}
 
 	private Result<AppConfiguration> TryLoadConfiguration(string configurationDirectory, params string[] fileNames)
 	{
 		var dirResult = EnsureConfigurationDirectoryExists(configurationDirectory);
 		if (dirResult.IsFailed)
+		{
 			return dirResult.ToResult<AppConfiguration>();
+		}
 
 		var fileResult = EnsureConfigurationFilesExist(configurationDirectory, fileNames);
 		if (fileResult.IsFailed)
+		{
 			return fileResult.ToResult<AppConfiguration>();
+		}
 
 		var configurationFiles = new ConfigurationFiles(configurationDirectory, fileNames);
 
@@ -110,19 +118,25 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 		{
 			var allConfigFilesResult = LoadAllConfigFiles(configurationFiles);
 			if (allConfigFilesResult.IsFailed)
+			{
 				return allConfigFilesResult.ToResult<AppConfiguration>();
+			}
 
 			var allConfigFiles = allConfigFilesResult.Value;
 
 			var crossRefResult = _crossReferenceValidator.Validate(allConfigFiles);
 			if (crossRefResult.IsFailed)
+			{
 				return crossRefResult.ToResult<AppConfiguration>();
+			}
 
 			var appConfig = ConvertAndAssemble(allConfigFiles);
 
 			var formulaValidationResult = ValidateFormulas(appConfig);
 			if (formulaValidationResult.IsFailed)
+			{
 				return formulaValidationResult.ToResult<AppConfiguration>();
+			}
 
 			return Result.Ok(appConfig);
 		}
@@ -175,19 +189,27 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 	{
 		var propertyDefsResult = LoadPropertyDefsFile(files.PropertyDefsPath);
 		if (propertyDefsResult.IsFailed)
+		{
 			return propertyDefsResult.ToResult();
+		}
 
 		var columnDefsResult = LoadColumnDefs(files.ColumnDefsPath);
 		if (columnDefsResult.IsFailed)
+		{
 			return columnDefsResult.ToResult();
+		}
 
 		var pinGroupDefsResult = LoadPinGroupDefs(files.PinGroupDefsPath);
 		if (pinGroupDefsResult.IsFailed)
+		{
 			return pinGroupDefsResult.ToResult();
+		}
 
 		var actionDefsResult = LoadActionDefs(files.ActionDefsPath);
 		if (actionDefsResult.IsFailed)
+		{
 			return actionDefsResult.ToResult();
+		}
 
 		var sections = new CombinedYamlConfig(
 			propertyDefsResult.Value,
@@ -229,7 +251,9 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 
 		var loadResult = loader.Load(path);
 		if (loadResult.IsFailed)
+		{
 			return loadResult.ToResult();
+		}
 
 		var actions = loadResult.Value;
 
@@ -238,7 +262,9 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 			var context = $"ActionsDefs.yaml, ActionId={action.Id}, ActionName='{action.Name}'";
 			var formulaValidationResult = _formulaDefsValidator.Validate(action.Formula!, context);
 			if (formulaValidationResult.IsFailed)
+			{
 				return formulaValidationResult.ToResult<ActionDefsYamlConfig>();
+			}
 		}
 
 		return Result.Ok(new ActionDefsYamlConfig(actions));
@@ -269,7 +295,9 @@ public sealed class ConfigurationLoader : IConfigurationLoader
 			var validator = new FormulaValidator(action.Formula, action.Columns, context);
 			var validationResult = validator.Validate();
 			if (validationResult.IsFailed)
+			{
 				return validationResult;
+			}
 		}
 
 		return Result.Ok();

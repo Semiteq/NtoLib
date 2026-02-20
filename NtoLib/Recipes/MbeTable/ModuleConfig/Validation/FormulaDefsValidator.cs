@@ -14,7 +14,9 @@ public class FormulaDefsValidator
 	{
 		var structureResult = ValidateFormulaStructure(formula, context);
 		if (structureResult.IsFailed)
+		{
 			return structureResult;
+		}
 
 		return ValidateRecalcOrder(formula.RecalcOrder, context);
 	}
@@ -23,11 +25,15 @@ public class FormulaDefsValidator
 	{
 		var notNullCheck = ValidationCheck.NotNull(formula, context, "formula");
 		if (notNullCheck.IsFailed)
+		{
 			return notNullCheck;
+		}
 
 		var recalcOrderNotNull = ValidationCheck.NotNull(formula.RecalcOrder, context, "recalc_order");
 		if (recalcOrderNotNull.IsFailed)
+		{
 			return recalcOrderNotNull;
+		}
 
 		return Result.Ok();
 	}
@@ -48,11 +54,15 @@ public class FormulaDefsValidator
 		{
 			var fieldNotEmpty = ValidationCheck.NotEmpty(field, context, "recalc_order item");
 			if (fieldNotEmpty.IsFailed)
+			{
 				return fieldNotEmpty;
+			}
 
 			var fieldUnique = ValidationCheck.Unique(field, uniqueFields, context, $"recalc_order field '{field}'");
 			if (fieldUnique.IsFailed)
+			{
 				return fieldUnique;
+			}
 		}
 
 		return Result.Ok();

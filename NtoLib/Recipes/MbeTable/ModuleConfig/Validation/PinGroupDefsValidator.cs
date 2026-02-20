@@ -19,7 +19,9 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
 	{
 		var emptyCheck = ValidationCheck.NotEmpty(items, "PinGroupDefs.yaml");
 		if (emptyCheck.IsFailed)
+		{
 			return emptyCheck;
+		}
 
 		var errors = new List<ConfigError>();
 
@@ -36,8 +38,10 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
 			AddIfFailed(ValidationCheck.Positive(group.PinQuantity, context, "pin_quantity"), errors);
 
 			if (!string.IsNullOrWhiteSpace(group.GroupName))
+			{
 				AddIfFailed(ValidationCheck.Unique(group.GroupName, uniqueNames, "PinGroupDefs.yaml", "group_name"),
 					errors);
+			}
 
 			AddIfFailed(ValidationCheck.Unique(group.PinGroupId, uniqueIds, context, "pin_group_id"), errors);
 
@@ -65,12 +69,7 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
 		var errors = new List<ConfigError>();
 
 		var ranges = items
-			.Select(g => new
-			{
-				g.GroupName,
-				Start = g.FirstPinId,
-				End = g.FirstPinId + g.PinQuantity - 1
-			})
+			.Select(g => new { g.GroupName, Start = g.FirstPinId, End = g.FirstPinId + g.PinQuantity - 1 })
 			.OrderBy(r => r.Start)
 			.ToArray();
 
@@ -102,9 +101,13 @@ public sealed class PinGroupDefsValidator : ISectionValidator<YamlPinGroupDefini
 			foreach (var e in result.Errors)
 			{
 				if (e is ConfigError ce)
+				{
 					errors.Add(ce);
+				}
 				else
+				{
 					errors.Add(new ConfigError(e.Message, "PinGroupDefs.yaml", "validation"));
+				}
 			}
 		}
 	}

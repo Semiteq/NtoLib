@@ -17,7 +17,9 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
 	{
 		var emptyCheck = ValidationCheck.NotEmpty(items, "ActionsDefs.yaml");
 		if (emptyCheck.IsFailed)
+		{
 			return emptyCheck;
+		}
 
 		var errors = new List<ConfigError>();
 		var uniqueIds = new HashSet<int>();
@@ -35,7 +37,9 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
 			AddIfFailed(ValidateDeployDuration(action, context), errors);
 
 			if (action.Columns != null)
+			{
 				errors.AddRange(ValidateActionColumns(action, context));
+			}
 
 			AddIfFailed(ValidateLongLastingRequirements(action, context), errors);
 		}
@@ -47,10 +51,14 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
 	{
 		var durationCheck = ValidationCheck.NotEmpty(action.DeployDuration, context, "deploy_duration");
 		if (durationCheck.IsFailed)
+		{
 			return durationCheck;
+		}
 
 		if (!Enum.TryParse<DeployDuration>(action.DeployDuration, ignoreCase: true, out _))
+		{
 			return Result.Fail(ConfigActionErrors.UnknownDeployDuration(action.DeployDuration, context));
+		}
 
 		return Result.Ok();
 	}
@@ -121,14 +129,17 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
 		}
 	}
 
-
 	private static Result ValidateLongLastingRequirements(YamlActionDefinition action, string context)
 	{
 		if (!IsLongLastingAction(action))
+		{
 			return Result.Ok();
+		}
 
 		if (!HasStepDurationColumn(action))
+		{
 			return Result.Fail(ConfigActionErrors.LongLastingStepDurationMissing(context));
+		}
 
 		return Result.Ok();
 	}
@@ -149,7 +160,9 @@ public sealed class ActionDefsValidator : ISectionValidator<YamlActionDefinition
 		if (result.IsFailed)
 		{
 			foreach (var e in result.Errors)
+			{
 				errors.Add(e as ConfigError ?? new ConfigError(e.Message, "ActionsDefs.yaml", "validation"));
+			}
 		}
 	}
 }

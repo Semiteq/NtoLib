@@ -36,7 +36,10 @@ public sealed class ColumnDefinitionMapper : IEntityMapper<YamlColumnDefinition,
 	private static PlcMapping? MapPlc(YamlPlcMapping? src)
 	{
 		if (src == null)
+		{
 			return null;
+		}
+
 		return new PlcMapping(src.Area, src.Index);
 	}
 }

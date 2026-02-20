@@ -10,19 +10,21 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Common;
 /// </summary>
 public sealed class ConfigException : Exception
 {
-	public IReadOnlyList<ConfigError> Errors { get; }
-
 	public ConfigException(IEnumerable<ConfigError> errors)
 		: base(BuildMessage(errors))
 	{
 		Errors = errors?.ToArray() ?? Array.Empty<ConfigError>();
 	}
 
+	public IReadOnlyList<ConfigError> Errors { get; }
+
 	private static string BuildMessage(IEnumerable<ConfigError> errors)
 	{
 		var list = errors?.ToArray() ?? Array.Empty<ConfigError>();
 		if (list.Length == 0)
+		{
 			return "Configuration failed with no details.";
+		}
 
 		var sb = new StringBuilder();
 		sb.AppendLine("Configuration loading failed with the following errors:");

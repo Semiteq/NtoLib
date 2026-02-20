@@ -18,18 +18,26 @@ public sealed class PropertyDefinitionMapper : IEntityMapper<YamlPropertyDefinit
 	public IPropertyTypeDefinition Map(YamlPropertyDefinition source)
 	{
 		if (string.Equals(source.PropertyTypeId, PropertyTypeIds.Time, StringComparison.OrdinalIgnoreCase))
+		{
 			return new DynamicTimeDefinition(source);
+		}
 
 		if (string.Equals(source.PropertyTypeId, PropertyTypeIds.Enum, StringComparison.OrdinalIgnoreCase))
+		{
 			return new ConfigurableEnumDefinition(source);
+		}
 
 		var systemType = Type.GetType(source.SystemType, throwOnError: true, ignoreCase: true)!;
 
 		if (systemType == typeof(string))
+		{
 			return new ConfigurableStringDefinition(source);
+		}
 
 		if (systemType == typeof(short) || systemType == typeof(float))
+		{
 			return new ConfigurableNumericDefinition(source);
+		}
 
 		throw new NotSupportedException(
 			$"Unsupported SystemType '{source.SystemType}' for PropertyTypeId '{source.PropertyTypeId}'.");

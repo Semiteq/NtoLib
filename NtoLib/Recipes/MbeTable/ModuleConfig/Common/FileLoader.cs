@@ -35,7 +35,9 @@ public sealed class FileLoader<TDto> : IFileLoader<TDto> where TDto : class
 	{
 		var validationResult = _validator.Validate(items);
 		if (validationResult.IsFailed)
+		{
 			return Result.Fail<IReadOnlyList<TDto>>(validationResult.Errors);
+		}
 
 		return Result.Ok(items);
 	}
@@ -72,6 +74,7 @@ public sealed class FileLoader<TDto> : IFileLoader<TDto> where TDto : class
 		try
 		{
 			var content = File.ReadAllText(path);
+
 			return Result.Ok(content);
 		}
 		catch (Exception ex)

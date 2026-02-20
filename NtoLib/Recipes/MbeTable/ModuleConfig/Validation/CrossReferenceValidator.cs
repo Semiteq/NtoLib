@@ -121,7 +121,9 @@ public sealed class CrossReferenceValidator
 			foreach (var column in action.Columns)
 			{
 				if (string.IsNullOrWhiteSpace(column.GroupName))
+				{
 					continue;
+				}
 
 				var columnContext = $"{context}, ColumnKey='{column.Key}'";
 
@@ -171,10 +173,14 @@ public sealed class CrossReferenceValidator
 		List<ConfigError> errors)
 	{
 		if (string.IsNullOrWhiteSpace(column.DefaultValue))
+		{
 			return;
+		}
 
 		if (!propertyDefinitionsByTypeId.TryGetValue(column.PropertyTypeId, out var propertyDef))
+		{
 			return;
+		}
 
 		var columnContext = $"{actionContext}, ColumnKey='{column.Key}'";
 
@@ -202,11 +208,15 @@ public sealed class CrossReferenceValidator
 			foreach (var column in action.Columns)
 			{
 				if (string.IsNullOrWhiteSpace(column.DefaultValue))
+				{
 					continue;
+				}
 
 				if (readOnlyColumns.Contains(column.Key))
+				{
 					errors.Add(ConfigCrossRefErrors.ReadOnlyDefaultConflict($"{context}, ColumnKey='{column.Key}'",
 						column.Key));
+				}
 			}
 		}
 
@@ -219,11 +229,15 @@ public sealed class CrossReferenceValidator
 		string context)
 	{
 		if (IsSpecialPropertyType(propertyDefinition.PropertyTypeId))
+		{
 			return Result.Ok();
+		}
 
 		var systemType = GetSystemType(propertyDefinition.SystemType);
 		if (systemType == null)
+		{
 			return Result.Ok();
+		}
 
 		return ValidateDefaultValueBySystemType(defaultValue, systemType, propertyDefinition, context);
 	}
@@ -240,13 +254,19 @@ public sealed class CrossReferenceValidator
 		string context)
 	{
 		if (systemType == typeof(string))
+		{
 			return ValidateStringDefaultValue(defaultValue, propertyDefinition, context);
+		}
 
 		if (systemType == typeof(short))
+		{
 			return ValidateInt16DefaultValue(defaultValue, propertyDefinition, context);
+		}
 
 		if (systemType == typeof(float))
+		{
 			return ValidateFloatDefaultValue(defaultValue, propertyDefinition, context);
+		}
 
 		return Result.Ok();
 	}
@@ -263,8 +283,10 @@ public sealed class CrossReferenceValidator
 		string context)
 	{
 		if (propertyDefinition.MaxLength.HasValue && defaultValue.Length > propertyDefinition.MaxLength.Value)
+		{
 			return Result.Fail(ConfigCrossRefErrors.DefaultValueExceedsMaxLength(context, defaultValue.Length,
 				propertyDefinition.MaxLength.Value, defaultValue));
+		}
 
 		return Result.Ok();
 	}
@@ -275,7 +297,9 @@ public sealed class CrossReferenceValidator
 		string context)
 	{
 		if (!TryParseInt16Value(defaultValue, out var shortValue))
+		{
 			return Result.Fail(ConfigCrossRefErrors.DefaultValueNotInt16(context, defaultValue));
+		}
 
 		return ValidateNumericRange(shortValue, propertyDefinition, context);
 	}
@@ -291,7 +315,9 @@ public sealed class CrossReferenceValidator
 		string context)
 	{
 		if (!TryParseFloatValue(defaultValue, out var parsedValue))
+		{
 			return Result.Fail(ConfigCrossRefErrors.DefaultValueNotFloat(context, defaultValue));
+		}
 
 		return ValidateNumericRange(parsedValue, propertyDefinition, context);
 	}
@@ -305,12 +331,16 @@ public sealed class CrossReferenceValidator
 		string context)
 	{
 		if (IsValueBelowMinimum(parsedValue, propertyDefinition))
+		{
 			return Result.Fail(
 				ConfigCrossRefErrors.DefaultValueLessThanMin(context, parsedValue, propertyDefinition.Min!.Value));
+		}
 
 		if (IsValueAboveMaximum(parsedValue, propertyDefinition))
+		{
 			return Result.Fail(
 				ConfigCrossRefErrors.DefaultValueExceedsMax(context, parsedValue, propertyDefinition.Max!.Value));
+		}
 
 		return Result.Ok();
 	}
@@ -325,25 +355,35 @@ public sealed class CrossReferenceValidator
 		return propertyDefinition.Max.HasValue && value > propertyDefinition.Max.Value;
 	}
 
-	private static HashSet<string> BuildPropertyTypeIdSet(PropertyDefsYamlConfig yamlConfig) =>
-		yamlConfig.Items.Select(p => p.PropertyTypeId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+	private static HashSet<string> BuildPropertyTypeIdSet(PropertyDefsYamlConfig yamlConfig)
+	{
+		return yamlConfig.Items.Select(p => p.PropertyTypeId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+	}
 
-	private static HashSet<string> BuildColumnKeySet(ColumnDefsYamlConfig yamlConfig) =>
-		yamlConfig.Items.Select(c => c.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+	private static HashSet<string> BuildColumnKeySet(ColumnDefsYamlConfig yamlConfig)
+	{
+		return yamlConfig.Items.Select(c => c.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+	}
 
-	private static HashSet<string> BuildPinGroupNameSet(PinGroupDefsYamlConfig yamlConfig) =>
-		yamlConfig.Items.Select(g => g.GroupName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+	private static HashSet<string> BuildPinGroupNameSet(PinGroupDefsYamlConfig yamlConfig)
+	{
+		return yamlConfig.Items.Select(g => g.GroupName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+	}
 
 	private static Dictionary<string, YamlPropertyDefinition> BuildPropertyDefinitionDictionary(
-		PropertyDefsYamlConfig yamlConfig) =>
-		yamlConfig.Items.ToDictionary(p => p.PropertyTypeId, StringComparer.OrdinalIgnoreCase);
+		PropertyDefsYamlConfig yamlConfig)
+	{
+		return yamlConfig.Items.ToDictionary(p => p.PropertyTypeId, StringComparer.OrdinalIgnoreCase);
+	}
 
 	private static void Append(Result result, List<ConfigError> errors, string defaultSection)
 	{
 		if (result.IsFailed)
 		{
 			foreach (var e in result.Errors)
+			{
 				errors.Add(e as ConfigError ?? new ConfigError(e.Message, defaultSection, "validation"));
+			}
 		}
 	}
 }

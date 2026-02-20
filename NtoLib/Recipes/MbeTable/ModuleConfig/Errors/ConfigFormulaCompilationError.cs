@@ -7,10 +7,6 @@ namespace NtoLib.Recipes.MbeTable.ModuleConfig.Errors;
 // Error type for formula precompilation failures.
 public sealed class ConfigFormulaCompilationError : Error
 {
-	public short ActionId { get; }
-	public string ActionName { get; }
-	public string Expression { get; }
-
 	public ConfigFormulaCompilationError(
 		string message,
 		short actionId,
@@ -28,6 +24,12 @@ public sealed class ConfigFormulaCompilationError : Error
 		WithMetadata("expression", Expression);
 
 		if (cause != null)
+		{
 			CausedBy(cause);
+		}
 	}
+
+	public short ActionId { get; }
+	public string ActionName { get; }
+	public string Expression { get; }
 }

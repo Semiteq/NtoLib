@@ -36,7 +36,9 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 	{
 		var emptyCheck = ValidationCheck.NotEmpty(items, "ColumnDefs.yaml");
 		if (emptyCheck.IsFailed)
+		{
 			return emptyCheck;
+		}
 
 		var allErrors = new List<ConfigError>();
 
@@ -63,6 +65,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 		if (missingKeys.Any())
 		{
 			var missing = string.Join(", ", missingKeys);
+
 			return Result.Fail(ConfigColumnErrors.MissingMandatory(missing));
 		}
 
@@ -81,6 +84,7 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 		if (unsupported.Any())
 		{
 			var info = string.Join(", ", unsupported.Select(c => $"'{c.Key}' ({c.ColumnType})"));
+
 			return Result.Fail(ConfigColumnErrors.UnsupportedTypes(info));
 		}
 
@@ -125,7 +129,9 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 		List<ConfigError> errors)
 	{
 		if (column.BusinessLogic == null)
+		{
 			return;
+		}
 
 		AddIfFailed(ValidationCheck.NotEmpty(column.BusinessLogic.PropertyTypeId, context, "property_type_id"), errors);
 
@@ -144,7 +150,9 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 	private static void ValidateColumnUi(YamlColumnDefinition column, string context, List<ConfigError> errors)
 	{
 		if (column.Ui == null)
+		{
 			return;
+		}
 
 		var allowFullWidth = IsCommentColumn(column.Key);
 
@@ -175,7 +183,9 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 	private static void ValidateMaxDropdownItems(YamlColumnDefinition column, string context, List<ConfigError> errors)
 	{
 		if (column.Ui == null)
+		{
 			return;
+		}
 
 		if (column.Ui.MaxDropdownItems <= 0)
 		{
@@ -187,7 +197,9 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 		List<ConfigError> errors)
 	{
 		if (column.Ui == null)
+		{
 			return;
+		}
 
 		var isActionComboBox = string.Equals(column.Ui.ColumnType, ColumnTypeIds.ActionComboBox,
 			StringComparison.OrdinalIgnoreCase);
@@ -204,7 +216,9 @@ public sealed class ColumnDefsValidator : ISectionValidator<YamlColumnDefinition
 		if (result.IsFailed)
 		{
 			foreach (var e in result.Errors)
+			{
 				errors.Add(e as ConfigError ?? new ConfigError(e.Message, "ColumnDefs.yaml", "validation"));
+			}
 		}
 	}
 }

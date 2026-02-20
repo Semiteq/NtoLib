@@ -54,6 +54,7 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 			{
 				var configError = ConvertToConfigError(action, compilationResult.Errors);
 				errors.Add(configError);
+
 				continue;
 			}
 
@@ -69,18 +70,24 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 	{
 		var validationResult = ValidateInput(expression, recalcOrder);
 		if (validationResult.IsFailed)
+		{
 			return validationResult.ToResult<CompiledFormula>();
+		}
 
 		var parseResult = ParseExpression(expression);
 		if (parseResult.IsFailed)
+		{
 			return parseResult.ToResult<CompiledFormula>();
+		}
 
 		var parsedExpression = parseResult.Value;
 		var variables = ExtractVariables(parsedExpression);
 
 		var structureValidationResult = ValidateFormulaStructure(variables, parsedExpression, recalcOrder);
 		if (structureValidationResult.IsFailed)
+		{
 			return structureValidationResult.ToResult<CompiledFormula>();
+		}
 
 		return BuildCompiledFormula(parsedExpression, recalcOrder, variables);
 	}
@@ -88,10 +95,14 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 	private static Result ValidateInput(string expression, IReadOnlyList<string> recalcOrder)
 	{
 		if (string.IsNullOrWhiteSpace(expression))
+		{
 			return new ConfigFormulaEmptyExpressionError();
+		}
 
 		if (recalcOrder.Count == 0)
+		{
 			return new ConfigFormulaEmptyRecalcOrderError();
+		}
 
 		return Result.Ok();
 	}
@@ -105,12 +116,15 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 		catch
 		{
 			_logger.LogError("Failed to parse formula expression: '{Expression}'", expression);
+
 			return new ConfigFormulaInvalidExpressionError(expression);
 		}
 	}
 
 	private static HashSet<string> ExtractVariables(Entity expression)
-		=> expression.Vars.Select(v => v.Name).ToHashSet(_variableNameComparer);
+	{
+		return expression.Vars.Select(v => v.Name).ToHashSet(_variableNameComparer);
+	}
 
 	private static Result ValidateFormulaStructure(
 		HashSet<string> variables,
@@ -119,9 +133,12 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 	{
 		var orderValidationResult = ValidateRecalcOrder(variables, recalcOrder);
 		if (orderValidationResult.IsFailed)
+		{
 			return orderValidationResult;
+		}
 
 		var linearityResult = ValidateLinearity(variables, parsedExpression);
+
 		return linearityResult;
 	}
 
@@ -132,7 +149,9 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 			.ToList();
 
 		if (variablesNotInRecalcOrder.Any())
+		{
 			return new ConfigFormulaRecalcOrderMissingError(string.Join(", ", variablesNotInRecalcOrder));
+		}
 
 		var orderVariablesNotInFormula = recalcOrder
 			.Where(v => !variables.Contains(v, _variableNameComparer))
@@ -171,7 +190,9 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 	{
 		var solversResult = CompileSolvers(variables, parsedExpression);
 		if (solversResult.IsFailed)
+		{
 			return solversResult.ToResult<CompiledFormula>();
+		}
 
 		return new CompiledFormula(
 			recalcOrder,
@@ -189,7 +210,9 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 		{
 			var solverResult = CreateSolverForVariable(parsedExpression, variable, variables);
 			if (solverResult.IsFailed)
+			{
 				return solverResult.ToResult<Dictionary<string, Func<Dictionary<string, double>, double>>>();
+			}
 
 			solvers[variable] = solverResult.Value;
 		}
@@ -214,6 +237,7 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 				simplified.Stringize());
 
 			var solver = BuildSolverFunction(simplified, targetVariable, allVariables);
+
 			return Result.Ok(solver);
 		}
 		catch (Exception ex)
@@ -229,7 +253,9 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 			var elements = expression.DirectChildren;
 			var count = elements.Count();
 			if (count == 1)
+			{
 				return elements.First();
+			}
 		}
 
 		return expression;
@@ -250,9 +276,12 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 			var expression = ExtractSingleElementIfSet(substituted);
 
 			if (!expression.EvaluableNumerical)
+			{
 				throw new InvalidOperationException($"Cannot evaluate expression for '{targetVariable}' as a number");
+			}
 
 			var result = expression.EvalNumerical();
+
 			return (double)result.RealPart;
 		};
 	}
@@ -274,7 +303,9 @@ public sealed class FormulaPrecompiler : IFormulaPrecompiler
 		foreach (var variable in variables)
 		{
 			if (values.TryGetValue(variable, out var value))
+			{
 				result = result.Substitute(variable, value);
+			}
 		}
 
 		return result;

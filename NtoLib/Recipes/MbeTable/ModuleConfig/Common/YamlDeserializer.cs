@@ -36,6 +36,7 @@ public sealed class YamlDeserializer : IYamlDeserializer
 		try
 		{
 			var items = _deserializer.Deserialize<List<T>>(yaml) ?? new List<T>();
+
 			return Result.Ok<IReadOnlyList<T>>(items);
 		}
 		catch (Exception ex)

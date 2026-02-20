@@ -101,6 +101,7 @@ public static class ValidationCheck
 		if (!Enum.TryParse<TEnum>(value, ignoreCase: true, out _))
 		{
 			var allowedValues = string.Join(", ", Enum.GetNames(typeof(TEnum)));
+
 			return Result.Fail(new ConfigError(
 					$"Field '{fieldName}' has invalid value '{value}'. Allowed: {allowedValues}.",
 					section: ExtractSection(context),
@@ -127,6 +128,7 @@ public static class ValidationCheck
 		if (!allowedValues.Contains(value!))
 		{
 			var allowed = string.Join(", ", allowedValues);
+
 			return Result.Fail(new ConfigError(
 					$"Field '{fieldName}' has invalid value '{value}'. Allowed: {allowed}.",
 					section: ExtractSection(context),
@@ -229,9 +231,12 @@ public static class ValidationCheck
 	private static string ExtractSection(string context)
 	{
 		if (string.IsNullOrWhiteSpace(context))
+		{
 			return string.Empty;
+		}
 
 		var commaIdx = context.IndexOf(',');
+
 		return commaIdx > 0 ? context.Substring(0, commaIdx).Trim() : context.Trim();
 	}
 }
