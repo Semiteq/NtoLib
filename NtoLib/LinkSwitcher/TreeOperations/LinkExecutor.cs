@@ -14,8 +14,8 @@ namespace NtoLib.LinkSwitcher.TreeOperations;
 
 public sealed class LinkExecutor
 {
-	private readonly IProjectHlp _project;
 	private readonly SwitchLogger _logger;
+	private readonly IProjectHlp _project;
 
 	public LinkExecutor(IProjectHlp project, SwitchLogger logger)
 	{
@@ -34,7 +34,9 @@ public sealed class LinkExecutor
 		foreach (var pairOps in pairResults)
 		{
 			if (pairOps.Operations.Count == 0)
+			{
 				continue;
+			}
 
 			_logger.LogPairExecutionHeader(pairOps.Pair);
 			var columnWidths = SwitchLogger.ComputeColumnWidths(pairOps.Operations, sourcePath, targetPath);

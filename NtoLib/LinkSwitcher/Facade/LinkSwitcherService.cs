@@ -16,12 +16,9 @@ namespace NtoLib.LinkSwitcher.Facade;
 
 public sealed class LinkSwitcherService : ILinkSwitcherService
 {
-	private readonly IProjectHlp _project;
 	private readonly PairDiscovery _pairDiscovery;
+	private readonly IProjectHlp _project;
 	private readonly SwitchLogger _switchLogger;
-
-	public bool HasPendingTask => PendingPlan != null;
-	public SwitchPlan? PendingPlan { get; private set; }
 
 	public LinkSwitcherService(IProjectHlp project, ILogger logger)
 	{
@@ -30,6 +27,9 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 		_pairDiscovery = new PairDiscovery(project);
 		_switchLogger = new SwitchLogger(logger);
 	}
+
+	public bool HasPendingTask => PendingPlan != null;
+	public SwitchPlan? PendingPlan { get; private set; }
 
 	public Result<SwitchPlan> ScanAndValidate(string sourcePath, string targetPath, bool reverse)
 	{
@@ -41,6 +41,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 		{
 			var errorMessage = string.Join("; ", pairsResult.Errors);
 			_switchLogger.LogError(errorMessage);
+
 			return Result.Fail(errorMessage);
 		}
 
@@ -63,6 +64,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 			{
 				var reason = string.Join("; ", collectResult.Errors);
 				_switchLogger.LogPairCollectionFailure(pair, reason);
+
 				continue;
 			}
 
@@ -75,6 +77,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 		if (totalLinks == 0)
 		{
 			_switchLogger.LogNoLinksFound();
+
 			return Result.Fail("No links to transfer across all pairs.");
 		}
 
@@ -82,6 +85,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 		_switchLogger.LogScanSummary(pairResults.Count, totalLinks);
 
 		PendingPlan = plan;
+
 		return Result.Ok(plan);
 	}
 
@@ -93,6 +97,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 			_switchLogger.LogExecutionHeader();
 			_switchLogger.LogExecutionSummary(0, 0, 0);
 			PendingPlan = null;
+
 			return Result.Ok();
 		}
 
@@ -100,6 +105,7 @@ public sealed class LinkSwitcherService : ILinkSwitcherService
 		var result = linkExecutor.Execute(plan.PairResults, plan.SourcePath, plan.TargetPath);
 
 		PendingPlan = null;
+
 		return result;
 	}
 

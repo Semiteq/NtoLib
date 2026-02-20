@@ -34,6 +34,7 @@ public sealed class SwitchLogger
 		if (pairs.Count == 0)
 		{
 			_logger.Warning("No pairs discovered");
+
 			return;
 		}
 
@@ -62,6 +63,7 @@ public sealed class SwitchLogger
 		if (pairOps.Operations.Count == 0)
 		{
 			_logger.Information("  Links: none");
+
 			return;
 		}
 
@@ -149,6 +151,7 @@ public sealed class SwitchLogger
 
 		var maxSource = operations.Max(op => StripPrefix(op.SourcePinPath, sourcePath).Length);
 		var maxTarget = operations.Max(op => StripPrefix(op.TargetPinPath, targetPath).Length);
+
 		return new ColumnWidths(maxSource, maxTarget);
 	}
 
@@ -161,6 +164,7 @@ public sealed class SwitchLogger
 
 		var maxSource = operations.Max(op => op.SourcePinPath.Length);
 		var maxTarget = operations.Max(op => op.TargetPinPath.Length);
+
 		return new ColumnWidths(maxSource, maxTarget);
 	}
 

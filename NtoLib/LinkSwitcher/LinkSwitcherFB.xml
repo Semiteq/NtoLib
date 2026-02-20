@@ -2,11 +2,11 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pin ID="1" Name="Execute" Type="Логический" />
-      <Pin ID="2" Name="Reverse" Type="Логический" DefaultValue="False" />
-      <Pin ID="3" Name="Cancel" Type="Логический" />
+      <Pin ID="1" Name="Execute" Type="Логический"/>
+      <Pin ID="2" Name="Reverse" Type="Логический" DefaultValue="False"/>
+      <Pin ID="3" Name="Cancel" Type="Логический"/>
 
-      <Pout ID="101" Name="IsPending" Type="Логический" />
+      <Pout ID="101" Name="IsPending" Type="Логический"/>
     </Items>
   </Map>
 </FBConfig>

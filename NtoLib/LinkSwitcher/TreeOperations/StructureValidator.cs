@@ -16,6 +16,7 @@ public static class StructureValidator
 	{
 		var differences = new List<string>();
 		CompareChildren(pair.Source, pair.Target, pair.Name, differences);
+
 		return differences;
 	}
 

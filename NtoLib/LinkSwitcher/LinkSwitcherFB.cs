@@ -34,12 +34,12 @@ public sealed class LinkSwitcherFB : StaticFBBase
 
 	private const int MaxDeferredRetries = 100;
 	private const int DeferredRetryIntervalMs = 200;
+	[NonSerialized] private bool _isRuntimeInitialized;
+	[NonSerialized] private bool _previousCancel;
+	[NonSerialized] private bool _previousExecute;
+	[NonSerialized] private Logger? _serilogLogger;
 
 	[NonSerialized] private ILinkSwitcherService? _service;
-	[NonSerialized] private Logger? _serilogLogger;
-	[NonSerialized] private bool _previousExecute;
-	[NonSerialized] private bool _previousCancel;
-	[NonSerialized] private bool _isRuntimeInitialized;
 
 	[DisplayName("Путь к узлу 1")]
 	[Category("Настройки поиска")]
@@ -136,6 +136,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 		if (scanResult.IsFailed)
 		{
 			WritePending(false);
+
 			return;
 		}
 
@@ -162,6 +163,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 		if (_service == null || !_service.HasPendingTask)
 		{
 			_serilogLogger?.Dispose();
+
 			return;
 		}
 
@@ -169,6 +171,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 		if (plan == null)
 		{
 			_serilogLogger?.Dispose();
+
 			return;
 		}
 
@@ -180,6 +183,7 @@ public sealed class LinkSwitcherFB : StaticFBBase
 		{
 			logger?.Error("Cannot flush pending plan: IProjectHlp is null");
 			logger?.Dispose();
+
 			return;
 		}
 
