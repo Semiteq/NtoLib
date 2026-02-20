@@ -15,10 +15,6 @@ public class ConfigLoaderService : IConfigLoaderService
 	private readonly FileSaver _fileSaver;
 	private readonly ConfigLoaderGroups _groups;
 
-	public LoaderDto CurrentConfiguration { get; private set; }
-	public bool IsLoaded { get; private set; }
-	public string LastError { get; private set; }
-
 	public ConfigLoaderService(
 		object fileLock,
 		ConfigLoaderGroups groups)
@@ -34,6 +30,10 @@ public class ConfigLoaderService : IConfigLoaderService
 		IsLoaded = false;
 		LastError = string.Empty;
 	}
+
+	public LoaderDto CurrentConfiguration { get; private set; }
+	public bool IsLoaded { get; private set; }
+	public string LastError { get; private set; }
 
 	public Result<LoaderDto> Load(string filePath)
 	{
@@ -70,6 +70,7 @@ public class ConfigLoaderService : IConfigLoaderService
 		if (string.IsNullOrWhiteSpace(filePath))
 		{
 			LastError = "File path cannot be empty.";
+
 			return Result.Fail(LastError);
 		}
 
@@ -78,6 +79,7 @@ public class ConfigLoaderService : IConfigLoaderService
 		if (saveResult.IsFailed)
 		{
 			LastError = FormatErrors(saveResult);
+
 			return Result.Fail(LastError);
 		}
 
@@ -119,6 +121,7 @@ public class ConfigLoaderService : IConfigLoaderService
 	{
 		IsLoaded = false;
 		LastError = message;
+
 		return Result.Fail(message);
 	}
 
@@ -126,6 +129,7 @@ public class ConfigLoaderService : IConfigLoaderService
 	{
 		IsLoaded = false;
 		LastError = FormatErrors(failedResult);
+
 		return Result.Fail(failedResult.Errors);
 	}
 

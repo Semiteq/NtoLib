@@ -12,21 +12,20 @@ namespace NtoLib.ConfigLoader.Pins;
 
 public class PinGroupManager
 {
+	private const int PinOffsetInsideGroup = 1;
 	private readonly StaticFBBase _fb;
 	private readonly ConfigLoaderGroups _groups;
-
-	private const int PinOffsetInsideGroup = 1;
+	private int _firstChamberHeaterInPinId;
+	private int _firstChamberHeaterOutPinId;
+	private int _firstGasesInPinId;
+	private int _firstGasesOutPinId;
 
 	private int _firstShutterInPinId;
 	private int _firstShutterOutPinId;
 	private int _firstSourcesInPinId;
 	private int _firstSourcesOutPinId;
-	private int _firstChamberHeaterInPinId;
-	private int _firstChamberHeaterOutPinId;
 	private int _firstWaterInPinId;
 	private int _firstWaterOutPinId;
-	private int _firstGasesInPinId;
-	private int _firstGasesOutPinId;
 
 	public PinGroupManager(StaticFBBase fb, ConfigLoaderGroups groups)
 	{
@@ -146,6 +145,7 @@ public class PinGroupManager
 			if (quality != OpcQuality.Good)
 			{
 				result[offset] = string.Empty;
+
 				continue;
 			}
 

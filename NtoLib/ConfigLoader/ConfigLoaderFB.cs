@@ -28,17 +28,17 @@ public class ConfigLoaderFB : StaticFBBase
 
 	private static readonly TimeSpan _savedFlagDuration = TimeSpan.FromSeconds(1);
 
-	[DisplayName("1. Путь к файлу конфигурации")]
-	public string FilePath { get; set; } = @"C:\DISTR\Config\NamesConfig.yaml";
+	[NonSerialized] private readonly object _fileLock = new();
+	private bool _isRuntimeInitialized;
+
+	[NonSerialized] private PinGroupManager? _pinGroupManager;
 
 	private bool _previousSaveCommand;
 	private DateTime _savedFlagResetTimeUtc;
-	private bool _isRuntimeInitialized;
-
-	[NonSerialized] private object _fileLock = new();
-
-	[NonSerialized] private PinGroupManager? _pinGroupManager;
 	[NonSerialized] private IConfigLoaderService? _service;
+
+	[DisplayName("1. Путь к файлу конфигурации")]
+	public string FilePath { get; set; } = @"C:\DISTR\Config\NamesConfig.yaml";
 
 	protected override void ToRuntime()
 	{
@@ -110,6 +110,7 @@ public class ConfigLoaderFB : StaticFBBase
 		{
 			SetPinValue(LoadedPinId, false);
 			SetPinValue(ErrorPinId, "Service is not initialized.");
+
 			return;
 		}
 
@@ -119,6 +120,7 @@ public class ConfigLoaderFB : StaticFBBase
 		{
 			SetPinValue(LoadedPinId, false);
 			SetPinValue(ErrorPinId, _service.LastError);
+
 			return;
 		}
 
@@ -157,6 +159,7 @@ public class ConfigLoaderFB : StaticFBBase
 		{
 			SetPinValue(SavedPinId, false);
 			SetPinValue(ErrorPinId, "Service or pin manager is not initialized.");
+
 			return;
 		}
 
@@ -168,6 +171,7 @@ public class ConfigLoaderFB : StaticFBBase
 		{
 			SetPinValue(SavedPinId, false);
 			SetPinValue(ErrorPinId, _service.LastError);
+
 			return;
 		}
 

@@ -10,8 +10,8 @@ namespace NtoLib.ConfigLoader.Io;
 public class FileLoader
 {
 	private readonly object _fileLock;
-	private readonly YamlDeserializer _yamlDeserializer = new();
 	private readonly YamlValidator _validator;
+	private readonly YamlDeserializer _yamlDeserializer = new();
 
 	public FileLoader(object fileLock, ConfigLoaderGroups groups)
 	{

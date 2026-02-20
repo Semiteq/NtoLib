@@ -32,6 +32,7 @@ public class YamlSerializer
 		var yamlConfig = new YamlConfigDto(shutter, source, chamberHeater, water, gases);
 
 		var yaml = _serializer.Serialize(yamlConfig);
+
 		return Result.Ok(yaml);
 	}
 

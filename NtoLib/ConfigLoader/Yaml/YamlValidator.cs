@@ -10,17 +10,16 @@ namespace NtoLib.ConfigLoader.Yaml;
 
 public class YamlValidator
 {
-	private readonly uint _shutterCapacity;
-	private readonly uint _sourceCapacity;
-	private readonly uint _chamberHeaterCapacity;
-	private readonly uint _waterCapacity;
-	private readonly uint _gasesCapacity;
+	private const int MaxNameLength = 255;
 
 	private static readonly Regex _allowedNamePattern = new(
 		@"^[A-Za-zА-Яа-яЁё0-9 ._\-+]*$",
 		RegexOptions.Compiled);
-
-	private const int MaxNameLength = 255;
+	private readonly uint _chamberHeaterCapacity;
+	private readonly uint _gasesCapacity;
+	private readonly uint _shutterCapacity;
+	private readonly uint _sourceCapacity;
+	private readonly uint _waterCapacity;
 
 	public YamlValidator(
 		uint shutterCapacity,
@@ -40,7 +39,8 @@ public class YamlValidator
 	{
 		var shutterResult = ValidateAndBuildArray(yamlDto.Shutters, _shutterCapacity, "Shutters");
 		var sourcesResult = ValidateAndBuildArray(yamlDto.Sources, _sourceCapacity, "Sources");
-		var chamberHeaterResult = ValidateAndBuildArray(yamlDto.ChamberHeaters, _chamberHeaterCapacity, "ChamberHeaters");
+		var chamberHeaterResult =
+			ValidateAndBuildArray(yamlDto.ChamberHeaters, _chamberHeaterCapacity, "ChamberHeaters");
 		var waterResult = ValidateAndBuildArray(yamlDto.Waters, _waterCapacity, "Waters");
 		var gasesResult = ValidateAndBuildArray(yamlDto.Gases, _gasesCapacity, "Gases");
 

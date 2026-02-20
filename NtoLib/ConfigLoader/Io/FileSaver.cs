@@ -12,8 +12,8 @@ namespace NtoLib.ConfigLoader.Io;
 public class FileSaver
 {
 	private readonly object _fileLock;
-	private readonly YamlSerializer _yamlSerializer;
 	private readonly YamlValidator _validator;
+	private readonly YamlSerializer _yamlSerializer;
 
 	public FileSaver(
 		object fileLock,

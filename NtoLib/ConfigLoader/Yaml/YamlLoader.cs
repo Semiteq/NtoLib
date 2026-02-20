@@ -49,6 +49,7 @@ public static class YamlLoader
 		try
 		{
 			var content = File.ReadAllText(path);
+
 			return Result.Ok(content);
 		}
 		catch (Exception ex)

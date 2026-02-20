@@ -4,12 +4,6 @@ namespace NtoLib.ConfigLoader.Entities;
 
 public sealed class YamlConfigDto
 {
-	public Dictionary<string, string> Shutters { get; set; }
-	public Dictionary<string, string> Sources { get; set; }
-	public Dictionary<string, string> ChamberHeaters { get; set; }
-	public Dictionary<string, string> Waters { get; set; }
-	public Dictionary<string, string> Gases { get; set; }
-
 	public YamlConfigDto()
 	{
 		Shutters = new Dictionary<string, string>();
@@ -32,4 +26,10 @@ public sealed class YamlConfigDto
 		Waters = water;
 		Gases = gases;
 	}
+
+	public Dictionary<string, string> Shutters { get; set; }
+	public Dictionary<string, string> Sources { get; set; }
+	public Dictionary<string, string> ChamberHeaters { get; set; }
+	public Dictionary<string, string> Waters { get; set; }
+	public Dictionary<string, string> Gases { get; set; }
 }
