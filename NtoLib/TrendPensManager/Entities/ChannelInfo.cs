@@ -5,12 +5,6 @@ namespace NtoLib.TrendPensManager.Entities;
 
 public sealed record ChannelInfo
 {
-	public string ServiceName { get; init; }
-	public ServiceType ServiceType { get; init; }
-	public int ChannelNumber { get; init; }
-	public bool Used { get; init; }
-	public IReadOnlyList<ParameterInfo> Parameters { get; init; }
-
 	public ChannelInfo(
 		string serviceName,
 		ServiceType serviceType,
@@ -34,4 +28,10 @@ public sealed record ChannelInfo
 		Used = used;
 		Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
 	}
+
+	public string ServiceName { get; init; }
+	public ServiceType ServiceType { get; init; }
+	public int ChannelNumber { get; init; }
+	public bool Used { get; init; }
+	public IReadOnlyList<ParameterInfo> Parameters { get; init; }
 }

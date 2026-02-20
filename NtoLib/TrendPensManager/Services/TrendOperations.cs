@@ -10,15 +10,14 @@ using MasterSCADA.Trend.Controls;
 using MasterSCADA.Trend.Helpers;
 using MasterSCADA.Trend.Services;
 
-
 using Microsoft.Extensions.Logging;
 
 namespace NtoLib.TrendPensManager.Services;
 
 public class TrendOperations
 {
-	private readonly IProjectHlp _project;
 	private readonly ILogger<TrendOperations>? _logger;
+	private readonly IProjectHlp _project;
 
 	public TrendOperations(IProjectHlp project, ILogger<TrendOperations>? logger = null)
 	{
@@ -37,19 +36,22 @@ public class TrendOperations
 		if (pin == null)
 		{
 			_logger?.LogError("Pin not found for path '{PinPath}'", pinPath);
+
 			return Result.Fail($"Pin not found: {pinPath}");
 		}
 
 		if (!HasRightsToAddPen(trend))
 		{
 			_logger?.LogError("No rights to add pen to trend. PinPath='{PinPath}'", pinPath);
+
 			return Result.Fail("No rights to add pen to trend");
 		}
 
 		var graph = trend.AddParametr(pin);
 		if (graph == null)
 		{
-			_logger?.LogError("Trend.AddParametr returned null for pin '{PinPath}'", pinPath);
+			_logger?.LogError("Trend.AddParameter returned null for pin '{PinPath}'", pinPath);
+
 			return Result.Fail("Failed to add pen to trend");
 		}
 
@@ -80,6 +82,7 @@ public class TrendOperations
 		catch (Exception ex)
 		{
 			_logger?.LogError(ex, "Error clearing trend data");
+
 			return Result.Fail("Error clearing trend data: " + ex.Message);
 		}
 	}
@@ -131,14 +134,8 @@ public class TrendOperations
 		var graph = trend.Settings.Objects
 			.OfType<BaseGraph2D>()
 			.FirstOrDefault(g =>
-			{
-				var settings = g.CustomSettings as ScadaPenSettings;
-				return settings != null &&
-					   string.Equals(
-						   settings.PinId,
-						   pinId,
-						   StringComparison.OrdinalIgnoreCase);
-			});
+				g.CustomSettings is ScadaPenSettings settings &&
+				string.Equals(settings.PinId, pinId, StringComparison.OrdinalIgnoreCase));
 
 		if (graph == null)
 		{

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 using NtoLib.TrendPensManager.Entities;
 
@@ -11,45 +10,24 @@ public sealed class ServiceFilter
 	private static readonly Dictionary<string, ServiceType> _serviceTypeByName =
 		new(StringComparer.OrdinalIgnoreCase)
 		{
-			{ "БКТ", ServiceType.Heaters },
-			{ "БП", ServiceType.ChamberHeaters },
-			{ "БУЗ", ServiceType.Shutters }
+			{ "БКТ", ServiceType.Heaters }, { "БП", ServiceType.ChamberHeaters }, { "БУЗ", ServiceType.Shutters }
 		};
 
-	private static readonly HashSet<string> _vacuumMetersNames = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"Вакуумметры"
-	};
+	private static readonly HashSet<string>
+		_vacuumMetersNames = new(StringComparer.OrdinalIgnoreCase) { "Вакуумметры" };
 
-	private static readonly HashSet<string> _pyrometerNames = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"Пирометр"
-	};
+	private static readonly HashSet<string> _pyrometerNames = new(StringComparer.OrdinalIgnoreCase) { "Пирометр" };
 
-	private static readonly HashSet<string> _turbineNames = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"Турбины"
-	};
+	private static readonly HashSet<string> _turbineNames = new(StringComparer.OrdinalIgnoreCase) { "Турбины" };
 
-	private static readonly HashSet<string> _cryoNames = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"Крио"
-	};
+	private static readonly HashSet<string> _cryoNames = new(StringComparer.OrdinalIgnoreCase) { "Крио" };
 
-	private static readonly HashSet<string> _ionNames = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"Ионные"
-	};
+	private static readonly HashSet<string> _ionNames = new(StringComparer.OrdinalIgnoreCase) { "Ионные" };
 
-	private static readonly HashSet<string> _interferometerNames = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"Интерферометр"
-	};
+	private static readonly HashSet<string> _interferometerNames =
+		new(StringComparer.OrdinalIgnoreCase) { "Интерферометр" };
 
-	private static readonly HashSet<string> _gasNames = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"Газы"
-	};
+	private static readonly HashSet<string> _gasNames = new(StringComparer.OrdinalIgnoreCase) { "Газы" };
 
 	public ServiceType GetServiceType(string serviceName)
 	{

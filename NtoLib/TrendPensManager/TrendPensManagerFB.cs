@@ -34,10 +34,15 @@ public class TrendPensManagerFB : StaticFBBase
 	private const int ErrorsPinId = 13;
 
 	private static readonly TimeSpan _successFlagDuration = TimeSpan.FromSeconds(1);
+	private bool _isRuntimeInitialized;
+	[NonSerialized] private StringBuilder? _logBuffer;
+	[NonSerialized] private SerilogLoggerFactory? _loggerFactory;
+	[NonSerialized] private StringBuilderSink? _logSink;
 
 	private bool _previousExecuteCommand;
 	private DateTime _successFlagResetTimeUtc;
-	private bool _isRuntimeInitialized;
+
+	[NonSerialized] private ITrendPensService? _trendPensService;
 
 	[DisplayName("01. Путь в дереве к корню трендов")]
 	public string TrendRootPath { get; set; } = "PLZ_Inject.Графики";
@@ -48,14 +53,11 @@ public class TrendPensManagerFB : StaticFBBase
 	[DisplayName("03. Путь в дереве к корню сервисов (источник данных)")]
 	public string DataRootPath { get; set; } = "PLZ_Inject.Графики";
 
-	[DisplayName("04. Добавлять БКТ")]
-	public bool AddHeaters { get; set; } = true;
+	[DisplayName("04. Добавлять БКТ")] public bool AddHeaters { get; set; } = true;
 
-	[DisplayName("05. Добавлять БП")]
-	public bool AddChamberHeaters { get; set; } = true;
+	[DisplayName("05. Добавлять БП")] public bool AddChamberHeaters { get; set; } = true;
 
-	[DisplayName("06. Добавлять БУЗ")]
-	public bool AddShutters { get; set; } = true;
+	[DisplayName("06. Добавлять БУЗ")] public bool AddShutters { get; set; } = true;
 
 	[DisplayName("07. Добавлять Вакуумметры")]
 	public bool AddVacuumMeters { get; set; } = true;
@@ -63,25 +65,17 @@ public class TrendPensManagerFB : StaticFBBase
 	[DisplayName("08. Добавлять Пирометр")]
 	public bool AddPyrometer { get; set; } = true;
 
-	[DisplayName("09. Добавлять Турбины")]
-	public bool AddTurbines { get; set; } = true;
+	[DisplayName("09. Добавлять Турбины")] public bool AddTurbines { get; set; } = true;
 
-	[DisplayName("10. Добавлять Крио")]
-	public bool AddCryo { get; set; } = true;
+	[DisplayName("10. Добавлять Крио")] public bool AddCryo { get; set; } = true;
 
-	[DisplayName("11. Добавлять Ионные")]
-	public bool AddIon { get; set; } = true;
+	[DisplayName("11. Добавлять Ионные")] public bool AddIon { get; set; } = true;
 
 	[DisplayName("12. Добавлять Интерферометр")]
 	public bool AddInterferometer { get; set; } = true;
 
 	[DisplayName("13. Добавлять Газовые линии")]
 	public bool AddGases { get; set; } = true;
-
-	[NonSerialized] private ITrendPensService? _trendPensService;
-	[NonSerialized] private SerilogLoggerFactory? _loggerFactory;
-	[NonSerialized] private StringBuilder? _logBuffer;
-	[NonSerialized] private StringBuilderSink? _logSink;
 
 	protected override void ToRuntime()
 	{
@@ -137,9 +131,12 @@ public class TrendPensManagerFB : StaticFBBase
 			var configLoaderReader = new ConfigLoaderReader(TreeItemHlp.Project, _loggerFactory);
 			var penSequenceBuilder = new PenSequenceBuilder(_loggerFactory);
 
-			var trendOperations = new TrendOperations(TreeItemHlp.Project, _loggerFactory.CreateLogger<TrendOperations>());
-			var trendWindowAccessor = new TrendWindowAccessor(TreeItemHlp.Project, trendOperations, _loggerFactory.CreateLogger<TrendWindowAccessor>());
-			var trendPenApplicator = new TrendPenApplicator(trendWindowAccessor, trendOperations, _loggerFactory.CreateLogger<TrendPenApplicator>());
+			var trendOperations =
+				new TrendOperations(TreeItemHlp.Project, _loggerFactory.CreateLogger<TrendOperations>());
+			var trendWindowAccessor = new TrendWindowAccessor(TreeItemHlp.Project, trendOperations,
+				_loggerFactory.CreateLogger<TrendWindowAccessor>());
+			var trendPenApplicator = new TrendPenApplicator(trendWindowAccessor, trendOperations,
+				_loggerFactory.CreateLogger<TrendPenApplicator>());
 
 			var trendPensLogger = _loggerFactory.CreateLogger<TrendPensService>();
 
@@ -212,6 +209,7 @@ public class TrendPensManagerFB : StaticFBBase
 		{
 			SetPinValue(SuccessPinId, false);
 			SetPinValue(ErrorsPinId, string.Join("|", result.Errors));
+
 			return;
 		}
 

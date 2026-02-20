@@ -4,9 +4,6 @@ namespace NtoLib.TrendPensManager.Entities;
 
 public sealed record ParameterInfo
 {
-	public string Name { get; init; }
-	public string FullPath { get; init; }
-
 	public ParameterInfo(string name, string fullPath)
 	{
 		if (string.IsNullOrWhiteSpace(name))
@@ -22,4 +19,7 @@ public sealed record ParameterInfo
 		Name = name;
 		FullPath = fullPath;
 	}
+
+	public string Name { get; init; }
+	public string FullPath { get; init; }
 }

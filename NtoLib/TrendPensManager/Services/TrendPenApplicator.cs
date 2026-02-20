@@ -4,10 +4,6 @@ using System.Linq;
 
 using FluentResults;
 
-using MasterSCADA.Hlp;
-using MasterSCADA.Trend.Controls;
-using MasterSCADA.Trend.Services;
-
 using Microsoft.Extensions.Logging;
 
 using NtoLib.TrendPensManager.Entities;
@@ -16,11 +12,9 @@ namespace NtoLib.TrendPensManager.Services;
 
 public class TrendPenApplicator
 {
-	private readonly TrendWindowAccessor _trendWindowAccessor;
-	private readonly TrendOperations _trendOperations;
 	private readonly ILogger<TrendPenApplicator>? _logger;
-
-	public sealed record ApplyResult(int PensAdded, List<string> Errors);
+	private readonly TrendOperations _trendOperations;
+	private readonly TrendWindowAccessor _trendWindowAccessor;
 
 	public TrendPenApplicator(
 		TrendWindowAccessor trendWindowAccessor,
@@ -57,6 +51,7 @@ public class TrendPenApplicator
 			if (trendResult.IsFailed)
 			{
 				errors.AddRange(trendResult.Errors.Select(e => e.Message));
+
 				return;
 			}
 
@@ -68,6 +63,7 @@ public class TrendPenApplicator
 			if (clearResult.IsFailed)
 			{
 				errors.AddRange(clearResult.Errors.Select(e => e.Message));
+
 				return;
 			}
 
@@ -97,4 +93,6 @@ public class TrendPenApplicator
 
 		return Result.Ok(new ApplyResult(pensAdded, errors));
 	}
+
+	public sealed record ApplyResult(int PensAdded, List<string> Errors);
 }

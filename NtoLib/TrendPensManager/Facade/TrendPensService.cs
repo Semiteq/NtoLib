@@ -4,17 +4,7 @@ using System.Linq;
 
 using FluentResults;
 
-using MasterSCADA;
-using MasterSCADA.Common;
-using MasterSCADA.Graph.Objects;
-using MasterSCADA.Graph.Styles;
 using MasterSCADA.Hlp;
-using MasterSCADA.Hlp.Events;
-using MasterSCADA.Trend.Controls;
-using MasterSCADA.Trend.Helpers;
-using MasterSCADA.Trend.Services;
-
-using MasterSCADALib;
 
 using Microsoft.Extensions.Logging;
 
@@ -25,11 +15,11 @@ namespace NtoLib.TrendPensManager.Facade;
 
 public class TrendPensService : ITrendPensService
 {
-	private readonly TreeTraversalService _treeTraversal;
 	private readonly ConfigLoaderReader _configReader;
-	private readonly PenSequenceBuilder _sequenceBuilder;
-	private readonly TrendPenApplicator _penApplicator;
 	private readonly ILogger<TrendPensService> _logger;
+	private readonly TrendPenApplicator _penApplicator;
+	private readonly PenSequenceBuilder _sequenceBuilder;
+	private readonly TreeTraversalService _treeTraversal;
 
 	public TrendPensService(
 		IProjectHlp project,
@@ -84,6 +74,7 @@ public class TrendPensService : ITrendPensService
 			if (traversalResult.IsFailed)
 			{
 				LogErrors($"Service traversal failed for data root '{dataRootPath}'", traversalResult.Errors);
+
 				return Result.Fail(traversalResult.Errors);
 			}
 
@@ -103,6 +94,7 @@ public class TrendPensService : ITrendPensService
 			if (configResult.IsFailed)
 			{
 				LogErrors($"ConfigLoader reading failed for path '{configLoaderRootPath}'", configResult.Errors);
+
 				return Result.Fail(configResult.Errors);
 			}
 
@@ -120,6 +112,7 @@ public class TrendPensService : ITrendPensService
 			if (sequenceResult.IsFailed)
 			{
 				LogErrors($"Pen sequence building failed for trend root '{trendRootPath}'", sequenceResult.Errors);
+
 				return Result.Fail(sequenceResult.Errors);
 			}
 
@@ -140,6 +133,7 @@ public class TrendPensService : ITrendPensService
 			if (applyResult.IsFailed)
 			{
 				LogErrors($"Applying pen sequence to trend failed for '{trendRootPath}'", applyResult.Errors);
+
 				return Result.Fail(applyResult.Errors);
 			}
 
@@ -170,6 +164,7 @@ public class TrendPensService : ITrendPensService
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Unhandled exception during AutoConfigurePens.");
+
 			return Result.Fail($"AutoConfig error: {ex.Message}");
 		}
 	}

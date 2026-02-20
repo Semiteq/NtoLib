@@ -22,9 +22,9 @@ public class ConfigLoaderReader
 	private const string ChamberHeatersOutGroupName = "ChamberHeaters_OUT";
 	private const string ShuttersOutGroupName = "Shutters_OUT";
 	private const string GasesOutGroupName = "Gases_OUT";
+	private readonly ILogger<ConfigLoaderReader>? _logger;
 
 	private readonly IProjectHlp _project;
-	private readonly ILogger<ConfigLoaderReader>? _logger;
 
 	public ConfigLoaderReader(
 		IProjectHlp project,
@@ -45,6 +45,7 @@ public class ConfigLoaderReader
 		if (string.IsNullOrWhiteSpace(configLoaderRootPath))
 		{
 			_logger?.LogWarning("ConfigLoader root path is empty.");
+
 			return Result.Fail("ConfigLoader root path is empty");
 		}
 
@@ -54,6 +55,7 @@ public class ConfigLoaderReader
 			_logger?.LogWarning(
 				"ConfigLoader not found at path '{ConfigLoaderRootPath}'",
 				configLoaderRootPath);
+
 			return Result.Fail($"ConfigLoader not found: {configLoaderRootPath}");
 		}
 
@@ -67,6 +69,7 @@ public class ConfigLoaderReader
 				_logger?.LogError(
 					"Failed to read pin group '{GroupName}' for heaters.",
 					SourcesOutGroupName);
+
 				return Result.Fail(sourcesResult.Errors);
 			}
 			result[ServiceType.Heaters] = sourcesResult.Value;
@@ -84,6 +87,7 @@ public class ConfigLoaderReader
 				_logger?.LogError(
 					"Failed to read pin group '{GroupName}' for chamber heaters.",
 					ChamberHeatersOutGroupName);
+
 				return Result.Fail(chamberHeatersResult.Errors);
 			}
 			result[ServiceType.ChamberHeaters] = chamberHeatersResult.Value;
@@ -101,6 +105,7 @@ public class ConfigLoaderReader
 				_logger?.LogError(
 					"Failed to read pin group '{GroupName}' for shutters.",
 					ShuttersOutGroupName);
+
 				return Result.Fail(shuttersResult.Errors);
 			}
 			result[ServiceType.Shutters] = shuttersResult.Value;
@@ -118,6 +123,7 @@ public class ConfigLoaderReader
 				_logger?.LogError(
 					"Failed to read pin group '{GroupName}' for gases.",
 					GasesOutGroupName);
+
 				return Result.Fail(gasesResult.Errors);
 			}
 			result[ServiceType.Gases] = gasesResult.Value;
@@ -149,6 +155,7 @@ public class ConfigLoaderReader
 			_logger?.LogWarning(
 				"Pin group '{GroupName}' not found in ConfigLoader.",
 				groupName);
+
 			return Result.Fail<string[]>($"Group {groupName} not found in ConfigLoader");
 		}
 
@@ -179,6 +186,7 @@ public class ConfigLoaderReader
 	private static string GetPinStringValueOrEmpty(ITreePinHlp pin)
 	{
 		var pinValue = pin.GetConnectedRTPinValue();
+
 		return pinValue?.Value?.ToString() ?? string.Empty;
 	}
 

@@ -14,9 +14,9 @@ namespace NtoLib.TrendPensManager.Services;
 public class TreeTraversalService
 {
 	private const string UsedPinName = "Used";
+	private readonly ILogger<TreeTraversalService>? _logger;
 
 	private readonly IProjectHlp _project;
-	private readonly ILogger<TreeTraversalService>? _logger;
 	private readonly ServiceFilter _serviceFilter;
 
 	public TreeTraversalService(
@@ -42,6 +42,7 @@ public class TreeTraversalService
 		if (string.IsNullOrWhiteSpace(dataRootPath))
 		{
 			_logger?.LogWarning("Data root path is empty while traversing services.");
+
 			return Result.Fail("Data root path is empty");
 		}
 
@@ -49,6 +50,7 @@ public class TreeTraversalService
 		if (dataRoot == null)
 		{
 			_logger?.LogWarning("Data root item not found for path '{DataRootPath}'", dataRootPath);
+
 			return Result.Fail($"Data root object not found: {dataRootPath}");
 		}
 
@@ -77,6 +79,7 @@ public class TreeTraversalService
 				_logger?.LogDebug(
 					"Service '{ServiceName}' is disabled by selection options. Skipping.",
 					serviceName);
+
 				continue;
 			}
 
@@ -163,6 +166,7 @@ public class TreeTraversalService
 		}
 
 		var suffix = channelName.Substring(index + 1);
+
 		return int.TryParse(suffix, out channelNumber) && channelNumber > 0;
 	}
 
@@ -173,12 +177,14 @@ public class TreeTraversalService
 		{
 			var message = $"Channel {channel.FullName} has no '{UsedPinName}' pin.";
 			_logger?.LogError(message);
+
 			return Result.Fail<bool>(message);
 		}
 
 		try
 		{
 			var used = GetPinBoolValue(usedPin);
+
 			return Result.Ok(used);
 		}
 		catch (Exception ex)
@@ -188,6 +194,7 @@ public class TreeTraversalService
 				ex,
 				"Failed to read 'Used' pin value for channel '{ChannelFullName}'",
 				channel.FullName);
+
 			return Result.Fail<bool>(message);
 		}
 	}

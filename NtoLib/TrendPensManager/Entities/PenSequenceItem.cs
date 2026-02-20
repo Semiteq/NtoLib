@@ -4,10 +4,6 @@ namespace NtoLib.TrendPensManager.Entities;
 
 public sealed record PenSequenceItem
 {
-	public string SourcePinPath { get; init; }
-	public string TrendPath { get; init; }
-	public string PenDisplayName { get; init; }
-
 	public PenSequenceItem(string sourcePinPath, string trendPath, string penDisplayName)
 	{
 		if (string.IsNullOrWhiteSpace(sourcePinPath))
@@ -29,4 +25,8 @@ public sealed record PenSequenceItem
 		TrendPath = trendPath;
 		PenDisplayName = penDisplayName;
 	}
+
+	public string SourcePinPath { get; init; }
+	public string TrendPath { get; init; }
+	public string PenDisplayName { get; init; }
 }

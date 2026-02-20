@@ -41,6 +41,7 @@ public class PenSequenceBuilder
 		if (string.IsNullOrWhiteSpace(trendRootPath))
 		{
 			_logger?.LogWarning("Trend root path is empty while building pen sequence.");
+
 			return Result.Fail("Trend root path is empty");
 		}
 
@@ -51,6 +52,7 @@ public class PenSequenceBuilder
 		{
 			_logger?.LogInformation(
 				"No channels provided for pen sequence. Returning empty sequence.");
+
 			return Result.Ok(new PenSequenceData(sequenceItems, warnings));
 		}
 
@@ -124,7 +126,8 @@ public class PenSequenceBuilder
 		var index = channel.ChannelNumber - 1;
 		if (index < 0 || index >= names.Length)
 		{
-			var message = $"Channel index {channel.ChannelNumber} is out of bounds for service type {channel.ServiceType}";
+			var message =
+				$"Channel index {channel.ChannelNumber} is out of bounds for service type {channel.ServiceType}";
 			_logger?.LogError(
 				"Channel index {ChannelNumber} is out of bounds for service type '{ServiceType}'. ArrayLength={Length}",
 				channel.ChannelNumber,
