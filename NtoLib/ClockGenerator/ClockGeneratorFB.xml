@@ -2,7 +2,7 @@
 <FBConfig>
   <Map>
     <Items>
-      <Pout ID="100" Name="Clock" Type="Целый" />
+      <Pout ID="100" Name="Clock" Type="Целый"/>
     </Items>
   </Map>
 </FBConfig>

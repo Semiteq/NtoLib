@@ -8,88 +8,83 @@ using FB;
 using InSAT.Library.Attributes;
 using InSAT.Library.Interop;
 
-namespace NtoLib.ClockGenerator
+namespace NtoLib.ClockGenerator;
+
+[Serializable]
+[ComVisible(true)]
+[Guid("6C051A25-C703-4ADD-9022-5D306B0C236A")]
+[CatID(CatIDs.CATID_OTHER)]
+[DisplayName("Инкремент по времени")]
+public class ClockGeneratorFB : StaticFBBase
 {
-	[Serializable]
-	[ComVisible(true)]
-	[Guid("6C051A25-C703-4ADD-9022-5D306B0C236A")]
-	[CatID(CatIDs.CATID_OTHER)]
-	[DisplayName("Инкремент по времени")]
-	public class ClockGeneratorFB : StaticFBBase
+	[NonSerialized] private Timer? _clockTimer;
+
+	private int _counter;
+	private int _delay;
+
+	[Order(2)]
+	[DisplayName("Задержка, мс")]
+	public int Delay
 	{
-		private int _delay;
-		[Order(2)]
-		[DisplayName("Задержка, мс")]
-		public int Delay
+		get => _delay;
+		set
 		{
-			get
-			{
-				return _delay;
-			}
-			set
-			{
-				_delay = value;
+			_delay = value;
 
-				if (_delay <= 1)
-					_delay = 1;
+			if (_delay <= 1)
+			{
+				_delay = 1;
 			}
 		}
+	}
 
-		[Order(0)]
-		[DisplayName("Максимум")]
-		public int Max { get; set; }
+	[Order(0)][DisplayName("Максимум")] public int Max { get; set; }
 
-		[Order(1)]
-		[DisplayName("Минимум")]
-		public int Min { get; set; }
+	[Order(1)][DisplayName("Минимум")] public int Min { get; set; }
 
-		[NonSerialized]
-		private Timer? _clockTimer;
+	protected override void ToRuntime()
+	{
+		base.ToRuntime();
 
-		private int _counter;
+		_counter = Min;
 
+		_clockTimer = new Timer();
+		_clockTimer.AutoReset = true;
 
+		_clockTimer.Interval = Delay;
+		_clockTimer.Elapsed += IncClock;
+		_clockTimer.Start();
+	}
 
-		protected override void ToRuntime()
+	protected override void ToDesign()
+	{
+		base.ToDesign();
+
+		_clockTimer?.Dispose();
+	}
+
+	protected override void UpdateData()
+	{
+		if (_clockTimer == null)
 		{
-			base.ToRuntime();
+			return;
+		}
 
-			_counter = Min;
-
-			_clockTimer = new Timer();
-			_clockTimer.AutoReset = true;
-
+		if (_clockTimer.Interval != Delay)
+		{
 			_clockTimer.Interval = Delay;
-			_clockTimer.Elapsed += IncClock;
-			_clockTimer.Start();
 		}
+	}
 
-		protected override void ToDesign()
+	private void IncClock(object sender, EventArgs e)
+	{
+		_counter++;
+
+		if (_counter > Max)
 		{
-			base.ToDesign();
-
-			_clockTimer?.Dispose();
+			_counter = Min;
 		}
 
-		protected override void UpdateData()
-		{
-			if (_clockTimer == null)
-				return;
-
-			if (_clockTimer.Interval != Delay)
-				_clockTimer.Interval = Delay;
-		}
-
-
-
-		private void IncClock(object sender, EventArgs e)
-		{
-			_counter++;
-
-			if (_counter > Max)
-				_counter = Min;
-
-			SetPinValue(100, _counter);
-		}
+		SetPinValue(100, _counter);
 	}
 }
