@@ -21,7 +21,7 @@ public struct Status
 	public bool BlockOpening;
 
 	public bool AnyError => !ConnectionOk ||
-							(!(Manual && WithoutSensors) && (NotOpened || NotClosed || Collision || UnknownState));
+							(!WithoutSensors && (NotOpened || NotClosed || Collision || UnknownState));
 
 	public bool AnimationNeeded => OpeningClosing || (Collision && !OpenedSmoothly) || AnyError;
 }

@@ -78,8 +78,8 @@ internal class SlideGateRenderer : ValveBaseRenderer
 			graphics.DrawClosedCurve(pen, groovePoints, 0, FillMode.Alternate);
 		}
 
-		// Для клапанов без датчиков в ручном режиме не показываем положение задвижки
-		if (!(status.Manual && status.WithoutSensors))
+		// Для клапанов без датчиков не показываем положение задвижки
+		if (!status.WithoutSensors)
 		{
 			var gateBounds = GetGateBounds(grooveBounds, status, isLight);
 

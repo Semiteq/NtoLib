@@ -25,13 +25,13 @@ internal abstract class ValveBaseRenderer : BaseRenderer
 
 		if (!status.ConnectionOk)
 		{
-			colors[0] = Colors.NoData;
-			colors[1] = Colors.NoData;
+			colors[0] = Colors.NoDataDark;
+			colors[1] = Colors.NoDataDark;
 		}
-		else if (status.Manual && status.WithoutSensors)
+		else if (status.WithoutSensors)
 		{
-			colors[0] = Colors.NoData;
-			colors[1] = Colors.NoData;
+			colors[0] = Colors.NoDataDark;
+			colors[1] = Colors.NoDataDark;
 		}
 		else if (status.Opened && !status.Collision && !status.UnknownState)
 		{

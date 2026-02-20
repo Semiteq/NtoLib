@@ -81,11 +81,11 @@ internal class SmoothValveRenderer : CommonValveRenderer
 
 		if (!status.ConnectionOk)
 		{
-			color = Colors.NoData;
+			color = Colors.NoDataDark;
 		}
-		else if (status.Manual && status.WithoutSensors)
+		else if (status.WithoutSensors)
 		{
-			color = Colors.NoData;
+			color = Colors.NoDataDark;
 		}
 		else if (status.Opened || status.OpenedSmoothly)
 		{

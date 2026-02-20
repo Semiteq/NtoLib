@@ -178,7 +178,7 @@ public class ValveFB : VisualFBBaseExtended
 		_prevOpenSmoothlyCmd = openSmoothlyCmd;
 		_prevCloseCmd = closeCmd;
 
-		var canRaisePositionErrors = used && !(manual && withoutSensors);
+		var canRaisePositionErrors = used && !withoutSensors;
 		_collisionEvent?.Update(collision && canRaisePositionErrors);
 		_notOpenedEvent?.Update(notOpened && canRaisePositionErrors);
 		_notClosedEvent?.Update(notClosed && canRaisePositionErrors);
