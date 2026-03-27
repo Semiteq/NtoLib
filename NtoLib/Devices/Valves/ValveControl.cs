@@ -175,7 +175,7 @@ public partial class ValveControl : VisualControlBase
 		// or not in focus. This timer will force the control to redraw.
 		_redrawTimer = new Timer();
 		_redrawTimer.Interval = 50;
-		_redrawTimer.Tick += (s, e) => Invalidate();
+		_redrawTimer.Tick += (_, _) => Invalidate();
 		_redrawTimer.Start();
 	}
 
@@ -239,26 +239,18 @@ public partial class ValveControl : VisualControlBase
 			return;
 		}
 
-		void Apply()
+		if (!FBConnector.GetPinValue<bool>(pinID))
 		{
-			var used = FBConnector.GetPinValue<bool>(pinID);
-			if (Visible != used)
-			{
-				Visible = used;
-			}
-			if (used)
-			{
-				Invalidate();
-			}
+			return;
 		}
 
 		if (InvokeRequired)
 		{
-			BeginInvoke((Action)Apply);
+			BeginInvoke((Action)Invalidate);
 		}
 		else
 		{
-			Apply();
+			Invalidate();
 		}
 	}
 
@@ -436,6 +428,7 @@ public partial class ValveControl : VisualControlBase
 		Status.ConnectionOk = GetPinValue<bool>(ValveFB.ConnectionOkId);
 		Status.NotOpened = GetPinValue<bool>(ValveFB.NotOpenedId);
 		Status.NotClosed = GetPinValue<bool>(ValveFB.NotClosedId);
+
 		if (Status.NotOpened && Status.NotClosed)
 		{
 			Status.NotOpened = false;
@@ -460,14 +453,38 @@ public partial class ValveControl : VisualControlBase
 		Status.ForceClose = GetPinValue<bool>(ValveFB.ForceCloseId);
 		Status.BlockClosing = GetPinValue<bool>(ValveFB.BlockClosingId);
 		Status.BlockOpening = GetPinValue<bool>(ValveFB.BlockOpeningId);
-		buttonOpen.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening && !Status.ForceClose;
-		buttonOpenSmoothly.Enabled = !Status.UsedByAutoMode && !Status.BlockOpening && !Status.ForceClose;
-		buttonClose.Enabled = !Status.UsedByAutoMode && !Status.BlockClosing;
 
-		spriteBox.Visible = Status.Used;
-		buttonTable.Visible = Status.Used && !Status.Manual && !NoButtons;
+		buttonOpen.Enabled = Status is
+		{
+			UsedByAutoMode: false,
+			BlockOpening: false,
+			ForceClose: false
+		};
+
+		buttonOpenSmoothly.Enabled = Status is
+		{
+			UsedByAutoMode: false,
+			BlockOpening: false,
+			ForceClose: false
+		};
+
+		buttonClose.Enabled = Status is
+		{
+			UsedByAutoMode: false,
+			BlockClosing: false
+		};
+
+		spriteBox.Visible = Status.Used
+							&& Visible;
+
+		buttonTable.Visible = Status is
+		{
+			Used: true,
+			Manual: false
+		} && !NoButtons && Visible;
 
 		_isSmoothValve = GetPinValue<bool>(ValveFB.IsSmoothValveId);
+
 		UpdateRenderer();
 
 		if (_isSmoothValve != _previousSmoothValve)

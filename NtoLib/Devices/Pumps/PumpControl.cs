@@ -136,7 +136,7 @@ public partial class PumpControl : VisualControlBase
 		// or not in focus. This timer will force the control to redraw.
 		_redrawTimer = new Timer();
 		_redrawTimer.Interval = 50;
-		_redrawTimer.Tick += (s, e) => Invalidate();
+		_redrawTimer.Tick += (_, _) => Invalidate();
 		_redrawTimer.Start();
 	}
 
@@ -195,26 +195,18 @@ public partial class PumpControl : VisualControlBase
 			return;
 		}
 
-		void Apply()
+		if (!FBConnector.GetPinValue<bool>(pinID))
 		{
-			var used = FBConnector.GetPinValue<bool>(pinID);
-			if (Visible != used)
-			{
-				Visible = used;
-			}
-			if (used)
-			{
-				Invalidate();
-			}
+			return;
 		}
 
 		if (InvokeRequired)
 		{
-			BeginInvoke((Action)Apply);
+			BeginInvoke((Action)Invalidate);
 		}
 		else
 		{
-			Apply();
+			Invalidate();
 		}
 	}
 
@@ -379,8 +371,18 @@ public partial class PumpControl : VisualControlBase
 		Status.BlockStop = GetPinValue<bool>(PumpFB.BlockStopId);
 		Status.Use = GetPinValue<bool>(PumpFB.UsedId);
 
-		buttonStart.Enabled = !Status.UsedByAutoMode && !Status.BlockStart && !Status.ForceStop;
-		buttonStop.Enabled = !Status.UsedByAutoMode && !Status.BlockStop;
+		buttonStart.Enabled = Status is
+		{
+			UsedByAutoMode: false,
+			BlockStart: false,
+			ForceStop: false
+		};
+
+		buttonStop.Enabled = Status is
+		{
+			UsedByAutoMode: false,
+			BlockStop: false
+		};
 
 		Status.Temperature = GetPinValue<float>(PumpFB.TemperatureId);
 
