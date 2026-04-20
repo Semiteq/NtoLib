@@ -49,9 +49,6 @@ if (Test-Path $resourcesExt)
 $cfgSrc = Join-Path $RepoRoot 'DefaultConfig'
 if (Test-Path $cfgSrc)
 {
-    if (Test-Path $ConfigurationDirectory)
-    {
-        Remove-Item $ConfigurationDirectory -Recurse -Force
-    }
-    Copy-Item $cfgSrc $ConfigurationDirectory -Recurse -Force
+    New-Item -ItemType Directory -Force -Path $ConfigurationDirectory | Out-Null
+    Copy-Item (Join-Path $cfgSrc '*') $ConfigurationDirectory -Recurse -Force
 }
