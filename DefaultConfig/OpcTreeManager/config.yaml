@@ -1,0 +1,18 @@
+projects:
+  MBE:
+    - Cameras
+    - Axes
+    - Config
+    - Shutters
+    - Action
+  PLASMA:
+    - Shutters
+    - Vacuummeter
+    - Pyrometer
+    - Interferometer
+    - GasLine
+    - PlasmaSource
+  MAGN:
+    - TemperatureControllers
+    - Vacuummeter
+    - Water

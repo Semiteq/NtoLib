@@ -20,6 +20,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0"/>
     <PackageReference Include="Moq" Version="4.20.72"/>
     <PackageReference Include="System.Collections.Immutable" Version="9.0.7"/>
+    <PackageReference Include="System.Text.Json" Version="10.0.7" />
     <PackageReference Include="xunit" Version="2.9.3"/>
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <PrivateAssets>all</PrivateAssets>
@@ -35,18 +36,33 @@
 
   <ItemGroup>
     <Reference Include="FB">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\FB.dll</HintPath>
+      <HintPath>..\Resources\FB.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Common">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Common.dll</HintPath>
+      <HintPath>..\Resources\MasterSCADA.Common.dll</HintPath>
     </Reference>
     <Reference Include="MasterSCADA.Trend">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\MasterSCADA.Trend.dll</HintPath>
+      <HintPath>..\Resources\MasterSCADA.Trend.dll</HintPath>
     </Reference>
     <Reference Include="System.Text.Json">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\MPSSoft\MasterSCADA\System.Text.Json.dll</HintPath>
+      <HintPath>..\Resources\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Serilog">
+      <HintPath>..\packages\Serilog.4.3.0\lib\net471\Serilog.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Forms"/>
+    <Reference Include="OpcUaClient">
+      <HintPath>..\Resources\OpcUaClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Opc.Ua.Core">
+      <HintPath>..\Resources\Opc.Ua.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="InSAT.Library">
+      <HintPath>..\Resources\InSAT.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="MasterSCADALib">
+      <HintPath>..\Resources\MasterSCADALib.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
