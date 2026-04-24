@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Pre-commit hook: keep CLAUDE.md identical to AGENTS.md.
+#
+# Behaviour:
+#   1. If AGENTS.md is staged, copy it onto CLAUDE.md and stage CLAUDE.md.
+#   2. If only CLAUDE.md is staged (without AGENTS.md), abort the commit and
+#      tell the developer to edit AGENTS.md instead.
+#   3. If neither is staged, do nothing.
+#
+# Enable locally with:  git config core.hooksPath .githooks
+
+set -e
+
+repo_root=$(git rev-parse --show-toplevel)
+agents="$repo_root/AGENTS.md"
+claude="$repo_root/CLAUDE.md"
+
+agents_staged=$(git diff --cached --name-only --diff-filter=ACM | grep -Fx 'AGENTS.md' || true)
+claude_staged=$(git diff --cached --name-only --diff-filter=ACM | grep -Fx 'CLAUDE.md' || true)
+
+if [ -z "$agents_staged" ] && [ -n "$claude_staged" ]; then
+    cat >&2 <<'EOF'
+[pre-commit] CLAUDE.md is staged without AGENTS.md.
+
+CLAUDE.md is a generated mirror of AGENTS.md. Edit AGENTS.md instead;
+this hook will copy it onto CLAUDE.md on the next commit.
+
+To recover:
+    git restore --staged CLAUDE.md
+    git checkout -- CLAUDE.md
+    # ...edit AGENTS.md...
+    git add AGENTS.md
+EOF
+    exit 1
+fi
+
+if [ -n "$agents_staged" ]; then
+    cp "$agents" "$claude"
+    git add -- "$claude"
+    echo "[pre-commit] CLAUDE.md synced from AGENTS.md."
+fi
+
+exit 0
