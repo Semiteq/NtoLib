@@ -41,7 +41,7 @@
     - В корневой директории, где установлена MasterSCADA, создайте папку с именем `NtoLibTableConfig`.
 3. Размещение конфигурационных файлов:
     - Поместите в папку `NtoLibTableConfig` четыре обязательных YAML-файла (готовые темплейты для проектов можно найти
-      по [ссылке](../../MbeTable/DefaultConfig)):
+      по [ссылке](../../DefaultConfig/MBE)):
         - `PropertyDefs.yaml`
         - `PinGroupDefs.yaml`
         - `ColumnDefs.yaml`

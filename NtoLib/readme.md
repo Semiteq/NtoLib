@@ -20,14 +20,14 @@
 
 Функциональный блок для конфигурации, редактирования и исполнения технологических рецептов в MasterSCADA.
 
-- Документация на блок: [`MbeTable`](../Docs/MbeTable/readme.md)
+- Документация на блок: [`MbeTable`](../Docs/mbe_table/readme.md)
 - Модули блоков:
-    - Конфигурация через YAML: [`01-config`](../Docs/MbeTable/01-config.md)
-    - Работа с пинами SCADA: [`02-infrastructure`](../Docs/MbeTable/02-infrastructure.md)
-    - UI/UX и взаимодействие: [`03-presentation`](../Docs/MbeTable/03-presentation.md)
-    - Импорт/экспорт CSV: [`04-csv`](../Docs/MbeTable/04-csv.md)
-    - Взаимодействие с ПЛК по Modbus TCP: [`05-modbus-tcp`](../Docs/MbeTable/05-modbus-tcp.md)
-    - Диагностика и логирование: [`06-logger`](../Docs/MbeTable/06-logger.md)
+    - Конфигурация через YAML: [`01-config`](../Docs/mbe_table/01-config.md)
+    - Работа с пинами SCADA: [`02-infrastructure`](../Docs/mbe_table/02-infrastructure.md)
+    - UI/UX и взаимодействие: [`03-presentation`](../Docs/mbe_table/03-presentation.md)
+    - Импорт/экспорт CSV: [`04-csv`](../Docs/mbe_table/04-csv.md)
+    - Взаимодействие с ПЛК по Modbus TCP: [`05-modbus-tcp`](../Docs/mbe_table/05-modbus-tcp.md)
+    - Диагностика и логирование: [`06-logger`](../Docs/mbe_table/06-logger.md)
 
 ### BrokenLinksObserver
 
@@ -55,7 +55,7 @@
 
 ## Известные ограничения платформы
 
-Подробности: [`Docs/KnownIssues`](../Docs/KnownIssues/)
+Подробности: [`Docs/known_issues`](../Docs/known_issues/)
 
 - В легаси FB **нельзя** менять неймспейс и типы пинов блоков, уже присутствующих в старых проектах (MasterSCADA кэширует объекты).
 - Рекомендуется всё что возможно помечать как `[NonSerialized]`.
