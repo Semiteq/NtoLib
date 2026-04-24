@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -20,11 +20,18 @@ namespace NtoLib.OpcTreeManager.TreeOperations;
 internal sealed class PlanExecutor
 {
 	private readonly IProjectHlp _project;
+	private readonly ISubtreeDisconnector _disconnector;
 	private readonly ILogger _logger;
 
-	public PlanExecutor(IProjectHlp project, ILogger logger)
+	/// <summary>
+	/// <paramref name="project"/> may be <c>null</c> when the instance is used only for
+	/// in-memory <see cref="TestApplyDesiredSpec"/> calls from tests.
+	/// <see cref="Execute"/> requires a non-null project and guards against misuse.
+	/// </summary>
+	public PlanExecutor(IProjectHlp project, ISubtreeDisconnector disconnector, ILogger logger)
 	{
-		_project = project ?? throw new ArgumentNullException(nameof(project));
+		_project = project!;
+		_disconnector = disconnector ?? throw new ArgumentNullException(nameof(disconnector));
 
 		if (logger == null)
 		{
@@ -46,6 +53,13 @@ internal sealed class PlanExecutor
 		if (plan == null)
 		{
 			throw new ArgumentNullException(nameof(plan));
+		}
+
+		if (_project == null)
+		{
+			throw new InvalidOperationException(
+				"PlanExecutor.Execute requires a non-null IProjectHlp; this instance was constructed for "
+				+ "in-memory test usage only (ApplyDesiredSpec path).");
 		}
 
 		_logger.Information(
@@ -107,15 +121,40 @@ internal sealed class PlanExecutor
 		return Result.Ok();
 	}
 
-	private readonly record struct Construction(string Path, IReadOnlyList<LinkEntry> Links);
+	/// <summary>
+	/// Test entry point: directly invokes <see cref="ApplyDesiredSpec"/> against an in-memory
+	/// container and snapshot, returning the produced constructions and shrink count for assertion.
+	/// </summary>
+	internal void TestApplyDesiredSpec(
+		OpcUaScadaItem container,
+		IReadOnlyList<NodeSpec> desired,
+		string containerPath,
+		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
+		out List<Construction> constructions,
+		out int shrinkCount)
+	{
+		var context = new RebuildContext();
+		ApplyDesiredSpec(
+			container: container,
+			desired: desired,
+			containerPath: containerPath,
+			resolveChild: name => snapshot.TryGetValue(name, out var s)
+				? (s.ScadaItem, s.Links)
+				: (null, Array.Empty<LinkEntry>()),
+			context: context);
+		constructions = context.Constructions;
+		shrinkCount = context.ShrinkCount;
+	}
+
+	internal readonly record struct Construction(string Path, IReadOnlyList<LinkEntry> Links);
 
 	private sealed class RebuildContext
 	{
 		public List<Construction> Constructions { get; } = new();
-		public int ShrinkCount;
-		public int ShrinkTotal;
-		public int ShrinkSuccess;
-		public int ShrinkFail;
+		public int ShrinkCount { get; set; }
+		public int ShrinkTotal { get; set; }
+		public int ShrinkSuccess { get; set; }
+		public int ShrinkFail { get; set; }
 	}
 
 	/// <summary>
@@ -139,7 +178,7 @@ internal sealed class PlanExecutor
 
 		foreach (var name in currentByName.Keys.Where(n => !desiredNames.Contains(n)).ToList())
 		{
-			var (total, success, fail) = DisconnectNodeLinks(containerPath + "." + name);
+			var (total, success, fail) = _disconnector.DisconnectSubtree(containerPath + "." + name);
 			context.ShrinkCount++;
 			context.ShrinkTotal += total;
 			context.ShrinkSuccess += success;
@@ -252,7 +291,12 @@ internal sealed class PlanExecutor
 	/// </summary>
 	private static void ResetScadaItemsMap(OpcUaProtocol protocol)
 	{
-		protocol.ScadaRootNode = protocol.ScadaRootNode;
+		// Self-assignment is intentional — the setter clears the internal scada-items map.
+		// Using a temporary makes the intent explicit to humans and analyzers.
+		var root = protocol.ScadaRootNode;
+#pragma warning disable CA2245
+		protocol.ScadaRootNode = root;
+#pragma warning restore CA2245
 	}
 
 	private (int Total, int Success, int Fail) ExecuteExpand(IReadOnlyList<Construction> constructions)
@@ -270,83 +314,6 @@ internal sealed class PlanExecutor
 		}
 
 		return (total, success, fail);
-	}
-
-	/// <summary>
-	/// Re-enumerates the node subtree at execution time and disconnects all
-	/// connections from its pins. Used for nodes that are present in the current
-	/// group but absent from <see cref="RebuildPlan.DesiredTree"/> — the plan
-	/// does not pre-collect their links, so live re-enumeration is required.
-	/// </summary>
-	private (int Total, int Success, int Fail) DisconnectNodeLinks(string nodePath)
-	{
-		var node = _project.SafeItem<ITreeItemHlp>(nodePath);
-		if (node == null)
-		{
-			_logger.Error("Disconnect — node not found: {NodePath}", nodePath);
-			return (1, 0, 1);
-		}
-
-		var allPins = node.EnumAllChilds(TreeMasks.AllPinKinds, 0);
-
-		var success = 0;
-		var fail = 0;
-
-		foreach (var child in allPins)
-		{
-			if (child is not ITreePinHlp localPin)
-			{
-				continue;
-			}
-
-			var (s, f) = DisconnectPinConnections(localPin);
-			success += s;
-			fail += f;
-		}
-
-		return (success + fail, success, fail);
-	}
-
-	private (int Success, int Fail) DisconnectPinConnections(ITreePinHlp localPin)
-	{
-		var success = 0;
-		var fail = 0;
-
-		foreach (var mask in new[]
-		{
-			EConnectionTypeMask.ctGenericPin,
-			EConnectionTypeMask.ctGenericPout,
-			EConnectionTypeMask.ctIConnect,
-		})
-		{
-			// Materialise the COM enumerable before iterating to avoid modifying the
-			// collection while enumerating it (COM collections are live views).
-			var connections = localPin.GetConnections(mask).Cast<ITreePinHlp>().ToList();
-
-			foreach (var externalPin in connections)
-			{
-				try
-				{
-					localPin.Disconnect(externalPin);
-					_logger.Debug(
-						"Disconnected {LocalPin} ← {ExternalPin}",
-						localPin.FullName,
-						externalPin.FullName);
-					success++;
-				}
-				catch (Exception ex)
-				{
-					_logger.Error(
-						"Disconnect {LocalPin} ← {ExternalPin} — {Message}",
-						localPin.FullName,
-						externalPin.FullName,
-						ex.Message);
-					fail++;
-				}
-			}
-		}
-
-		return (success, fail);
 	}
 
 	/// <summary>

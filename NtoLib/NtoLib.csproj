@@ -320,10 +320,13 @@
     <Compile Include="OpcTreeManager\TreeOperations\DeferredExecutor.cs"/>
     <Compile Include="OpcTreeManager\TreeOperations\LinkCollector.cs"/>
     <Compile Include="OpcTreeManager\TreeOperations\OpcProtocolAccessor.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\ISubtreeDisconnector.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\ProjectSubtreeDisconnector.cs"/>
     <Compile Include="OpcTreeManager\TreeOperations\PlanExecutor.cs"/>
     <Compile Include="OpcTreeManager\TreeOperations\TreeMasks.cs"/>
     <Compile Include="OpcTreeManager\Facade\IOpcTreeManagerService.cs"/>
     <Compile Include="OpcTreeManager\Facade\OpcTreeManagerService.cs"/>
+    <Compile Include="OpcTreeManager\Facade\PlanBuilder.cs"/>
     <Compile Include="OpcTreeManager\OpcTreeManagerFB.cs"/>
     <Compile Include="LinkSwitcher\TreeOperations\LinkCollector.cs"/>
     <Compile Include="LinkSwitcher\TreeOperations\LinkExecutor.cs"/>

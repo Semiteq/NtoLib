@@ -79,10 +79,21 @@ public static class OpcConfigLoader
 		return result;
 	}
 
+	private static void ValidateNodeName(string name, string parentPath)
+	{
+		if (name.IndexOfAny(new[] { ' ', '\t', '\r', '\n' }) >= 0)
+		{
+			throw new InvalidOperationException(
+				$"Node name '{name}' under '{parentPath}' contains whitespace. "
+				+ "Use the 'Name:' mapping form (e.g. '- Valves:\\n    - VPG1') rather than '- Valves - VPG1'.");
+		}
+	}
+
 	private static NodeSpec ConvertNode(object raw, string parentPath)
 	{
 		if (raw is string scalar)
 		{
+			ValidateNodeName(scalar, parentPath);
 			return new NodeSpec(scalar, Children: null);
 		}
 
@@ -101,6 +112,8 @@ public static class OpcConfigLoader
 				throw new InvalidOperationException(
 					$"Node name under '{parentPath}' must be a string (got {entry.Key?.GetType().Name ?? "null"}).");
 			}
+
+			ValidateNodeName(name, parentPath);
 
 			var childPath = parentPath + "/" + name;
 

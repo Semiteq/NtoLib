@@ -139,6 +139,55 @@ projects:
 	}
 
 	[Fact]
+	public void Load_FoldedScalarWithSpaces_ReturnsFail()
+	{
+		// A folded YAML scalar like `- "Valves - VPG1"` or `- Valves - VPG1`
+		// is a common user mistake. The parser would accept it as a plain string,
+		// but it is semantically wrong — should be a mapping with children.
+		using var file = TempYaml(@"
+projects:
+  MBE:
+    - ""Valves - VPG1""
+");
+
+		var result = OpcConfigLoader.Load(file.Path);
+
+		result.IsFailed.Should().BeTrue();
+		string.Join(";", result.Errors).Should().Contain("whitespace");
+	}
+
+	[Fact]
+	public void Load_SingleWordScalar_Succeeds()
+	{
+		using var file = TempYaml(@"
+projects:
+  MBE:
+    - Valves
+");
+
+		var result = OpcConfigLoader.Load(file.Path);
+
+		result.IsSuccess.Should().BeTrue();
+		result.Value.Projects["MBE"].Single().Name.Should().Be("Valves");
+	}
+
+	[Fact]
+	public void Load_NameWithDot_Succeeds()
+	{
+		// OPC UA node names can contain dots — ensure dots are not rejected.
+		using var file = TempYaml(@"
+projects:
+  MBE:
+    - Valve.VPG1
+");
+
+		var result = OpcConfigLoader.Load(file.Path);
+
+		result.IsSuccess.Should().BeTrue();
+		result.Value.Projects["MBE"].Single().Name.Should().Be("Valve.VPG1");
+	}
+
+	[Fact]
 	public void Load_FileNotFound_ReturnsFail()
 	{
 		var result = OpcConfigLoader.Load(@"C:\NonExistent\missing.yaml");

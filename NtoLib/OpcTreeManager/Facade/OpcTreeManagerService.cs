@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,7 +34,8 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 		}
 
 		_logger = logger.ForContext<OpcTreeManagerService>();
-		_planExecutor = new PlanExecutor(project, logger);
+		var disconnector = new ProjectSubtreeDisconnector(project, logger);
+		_planExecutor = new PlanExecutor(project, disconnector, logger);
 	}
 
 	public bool HasPendingTask => PendingPlan != null;
@@ -57,14 +58,6 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 		}
 
 		var config = configResult.Value;
-
-		if (!config.Projects.TryGetValue(targetProject, out var nodeNames) || nodeNames == null || nodeNames.Count == 0)
-		{
-			var message = $"Project '{targetProject}' not found in config or has no nodes.";
-			_logger.Error("{ErrorMessage}", message);
-
-			return Result.Fail(message);
-		}
 
 		_logger.Information(
 			"Tree scan begin; OpcFbPath={OpcFbPath} GroupName={GroupName} TargetProject={TargetProject}",
@@ -89,32 +82,15 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 
 		var snapshot = snapshotResult.Value;
 
-		var desiredTree = nodeNames
-			.Where(n => n != null && !string.IsNullOrEmpty(n.Name))
-			.ToList();
-		var desiredSet = new HashSet<string>(
-			desiredTree.Select(s => s.Name),
-			StringComparer.Ordinal);
-		var currentSet = new HashSet<string>(
-			groupResult.Value.Group.Items.Select(i => i.Name),
-			StringComparer.Ordinal);
+		var currentTopLevelNames = groupResult.Value.Group.Items.Select(i => i.Name).ToList();
+		var planResult = PlanBuilder.Build(opcFbPath, groupName, targetProject, config, snapshot, currentTopLevelNames, _logger);
 
-		// Shallow short-circuit: if the top-level names match AND every top-level
-		// spec is a leaf (no children), we know the current contents already
-		// satisfy the target project — no need to touch anything. When any
-		// top-level spec has children we must proceed to the planner to let it
-		// recurse and check deeper differences.
-		var allLeaves = desiredTree.All(s => s.Children == null);
-		if (allLeaves && desiredSet.SetEquals(currentSet))
+		if (planResult.IsFailed)
 		{
-			_logger.Information(
-				"No operations required for group '{GroupName}' — current contents already match target project '{TargetProject}'.",
-				groupName, targetProject);
-			return Result.Ok();
+			return LogAndFail(planResult.Errors);
 		}
 
-		_logger.Information("Top-level desired nodes: {Count}", desiredTree.Count);
-		PendingPlan = new RebuildPlan(opcFbPath, groupName, desiredTree, snapshot);
+		PendingPlan = planResult.Value;
 
 		return Result.Ok();
 	}
