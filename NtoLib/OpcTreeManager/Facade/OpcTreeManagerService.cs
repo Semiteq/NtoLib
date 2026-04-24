@@ -77,41 +77,35 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 			return LogAndFail(groupResult.Errors);
 		}
 
-		Dictionary<string, NodeSnapshot> snapshot;
-
 		var snapshotResult = TreeSnapshotLoader.Load(treeJsonPath);
 
 		if (snapshotResult.IsFailed)
 		{
-			if (!File.Exists(treeJsonPath))
-			{
-				_logger.Warning(
-					"Snapshot file not found at '{Path}' — Expand operations will not be possible.",
-					treeJsonPath);
-			}
-			else
-			{
-				_logger.Warning(
-					"Failed to load snapshot from '{Path}' — Expand operations will not be possible. {Errors}",
-					treeJsonPath,
-					string.Join("; ", snapshotResult.Errors));
-			}
-
-			snapshot = new Dictionary<string, NodeSnapshot>(StringComparer.Ordinal);
-		}
-		else
-		{
-			snapshot = snapshotResult.Value;
+			var reason = File.Exists(treeJsonPath)
+				? $"Failed to load snapshot from '{treeJsonPath}': {string.Join("; ", snapshotResult.Errors)}"
+				: $"Snapshot file not found at '{treeJsonPath}'.";
+			return LogAndFail(new[] { new Error(reason) });
 		}
 
-		var nodeNameSet = new HashSet<string>(
-			nodeNames.Where(n => n != null),
+		var snapshot = snapshotResult.Value;
+
+		var desiredNames = nodeNames.Where(n => n != null).Distinct(StringComparer.Ordinal).ToList();
+		var desiredSet = new HashSet<string>(desiredNames, StringComparer.Ordinal);
+		var currentSet = new HashSet<string>(
+			groupResult.Value.Group.Items.Select(i => i.Name),
 			StringComparer.Ordinal);
 
-		var expandSpecs = BuildExpandSpecs(nodeNameSet, snapshot);
+		if (desiredSet.SetEquals(currentSet))
+		{
+			_logger.Information(
+				"No operations required for group '{GroupName}' — current contents already match target project '{TargetProject}'.",
+				groupName, targetProject);
+			return Result.Ok();
+		}
+
+		var expandSpecs = BuildExpandSpecs(desiredSet, snapshot);
 
 		_logger.Information("Expand specs queued: {Count}", expandSpecs.Count);
-		var desiredNames = nodeNames.Where(n => n != null).Distinct(StringComparer.Ordinal).ToList();
 		PendingPlan = new RebuildPlan(opcFbPath, groupName, desiredNames, expandSpecs);
 
 		return Result.Ok();

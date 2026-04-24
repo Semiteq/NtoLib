@@ -87,6 +87,17 @@ public sealed class OpcScadaItemDto
 				$"Cannot convert snapshot value '{DeadbandType}' to {nameof(Opc.Ua.DeadbandType)} for item '{Name}'.");
 		}
 
+		Type? dataType = null;
+		if (DataType != null)
+		{
+			dataType = Type.GetType(DataType);
+			if (dataType == null)
+			{
+				throw new InvalidOperationException(
+					$"Cannot resolve snapshot DataType '{DataType}' for item '{Name}'.");
+			}
+		}
+
 		var scadaItem = new OpcUaScadaItem
 		{
 			Name = Name,
@@ -94,7 +105,7 @@ public sealed class OpcScadaItemDto
 			NodeId = NodeId,
 			IsNode = IsNode,
 			PinValueType = pinType,
-			DataType = DataType != null ? Type.GetType(DataType) : null,
+			DataType = dataType,
 			IsArray = IsArray,
 			ArrayCount = ArrayCount,
 			DeadbandType = deadbandType,
