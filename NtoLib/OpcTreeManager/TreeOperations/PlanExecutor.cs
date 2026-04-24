@@ -35,11 +35,11 @@ internal sealed class PlanExecutor
 	}
 
 	/// <summary>
-	/// Synchronously executes the rebuild: resolves the OPC protocol/group, shrinks the
-	/// group, swaps <c>group.Items</c>, calls <c>SynchWihSysTree</c> and
-	/// <c>ITreeItemHlp.ApplyChange()</c>, then connects the expand-spec links. Returns
-	/// <see cref="Result.Ok"/> on success or a failed <see cref="Result"/> carrying the
-	/// protocol/group/tree-item resolution error.
+	/// Synchronously executes the rebuild: resolves the OPC protocol/group, applies the
+	/// <see cref="RebuildPlan.DesiredTree"/> recursively at every nesting level
+	/// (disconnecting removed subtrees, constructing missing ones pruned to the spec,
+	/// preserving matches), calls <c>SynchWihSysTree</c> and <c>ITreeItemHlp.ApplyChange()</c>
+	/// once at the group level, then reconnects links for all freshly-constructed nodes.
 	/// </summary>
 	public Result Execute(RebuildPlan plan)
 	{
@@ -49,8 +49,8 @@ internal sealed class PlanExecutor
 		}
 
 		_logger.Information(
-			"Executing plan for OPC FB {OpcFbPath}, group {GroupName} ({Count} expand specs)",
-			plan.OpcFbPath, plan.GroupName, plan.ExpandSpecs.Count);
+			"Executing plan for OPC FB {OpcFbPath}, group {GroupName} ({Count} top-level nodes desired)",
+			plan.OpcFbPath, plan.GroupName, plan.DesiredTree.Count);
 
 		var protocolResult = OpcProtocolAccessor.GetProtocol(_project, plan.OpcFbPath);
 
@@ -68,17 +68,21 @@ internal sealed class PlanExecutor
 		}
 
 		var (group, groupRelativePath) = groupResult.Value;
+		var groupPath = plan.OpcFbPath + "." + groupRelativePath;
 
-		var currentByName = group.Items.ToDictionary(i => i.Name, i => i, StringComparer.Ordinal);
-		var desiredNames = new HashSet<string>(plan.DesiredNodeNames, StringComparer.Ordinal);
-		var expandByName = plan.ExpandSpecs.ToDictionary(s => s.Name, s => s, StringComparer.Ordinal);
+		var context = new RebuildContext();
 
-		var toRemoveNames = currentByName.Keys.Where(n => !desiredNames.Contains(n)).ToList();
-		var (shrinkTotal, shrinkSuccess, shrinkFail) = DisconnectAll(toRemoveNames, plan.OpcFbPath, groupRelativePath);
-
-		var (newItems, expandedSpecs) = BuildNewItems(plan, currentByName, expandByName);
-
-		SwapGroupItems(group, newItems);
+		// Top-level: each desired child resolves through plan.Snapshot (keyed by
+		// top-level name). Links for each top-level subtree live in the same
+		// snapshot entry's Links list and are inherited by deeper recursive calls.
+		ApplyDesiredSpec(
+			container: group,
+			desired: plan.DesiredTree,
+			containerPath: groupPath,
+			resolveChild: name => plan.Snapshot.TryGetValue(name, out var s)
+				? (s.ScadaItem, s.Links)
+				: (null, Array.Empty<LinkEntry>()),
+			context: context);
 
 		ResetScadaItemsMap(protocol);
 		protocol.SynchWihSysTree();
@@ -89,77 +93,136 @@ internal sealed class PlanExecutor
 			return commitResult;
 		}
 
-		var (expandTotal, expandSuccess, expandFail) = ExecuteExpand(expandedSpecs);
+		var (expandTotal, expandSuccess, expandFail) = ExecuteExpand(context.Constructions);
 
-		var linkTotal = shrinkTotal + expandTotal;
-		var linkSuccess = shrinkSuccess + expandSuccess;
-		var linkFail = shrinkFail + expandFail;
+		var linkTotal = context.ShrinkTotal + expandTotal;
+		var linkSuccess = context.ShrinkSuccess + expandSuccess;
+		var linkFail = context.ShrinkFail + expandFail;
 
 		_logger.Information(
 			"Execution complete: shrink={ShrinkCount} expand={ExpandCount}; "
 			+ "links total={LinkTotal} ok={LinkSuccess} fail={LinkFail}",
-			toRemoveNames.Count, expandedSpecs.Count, linkTotal, linkSuccess, linkFail);
+			context.ShrinkCount, context.Constructions.Count, linkTotal, linkSuccess, linkFail);
 
 		return Result.Ok();
 	}
 
-	/// <summary>
-	/// Builds the new <c>group.Items</c> list from the desired node order. Existing items
-	/// are preserved verbatim; missing ones are constructed from the expand spec's scada
-	/// item DTO. The new items are returned as a local list so that a throw from
-	/// <c>ToScadaItem()</c> leaves <c>group.Items</c> untouched — the swap at the call
-	/// site is the only mutation. Also returns the subset of <see cref="ExpandSpec"/>s
-	/// whose links must be re-connected — <b>only</b> the freshly-constructed items.
-	/// Preserved existing items keep their pin wiring through the <c>group.Items</c> swap
-	/// and must not be reconnected, because <c>ITreePin.ConnectByName</c> throws
-	/// <c>ArgumentOutOfRangeException</c> on a pin slot that is already wired.
-	/// </summary>
-	private (List<OpcUaScadaItem> NewItems, List<ExpandSpec> ExpandedSpecs) BuildNewItems(
-		RebuildPlan plan,
-		Dictionary<string, OpcUaScadaItem> currentByName,
-		Dictionary<string, ExpandSpec> expandByName)
-	{
-		var newItems = new List<OpcUaScadaItem>();
-		var expandedSpecs = new List<ExpandSpec>();
+	private readonly record struct Construction(string Path, IReadOnlyList<LinkEntry> Links);
 
-		foreach (var name in plan.DesiredNodeNames)
+	private sealed class RebuildContext
+	{
+		public List<Construction> Constructions { get; } = new();
+		public int ShrinkCount;
+		public int ShrinkTotal;
+		public int ShrinkSuccess;
+		public int ShrinkFail;
+	}
+
+	/// <summary>
+	/// Rebuilds <paramref name="container"/>'s <c>Items</c> to match <paramref name="desired"/>.
+	/// Missing items are constructed from the snapshot DTO returned by
+	/// <paramref name="resolveChild"/> (pruned to match the spec's children),
+	/// existing items whose names match are preserved. Removed items are live-disconnected
+	/// and then dropped. Recurses into each preserved item whose spec has non-null
+	/// <c>Children</c>, carrying the resolved DTO downwards so deep constructions can
+	/// walk the same snapshot subtree.
+	/// </summary>
+	private void ApplyDesiredSpec(
+		OpcUaScadaItem container,
+		IReadOnlyList<NodeSpec> desired,
+		string containerPath,
+		Func<string, (OpcScadaItemDto? Dto, IReadOnlyList<LinkEntry> Links)> resolveChild,
+		RebuildContext context)
+	{
+		var currentByName = container.Items.ToDictionary(i => i.Name, i => i, StringComparer.Ordinal);
+		var desiredNames = new HashSet<string>(desired.Select(s => s.Name), StringComparer.Ordinal);
+
+		foreach (var name in currentByName.Keys.Where(n => !desiredNames.Contains(n)).ToList())
 		{
-			if (currentByName.TryGetValue(name, out var existing))
+			var (total, success, fail) = DisconnectNodeLinks(containerPath + "." + name);
+			context.ShrinkCount++;
+			context.ShrinkTotal += total;
+			context.ShrinkSuccess += success;
+			context.ShrinkFail += fail;
+		}
+
+		var newItems = new List<OpcUaScadaItem>(desired.Count);
+		var preservedCount = 0;
+		var constructedCount = 0;
+
+		foreach (var spec in desired)
+		{
+			var childPath = containerPath + "." + spec.Name;
+			var (childDto, childLinks) = resolveChild(spec.Name);
+
+			if (currentByName.TryGetValue(spec.Name, out var existing))
 			{
 				newItems.Add(existing);
-				_logger.Debug("BuildNewItems — preserved '{NodeName}' (links intact, no reconnect)", name);
+				preservedCount++;
+				_logger.Debug("BuildNewItems — preserved '{NodePath}' (links intact, no reconnect)", childPath);
+
+				if (spec.Children != null)
+				{
+					ApplyDesiredSpec(
+						existing,
+						spec.Children,
+						childPath,
+						inner => childDto != null
+							? (childDto.Items.FirstOrDefault(i => i.Name == inner), childLinks)
+							: (null, Array.Empty<LinkEntry>()),
+						context);
+				}
+
+				continue;
 			}
-			else if (expandByName.TryGetValue(name, out var spec))
-			{
-				newItems.Add(spec.ScadaItem.ToScadaItem());
-				expandedSpecs.Add(spec);
-				_logger.Debug(
-					"BuildNewItems — newly constructed '{NodeName}' ({LinkCount} links to reconnect)",
-					name, spec.Links.Count);
-			}
-			else
+
+			if (childDto == null)
 			{
 				_logger.Warning(
-					"BuildNewItems — node '{NodeName}' not in current group and not in expand specs; skipped.",
-					name);
+					"BuildNewItems — node '{NodePath}' not in current container and not in snapshot; skipped.",
+					childPath);
+				continue;
 			}
+
+			var constructed = childDto.ToScadaItemPruned(spec);
+			newItems.Add(constructed);
+			constructedCount++;
+
+			var keptPaths = EnumerateSubtreeNodePaths(constructed, childPath).ToArray();
+			var filteredLinks = LinkCollector.FilterForSubtree(childLinks, keptPaths);
+			context.Constructions.Add(new Construction(childPath, filteredLinks));
+
+			_logger.Debug(
+				"BuildNewItems — newly constructed '{NodePath}' ({LinkCount} links to reconnect)",
+				childPath, filteredLinks.Count);
 		}
 
 		_logger.Information(
-			"BuildNewItems — desired={DesiredCount} preserved={PreservedCount} newlyConstructed={NewlyConstructedCount}",
-			plan.DesiredNodeNames.Count,
-			newItems.Count - expandedSpecs.Count,
-			expandedSpecs.Count);
+			"BuildNewItems at '{ContainerPath}' — desired={DesiredCount} preserved={PreservedCount} newlyConstructed={NewlyConstructedCount}",
+			containerPath, desired.Count, preservedCount, constructedCount);
 
-		return (newItems, expandedSpecs);
+		SwapContainerItems(container, newItems);
 	}
 
-	private static void SwapGroupItems(OpcUaScadaItem group, List<OpcUaScadaItem> newItems)
+	private static IEnumerable<string> EnumerateSubtreeNodePaths(OpcUaScadaItem item, string itemPath)
 	{
-		group.Items.Clear();
+		yield return itemPath;
+
+		foreach (var child in item.Items)
+		{
+			foreach (var descendantPath in EnumerateSubtreeNodePaths(child, itemPath + "." + child.Name))
+			{
+				yield return descendantPath;
+			}
+		}
+	}
+
+	private static void SwapContainerItems(OpcUaScadaItem container, List<OpcUaScadaItem> newItems)
+	{
+		container.Items.Clear();
 		foreach (var item in newItems)
 		{
-			group.Items.Add(item);
+			container.Items.Add(item);
 		}
 	}
 
@@ -192,34 +255,15 @@ internal sealed class PlanExecutor
 		protocol.ScadaRootNode = protocol.ScadaRootNode;
 	}
 
-	private (int Total, int Success, int Fail) DisconnectAll(
-		IReadOnlyList<string> names, string opcFbPath, string groupRelativePath)
+	private (int Total, int Success, int Fail) ExecuteExpand(IReadOnlyList<Construction> constructions)
 	{
 		var total = 0;
 		var success = 0;
 		var fail = 0;
 
-		foreach (var name in names)
+		foreach (var construction in constructions)
 		{
-			var fullPath = opcFbPath + "." + groupRelativePath + "." + name;
-			var (nodeTotal, nodeSuccess, nodeFail) = DisconnectNodeLinks(fullPath);
-			total += nodeTotal;
-			success += nodeSuccess;
-			fail += nodeFail;
-		}
-
-		return (total, success, fail);
-	}
-
-	private (int Total, int Success, int Fail) ExecuteExpand(IReadOnlyList<ExpandSpec> specs)
-	{
-		var total = 0;
-		var success = 0;
-		var fail = 0;
-
-		foreach (var spec in specs)
-		{
-			var (t, s, f) = ConnectLinks(spec.Links);
+			var (t, s, f) = ConnectLinks(construction.Links);
 			total += t;
 			success += s;
 			fail += f;
@@ -231,7 +275,7 @@ internal sealed class PlanExecutor
 	/// <summary>
 	/// Re-enumerates the node subtree at execution time and disconnects all
 	/// connections from its pins. Used for nodes that are present in the current
-	/// group but absent from <see cref="RebuildPlan.DesiredNodeNames"/> — the plan
+	/// group but absent from <see cref="RebuildPlan.DesiredTree"/> — the plan
 	/// does not pre-collect their links, so live re-enumeration is required.
 	/// </summary>
 	private (int Total, int Success, int Fail) DisconnectNodeLinks(string nodePath)

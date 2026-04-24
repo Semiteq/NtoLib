@@ -75,6 +75,45 @@ public sealed class OpcScadaItemDto
 
 	public OpcUaScadaItem ToScadaItem()
 	{
+		var scadaItem = BuildWithoutChildren();
+
+		foreach (var child in Items)
+		{
+			scadaItem.Items.Add(child.ToScadaItem());
+		}
+
+		return scadaItem;
+	}
+
+	/// <summary>
+	/// Same as <see cref="ToScadaItem"/> when <paramref name="spec"/> is null or
+	/// a leaf (<c>Children == null</c>). Otherwise constructs this item with its
+	/// <c>Items</c> filtered to only those children named by <paramref name="spec"/>,
+	/// recursively applying the same rule. Throws when a child listed in
+	/// <paramref name="spec"/> is absent from this DTO's <see cref="Items"/>.
+	/// </summary>
+	public OpcUaScadaItem ToScadaItemPruned(NodeSpec? spec)
+	{
+		if (spec == null || spec.Children == null)
+		{
+			return ToScadaItem();
+		}
+
+		var scadaItem = BuildWithoutChildren();
+
+		foreach (var childSpec in spec.Children)
+		{
+			var childDto = Items.FirstOrDefault(i => i.Name == childSpec.Name)
+				?? throw new InvalidOperationException(
+					$"Child '{childSpec.Name}' listed in desired spec is not present in snapshot item '{Name}'.");
+			scadaItem.Items.Add(childDto.ToScadaItemPruned(childSpec));
+		}
+
+		return scadaItem;
+	}
+
+	private OpcUaScadaItem BuildWithoutChildren()
+	{
 		if (!Enum.TryParse(PinValueType, out PinType pinType))
 		{
 			throw new InvalidOperationException(
@@ -98,7 +137,7 @@ public sealed class OpcScadaItemDto
 			}
 		}
 
-		var scadaItem = new OpcUaScadaItem
+		return new OpcUaScadaItem
 		{
 			Name = Name,
 			Id = Id,
@@ -114,12 +153,5 @@ public sealed class OpcScadaItemDto
 			ReadPeriod = ReadPeriod,
 			ReadTimeout = ReadTimeout,
 		};
-
-		foreach (var child in Items)
-		{
-			scadaItem.Items.Add(child.ToScadaItem());
-		}
-
-		return scadaItem;
 	}
 }

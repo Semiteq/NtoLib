@@ -89,13 +89,23 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 
 		var snapshot = snapshotResult.Value;
 
-		var desiredNames = nodeNames.Where(n => n != null).Distinct(StringComparer.Ordinal).ToList();
-		var desiredSet = new HashSet<string>(desiredNames, StringComparer.Ordinal);
+		var desiredTree = nodeNames
+			.Where(n => n != null && !string.IsNullOrEmpty(n.Name))
+			.ToList();
+		var desiredSet = new HashSet<string>(
+			desiredTree.Select(s => s.Name),
+			StringComparer.Ordinal);
 		var currentSet = new HashSet<string>(
 			groupResult.Value.Group.Items.Select(i => i.Name),
 			StringComparer.Ordinal);
 
-		if (desiredSet.SetEquals(currentSet))
+		// Shallow short-circuit: if the top-level names match AND every top-level
+		// spec is a leaf (no children), we know the current contents already
+		// satisfy the target project — no need to touch anything. When any
+		// top-level spec has children we must proceed to the planner to let it
+		// recurse and check deeper differences.
+		var allLeaves = desiredTree.All(s => s.Children == null);
+		if (allLeaves && desiredSet.SetEquals(currentSet))
 		{
 			_logger.Information(
 				"No operations required for group '{GroupName}' — current contents already match target project '{TargetProject}'.",
@@ -103,10 +113,8 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 			return Result.Ok();
 		}
 
-		var expandSpecs = BuildExpandSpecs(desiredSet, snapshot);
-
-		_logger.Information("Expand specs queued: {Count}", expandSpecs.Count);
-		PendingPlan = new RebuildPlan(opcFbPath, groupName, desiredNames, expandSpecs);
+		_logger.Information("Top-level desired nodes: {Count}", desiredTree.Count);
+		PendingPlan = new RebuildPlan(opcFbPath, groupName, desiredTree, snapshot);
 
 		return Result.Ok();
 	}
@@ -187,28 +195,6 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 
 		_logger.Information("Snapshot written to '{Path}'", treeJsonPath);
 		return Result.Ok();
-	}
-
-	private static IReadOnlyList<ExpandSpec> BuildExpandSpecs(
-		HashSet<string> nodeNameSet,
-		Dictionary<string, NodeSnapshot> snapshot)
-	{
-		var specs = new List<ExpandSpec>();
-
-		foreach (var name in nodeNameSet)
-		{
-			if (!snapshot.TryGetValue(name, out var nodeSnapshot) || nodeSnapshot.ScadaItem == null)
-			{
-				continue;
-			}
-
-			specs.Add(new ExpandSpec(
-				Name: name,
-				ScadaItem: nodeSnapshot.ScadaItem,
-				Links: nodeSnapshot.Links));
-		}
-
-		return specs;
 	}
 
 	private Result LogAndFail(IEnumerable<IError> errors)

@@ -5,6 +5,17 @@ projects:
     - Config
     - Shutters
     - Action
+    - Valves:
+      - VPG1
+      - VPG2
+  MBE_ALT:
+    - Cameras
+    - Axes
+    - Config
+    - Shutters
+    - Action
+    - Valves:
+      - VPG2
   PLASMA:
     - Shutters
     - Vacuummeter

@@ -36,6 +36,45 @@ public static class LinkCollector
 		return links;
 	}
 
+	/// <summary>
+	/// Keeps only the <see cref="LinkEntry"/>s whose <see cref="LinkEntry.LocalPinPath"/>
+	/// sits under any of the given node paths. Used when replaying a pruned subtree
+	/// construction: the snapshot stores the full top-level subtree's links, but
+	/// for a prune-selected descendant set only the matching ones must be reconnected.
+	/// A link belongs to a node when its local path starts with <c>nodePath + "."</c>.
+	/// </summary>
+	public static IReadOnlyList<LinkEntry> FilterForSubtree(
+		IReadOnlyList<LinkEntry> links,
+		IReadOnlyCollection<string> keptNodePaths)
+	{
+		if (links == null)
+		{
+			throw new ArgumentNullException(nameof(links));
+		}
+
+		if (keptNodePaths == null || keptNodePaths.Count == 0)
+		{
+			return Array.Empty<LinkEntry>();
+		}
+
+		var prefixes = keptNodePaths.Select(p => p + ".").ToArray();
+		var result = new List<LinkEntry>();
+
+		foreach (var link in links)
+		{
+			foreach (var prefix in prefixes)
+			{
+				if (link.LocalPinPath.StartsWith(prefix, StringComparison.Ordinal))
+				{
+					result.Add(link);
+					break;
+				}
+			}
+		}
+
+		return result;
+	}
+
 	internal static IReadOnlyList<LinkEntry> BuildLinks(IEnumerable<PinView> pins, ILogger? log)
 	{
 		if (pins == null)

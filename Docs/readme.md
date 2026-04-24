@@ -14,7 +14,7 @@
 | 4 | [MbeTable](MbeTable/readme.md) | Таблица рецептов MBE: конфигурация, UI, Modbus TCP, CSV |
 | 5 | [NumericBox](numeric-box.md) | Поле ввода числового значения с арбитрацией и валидацией |
 | 6 | [Installer](installer.md) | Графический установщик NtoLib: копирование файлов, конфигурации и COM-регистрация |
-| 7 | [OpcTreeManager](opc-tree-manager.md) | Перестройка дерева OPC UA FB под выбранный целевой проект (shrink/expand с восстановлением связей) |
+| 7 | [OpcTreeManager](opc-tree-manager.md) | Перестройка дерева OPC UA FB под выбранный целевой проект с произвольной глубиной вложенности (shrink/expand с восстановлением связей на любом уровне) |
 
 ---
 

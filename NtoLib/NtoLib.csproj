@@ -310,10 +310,10 @@
     <Compile Include="OpcTreeManager\Config\OpcConfigLoader.cs"/>
     <Compile Include="OpcTreeManager\Config\TreeSnapshotLoader.cs"/>
     <Compile Include="OpcTreeManager\Config\TreeSnapshotWriter.cs"/>
-    <Compile Include="OpcTreeManager\Entities\ExpandSpec.cs"/>
     <Compile Include="OpcTreeManager\Entities\LinkEntry.cs"/>
     <Compile Include="OpcTreeManager\Entities\LinkTypes.cs"/>
     <Compile Include="OpcTreeManager\Entities\NodeSnapshot.cs"/>
+    <Compile Include="OpcTreeManager\Entities\NodeSpec.cs"/>
     <Compile Include="OpcTreeManager\Entities\OpcScadaItemDto.cs"/>
     <Compile Include="OpcTreeManager\Entities\RebuildPlan.cs"/>
     <Compile Include="OpcTreeManager\Logging\OpcLoggerFactory.cs"/>
