@@ -78,17 +78,17 @@ public sealed class PlanBuilderAcceptanceTests
 			snapshotResult.IsSuccess.Should().BeTrue(
 				because: $"case '{caseName}': snapshot should load for a plan-level failure test");
 
-		// Use targetProject from the fixture if specified; otherwise default to a value that
-		// is guaranteed absent from any real config, so the plan-level failure is triggered
-		// only for cases that explicitly rely on a missing project name.
-		var targetProjectForFailure = expected.TargetProject ?? "NONEXISTENT_PROJECT";
-		var failPlan = PlanBuilder.Build(
-			opcFbPath: "Project.OpcUaFB",
-			groupName: "TestGroup",
-			targetProject: targetProjectForFailure,
-			config: configResult.Value,
-			snapshot: snapshotResult.Value,
-			currentTopLevelNames: new List<string>());
+			// Use targetProject from the fixture if specified; otherwise default to a value that
+			// is guaranteed absent from any real config, so the plan-level failure is triggered
+			// only for cases that explicitly rely on a missing project name.
+			var targetProjectForFailure = expected.TargetProject ?? "NONEXISTENT_PROJECT";
+			var failPlan = PlanBuilder.Build(
+				opcFbPath: "Project.OpcUaFB",
+				groupName: "TestGroup",
+				targetProject: targetProjectForFailure,
+				config: configResult.Value,
+				snapshot: snapshotResult.Value,
+				currentTopLevelNames: new List<string>());
 
 			failPlan.IsFailed.Should().BeTrue(
 				because: $"case '{caseName}': PlanBuilder should fail");

@@ -129,7 +129,7 @@ projects:
 		using var file = TempYaml(@"
 projects:
   MBE:
-    - Valves: notALis­tButAScalar
+    - Valves: notAListButAScalar
 ");
 
 		var result = OpcConfigLoader.Load(file.Path);
@@ -194,6 +194,39 @@ projects:
 
 		result.IsFailed.Should().BeTrue();
 		string.Join(";", result.Errors).Should().Contain("not found");
+	}
+
+	[Fact]
+	public void Load_EmptyScalarName_ReturnsFail()
+	{
+		// Empty-quoted scalar would pass the whitespace check but leave a blank name
+		// that would flow downstream and corrupt the plan.
+		using var file = TempYaml(@"
+projects:
+  MBE:
+    - """"
+");
+
+		var result = OpcConfigLoader.Load(file.Path);
+
+		result.IsFailed.Should().BeTrue();
+		string.Join(";", result.Errors).Should().Contain("Empty node name");
+	}
+
+	[Fact]
+	public void Load_DuplicateSiblings_ReturnsFail()
+	{
+		using var file = TempYaml(@"
+projects:
+  MBE:
+    - Valves
+    - Valves
+");
+
+		var result = OpcConfigLoader.Load(file.Path);
+
+		result.IsFailed.Should().BeTrue();
+		string.Join(";", result.Errors).Should().Contain("Duplicate sibling name");
 	}
 
 	private static TempYamlFile TempYaml(string content)

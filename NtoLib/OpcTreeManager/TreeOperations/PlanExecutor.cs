@@ -240,7 +240,30 @@ internal sealed class PlanExecutor
 			"BuildNewItems at '{ContainerPath}' — desired={DesiredCount} preserved={PreservedCount} newlyConstructed={NewlyConstructedCount}",
 			containerPath, desired.Count, preservedCount, constructedCount);
 
+		if (ItemsReferenceEqual(container.Items, newItems))
+		{
+			return;
+		}
+
 		SwapContainerItems(container, newItems);
+	}
+
+	private static bool ItemsReferenceEqual(IList<OpcUaScadaItem> current, List<OpcUaScadaItem> candidate)
+	{
+		if (current.Count != candidate.Count)
+		{
+			return false;
+		}
+
+		for (var i = 0; i < candidate.Count; i++)
+		{
+			if (!ReferenceEquals(current[i], candidate[i]))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private static IEnumerable<string> EnumerateSubtreeNodePaths(OpcUaScadaItem item, string itemPath)

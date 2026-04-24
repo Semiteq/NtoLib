@@ -66,6 +66,8 @@ public static class OpcConfigLoader
 			return result;
 		}
 
+		var seenNames = new HashSet<string>(StringComparer.Ordinal);
+
 		foreach (var item in items)
 		{
 			if (item == null)
@@ -73,7 +75,15 @@ public static class OpcConfigLoader
 				continue;
 			}
 
-			result.Add(ConvertNode(item, parentPath));
+			var spec = ConvertNode(item, parentPath);
+			if (!seenNames.Add(spec.Name))
+			{
+				throw new InvalidOperationException(
+					$"Duplicate sibling name '{spec.Name}' under '{parentPath}'. "
+					+ "Each node name must appear at most once under the same parent.");
+			}
+
+			result.Add(spec);
 		}
 
 		return result;
@@ -81,6 +91,12 @@ public static class OpcConfigLoader
 
 	private static void ValidateNodeName(string name, string parentPath)
 	{
+		if (string.IsNullOrEmpty(name))
+		{
+			throw new InvalidOperationException(
+				$"Empty node name under '{parentPath}'. Every entry must have a non-empty identifier.");
+		}
+
 		if (name.IndexOfAny(new[] { ' ', '\t', '\r', '\n' }) >= 0)
 		{
 			throw new InvalidOperationException(

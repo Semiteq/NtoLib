@@ -51,6 +51,13 @@ internal static class PlanBuilder
 			.Where(n => n != null && !string.IsNullOrEmpty(n.Name))
 			.ToList();
 
+		if (desiredTree.Count == 0)
+		{
+			return Result.Fail(
+				$"Project '{targetProject}' has no valid nodes after filtering null/empty entries. "
+				+ "Refusing to build a destructive plan that would clear the whole group.");
+		}
+
 		var desiredSet = new HashSet<string>(
 			desiredTree.Select(s => s.Name),
 			StringComparer.Ordinal);
