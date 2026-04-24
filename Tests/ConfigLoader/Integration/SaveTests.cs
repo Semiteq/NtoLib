@@ -50,7 +50,12 @@ public sealed class SaveTests
 		var service = ConfigLoaderTestHelper.CreateService();
 		var filePath = ConfigLoaderTestHelper.GetConfigFilePath(tempDir);
 
-		var emptyDto = new LoaderDto([], [], [], [], []);
+		var emptyDto = new LoaderDto(
+			System.Array.Empty<string>(),
+			System.Array.Empty<string>(),
+			System.Array.Empty<string>(),
+			System.Array.Empty<string>(),
+			System.Array.Empty<string>());
 		var result = service.Save(filePath, emptyDto);
 
 		result.IsFailed.Should().BeTrue();

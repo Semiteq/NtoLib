@@ -1,4 +1,4 @@
-namespace NtoLib.OpcTreeManager.TreeOperations;
+﻿namespace NtoLib.OpcTreeManager.TreeOperations;
 
 internal interface ISubtreeDisconnector
 {

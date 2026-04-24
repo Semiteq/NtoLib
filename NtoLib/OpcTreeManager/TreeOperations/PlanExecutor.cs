@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -383,7 +383,7 @@ internal sealed class PlanExecutor
 		try
 		{
 			// Direct wires use the no-arg Connect overload on purpose — see
-			// Docs/KnownIssues/05-opc-command-pin-connect-overload.md.
+			// Docs/known_issues/05-opc-command-pin-connect-overload.md.
 			if (link.LinkType == LinkTypes.IConnect)
 			{
 				localPin.Connect(externalPin, EConnectionType.ctIConnect);

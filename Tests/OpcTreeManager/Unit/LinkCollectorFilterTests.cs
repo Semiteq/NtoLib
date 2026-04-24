@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using NtoLib.OpcTreeManager.Entities;
 using NtoLib.OpcTreeManager.TreeOperations;
