@@ -240,7 +240,10 @@ projects:
 	{
 		public string Path { get; }
 
-		public TempYamlFile(string path) => Path = path;
+		public TempYamlFile(string path)
+		{
+			Path = path;
+		}
 
 		public void Dispose()
 		{

@@ -21,9 +21,9 @@ namespace Tests.OpcTreeManager.Acceptance;
 /// </summary>
 public sealed class PlanBuilderAcceptanceTests
 {
-	private static readonly string FixturesRoot = FindFixturesRoot();
+	private static readonly string _fixturesRoot = Find_fixturesRoot();
 
-	private static readonly JsonSerializerOptions JsonOptions = new()
+	private static readonly JsonSerializerOptions _jsonOptions = new()
 	{
 		PropertyNameCaseInsensitive = true,
 	};
@@ -31,12 +31,12 @@ public sealed class PlanBuilderAcceptanceTests
 	/// <summary>Discovers all fixture case names to feed into the theory.</summary>
 	public static IEnumerable<object[]> Cases()
 	{
-		if (!Directory.Exists(FixturesRoot))
+		if (!Directory.Exists(_fixturesRoot))
 		{
 			yield break;
 		}
 
-		foreach (var dir in Directory.EnumerateDirectories(FixturesRoot))
+		foreach (var dir in Directory.EnumerateDirectories(_fixturesRoot))
 		{
 			yield return new object[] { Path.GetFileName(dir) };
 		}
@@ -46,13 +46,13 @@ public sealed class PlanBuilderAcceptanceTests
 	[MemberData(nameof(Cases))]
 	public void PlanBuilder_FixtureCase(string caseName)
 	{
-		var caseDir = Path.Combine(FixturesRoot, caseName);
+		var caseDir = Path.Combine(_fixturesRoot, caseName);
 		var configPath = Path.Combine(caseDir, "config.yaml");
 		var treePath = Path.Combine(caseDir, "tree.json");
 		var expectedPath = Path.Combine(caseDir, "expected.json");
 
 		var expectedJson = File.ReadAllText(expectedPath);
-		var expected = JsonSerializer.Deserialize<ExpectedOutcome>(expectedJson, JsonOptions)!;
+		var expected = JsonSerializer.Deserialize<ExpectedOutcome>(expectedJson, _jsonOptions)!;
 
 		var configResult = OpcConfigLoader.Load(configPath);
 		var snapshotResult = TreeSnapshotLoader.Load(treePath);
@@ -162,7 +162,7 @@ public sealed class PlanBuilderAcceptanceTests
 		}
 	}
 
-	private static string FindFixturesRoot()
+	private static string Find_fixturesRoot()
 	{
 		var dir = AppContext.BaseDirectory;
 
