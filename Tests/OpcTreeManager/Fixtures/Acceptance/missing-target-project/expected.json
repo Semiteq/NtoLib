@@ -1,0 +1,8 @@
+{
+  "isOk": false,
+  "isNull": false,
+  "targetProject": "NONEXISTENT_PROJECT",
+  "errorSubstring": "not found in config",
+  "desiredTreeTopLevelNames": null,
+  "snapshotKeys": null
+}

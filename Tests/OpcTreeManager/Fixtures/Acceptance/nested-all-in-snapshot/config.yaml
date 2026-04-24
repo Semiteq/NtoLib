@@ -1,0 +1,6 @@
+projects:
+  MBE:
+    - Cameras
+    - Valves:
+        - VPG1
+        - VPG2

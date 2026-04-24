@@ -1,0 +1,38 @@
+{
+  "Valves": {
+    "links": [],
+    "scadaItem": {
+      "name": "Valves",
+      "id": 1,
+      "nodeId": "ns=2;s=Valves",
+      "isNode": true,
+      "pinValueType": "None",
+      "dataType": null,
+      "isArray": false,
+      "arrayCount": 0,
+      "deadbandType": "None",
+      "deadBandValue": 0.0,
+      "isOwnSubscriptionSettings": false,
+      "readPeriod": 0,
+      "readTimeout": 0,
+      "items": [
+        {
+          "name": "VPG1",
+          "id": 2,
+          "nodeId": "ns=2;s=Valves.VPG1",
+          "isNode": true,
+          "pinValueType": "None",
+          "dataType": null,
+          "isArray": false,
+          "arrayCount": 0,
+          "deadbandType": "None",
+          "deadBandValue": 0.0,
+          "isOwnSubscriptionSettings": false,
+          "readPeriod": 0,
+          "readTimeout": 0,
+          "items": []
+        }
+      ]
+    }
+  }
+}

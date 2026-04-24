@@ -1,0 +1,7 @@
+{
+  "isOk": true,
+  "isNull": false,
+  "errorSubstring": null,
+  "desiredTreeTopLevelNames": ["Cameras", "Axes", "Valves"],
+  "snapshotKeys": ["Cameras", "Axes"]
+}
