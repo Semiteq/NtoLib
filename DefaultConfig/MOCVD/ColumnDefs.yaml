@@ -71,9 +71,9 @@
       index: 2
 
 # Значение
-- key: "target_value"
+- key: "task"
   ui:
-    code: "target_value"
+    code: "task"
     ui_name: "Значение"
     column_type: "property_field"
     width: 160

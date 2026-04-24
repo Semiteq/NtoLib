@@ -14,6 +14,7 @@
 | 4 | [MbeTable](MbeTable/readme.md) | Таблица рецептов MBE: конфигурация, UI, Modbus TCP, CSV |
 | 5 | [NumericBox](numeric-box.md) | Поле ввода числового значения с арбитрацией и валидацией |
 | 6 | [Installer](installer.md) | Графический установщик NtoLib: копирование файлов, конфигурации и COM-регистрация |
+| 7 | [OpcTreeManager](opc-tree-manager.md) | Перестройка дерева OPC UA FB под выбранный целевой проект (shrink/expand с восстановлением связей) |
 
 ---
 
@@ -25,3 +26,4 @@
 | [DllMergeConstraints](KnownIssues/02-dll-merge-constraints.md) | Ограничения сборки DLL (Costura, ILRepack) |
 | [ProjectCachingAndSerialization](KnownIssues/03-project-caching-and-serialization.md) | Кэширование и сериализация компонентов в проекте |
 | [DeploymentErrors](KnownIssues/04-deployment-errors.md) | Ошибки при развёртывании и регистрации NtoLib |
+| [OpcCommandPinConnectOverload](KnownIssues/05-opc-command-pin-connect-overload.md) | `PlanExecutor` обязан использовать no-arg `Connect` для Command-пинов |

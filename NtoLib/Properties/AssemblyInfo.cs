@@ -1,5 +1,8 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+[assembly: InternalsVisibleTo("Tests")]
 
 [assembly: AssemblyTitle("NtoLib")]
 [assembly: AssemblyDescription("Библиотека для высокопроизводительных вычислений и работы с данными.")]

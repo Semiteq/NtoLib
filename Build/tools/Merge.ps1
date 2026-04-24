@@ -52,6 +52,7 @@ $excludedNameRegexes = @(
     '^MasterScada\..*\.dll$',
     '^MasterSCADALib\.dll$',
     '^ICSharpCode\..*\.dll$',
+    '^OpcUaClient\.dll$',
     '^System\.Text\.Json\.dll$',
     '^System\.Text\.Encodings\.Web\.dll$'
 )

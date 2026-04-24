@@ -84,6 +84,13 @@
       <HintPath>..\Resources\Insat.Opc.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.7\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Opc.Ua.Core">
+      <HintPath>..\Resources\Opc.Ua.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="MasterSCADA.Common">
       <HintPath>..\Resources\MasterSCADA.Common.dll</HintPath>
       <Private>False</Private>
@@ -104,8 +111,9 @@
       <HintPath>..\Resources\MasterSCADALib.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.8\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    <Reference Include="OpcUaClient">
+      <HintPath>..\Resources\OpcUaClient.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
@@ -162,8 +170,8 @@
       <HintPath>..\packages\Serilog.Sinks.File.7.0.0\lib\net471\Serilog.Sinks.File.dll</HintPath>
     </Reference>
     <Reference Include="System"/>
-    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
     </Reference>
     <Reference Include="System.Collections.Immutable, Version=9.0.0.7, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.Immutable.9.0.7\lib\net462\System.Collections.Immutable.dll</HintPath>
@@ -181,15 +189,15 @@
     <Reference Include="System.Formats.Nrbf, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Formats.Nrbf.9.0.7\lib\net462\System.Formats.Nrbf.dll</HintPath>
     </Reference>
-    <Reference Include="System.IO.Pipelines, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.IO.Pipelines.9.0.8\lib\net462\System.IO.Pipelines.dll</HintPath>
+    <Reference Include="System.IO.Pipelines, Version=10.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Pipelines.10.0.7\lib\net462\System.IO.Pipelines.dll</HintPath>
     </Reference>
-    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics"/>
-    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
     </Reference>
     <Reference Include="System.Reflection.Metadata, Version=9.0.0.7, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Reflection.Metadata.9.0.7\lib\net462\System.Reflection.Metadata.dll</HintPath>
@@ -198,25 +206,23 @@
       <HintPath>..\packages\System.Resources.Extensions.9.0.7\lib\net462\System.Resources.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime"/>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization"/>
-    <Reference Include="System.Text.Encodings.Web, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Encodings.Web.9.0.8\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    <Reference Include="System.Text.Encodings.Web, Version=10.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.10.0.7\lib\net462\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
-    <Reference Include="System.Text.Json, Version=9.0.0.8, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Json.9.0.8\lib\net462\System.Text.Json.dll</HintPath>
+    <Reference Include="System.Text.Json, Version=10.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.10.0.7\lib\net462\System.Text.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Threading.Channels, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Channels.8.0.0\lib\net462\System.Threading.Channels.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
-    </Reference>
+    <Reference Include="System.ValueTuple" />
     <Reference Include="System.Windows.Forms"/>
     <Reference Include="System.Xml.Linq"/>
     <Reference Include="System.Data.DataSetExtensions"/>
@@ -300,6 +306,25 @@
     <Compile Include="LinkSwitcher\Facade\LinkSwitcherService.cs"/>
     <Compile Include="LinkSwitcher\LinkSwitcherFB.cs"/>
     <Compile Include="LinkSwitcher\Logging\SwitchLogger.cs"/>
+    <Compile Include="OpcTreeManager\Config\OpcConfig.cs"/>
+    <Compile Include="OpcTreeManager\Config\OpcConfigLoader.cs"/>
+    <Compile Include="OpcTreeManager\Config\TreeSnapshotLoader.cs"/>
+    <Compile Include="OpcTreeManager\Config\TreeSnapshotWriter.cs"/>
+    <Compile Include="OpcTreeManager\Entities\ExpandSpec.cs"/>
+    <Compile Include="OpcTreeManager\Entities\LinkEntry.cs"/>
+    <Compile Include="OpcTreeManager\Entities\LinkTypes.cs"/>
+    <Compile Include="OpcTreeManager\Entities\NodeSnapshot.cs"/>
+    <Compile Include="OpcTreeManager\Entities\OpcScadaItemDto.cs"/>
+    <Compile Include="OpcTreeManager\Entities\RebuildPlan.cs"/>
+    <Compile Include="OpcTreeManager\Logging\OpcLoggerFactory.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\DeferredExecutor.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\LinkCollector.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\OpcProtocolAccessor.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\PlanExecutor.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\TreeMasks.cs"/>
+    <Compile Include="OpcTreeManager\Facade\IOpcTreeManagerService.cs"/>
+    <Compile Include="OpcTreeManager\Facade\OpcTreeManagerService.cs"/>
+    <Compile Include="OpcTreeManager\OpcTreeManagerFB.cs"/>
     <Compile Include="LinkSwitcher\TreeOperations\LinkCollector.cs"/>
     <Compile Include="LinkSwitcher\TreeOperations\LinkExecutor.cs"/>
     <Compile Include="LinkSwitcher\TreeOperations\PairDiscovery.cs"/>
@@ -859,6 +884,8 @@
   <ItemGroup>
     <EmbeddedResource Include="LinkSwitcher\LinkSwitcherFB.bmp"/>
     <EmbeddedResource Include="LinkSwitcher\LinkSwitcherFB.xml"/>
+    <EmbeddedResource Include="OpcTreeManager\OpcTreeManagerFB.xml"/>
+    <EmbeddedResource Include="OpcTreeManager\OpcTreeManagerFB.bmp"/>
     <Content Include="ConfigLoader\ConfigLoaderFB.bmp"/>
     <Content Include="Properties\Resources.resources"/>
     <None Include="readme.md"/>
