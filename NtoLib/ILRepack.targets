@@ -1,0 +1,46 @@
+<Project>
+  <!--
+    Custom ILRepack target for NtoLib.
+    Imported automatically by ILRepack.Lib.MSBuild.Task.targets via the
+    $(ILRepackTargetsFile) property declared in NtoLib.csproj. Presence of this
+    file also suppresses the package's default ILRepack target, allowing this
+    project-specific configuration (vendor SDK exclusions, Resources probe path)
+    to take effect.
+  -->
+  <!--
+    Gated on $(RunILRepack)=true so ordinary `dotnet build` does not internalize
+    NuGet types into NtoLib.dll. Internalisation collides with the test build
+    because NtoLib carries [InternalsVisibleTo("Tests")] and Tests references the
+    same NuGet packages directly; CS0433 ambiguity follows. Build/Package.ps1
+    invokes a final `dotnet build /p:RunILRepack=true` after the test step to
+    produce the merged release artifact.
+  -->
+  <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(RunILRepack)' == 'true'">
+    <ItemGroup>
+      <!--
+        Vendor SDK references (FB, InSAT.*, MasterSCADA*, ICSharpCode.*, OpcUaClient,
+        Opc.Ua.Core) all carry <Private>False</Private> in NtoLib.csproj, so MSBuild
+        does not copy them to $(OutputPath) and the *.dll glob cannot pick them up.
+        They are intentionally not listed here. The remaining excludes are for
+        assemblies that DO land in $(OutputPath) but must not be merged:
+        System.Resources.Extensions (resx loader, breaks if internalised),
+        System.Text.Json + System.Text.Encodings.Web (kept external; bundled
+        separately by Archive.ps1 / Copy.ps1).
+      -->
+      <ILRepackInputAssemblies Include="$(OutputPath)NtoLib.dll" />
+      <ILRepackInputAssemblies Include="$(OutputPath)*.dll"
+        Exclude="$(OutputPath)NtoLib.dll;
+                 $(OutputPath)System.Resources.Extensions.dll;
+                 $(OutputPath)System.Text.Json.dll;
+                 $(OutputPath)System.Text.Encodings.Web.dll" />
+      <ILRepackLibraryPath Include="$(OutputPath)" />
+      <ILRepackLibraryPath Include="$(MSBuildProjectDirectory)\..\Resources" />
+    </ItemGroup>
+    <ILRepack
+      Parallel="true"
+      Internalize="true"
+      InputAssemblies="@(ILRepackInputAssemblies)"
+      OutputFile="$(OutputPath)NtoLib.dll"
+      LibraryPath="@(ILRepackLibraryPath)" />
+  </Target>
+</Project>
