@@ -19,17 +19,28 @@
     <ItemGroup>
       <!--
         Vendor SDK references (FB, InSAT.*, MasterSCADA*, ICSharpCode.*, OpcUaClient,
-        Opc.Ua.Core) all carry <Private>False</Private> in NtoLib.csproj, so MSBuild
-        does not copy them to $(OutputPath) and the *.dll glob cannot pick them up.
-        They are intentionally not listed here. The remaining excludes are for
-        assemblies that DO land in $(OutputPath) but must not be merged:
+        Opc.Ua.Core, COMDeviceSDK) all carry <Private>False</Private> in NtoLib.csproj,
+        so MSBuild does not copy them to $(OutputPath) and the *.dll glob normally cannot
+        pick them up. The vendor-name patterns below are belt-and-suspenders defense
+        against stale binaries in $(OutputPath) (older builds, manual copies) that the
+        glob would otherwise sweep into the merge.
+
+        The remaining excludes are for assemblies that DO legitimately land in
+        $(OutputPath) but must not be merged:
         System.Resources.Extensions (resx loader, breaks if internalised),
-        System.Text.Json + System.Text.Encodings.Web (kept external; bundled
-        separately by Archive.ps1 / Copy.ps1).
+        System.Text.Json + System.Text.Encodings.Web (kept external; the host
+        environment / MasterSCADA runtime is expected to supply them).
       -->
       <ILRepackInputAssemblies Include="$(OutputPath)NtoLib.dll" />
       <ILRepackInputAssemblies Include="$(OutputPath)*.dll"
         Exclude="$(OutputPath)NtoLib.dll;
+                 $(OutputPath)FB.dll;
+                 $(OutputPath)InSAT.*.dll;
+                 $(OutputPath)MasterSCADA*.dll;
+                 $(OutputPath)ICSharpCode.*.dll;
+                 $(OutputPath)OpcUaClient.dll;
+                 $(OutputPath)Opc.Ua.Core.dll;
+                 $(OutputPath)COMDeviceSDK.dll;
                  $(OutputPath)System.Resources.Extensions.dll;
                  $(OutputPath)System.Text.Json.dll;
                  $(OutputPath)System.Text.Encodings.Web.dll" />

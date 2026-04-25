@@ -19,7 +19,7 @@ via `netreg.exe`.
 dotnet build NtoLib.sln                        # un-merged DLL (used by tests)
 dotnet build NtoLib.sln -p:RunILRepack=true    # merged DLL (used for deployment)
 Build/Package.ps1   # build + test + ILRepack merge + archive
-Build/Deploy.ps1    # build + merge + copy to target machine
+Build/deploy.ps1    # build + merge + copy to target machine
 ```
 
 `Build/Package.ps1` orchestrates the pipeline: it runs the test suite against the
@@ -64,7 +64,7 @@ Code Cleanup or `jb cleanupcode`.
 NtoLib/
 ├── NtoLib/          main library (FB implementations)
 ├── Tests/           xUnit + FluentAssertions + Moq
-├── Build/           PowerShell pipeline (Package.ps1, Deploy.ps1, tools/)
+├── Build/           PowerShell pipeline (Package.ps1, deploy.ps1, tools/)
 ├── Docs/            documentation
 │   ├── architecture/     primer + NtoLib patterns (LLM-targeted, not user-facing)
 │   ├── known_issues/     platform-level bug classes with cause and workaround

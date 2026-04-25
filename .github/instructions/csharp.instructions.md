@@ -20,7 +20,7 @@ COM component via `netreg.exe`.
 - **Build:** `dotnet build` produces an un-merged `NtoLib.dll` for unit tests. Merging
   is gated on `/p:RunILRepack=true` (because `[InternalsVisibleTo("Tests")]` would
   otherwise cause CS0433 ambiguity in the test project) and runs only via
-  `Build/Package.ps1` / `Build/Deploy.ps1` after the test step. `netreg.exe` registers
+  `Build/Package.ps1` / `Build/deploy.ps1` after the test step. `netreg.exe` registers
   the merged `NtoLib.dll` as a COM component for MasterSCADA.
 
 ---
