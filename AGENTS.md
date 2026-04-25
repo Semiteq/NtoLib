@@ -6,19 +6,37 @@ via `netreg.exe`.
 
 - **Framework:** .NET Framework 4.8, C# 10, Nullable enabled
 - **Solution:** `NtoLib.sln` — two projects: `NtoLib` (main library) and `Tests` (xUnit)
-- **csproj style:** Old-style with explicit `<Compile Include>` entries (no wildcards)
+- **csproj style:** SDK-style (`<Project Sdk="Microsoft.NET.Sdk">`) with explicit
+  `<Compile Include>` entries — default item globs are disabled
+  (`EnableDefaultCompileItems=false`, `EnableDefaultEmbeddedResourceItems=false`,
+  `EnableDefaultNoneItems=false`) so the "no wildcards" rule still holds.
+- **NuGet:** `PackageReference` only; versions centrally managed in
+  `Directory.Packages.props` at the repo root (Central Package Management).
 
 ## Build
 
 ```powershell
-dotnet build NtoLib.sln
-Build/Package.ps1   # build + ILRepack merge + archive
+dotnet build NtoLib.sln                        # un-merged DLL (used by tests)
+dotnet build NtoLib.sln -p:RunILRepack=true    # merged DLL (used for deployment)
+Build/Package.ps1   # build + test + ILRepack merge + archive
 Build/Deploy.ps1    # build + merge + copy to target machine
 ```
 
+`Build/Package.ps1` orchestrates the pipeline: it runs the test suite against the
+un-merged DLL, then re-builds with `-p:RunILRepack=true` to produce the merged
+artifact, then archives.
+
 ILRepack merges all NuGet DLLs into a single `NtoLib.dll`, excluding vendor SDK DLLs
-(`FB.dll`, `InSAT.*`, `MasterSCADA.*`). After build, `netreg.exe NtoLib.dll /showerror`
-registers the COM component for MasterSCADA.
+(`FB.dll`, `InSAT.*`, `MasterSCADA.*`). The merge step is implemented in
+`NtoLib/ILRepack.targets` (invoked through MSBuild via the
+`ILRepack.Lib.MSBuild.Task` package); the legacy `Build/tools/Merge.ps1` PowerShell
+wrapper has been removed. The target is gated on the `RunILRepack` MSBuild
+property so a plain `dotnet build` produces an un-merged DLL — this is intentional
+and required, because `NtoLib` carries `[InternalsVisibleTo("Tests")]` and merging
+internalised NuGet types into the assembly would collide with the Tests project's
+own `<PackageReference>`s on the same packages (CS0433 ambiguity on
+`FluentResults.Result<>`, `Microsoft.Extensions.*`, etc.). After the merged build,
+`netreg.exe NtoLib.dll /showerror` registers the COM component for MasterSCADA.
 
 ## Test
 
@@ -72,14 +90,46 @@ for the reading order).
 
 ## csproj Conventions
 
-- `NtoLib.csproj` uses **explicit `<Compile Include>` entries** — no wildcards. Every new
-  `.cs` file must be added manually.
+- `NtoLib.csproj` is **SDK-style** (`<Project Sdk="Microsoft.NET.Sdk">`) but uses
+  **explicit `<Compile Include>` entries** — no wildcards. Default item globs are
+  disabled via `EnableDefaultCompileItems=false`,
+  `EnableDefaultEmbeddedResourceItems=false`, `EnableDefaultNoneItems=false`, and
+  `GenerateAssemblyInfo=false`. Every new `.cs` file must be added manually.
 - FB XML pin configuration files must be included as **`<EmbeddedResource>`**, not `<Content>`:
   ```xml
   <EmbeddedResource Include="MyFeature\MyFB.xml" />
   ```
 - When adding a new FB with multiple source files, add all `<Compile Include>` and the
   `<EmbeddedResource>` entry in a single csproj edit to avoid partial builds.
+- `packages.config` is **gone** — the project uses `<PackageReference>` exclusively.
+
+### Central Package Management
+
+- NuGet package versions are centrally managed in `Directory.Packages.props` at the
+  repo root (`ManagePackageVersionsCentrally=true`,
+  `CentralPackageTransitivePinningEnabled=true`).
+- Add a new package by appending a `<PackageVersion Include="..." Version="..." />`
+  entry to `Directory.Packages.props`, then reference it from the consuming csproj
+  with `<PackageReference Include="..." />` — **no `Version=` attribute on the
+  `PackageReference`**. NuGet emits `NU1008` (hard error) if a `Version=` attribute
+  is left in place under CPM, and `NU1010` if a referenced id has no
+  `<PackageVersion>` entry.
+- Dependabot is configured against the repo root and bumps versions in
+  `Directory.Packages.props` only; csproj files are not touched by version updates.
+
+### ILRepack and `[InternalsVisibleTo("Tests")]`
+
+- The merge target lives in `NtoLib/ILRepack.targets` and is wired in via the
+  `ILRepack.Lib.MSBuild.Task` package's `$(ILRepackTargetsFile)` hook.
+- The target only runs when the `RunILRepack` MSBuild property is `true`. A plain
+  `dotnet build` therefore produces an **un-merged** DLL — this is required for the
+  Tests project to build, because merging internalises NuGet types that Tests also
+  references directly.
+- `Build/Package.ps1` runs the test suite against the un-merged DLL first, then
+  re-invokes `dotnet build NtoLib/NtoLib.csproj -c Release -p:RunILRepack=true` to
+  produce the deployable merged artifact between the Test and Archive steps.
+- `Build/tools/Merge.ps1` no longer exists; do not re-introduce a PowerShell merge
+  wrapper.
 
 ## Dependencies
 
