@@ -35,3 +35,20 @@ ILRepack работает, но с ограничениями:
 3. **Известные "не-mergeable" зависимости доставлять отдельно** рядом с основной DLL.
 
 4. **Придерживаться принципа наименьшего количества файлов** в поставке.
+
+## Гейт `RunILRepack` и `[InternalsVisibleTo("Tests")]`
+
+После миграции на `ILRepack.Lib.MSBuild.Task` (см. `NtoLib/ILRepack.targets`) шаг merge
+гейтится свойством `RunILRepack=true`. Снять гейт нельзя — это сломает Tests.
+
+Причина: `NtoLib` декларирует `[assembly: InternalsVisibleTo("Tests")]`. Если ILRepack
+запускается на каждой `dotnet build`, NuGet-типы (например `FluentResults.Result<>`)
+попадают внутрь `NtoLib.dll` как internal. Tests подтягивает те же пакеты напрямую
+через `PackageReference`, и компилятор видит каждый такой тип в двух сборках
+одновременно — получает CS0433 (ambiguous reference).
+
+Поэтому:
+- `dotnet build NtoLib.sln -c Release` (без `-p:RunILRepack=true`) собирает unmerged
+  `NtoLib.dll` -- именно то, что нужно для unit-тестов.
+- `Build/Package.ps1` и `Build/Deploy.ps1` передают `-p:RunILRepack=true` уже **после**
+  Test-шага, чтобы выпустить merge-артефакт.

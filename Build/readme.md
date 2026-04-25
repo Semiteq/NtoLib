@@ -53,22 +53,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\tools\Build.ps1
 
 ### 2) Слияние зависимостей (Merge)
 
-Скрипт: `Build\tools\Merge.ps1`  
-Назначение: объединение `NtoLib.dll` и большинства managed-зависимостей в один файл с помощью **ILRepack**.
+Слияние выполняется через MSBuild-таргет `NtoLib/ILRepack.targets`, использующий пакет **ILRepack.Lib.MSBuild.Task**. Отдельного скрипта `Merge.ps1` больше нет — таргет вызывается напрямую через `dotnet build` с флагом `-p:RunILRepack=true`.
 
-Скрипт:
-- берёт все `*.dll` из `NtoLib\bin\<BUILD_CONFIGURATION>\`
-- объединяет их в `NtoLib.dll`
+Поведение таргета:
+- объединяет managed-зависимости из `NtoLib\bin\<BUILD_CONFIGURATION>\` в `NtoLib.dll`
 - **не включает** хостовые зависимости MasterSCADA (например `FB.dll`, `MasterSCADA.*`) и **не включает** `System.Resources.Extensions.dll`
-- использует `/lib:` для каталогов поиска зависимостей при анализе ссылок
+- активируется только при `RunILRepack=true`, чтобы юнит-тесты собирались с не-смерженной сборкой
 
 Запуск:
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\tools\Merge.ps1
+dotnet build .\NtoLib\NtoLib.csproj -c Release -p:RunILRepack=true
 ```
-
-Требование: установлен ILRepack в каталоге:
-- `NtoLib\packages\ILRepack.2.0.44\tools\ILRepack.exe`
 
 ### 3) Тесты (Test)
 
@@ -158,9 +153,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Package.ps1
 
 ## Прямые команды dotnet (при необходимости)
 
-Restore (packages.config):
+Restore (PackageReference + Central Package Management через `Directory.Packages.props` в корне репозитория):
 ```powershell
-dotnet msbuild .\NtoLib.sln /t:Restore /p:RestorePackagesConfig=true
+dotnet restore .\NtoLib.sln
 ```
 
 Build:

@@ -13,9 +13,15 @@ COM component via `netreg.exe`.
 
 - **Framework:** .NET Framework 4.8, C# 10 (`LangVersion`), `Nullable` enabled
 - **Solution:** `NtoLib.sln` — two projects: `NtoLib` (main library) and `Tests` (xUnit)
-- **csproj style:** Old-style with explicit `<Compile Include>` entries (no wildcards)
-- **Build:** `dotnet build` → ILRepack merges NuGet DLLs into `NtoLib.dll` (vendor SDK DLLs
-  in `Resources/` are excluded); `netreg.exe` registers the COM component for MasterSCADA
+- **csproj style:** SDK-style (`Microsoft.NET.Sdk`) with `EnableDefaultCompileItems=false`;
+  every `.cs` file is listed explicitly as `<Compile Include>` (no wildcards). Packages
+  are referenced via `<PackageReference>`; versions live centrally in
+  `Directory.Packages.props` (Central Package Management).
+- **Build:** `dotnet build` produces an un-merged `NtoLib.dll` for unit tests. Merging
+  is gated on `/p:RunILRepack=true` (because `[InternalsVisibleTo("Tests")]` would
+  otherwise cause CS0433 ambiguity in the test project) and runs only via
+  `Build/Package.ps1` / `Build/deploy.ps1` after the test step. `netreg.exe` registers
+  the merged `NtoLib.dll` as a COM component for MasterSCADA.
 
 ---
 

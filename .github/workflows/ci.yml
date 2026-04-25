@@ -9,6 +9,8 @@ on:
       - "Tests/**"
       - "Resources/**"
       - "NtoLib.sln"
+      - "Directory.Packages.props"
+      - "nuget.config"
       - "global.json"
       - ".editorconfig"
       - "!**.md"
@@ -19,6 +21,8 @@ on:
       - "Tests/**"
       - "Resources/**"
       - "NtoLib.sln"
+      - "Directory.Packages.props"
+      - "nuget.config"
       - "global.json"
       - ".editorconfig"
       - "!**.md"
@@ -45,18 +49,8 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: setup NuGet
-        uses: NuGet/setup-nuget@v2
-
-      # NtoLib.csproj uses packages.config with MSBuild <Import> of
-      # ..\packages\Serilog.4.3.0\build\Serilog.targets — dotnet restore does
-      # not populate packages/ for old-style projects, so nuget.exe restore
-      # runs first. dotnet restore then covers the Tests project's
-      # PackageReference graph.
       - name: restore
-        run: |
-          nuget restore NtoLib.sln
-          dotnet restore NtoLib.sln
+        run: dotnet restore NtoLib.sln
 
       - name: build
         run: dotnet build NtoLib.sln -c Release --no-restore

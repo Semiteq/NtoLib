@@ -10,7 +10,11 @@ updates:
           - "*"
 
   - package-ecosystem: "nuget"
-    directory: "/NtoLib"
+    # Repo-root scope: with Central Package Management enabled, all versions
+    # live in Directory.Packages.props at the repo root. Pointing dependabot
+    # at "/" lets it discover both NtoLib.csproj and Tests/Tests.csproj and
+    # update the central versions file in a single PR per group.
+    directory: "/"
     schedule:
       interval: "monthly"
     groups:
