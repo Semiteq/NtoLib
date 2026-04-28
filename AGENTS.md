@@ -5,7 +5,9 @@ NtoLib is a MasterSCADA 3.x Function Block library by Semiteq for industrial SCA
 via `netreg.exe`.
 
 - **Framework:** .NET Framework 4.8, C# 10, Nullable enabled
-- **Solution:** `NtoLib.sln` — two projects: `NtoLib` (main library) and `Tests` (xUnit)
+- **SDK:** .NET SDK 8.x (pinned in `global.json` to `8.0.420`, `latestPatch`).
+- **Solution:** `NtoLib.sln` — three projects: `NtoLib` (main library), `Tests` (xUnit),
+  `Installer` (WinForms `.exe` self-installer used by release artifacts).
 - **csproj style:** SDK-style (`<Project Sdk="Microsoft.NET.Sdk">`) with explicit
   `<Compile Include>` entries — default item globs are disabled
   (`EnableDefaultCompileItems=false`, `EnableDefaultEmbeddedResourceItems=false`,
@@ -17,26 +19,42 @@ via `netreg.exe`.
 
 ```powershell
 dotnet build NtoLib.sln                        # un-merged DLL (used by tests)
-dotnet build NtoLib.sln -p:RunILRepack=true    # merged DLL (used for deployment)
-Build/Package.ps1   # build + test + ILRepack merge + archive
-Build/deploy.ps1    # build + merge + copy to target machine
+dotnet build NtoLib/NtoLib.csproj -p:RunILRepack=true   # merged DLL (used for deployment)
+Build/Deploy.ps1   # build + merge + copy to target machine (local debug only)
 ```
 
-`Build/Package.ps1` orchestrates the pipeline: it runs the test suite against the
-un-merged DLL, then re-builds with `-p:RunILRepack=true` to produce the merged
-artifact, then archives.
+Releases are built **in CI** (`.github/workflows/release.yml`) on push of `v*` tag —
+local `Build/Package.ps1` no longer exists. Locally, `Build/Deploy.ps1` is the only
+script: build → ILRepack merge → copy to MasterSCADA install dir + config dir.
+Required env vars: `BUILD_CONFIGURATION`, `REPO_ROOT`, `NTOLIB_DEST_DIR`,
+`NTOLIB_CONFIG_DIR` (in Rider injected via `.run/Deploy Debug.run.xml`).
 
 ILRepack merges all NuGet DLLs into a single `NtoLib.dll`, excluding vendor SDK DLLs
 (`FB.dll`, `InSAT.*`, `MasterSCADA.*`). The merge step is implemented in
 `NtoLib/ILRepack.targets` (invoked through MSBuild via the
-`ILRepack.Lib.MSBuild.Task` package); the legacy `Build/tools/Merge.ps1` PowerShell
-wrapper has been removed. The target is gated on the `RunILRepack` MSBuild
+`ILRepack.Lib.MSBuild.Task` package). The target is gated on the `RunILRepack` MSBuild
 property so a plain `dotnet build` produces an un-merged DLL — this is intentional
 and required, because `NtoLib` carries `[InternalsVisibleTo("Tests")]` and merging
 internalised NuGet types into the assembly would collide with the Tests project's
 own `<PackageReference>`s on the same packages (CS0433 ambiguity on
 `FluentResults.Result<>`, `Microsoft.Extensions.*`, etc.). After the merged build,
 `netreg.exe NtoLib.dll /showerror` registers the COM component for MasterSCADA.
+
+## Release
+
+Tag `vX.Y.Z` (or `vX.Y.Z-suffix` for prerelease) → `.github/workflows/release.yml`
+runs on `windows-2025`: restore → build with `-p:Version=X.Y.Z` → test → ILRepack →
+zip (`NtoLib_v<ver>.zip` containing `NtoLib.dll`, `System.Resources.Extensions.dll`,
+`NtoLib_reg.bat`, `DefaultConfig/`) → build `Installer.exe` with the same `-p:Version=`
+→ `softprops/action-gh-release@v2` attaches both the zip and the installer.exe to a
+GitHub Release named `NtoLib X.Y.Z`. Annotated tag message becomes the release body
+(fallback: `Release X.Y.Z`).
+
+The `<Version>` in `NtoLib.csproj` is a **fallback for local builds only**; CI always
+overrides via `-p:Version=$VERSION`. With `GenerateAssemblyInfo=true`, MSBuild propagates:
+`AssemblyVersion`/`AssemblyFileVersion` = numeric prefix (suffix stripped),
+`AssemblyInformationalVersion` = full string. `IncludeSourceRevisionInInformationalVersion=false`
+suppresses the `+SourceRevisionId` suffix that .NET 8+ SDK adds by default.
 
 ## Test
 
@@ -45,7 +63,7 @@ dotnet test NtoLib.sln
 ```
 
 xUnit 2.9.3 + FluentAssertions 8.8.0 + Moq 4.20.72 + Xunit.SkippableFact 1.4.13.
-Coverage: MbeTable, ConfigLoader, TrendPensManager, OpcTreeManager (acceptance,
+Test areas: MbeTable, ConfigLoader, TrendPensManager, OpcTreeManager (acceptance,
 integration, unit).
 
 ## Format
@@ -64,16 +82,19 @@ Code Cleanup or `jb cleanupcode`.
 NtoLib/
 ├── NtoLib/          main library (FB implementations)
 ├── Tests/           xUnit + FluentAssertions + Moq
-├── Build/           PowerShell pipeline (Package.ps1, deploy.ps1, tools/)
+├── Installer/       WinForms self-installer (.exe attached to GitHub Releases)
+├── Build/           local debug-deploy script (Deploy.ps1)
 ├── Docs/            documentation
 │   ├── architecture/     primer + NtoLib patterns (LLM-targeted, not user-facing)
 │   ├── known_issues/     platform-level bug classes with cause and workaround
 │   ├── mbe_table/        MBE recipe table sub-modules
 │   └── <feature>.md      per-FB user documentation
 ├── DefaultConfig/   YAML configs shipped alongside the DLL
-├── Resources/       vendor SDK DLLs (FB.dll, InSAT.*, MasterSCADA.*)
-└── Releases/        versioned zip archives
+└── Resources/       vendor SDK DLLs (FB.dll, InSAT.*, MasterSCADA.*)
 ```
+
+Release zip archives are produced by CI and live in GitHub Releases, not in the
+working tree. The local `Releases/` directory (if present) is gitignored.
 
 ## Two FB Architectures
 
@@ -93,8 +114,13 @@ for the reading order).
 - `NtoLib.csproj` is **SDK-style** (`<Project Sdk="Microsoft.NET.Sdk">`) but uses
   **explicit `<Compile Include>` entries** — no wildcards. Default item globs are
   disabled via `EnableDefaultCompileItems=false`,
-  `EnableDefaultEmbeddedResourceItems=false`, `EnableDefaultNoneItems=false`, and
-  `GenerateAssemblyInfo=false`. Every new `.cs` file must be added manually.
+  `EnableDefaultEmbeddedResourceItems=false`, `EnableDefaultNoneItems=false`. Every new
+  `.cs` file must be added manually.
+- `GenerateAssemblyInfo=true` (SDK default). Assembly metadata properties (`AssemblyTitle`,
+  `Description`, `Company`, `Product`, `Copyright`, `Version`) live in csproj `<PropertyGroup>`.
+  `AssemblyTrademarkAttribute`, `[ComVisible(false)]`, and `[Guid("...")]` stay in
+  `Properties/AssemblyInfo.cs` because the SDK has no MSBuild equivalent for them.
+  `[InternalsVisibleTo("Tests")]` is in csproj as `<ItemGroup><InternalsVisibleTo Include="Tests" /></ItemGroup>`.
 - FB XML pin configuration files must be included as **`<EmbeddedResource>`**, not `<Content>`:
   ```xml
   <EmbeddedResource Include="MyFeature\MyFB.xml" />
@@ -125,11 +151,11 @@ for the reading order).
   `dotnet build` therefore produces an **un-merged** DLL — this is required for the
   Tests project to build, because merging internalises NuGet types that Tests also
   references directly.
-- `Build/Package.ps1` runs the test suite against the un-merged DLL first, then
-  re-invokes `dotnet build NtoLib/NtoLib.csproj -c Release -p:RunILRepack=true` to
-  produce the deployable merged artifact between the Test and Archive steps.
-- `Build/tools/Merge.ps1` no longer exists; do not re-introduce a PowerShell merge
-  wrapper.
+- `release.yml` (and locally `Build/Deploy.ps1`) builds the solution un-merged first,
+  then re-invokes `dotnet build NtoLib/NtoLib.csproj -c Release -p:RunILRepack=true`
+  to produce the deployable merged artifact between the Test and Archive steps.
+- `Build/Package.ps1`, `Build/tools/`, and `Build/tools/Merge.ps1` no longer exist;
+  do not re-introduce PowerShell wrappers — the only local script is `Build/Deploy.ps1`.
 
 ## Dependencies
 

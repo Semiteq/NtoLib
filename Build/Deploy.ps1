@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$Configuration = $env:BUILD_CONFIGURATION,
-    [string]$RepoRoot,
+    [string]$RepoRoot = $env:REPO_ROOT,
     [string]$DestinationDirectory = $env:NTOLIB_DEST_DIR,
     [string]$ConfigurationDirectory = $env:NTOLIB_CONFIG_DIR
 )
@@ -14,11 +14,11 @@ if ( [string]::IsNullOrWhiteSpace($Configuration))
 }
 if ( [string]::IsNullOrWhiteSpace($RepoRoot))
 {
-    throw 'RepoRoot is required.'
+    throw 'REPO_ROOT is required.'
 }
 if (-not (Test-Path $RepoRoot))
 {
-    throw "RepoRoot does not exist: $RepoRoot"
+    throw "REPO_ROOT does not exist: $RepoRoot"
 }
 if ( [string]::IsNullOrWhiteSpace($DestinationDirectory))
 {
@@ -27,6 +27,28 @@ if ( [string]::IsNullOrWhiteSpace($DestinationDirectory))
 if ( [string]::IsNullOrWhiteSpace($ConfigurationDirectory))
 {
     throw 'NTOLIB_CONFIG_DIR is required.'
+}
+
+$solutionPath = Join-Path $RepoRoot 'NtoLib.sln'
+if (-not (Test-Path $solutionPath))
+{
+    throw "Solution not found: $solutionPath"
+}
+
+dotnet build $solutionPath -c $Configuration -v minimal
+if ($LASTEXITCODE -ne 0)
+{
+    throw "dotnet build failed with exit code $LASTEXITCODE."
+}
+
+# Bundle NuGet runtime dependencies into NtoLib.dll via the ILRepack.targets MSBuild target.
+# Gated by /p:RunILRepack=true so the preceding solution build stays un-merged
+# (see NtoLib/ILRepack.targets header for the rationale).
+$projectPath = Join-Path $RepoRoot 'NtoLib\NtoLib.csproj'
+dotnet build $projectPath -c $Configuration -v minimal -p:RunILRepack=true --no-restore
+if ($LASTEXITCODE -ne 0)
+{
+    throw "ILRepack merge step failed with exit code $LASTEXITCODE."
 }
 
 $binDir = Join-Path (Join-Path $RepoRoot 'NtoLib') "bin\$Configuration"
