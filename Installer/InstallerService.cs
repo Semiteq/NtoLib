@@ -258,6 +258,12 @@ public sealed class InstallerService
 		{
 			// ADS may not exist or filesystem does not support ADS — not fatal
 		}
+		catch (NotSupportedException)
+		{
+			// .NET Framework's path validator rejects the second colon in ADS
+			// paths ("Данный формат пути не поддерживается"). Skip — unblocking
+			// the ADS is best-effort anyway.
+		}
 	}
 
 	private void UnblockDestinationDlls()

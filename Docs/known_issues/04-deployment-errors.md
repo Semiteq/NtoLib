@@ -20,7 +20,7 @@ Windows пометил файлы из распакованного архива
 
 Открыть свойства файла `NtoLib.dll` (и других файлов из архива) и снять блокировку:
 
-![unlock](img/unlock.jpg)
+![unlock](../img/unlock.jpg)
 
 Альтернативно, можно разблокировать файл через PowerShell:
 
@@ -36,7 +36,7 @@ Unblock-File -Path "C:\path\to\NtoLib.dll"
 
 При запуске `NtoLib_reg.bat` (вызов `netreg.exe`) возникает ошибка регистрации:
 
-![netreg](img/netreg.jpg)
+![netreg](../img/netreg.jpg)
 
 ### Причина
 
@@ -54,7 +54,7 @@ Unblock-File -Path "C:\path\to\NtoLib.dll"
 
 При переходе на экран с блоком или при старте проекта возникает ошибка с кодом, не относящимся к SCADA:
 
-![compile](img/compile.jpg)
+![compile](../img/compile.jpg)
 
 ### Причина
 
