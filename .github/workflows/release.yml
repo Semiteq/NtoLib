@@ -1,0 +1,109 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    name: Build, Test & Release
+    runs-on: windows-2025
+    permissions:
+      contents: write
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: extract version and release notes from tag
+        id: version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          BODY=$(git tag -l --format='%(contents)' "$TAG" | sed '/^$/d')
+          if [ -z "$BODY" ]; then
+            BODY="Release $VERSION"
+          fi
+
+          {
+            echo "body<<RELEASE_NOTES_EOF"
+            echo "$BODY"
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: restore
+        run: dotnet restore NtoLib.sln
+
+      - name: build (un-merged, for tests)
+        run: dotnet build NtoLib.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+
+      - name: test
+        run: dotnet test NtoLib.sln -c Release --no-build --logger "console;verbosity=normal"
+
+      - name: build (merged via ILRepack)
+        run: dotnet build NtoLib/NtoLib.csproj -c Release -p:RunILRepack=true -p:Version=${{ steps.version.outputs.version }} --no-restore
+
+      - name: build release zip
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $binDir = 'NtoLib/bin/Release'
+          $stagingDir = "staging"
+          $releasesDir = "Releases"
+
+          New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
+          New-Item -ItemType Directory -Force -Path $releasesDir | Out-Null
+
+          Copy-Item "$binDir/NtoLib.dll" "$stagingDir/NtoLib.dll" -Force
+
+          $resourcesExt = "$binDir/System.Resources.Extensions.dll"
+          if (Test-Path $resourcesExt) {
+            Copy-Item $resourcesExt "$stagingDir/System.Resources.Extensions.dll" -Force
+          }
+
+          $bat = 'NtoLib/NtoLib_reg.bat'
+          if (Test-Path $bat) {
+            Copy-Item $bat "$stagingDir/NtoLib_reg.bat" -Force
+          }
+
+          if (Test-Path 'DefaultConfig') {
+            Copy-Item 'DefaultConfig' "$stagingDir/DefaultConfig" -Recurse -Force
+          }
+
+          $zipPath = "$releasesDir/NtoLib_v$version.zip"
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+          Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipPath
+          Write-Host "Created $zipPath"
+
+      - name: build installer
+        run: dotnet build Installer/Installer.csproj -c Release -p:Version=${{ steps.version.outputs.version }} -o publish/installer --no-restore
+
+      - name: create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: NtoLib ${{ steps.version.outputs.version }}
+          body: ${{ steps.version.outputs.body }}
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: |
+            Releases/NtoLib_v${{ steps.version.outputs.version }}.zip
+            publish/installer/Installer.exe

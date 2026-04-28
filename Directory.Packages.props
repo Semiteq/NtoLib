@@ -58,7 +58,6 @@
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
 
     <!-- Tests project dependencies -->
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="FluentAssertions" Version="8.8.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageVersion Include="Moq" Version="4.20.72" />

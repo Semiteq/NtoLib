@@ -1,169 +1,63 @@
 # Build and deployment (Windows)
 
-Проект: **.NET Framework 4.8** (`net48`).
+Проект: **.NET Framework 4.8** (`net48`), .NET SDK **8.x** (см. `global.json`).
 
-Сборка, упаковка и развёртывание выполняются PowerShell-скриптами из каталога `Build\`. Скрипты **не вычисляют пути автоматически**: все ключевые пути и конфигурация **задаются переменными окружения**.
+В каталоге `Build\` остался только один скрипт — **`Deploy.ps1`** для локального дебаг-развёртывания библиотеки в установленный MasterSCADA. Сборка релизных артефактов выполняется в GitHub Actions (`.github/workflows/release.yml`) по пушу тега `v*`.
 
 Рекомендуется работать через профили `.run` в Rider.
 
 ## Требования
 
-На машине разработчика должны быть установлены:
+- **.NET SDK** (`dotnet`) — версия из `global.json`
+- **Visual Studio Build Tools** с MSBuild для `net48` (или полноценная Visual Studio)
 
-- **.NET SDK** (`dotnet`)
-- **Visual Studio Build Tools** с MSBuild для сборки `net48` (или полноценная Visual Studio)
+## Переменные окружения для `Build\Deploy.ps1`
 
-## Переменные окружения
+- `REPO_ROOT` — путь к корню репозитория, где лежит `NtoLib.sln`. Пример: `C:\Users\admin\projects\NtoLib`.
+- `BUILD_CONFIGURATION` — `Debug` или `Release`.
+- `NTOLIB_DEST_DIR` — каталог, из которого MasterSCADA подгружает `NtoLib.dll`. Пример: `C:\Program Files (x86)\MPSSoft\MasterSCADA`.
+- `NTOLIB_CONFIG_DIR` — каталог для копирования содержимого `DefaultConfig\`. Пример: `C:\DISTR\Config`.
 
-Скрипты используют следующие переменные:
+В Rider переменные инжектятся через `.run\Deploy Debug.run.xml`.
 
-### Обязательные (для сборки/тестов/упаковки)
+## Что делает `Deploy.ps1`
 
-- `REPO_ROOT`  
-  Путь к корню репозитория, где расположен файл решения `NtoLib.sln`.  
-  Пример: `C:\Users\admin\Projects\git\NtoLib`
+1. `dotnet build NtoLib.sln -c $cfg` — сборка решения (un-merged, нужно для тестов в CI; локально просто промежуточный шаг).
+2. `dotnet build NtoLib\NtoLib.csproj -c $cfg -p:RunILRepack=true` — слияние NuGet-зависимостей в `NtoLib.dll` через MSBuild-таргет `NtoLib/ILRepack.targets`. Vendor SDK DLL (`FB.dll`, `MasterSCADA.*`) и `System.Resources.Extensions.dll` **не сливаются**.
+3. Копирует артефакты в `NTOLIB_DEST_DIR`:
+    - `NtoLib.dll`
+    - `NtoLib.pdb` (если есть)
+    - `System.Resources.Extensions.dll` (если есть)
+4. Копирует `DefaultConfig\*` в `NTOLIB_CONFIG_DIR`.
 
-- `BUILD_CONFIGURATION`  
-  Конфигурация сборки: `Debug` или `Release`.
-
-### Обязательные для развёртывания (Deploy)
-
-- `NTOLIB_DEST_DIR`  
-  Каталог назначения для копирования артефактов сборки. Это должна быть папка, из которой целевое приложение загружает библиотеку.
-
-- `NTOLIB_CONFIG_DIR`  
-  Каталог назначения для `DefaultConfig`.  
-  Важно: при развёртывании каталог назначения **удаляется рекурсивно** и затем создаётся заново путём копирования `DefaultConfig`.
-
-## Скрипты и назначение
-
-### 1) Сборка (Build)
-
-Скрипт: `Build\tools\Build.ps1`  
-Назначение: сборка решения `NtoLib.sln` в заданной конфигурации.
-
-Запуск:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\tools\Build.ps1
-```
-
-Ожидаемый результат:
-- артефакты сборки появляются в `NtoLib\bin\<BUILD_CONFIGURATION>\`
-- ключевой файл: `NtoLib\bin\<BUILD_CONFIGURATION>\NtoLib.dll`
-
-### 2) Слияние зависимостей (Merge)
-
-Слияние выполняется через MSBuild-таргет `NtoLib/ILRepack.targets`, использующий пакет **ILRepack.Lib.MSBuild.Task**. Отдельного скрипта `Merge.ps1` больше нет — таргет вызывается напрямую через `dotnet build` с флагом `-p:RunILRepack=true`.
-
-Поведение таргета:
-- объединяет managed-зависимости из `NtoLib\bin\<BUILD_CONFIGURATION>\` в `NtoLib.dll`
-- **не включает** хостовые зависимости MasterSCADA (например `FB.dll`, `MasterSCADA.*`) и **не включает** `System.Resources.Extensions.dll`
-- активируется только при `RunILRepack=true`, чтобы юнит-тесты собирались с не-смерженной сборкой
-
-Запуск:
-```powershell
-dotnet build .\NtoLib\NtoLib.csproj -c Release -p:RunILRepack=true
-```
-
-### 3) Тесты (Test)
-
-Скрипт: `Build\tools\Test.ps1`  
-Назначение: запуск тестов `Tests\Tests.csproj` в заданной конфигурации.
-
-Запуск:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\tools\Test.ps1
-```
-
-Примечание: используется `dotnet test` без отключения restore/build (приоритет — стабильность для legacy-проекта).
-
-### 4) Упаковка релиза (Package)
-
-Скрипт: `Build\Package.ps1`  
-Назначение: сборка, слияние зависимостей и формирование zip-архива в каталоге `Releases\` в корне репозитория.
-
-Запуск:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Package.ps1
-```
-
-Выходной артефакт:
-- `Releases\NtoLib_v<version>.zip`
-- `<version>` берётся из `NtoLib\Properties\AssemblyInfo.cs` из атрибута `AssemblyInformationalVersion`.
-
-Содержимое архива включает:
-- `NtoLib.dll` (после ILRepack)
-- `System.Resources.Extensions.dll` (отдельным файлом, не объединяется)
-- `DefaultConfig\` (если каталог существует)
-- `NtoLib_reg.bat` (если файл существует)
-
-### 5) Развёртывание (Deploy)
-
-Скрипт: `Build\Deploy.ps1`  
-Назначение: сборка, слияние зависимостей и копирование артефактов в папки установки/использования на локальной машине.
-
-Запуск:
+Запуск напрямую:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Deploy.ps1
 ```
 
-Что делает Deploy:
-1. Выполняет сборку решения `NtoLib.sln` в конфигурации `BUILD_CONFIGURATION`.
-2. Выполняет слияние зависимостей (`ILRepack`) для получения одного `NtoLib.dll`.
-3. Копирует:
-    - `NtoLib\bin\<BUILD_CONFIGURATION>\NtoLib.dll` → `%NTOLIB_DEST_DIR%\NtoLib.dll`
-    - `NtoLib\bin\<BUILD_CONFIGURATION>\System.Resources.Extensions.dll` → `%NTOLIB_DEST_DIR%\System.Resources.Extensions.dll` (если существует)
-    - `NtoLib\bin\<BUILD_CONFIGURATION>\NtoLib.pdb` → `%NTOLIB_DEST_DIR%\NtoLib.pdb` (если существует)
-4. Если в репозитории есть каталог `DefaultConfig`, то:
-    - удаляет `%NTOLIB_CONFIG_DIR%` рекурсивно (если существует)
-    - копирует `DefaultConfig` в `%NTOLIB_CONFIG_DIR%`
+После успешного `Deploy.ps1` перезапустите MasterSCADA, чтобы новая библиотека была подгружена.
 
-## Порядок работы (рекомендуемый)
+## Релиз (выполняется в CI)
 
-### Debug-развёртывание на своей машине (локальная отладка)
+Локального релизного скрипта **больше нет**. Релизный конвейер живёт в `.github/workflows/release.yml`.
 
-1. Установите переменные:
-    - `REPO_ROOT` = путь к репозиторию
-    - `BUILD_CONFIGURATION=Debug`
-    - `NTOLIB_DEST_DIR` = папка, откуда целевое приложение загружает `NtoLib.dll`
-    - `NTOLIB_CONFIG_DIR` = папка для конфигов (будет перезаписана)
+Чтобы выпустить релиз:
 
-2. Запустите:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Deploy.ps1
-```
+1. Создайте annotated git tag вида `vX.Y.Z` (или с pre-release суффиксом, например `v1.12.0-beta1`):
+    ```powershell
+    git tag -a v1.12.0 -m "release notes here"
+    git push origin v1.12.0
+    ```
+2. CI на windows-2025 раннере: build → test → ILRepack → собирает `NtoLib_v<ver>.zip` + `Installer.exe` (с версией из тега) → создаёт GitHub Release с обоими файлами.
+3. Версия из тега прокидывается через `-p:Version=$VERSION` (csproj — `GenerateAssemblyInfo=true`).
 
-3. Перезапустите целевое приложение/службу, чтобы новая библиотека была загружена.
+Локальные сборки используют fallback-версию из `NtoLib/NtoLib.csproj` (`<Version>`), CI всегда переопределяет тегом.
 
-### Release-сборка для передачи/установки
+## Прямые команды `dotnet` (при необходимости)
 
-1. Установите:
-    - `REPO_ROOT`
-    - `BUILD_CONFIGURATION=Release`
-
-2. Запустите упаковку:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Build\Package.ps1
-```
-
-3. Полученный файл `Releases\NtoLib_v<version>.zip` используйте для установки на целевой машине:
-    - распакуйте `NtoLib.dll` и `System.Resources.Extensions.dll` в каталог, откуда приложение загружает библиотеку;
-    - распакуйте `DefaultConfig` в требуемый каталог конфигурации (или используйте стандартный механизм конфигов вашей системы);
-    - при необходимости выполните действия из `NtoLib_reg.bat` (если он включён и требуется вашей средой).
-
-## Прямые команды dotnet (при необходимости)
-
-Restore (PackageReference + Central Package Management через `Directory.Packages.props` в корне репозитория):
 ```powershell
 dotnet restore .\NtoLib.sln
-```
-
-Build:
-```powershell
 dotnet build .\NtoLib.sln -c Release
-```
-
-Test:
-```powershell
-dotnet test .\Tests\Tests.csproj -c Release
+dotnet test .\NtoLib.sln -c Release
+dotnet format .\NtoLib.sln --verify-no-changes
 ```
