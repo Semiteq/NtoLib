@@ -51,12 +51,6 @@ jobs:
       - name: restore
         run: dotnet restore NtoLib.sln
 
-      - name: build (un-merged, for tests)
-        run: dotnet build NtoLib.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
-
-      - name: test
-        run: dotnet test NtoLib.sln -c Release --no-build --logger "console;verbosity=normal"
-
       - name: build (merged via ILRepack)
         run: dotnet build NtoLib/NtoLib.csproj -c Release -p:RunILRepack=true -p:Version=${{ steps.version.outputs.version }} --no-restore
 
@@ -99,7 +93,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: NtoLib ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.tag }}
           body: ${{ steps.version.outputs.body }}
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}

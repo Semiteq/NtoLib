@@ -3,6 +3,7 @@
 ![Target](https://img.shields.io/badge/target-.NET%20Framework%204.8-lightgrey)
 ![MasterSCADA](https://img.shields.io/badge/MasterSCADA-3.12-informational)
 [![CI](https://github.com/Semiteq/NtoLib/actions/workflows/ci.yml/badge.svg)](https://github.com/Semiteq/NtoLib/actions/workflows/ci.yml)
+[![release](https://github.com/Semiteq/NtoLib/actions/workflows/release.yml/badge.svg)](https://github.com/Semiteq/NtoLib/actions/workflows/release.yml)
 
 <p align="center"><img src=logo.png/></p>
 

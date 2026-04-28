@@ -30,7 +30,7 @@
     <Description>Библиотека для высокопроизводительных вычислений и работы с данными.</Description>
     <Company>Semiteq</Company>
     <Product>NtoLib SDK</Product>
-    <Copyright>Copyright Semiteq©, 2025</Copyright>
+    <Copyright>Copyright Semiteq©, $([System.DateTime]::UtcNow.Year)</Copyright>
     <Version>1.12.0-dev</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>

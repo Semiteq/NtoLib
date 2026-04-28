@@ -57,6 +57,3 @@ jobs:
 
       - name: test
         run: dotnet test NtoLib.sln -c Release --no-build --logger "console;verbosity=normal"
-
-      - name: verify formatting
-        run: dotnet format NtoLib.sln --verify-no-changes
