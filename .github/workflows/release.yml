@@ -32,7 +32,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-          BODY=$(git tag -l --format='%(contents)' "$TAG" | sed '/^$/d')
+          BODY=$(git tag -l --format='%(contents)' "$TAG")
           if [ -z "$BODY" ]; then
             BODY="Release $VERSION"
           fi
@@ -102,8 +102,8 @@ jobs:
           name: NtoLib ${{ steps.version.outputs.version }}
           body: ${{ steps.version.outputs.body }}
           draft: false
-          prerelease: false
-          make_latest: true
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          make_latest: ${{ !contains(steps.version.outputs.version, '-') }}
           files: |
             Releases/NtoLib_v${{ steps.version.outputs.version }}.zip
             publish/installer/Installer.exe
