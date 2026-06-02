@@ -33,6 +33,14 @@
     <Copyright>Copyright Semiteq©, $([System.DateTime]::UtcNow.Year)</Copyright>
     <Version>1.12.0-dev</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!--
+      Let MSBuild compute binding redirects from the resolved assembly versions instead of
+      hand-maintaining an <assemblyBinding> list in App.config (which drifts whenever
+      Dependabot bumps a package in Directory.Packages.props). GenerateBindingRedirectsOutputType
+      is required because this is a Library (redirects are otherwise emitted only for Exe outputs).
+    -->
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Tests" />
