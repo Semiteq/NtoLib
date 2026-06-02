@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FBConfig>
+
+  <!--
+    Editor-only recipe FB. All PLC monitoring / Modbus addressing pins are removed.
+    The dynamic target-name pin groups (ShutterNames, HeaterNames, ...) are added
+    automatically in code (MbeTableEditorFB.Pins.cs) from PinGroupDefs.yaml.
+  -->
+
+  <Map>
+    <Items>
+    </Items>
+  </Map>
+
+  <VisualMap>
+    <Items>
+    </Items>
+  </VisualMap>
+</FBConfig>

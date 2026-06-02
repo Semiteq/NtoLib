@@ -15,14 +15,14 @@ public sealed class TablePresenter : IDisposable
 	private readonly RecipeOperationService _app;
 	private readonly BusyStateManager _busy;
 	private readonly OpenFileDialog _openDialog;
-	private readonly ThreadSafeRowExecutionStateProvider _rowStateProvider;
+	private readonly IRowExecutionStateProvider _rowStateProvider;
 	private readonly SaveFileDialog _saveDialog;
 	private readonly ITableView _view;
 
 	public TablePresenter(
 		ITableView view,
 		RecipeOperationService app,
-		ThreadSafeRowExecutionStateProvider rowStateProvider,
+		IRowExecutionStateProvider rowStateProvider,
 		BusyStateManager busy,
 		OpenFileDialog openDialog,
 		SaveFileDialog saveDialog)

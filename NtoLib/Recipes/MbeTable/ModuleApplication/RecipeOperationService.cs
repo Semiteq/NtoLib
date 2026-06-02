@@ -31,7 +31,7 @@ public sealed class RecipeOperationService
 	private readonly ClipboardAssemblyService _clipboardAssembly;
 	private readonly ICsvService _csv;
 	private readonly ILogger<RecipeOperationService> _logger;
-	private readonly IModbusTcpService _modbus;
+	private readonly IModbusTcpService? _modbus;
 	private readonly OperationPipelineRunner _pipeline;
 	private readonly RecipeFacade _recipeFacade;
 	private readonly ClipboardSchemaDescriptor _schema;
@@ -42,18 +42,18 @@ public sealed class RecipeOperationService
 		TimerService timer,
 		OperationPipelineRunner pipeline,
 		ICsvService csv,
-		IModbusTcpService modbus,
 		ClipboardService clipboard,
 		ClipboardSchemaDescriptor schema,
 		ClipboardAssemblyService clipboardAssembly,
 		RecipeViewModel viewModel,
-		ILogger<RecipeOperationService> logger)
+		ILogger<RecipeOperationService> logger,
+		IModbusTcpService? modbus = null)
 	{
 		_recipeFacade = recipeFacade ?? throw new ArgumentNullException(nameof(recipeFacade));
 		_timer = timer ?? throw new ArgumentNullException(nameof(timer));
 		_pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
 		_csv = csv ?? throw new ArgumentNullException(nameof(csv));
-		_modbus = modbus ?? throw new ArgumentNullException(nameof(modbus));
+		_modbus = modbus;
 		_clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
 		_schema = schema ?? throw new ArgumentNullException(nameof(schema));
 		_clipboardAssembly = clipboardAssembly ?? throw new ArgumentNullException(nameof(clipboardAssembly));
@@ -214,6 +214,11 @@ public sealed class RecipeOperationService
 
 	public async Task<Result> SendRecipeAsync()
 	{
+		if (_modbus is null)
+		{
+			return Result.Fail(new ApplicationInvalidOperationError("PLC communication is not available"));
+		}
+
 		return await _pipeline.RunAsync(
 			OperationMetadata.Send,
 			() =>
@@ -227,6 +232,11 @@ public sealed class RecipeOperationService
 
 	public async Task<Result> ReceiveRecipeAsync()
 	{
+		if (_modbus is null)
+		{
+			return Result.Fail(new ApplicationInvalidOperationError("PLC communication is not available"));
+		}
+
 		var result = await _pipeline.RunAsync(
 			OperationMetadata.Receive,
 			PerformReceiveAsync,
@@ -244,7 +254,7 @@ public sealed class RecipeOperationService
 	{
 		try
 		{
-			var receiveResult = await _modbus.ReceiveRecipeAsync().ConfigureAwait(false);
+			var receiveResult = await _modbus!.ReceiveRecipeAsync().ConfigureAwait(false);
 			if (receiveResult.IsFailed || receiveResult.Value == null)
 			{
 				return receiveResult.ToResult<RecipeAnalysisSnapshot>();

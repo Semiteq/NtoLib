@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 
 using InSAT.OPC;
 
+using NtoLib.Recipes.MbeTable;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 
-namespace NtoLib.Recipes.MbeTable;
+namespace NtoLib.Recipes.MbeTableEditor;
 
-public partial class MbeTableFB
+public partial class MbeTableEditorFB
 {
 	public IReadOnlyCollection<string> GetDefinedGroupNames()
 	{
@@ -36,11 +36,15 @@ public partial class MbeTableFB
 
 	private AppConfiguration LoadConfigurationInternal()
 	{
-		// Backwards compatibility:
-		_configDirPath ??= Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
+		if (string.IsNullOrWhiteSpace(_configDirPath))
+		{
+			throw new InvalidOperationException(
+				"Configuration directory path (ConfigDirPath) is not set. " +
+				"Specify the folder containing the YAML configuration files in the block's properties.");
+		}
 
 		var loaded = RecipeFbConfigurationHelper.LoadConfiguration(
-			_configDirPath,
+			_configDirPath!,
 			DefaultPropertyDefsFileName,
 			DefaultColumnDefsFileName,
 			DefaultPinGroupDefsFileName,

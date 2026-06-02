@@ -1,10 +1,9 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 
 namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.RuntimeOptions;
 
-public sealed class FbRuntimeOptionsProvider
+public sealed class FbRuntimeOptionsProvider : IRuntimeOptionsProvider
 {
 	private readonly MbeTableFB _fb;
 
@@ -23,11 +22,7 @@ public sealed class FbRuntimeOptionsProvider
 		var verifyDelayMs = 200;
 		var wordOrder = _fb.WordOrder;
 
-		var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-		var defaultLogsDir = Path.Combine(appData, "NtoLibLogs");
-		var dirExpanded = Environment.ExpandEnvironmentVariables(_fb.LogDirPath ?? string.Empty);
-		var effectiveDir = string.IsNullOrWhiteSpace(dirExpanded) ? defaultLogsDir : dirExpanded;
-		var logFilePath = Path.Combine(effectiveDir, "mbe-table.log");
+		var logFilePath = LogFilePathResolver.Resolve(_fb.LogDirPath);
 
 		return new RuntimeOptions(
 			IpAddress: ip,

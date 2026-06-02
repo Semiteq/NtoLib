@@ -271,6 +271,30 @@
     <Compile Include="Recipes\MbeTable\MbeTableFB.cs"/>
     <Compile Include="Recipes\MbeTable\MbeTableFB.Pins.cs"/>
     <Compile Include="Recipes\MbeTable\MbeTableFB.VisualProperties.cs"/>
+    <Compile Include="Recipes\MbeTable\IPinGroupReader.cs"/>
+    <Compile Include="Recipes\MbeTable\RecipeFbConfigurationHelper.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\StaticRowExecutionStateProvider.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\EditorRuntimeOptionsProvider.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorFB.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorFB.Configuration.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorFB.Pins.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorFB.VisualProperties.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorControl.cs"/>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorControl.Buttons.cs">
+      <DependentUpon>MbeTableEditorControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorControl.Designer.cs">
+      <DependentUpon>MbeTableEditorControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorControl.DesignTime.cs">
+      <DependentUpon>MbeTableEditorControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorControl.Helpers.cs">
+      <DependentUpon>MbeTableEditorControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Recipes\MbeTableEditor\MbeTableEditorControl.Lifecycle.cs">
+      <DependentUpon>MbeTableEditorControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\CompletionMessageKind.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\ConsistencyEffect.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleApplication\Operations\Contracts\OperationId.cs"/>
@@ -475,12 +499,13 @@
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\ActionTarget\IActionTargetProvider.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\DiContainer.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\Errors\InfrastructureTargetGroupEmptyError.cs"/>
-    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\Errors\InfrastructureTargetGroupNoNonEmptyError.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\Errors\InfrastructureTargetsNotDefinedError.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\FbPinAccessor.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\RecipeRuntimeSnapshot.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\PinDataManager\RecipeRuntimeStatePoller.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\FbRuntimeOptionsProvider.cs"/>
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\IRuntimeOptionsProvider.cs"/>
+    <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\LogFilePathResolver.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\RuntimeOptioins.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeOptions\TypeConverter.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleInfrastructure\RuntimeServiceHost.cs"/>
@@ -526,6 +551,7 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\ComboBoxCellRenderer.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\EditGatingCoordinator.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\Rendering\TableRenderCoordinator.cs"/>
+    <Compile Include="Recipes\MbeTable\ModulePresentation\StateProviders\IRowExecutionStateProvider.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\StateProviders\ThreadSafeRowExecutionStateProvider.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\State\BusyStateManager.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\State\CellStateResolver.cs"/>
@@ -758,6 +784,11 @@
     <EmbeddedResource Include="Recipes\MbeTable\MbeTableFB.xml"/>
     <EmbeddedResource Include="Recipes\MbeTable\TableControl.resx">
       <DependentUpon>TableControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Recipes\MbeTableEditor\MbeTableEditorFB.bmp"/>
+    <EmbeddedResource Include="Recipes\MbeTableEditor\MbeTableEditorFB.xml"/>
+    <EmbeddedResource Include="Recipes\MbeTableEditor\MbeTableEditorControl.resx">
+      <DependentUpon>MbeTableEditorControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>

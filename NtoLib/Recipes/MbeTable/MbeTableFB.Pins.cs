@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-
-using InSAT.OPC;
-
-using MasterSCADA.Hlp;
+﻿using MasterSCADA.Hlp;
 
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 
@@ -37,33 +33,11 @@ public partial class MbeTableFB
 		{
 			var groupNode = Root.AddGroup(pinGroup.PinGroupId, pinGroup.GroupName);
 
-			for (var i = 0; i < pinGroup.PinQuantity; i++)
+			foreach (var (pinId, pinName) in RecipeFbConfigurationHelper.EnumerateGroupPins(pinGroup))
 			{
-				var pinId = pinGroup.FirstPinId + i;
-				var pinName = $"{pinGroup.GroupName}{i + 1}";
 				groupNode.AddPinWithID(pinId, pinName, PinType.Pin, typeof(string), "");
 			}
 		}
-	}
-
-	private Dictionary<int, string> ReadPinGroup(int firstId, int quantity)
-	{
-		const int InitialPinOffset = 1;
-		var pinGroup = new Dictionary<int, string>(quantity + InitialPinOffset);
-
-		for (var offset = 0; offset < quantity; offset++)
-		{
-			var pinId = firstId + offset;
-			if (GetPinQuality(pinId) != OpcQuality.Good)
-			{
-				continue;
-			}
-
-			var value = GetPinValue<string>(pinId);
-			pinGroup[offset + InitialPinOffset] = value;
-		}
-
-		return pinGroup;
 	}
 
 	private void UpdateUiConnectionPins()

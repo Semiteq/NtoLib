@@ -21,14 +21,14 @@ internal sealed class CellFormattingEngine
 	private readonly DesignTimeColorSchemeProvider _colorSchemeProvider;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
 	private readonly RecipeViewModel _recipeViewModel;
-	private readonly ThreadSafeRowExecutionStateProvider _rowExecutionStateProvider;
+	private readonly IRowExecutionStateProvider _rowExecutionStateProvider;
 	private readonly DataGridView _table;
 
 	public CellFormattingEngine(
 		DataGridView table,
 		CellStateResolver cellStateResolver,
 		RecipeViewModel recipeViewModel,
-		ThreadSafeRowExecutionStateProvider rowExecutionStateProvider,
+		IRowExecutionStateProvider rowExecutionStateProvider,
 		DesignTimeColorSchemeProvider colorSchemeProvider,
 		IReadOnlyList<ColumnDefinition> columns)
 	{
