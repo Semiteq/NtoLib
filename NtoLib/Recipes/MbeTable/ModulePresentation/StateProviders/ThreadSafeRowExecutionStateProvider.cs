@@ -6,7 +6,7 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Models;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
 
-public sealed class ThreadSafeRowExecutionStateProvider : IDisposable
+public sealed class ThreadSafeRowExecutionStateProvider : IRowExecutionStateProvider
 {
 	private readonly RecipeRuntimeStatePoller _runtimeState;
 	private int _currentStepIndex;

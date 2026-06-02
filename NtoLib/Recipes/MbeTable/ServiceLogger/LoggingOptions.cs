@@ -4,7 +4,7 @@ namespace NtoLib.Recipes.MbeTable.ServiceLogger;
 
 public sealed class LoggingOptions
 {
-	public LoggingOptions(FbRuntimeOptionsProvider runtimeOptionsProvider)
+	public LoggingOptions(IRuntimeOptionsProvider runtimeOptionsProvider)
 	{
 		var runtimeOptions = runtimeOptionsProvider.GetCurrent();
 		Enabled = runtimeOptions.LogToFile;

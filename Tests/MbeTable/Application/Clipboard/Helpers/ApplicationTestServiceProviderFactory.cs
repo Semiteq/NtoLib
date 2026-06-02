@@ -39,7 +39,8 @@ namespace Tests.MbeTable.Application.Clipboard.Helpers;
 public static class ApplicationTestServiceProviderFactory
 {
 	public static ServiceProvider Create(AppConfiguration config,
-		IReadOnlyDictionary<short, CompiledFormula> compiledFormulas)
+		IReadOnlyDictionary<short, CompiledFormula> compiledFormulas,
+		bool registerModbus = true)
 	{
 		if (config == null)
 		{
@@ -113,7 +114,11 @@ public static class ApplicationTestServiceProviderFactory
 		services.AddSingleton<RecipeViewModel>();
 
 		services.AddSingleton<ICsvService, FakeCsvService>();
-		services.AddSingleton<IModbusTcpService, FakeModbusTcpService>();
+
+		if (registerModbus)
+		{
+			services.AddSingleton<IModbusTcpService, FakeModbusTcpService>();
+		}
 
 		services.AddSingleton<OperationPipelineRunner>();
 		services.AddSingleton<RecipeOperationService>();

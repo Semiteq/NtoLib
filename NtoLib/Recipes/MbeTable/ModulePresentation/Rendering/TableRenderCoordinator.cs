@@ -25,7 +25,7 @@ public sealed class TableRenderCoordinator : IDisposable
 
 	private readonly CellFormattingEngine _formattingEngine;
 	private readonly ILogger<TableRenderCoordinator> _logger;
-	private readonly ThreadSafeRowExecutionStateProvider _rowExecutionStateProvider;
+	private readonly IRowExecutionStateProvider _rowExecutionStateProvider;
 	private readonly DataGridView _table;
 	private bool _disposed;
 
@@ -33,7 +33,7 @@ public sealed class TableRenderCoordinator : IDisposable
 
 	public TableRenderCoordinator(
 		DataGridView table,
-		ThreadSafeRowExecutionStateProvider rowExecutionStateProvider,
+		IRowExecutionStateProvider rowExecutionStateProvider,
 		CellStateResolver cellStateResolver,
 		RecipeViewModel recipeViewModel,
 		IReadOnlyList<ColumnDefinition> columns,

@@ -30,7 +30,7 @@ internal sealed class TableControlServices
 		IReadOnlyList<ColumnDefinition> columnDefinitions,
 		FactoryColumnRegistry columnRegistry,
 		RecipeOperationService recipeOperationService,
-		ThreadSafeRowExecutionStateProvider rowStateProvider,
+		IRowExecutionStateProvider rowStateProvider,
 		BusyStateManager busyStateManager,
 		OpenFileDialog openFileDialog,
 		SaveFileDialog saveFileDialog)
@@ -57,7 +57,7 @@ internal sealed class TableControlServices
 	public IReadOnlyList<ColumnDefinition> ColumnDefinitions { get; }
 	public FactoryColumnRegistry ColumnRegistry { get; }
 	public RecipeOperationService RecipeOperationService { get; }
-	public ThreadSafeRowExecutionStateProvider RowStateProvider { get; }
+	public IRowExecutionStateProvider RowStateProvider { get; }
 	public BusyStateManager BusyStateManager { get; }
 	public OpenFileDialog OpenFileDialog { get; }
 	public SaveFileDialog SaveFileDialog { get; }

@@ -8,24 +8,23 @@ using FB;
 using FB.VisualFB;
 
 using InSAT.Library.Interop;
-using InSAT.OPC;
 
+using NtoLib.Recipes.MbeTable;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain;
 using NtoLib.Recipes.MbeTable.ModuleCore.Formulas;
 using NtoLib.Recipes.MbeTable.ModuleInfrastructure;
 
-namespace NtoLib.Recipes.MbeTable;
+namespace NtoLib.Recipes.MbeTableEditor;
 
 [CatID(CatIDs.CATID_OTHER)]
-[Guid("DFB05172-07CD-492C-925E-A091B197D8A8")]
+[Guid("B9FC0D44-3827-4D86-9CD8-0F0965DCED47")]
 [FBOptions(FBOptions.EnableChangeConfigInRT)]
-[VisualControls(typeof(TableControl))]
-[DisplayName("Таблица рецептов MBE")]
+[VisualControls(typeof(MbeTableEditorControl))]
+[DisplayName("Редактор рецептов MBE")]
 [ComVisible(true)]
 [Serializable]
-public partial class MbeTableFB : VisualFBBase, IPinGroupReader
+public partial class MbeTableEditorFB : VisualFBBase, IPinGroupReader
 {
-	private const string DefaultConfigFolderName = "NtoLibTableConfig";
 	private const string DefaultPropertyDefsFileName = "PropertyDefs.yaml";
 	private const string DefaultColumnDefsFileName = "ColumnDefs.yaml";
 	private const string DefaultPinGroupDefsFileName = "PinGroupDefs.yaml";
@@ -33,7 +32,6 @@ public partial class MbeTableFB : VisualFBBase, IPinGroupReader
 
 	[NonSerialized] private Lazy<AppConfiguration>? _appConfigurationLazy;
 	[NonSerialized] private IReadOnlyDictionary<short, CompiledFormula>? _compiledFormulas;
-	[NonSerialized] private RuntimeServiceHost? _runtimeServiceHost;
 	[NonSerialized] private IServiceProvider? _serviceProvider;
 
 	[Browsable(false)] public IServiceProvider? ServiceProvider => _serviceProvider;
@@ -72,8 +70,7 @@ public partial class MbeTableFB : VisualFBBase, IPinGroupReader
 				throw new InvalidOperationException("Compiled formulas cache was not initialized.");
 			}
 
-			_serviceProvider = MbeTableServiceConfigurator.ConfigureServices(this, state, _compiledFormulas);
-			_runtimeServiceHost = new RuntimeServiceHost(_serviceProvider);
+			_serviceProvider = MbeTableServiceConfigurator.ConfigureEditorServices(this, state, _compiledFormulas);
 		}
 		catch (Exception ex)
 		{
@@ -99,47 +96,11 @@ public partial class MbeTableFB : VisualFBBase, IPinGroupReader
 			return;
 		}
 
-		_runtimeServiceHost?.Dispose();
-		_runtimeServiceHost = null;
-
 		if (_serviceProvider is IDisposable disposableProvider)
 		{
 			disposableProvider.Dispose();
 		}
 
 		_serviceProvider = null;
-	}
-
-	protected override void UpdateData()
-	{
-		base.UpdateData();
-
-		_runtimeServiceHost?.Poll();
-
-		UpdateUiConnectionPins();
-	}
-
-	internal void UpdateTimerPins(TimeSpan stepTimeLeft, TimeSpan totalTimeLeft)
-	{
-		if (GetPinQuality(IdLineTimeLeft) != OpcQuality.Good
-			|| !AreFloatsEqual(GetPinValue<float>(IdLineTimeLeft), (float)stepTimeLeft.TotalSeconds))
-		{
-			SetPinValue(IdLineTimeLeft, (float)stepTimeLeft.TotalSeconds);
-		}
-
-		if (GetPinQuality(IdTotalTimeLeft) != OpcQuality.Good
-			|| !AreFloatsEqual(GetPinValue<float>(IdTotalTimeLeft), (float)totalTimeLeft.TotalSeconds))
-		{
-			SetPinValue(IdTotalTimeLeft, (float)totalTimeLeft.TotalSeconds);
-		}
-	}
-
-	internal void UpdateRecipeConsistentPin(bool isRecipeConsistent)
-	{
-		if (GetPinQuality(IdIsRecipeConsistent) != OpcQuality.Good
-			|| GetPinValue<bool>(IdIsRecipeConsistent) != isRecipeConsistent)
-		{
-			SetPinValue(IdIsRecipeConsistent, isRecipeConsistent);
-		}
 	}
 }

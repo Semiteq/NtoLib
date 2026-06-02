@@ -108,6 +108,31 @@ Platform primer and detailed NtoLib-specific patterns, lifecycle templates, and
 checklists: [`Docs/architecture/`](Docs/architecture/) (see Documentation Index below
 for the reading order).
 
+### Shared-core / thin-shell pattern (MbeTable / MbeTableEditor)
+
+When a customer wants a "copy" of an existing FB with a feature stripped out, do **not**
+duplicate the module tree. Carry COM identity in the thin shell only (the `[Guid]`,
+`[Serializable]` FB class + its `VisualControlBase` control + embedded XML/bmp) and reuse
+the COM-neutral core verbatim:
+
+- The FB shells (`MbeTableFB`, `MbeTableEditorFB`) keep **fresh GUIDs** and their own XML;
+  never share a base class between them (it would risk COM identity / MasterSCADA
+  serialization). Reuse logic via **static helpers and composition**, not inheritance.
+- COM-neutral, non-UI logic that both shells need (YAML loading, formula precompilation,
+  dynamic-pin enumeration / reading) lives in a static helper —
+  `Recipes/MbeTable/RecipeFbConfigurationHelper.cs`. Platform-specific bits (pin quality
+  via `OpcQuality`, `Root` node mutation) stay in the FB and are passed in as delegates
+  (e.g. `Func<int, string?> tryReadPin`) so the helper stays unit-testable from `Tests`
+  (which cannot reference the vendor SDK / `InSAT.OPC`).
+- Variant DI graphs fork through one configurator (`DiContainer.ConfigureServices` vs
+  `ConfigureEditorServices`) sharing a private `RegisterShared`; the variant omits the
+  PLC-only registrations and substitutes no-op/slim providers
+  (`StaticRowExecutionStateProvider`, `EditorRuntimeOptionsProvider`) behind interfaces
+  (`IRowExecutionStateProvider`, `IRuntimeOptionsProvider`, `IPinGroupReader`).
+- The WinForms **control shell** is the one piece intentionally duplicated
+  (`MbeTableEditorControl.*` mirrors `TableControl.*`) — it is COM-bound glue, not domain
+  logic, and extracting a shared control base would entangle COM identity.
+
 ## csproj Conventions
 
 - `NtoLib.csproj` is **SDK-style** (`<Project Sdk="Microsoft.NET.Sdk">`) but uses

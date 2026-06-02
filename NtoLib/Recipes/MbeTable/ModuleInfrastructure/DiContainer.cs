@@ -56,6 +56,7 @@ using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Common;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Csv;
 using NtoLib.Recipes.MbeTable.ServiceRecipeAssembly.Modbus;
 using NtoLib.Recipes.MbeTable.ServiceStatus;
+using NtoLib.Recipes.MbeTableEditor;
 
 using Serilog;
 
@@ -73,11 +74,50 @@ public static class MbeTableServiceConfigurator
 
 		var runtimeOptionsProvider = new FbRuntimeOptionsProvider(mbeTableFb);
 		services.AddSingleton(runtimeOptionsProvider);
+		services.AddSingleton<IRuntimeOptionsProvider>(runtimeOptionsProvider);
 
+		RegisterShared(services, mbeTableFb, configurationState, compiledFormulas);
+
+		services.AddSingleton<IPinGroupReader>(mbeTableFb);
+		services.AddSingleton<FbPinAccessor>(_ => new FbPinAccessor(mbeTableFb));
+		RegisterRuntimeState(services, mbeTableFb);
+		RegisterModbusTcpServices(services);
+		RegisterModbusAssembly(services);
+		services.AddSingleton<IModbusTcpService, ModbusTcpService>();
+		services.AddSingleton<IRowExecutionStateProvider, ThreadSafeRowExecutionStateProvider>();
+
+		return BuildAndBootstrap(services);
+	}
+
+	public static IServiceProvider ConfigureEditorServices(MbeTableEditorFB editorFb,
+		AppConfiguration configurationState,
+		IReadOnlyDictionary<short, CompiledFormula> compiledFormulas)
+	{
+		var services = new ServiceCollection();
+
+		var runtimeOptionsProvider = new EditorRuntimeOptionsProvider(
+			editorFb.LogToFile,
+			editorFb.LogDirPath,
+			editorFb.Epsilon);
+		services.AddSingleton<IRuntimeOptionsProvider>(runtimeOptionsProvider);
+
+		RegisterShared(services, editorFb, configurationState, compiledFormulas);
+
+		services.AddSingleton<IPinGroupReader>(editorFb);
+		services.AddSingleton<IRowExecutionStateProvider, StaticRowExecutionStateProvider>();
+
+		return BuildAndBootstrap(services);
+	}
+
+	private static void RegisterShared(
+		IServiceCollection services,
+		object fbInstance,
+		AppConfiguration configurationState,
+		IReadOnlyDictionary<short, CompiledFormula> compiledFormulas)
+	{
 		RegisterLogging(services);
 		RegisterConfiguration(services, configurationState);
-		RegisterSharedInstances(services, mbeTableFb, configurationState);
-		RegisterRuntimeState(services, mbeTableFb);
+		RegisterSharedInstances(services, fbInstance, configurationState);
 		RegisterLoggerServices(services);
 		RegisterStatusService(services);
 		RegisterCompiledFormulas(services, compiledFormulas);
@@ -85,11 +125,13 @@ public static class MbeTableServiceConfigurator
 		RegisterAnalyzerPipeline(services);
 		RegisterCsvServices(services);
 		RegisterInfrastructureServices(services);
-		RegisterModbusTcpServices(services);
 		RegisterRecipeAssemblyServices(services);
 		RegisterApplicationServices(services);
 		RegisterPresentationServices(services);
+	}
 
+	private static IServiceProvider BuildAndBootstrap(IServiceCollection services)
+	{
 		var serviceProvider = services.BuildServiceProvider();
 		var loggingBootstrapper = serviceProvider.GetRequiredService<LoggingBootstrapper>();
 		loggingBootstrapper.Initialize();
@@ -127,12 +169,15 @@ public static class MbeTableServiceConfigurator
 
 	private static void RegisterSharedInstances(
 		IServiceCollection services,
-		MbeTableFB mbeTableFb,
+		object fbInstance,
 		AppConfiguration configurationState)
 	{
-		services.AddSingleton(mbeTableFb);
+		if (fbInstance is MbeTableFB mbeTableFb)
+		{
+			services.AddSingleton(mbeTableFb);
+		}
+
 		services.AddSingleton(configurationState);
-		services.AddSingleton<FbPinAccessor>(_ => new FbPinAccessor(mbeTableFb));
 	}
 
 	private static void RegisterRuntimeState(IServiceCollection services, MbeTableFB fb)
@@ -231,12 +276,16 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<RecipePlcService>();
 	}
 
-	private static void RegisterRecipeAssemblyServices(IServiceCollection services)
+	private static void RegisterModbusAssembly(IServiceCollection services)
 	{
 		services.AddSingleton<ModbusAssemblyStrategy>();
+		services.AddSingleton<ModbusRecipeAssemblyService>();
+	}
+
+	private static void RegisterRecipeAssemblyServices(IServiceCollection services)
+	{
 		services.AddSingleton<AssemblyValidator>();
 		services.AddSingleton<TargetAvailabilityValidator>();
-		services.AddSingleton<ModbusRecipeAssemblyService>();
 		services.AddSingleton<CsvRecipeAssemblyService>();
 
 		services.AddSingleton<ClipboardSchemaDescriptor>(sp =>
@@ -269,7 +318,6 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<TextBoxExtension>();
 		services.AddSingleton<StepStartTime>();
 		services.AddSingleton<RecipeViewModel>();
-		services.AddSingleton<IModbusTcpService, ModbusTcpService>();
 		services.AddSingleton<ICsvService, CsvService>();
 		services.AddSingleton<OperationPipelineRunner>();
 		services.AddSingleton<RecipeOperationService>();
@@ -279,7 +327,6 @@ public static class MbeTableServiceConfigurator
 	{
 		services.AddSingleton<BusyStateManager>();
 		services.AddSingleton<CellStateResolver>();
-		services.AddSingleton<ThreadSafeRowExecutionStateProvider>();
 		services.AddSingleton<DesignTimeColorSchemeProvider>();
 		services.AddSingleton<ColorScheme>();
 		services.AddSingleton<CellDataContext>();

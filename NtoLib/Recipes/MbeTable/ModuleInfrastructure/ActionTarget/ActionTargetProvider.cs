@@ -11,11 +11,11 @@ namespace NtoLib.Recipes.MbeTable.ModuleInfrastructure.ActionTarget;
 
 public sealed class ActionTargetProvider : IActionTargetProvider
 {
-	private readonly MbeTableFB _mbeTableFb;
+	private readonly IPinGroupReader _pinGroupReader;
 
-	public ActionTargetProvider(MbeTableFB mbeTableFb)
+	public ActionTargetProvider(IPinGroupReader pinGroupReader)
 	{
-		_mbeTableFb = mbeTableFb ?? throw new ArgumentNullException(nameof(mbeTableFb));
+		_pinGroupReader = pinGroupReader ?? throw new ArgumentNullException(nameof(pinGroupReader));
 	}
 
 	public Result<int> GetMinimalTargetId(string? groupName)
@@ -26,22 +26,15 @@ public sealed class ActionTargetProvider : IActionTargetProvider
 			return targetsResult.ToResult();
 		}
 
+		// GetFilteredGroupTargets already drops empty-valued pins, so an empty result means
+		// the group has no usable targets.
 		var targets = targetsResult.Value;
 		if (targets.Count == 0)
 		{
 			return new InfrastructureTargetGroupEmptyError(groupName);
 		}
 
-		var nonEmptyValueTargets = targets
-			.Where(kvp => !string.IsNullOrEmpty(kvp.Value))
-			.ToDictionary(kv => (short)kv.Key, kv => kv.Value);
-
-		if (nonEmptyValueTargets.Count == 0)
-		{
-			return new InfrastructureTargetGroupNoNonEmptyError(groupName);
-		}
-
-		return nonEmptyValueTargets.Min(kvp => kvp.Key);
+		return targets.Min(kvp => kvp.Key);
 	}
 
 	public Result<IReadOnlyDictionary<short, string>> GetFilteredGroupTargets(string? groupName)
@@ -51,7 +44,7 @@ public sealed class ActionTargetProvider : IActionTargetProvider
 			throw new ArgumentNullException(nameof(groupName));
 		}
 
-		var groupExists = _mbeTableFb.GetDefinedGroupNames()
+		var groupExists = _pinGroupReader.GetDefinedGroupNames()
 			.Any(g => string.Equals(g, groupName, StringComparison.OrdinalIgnoreCase));
 
 		if (!groupExists)
@@ -59,7 +52,7 @@ public sealed class ActionTargetProvider : IActionTargetProvider
 			return new InfrastructureTargetsNotDefinedError(groupName);
 		}
 
-		var targets = _mbeTableFb.ReadTargets(groupName);
+		var targets = _pinGroupReader.ReadTargets(groupName);
 		var filteredTargets = targets.Where(kvp => !string.IsNullOrEmpty(kvp.Value))
 			.ToDictionary(kv => (short)kv.Key, kv => kv.Value);
 
@@ -68,12 +61,12 @@ public sealed class ActionTargetProvider : IActionTargetProvider
 
 	public IReadOnlyDictionary<string, IReadOnlyDictionary<short, string>> GetAllTargetsFilteredSnapshot()
 	{
-		var groups = _mbeTableFb.GetDefinedGroupNames();
+		var groups = _pinGroupReader.GetDefinedGroupNames();
 		var result = new Dictionary<string, IReadOnlyDictionary<short, string>>(StringComparer.OrdinalIgnoreCase);
 
 		foreach (var group in groups)
 		{
-			var targets = _mbeTableFb.ReadTargets(group);
+			var targets = _pinGroupReader.ReadTargets(group);
 			var filteredTargets = targets.Where(kvp => !string.IsNullOrEmpty(kvp.Value))
 				.ToDictionary(kv => (short)kv.Key, kv => kv.Value);
 			result[group] = CreateReadOnlyDictionary(filteredTargets);
