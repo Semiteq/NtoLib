@@ -1,9 +1,11 @@
 ---
-name: release
-description: Use this skill when the user asks to release a new NtoLib version — "let's release v1.12.0", "cut a release", "выпустить новую версию", "пуш тега", "сделать beta1". Walks through gathering changes since the last release, drafting release notes in the project's established Russian style, creating an annotated tag with the right cleanup flag, pushing it to trigger the GitHub Actions release workflow, and verifying the published GitHub Release.
+name: make-release
+description: Use this skill when the user asks to release a new NtoLib version — "let's release v1.12.0", "cut a release", "выпустить новую версию", "пуш тега", "сделать beta1". Walks through gathering changes since the last release, drafting release notes in the project's established Russian style, creating an annotated tag with the right cleanup flag, pushing it to trigger the GitHub Actions release workflow, and verifying the published GitHub Release. NOT for generic release tooling on other repos (use release-tools:new) or for listing unreleased commits (use release-tools:last-tag).
 ---
 
 # Releasing a new NtoLib version
+
+Cut and publish a tagged NtoLib release end to end: gather changes, draft Russian release notes, create the annotated tag, push to trigger CI, and verify the published GitHub Release.
 
 The release flow is fully automated by `.github/workflows/release.yml`: pushing an annotated tag `vX.Y.Z` (or `vX.Y.Z-suffix` for prereleases) on `windows-2025` builds the merged `NtoLib.dll` and `Installer.exe` with the tag-derived version, packages `NtoLib_v<ver>.zip`, and publishes a GitHub Release with both attached. SemVer suffix → automatic `prerelease=true` and `make_latest=false`.
 
@@ -31,7 +33,7 @@ Before touching any tag:
    dotnet test NtoLib.sln -c Release --no-build --logger "console;verbosity=minimal"
    dotnet build NtoLib/NtoLib.csproj -c Release -p:RunILRepack=true --no-restore
    ```
-   All green before proceeding.
+   All green before proceeding. **If the smoke build or tests fail, STOP — do not create or push a tag.** A tag that crashes CI must then be rolled back (see Rollback) before retrying.
 
 ## Phase 2 — Gather changes since the last release
 
@@ -121,6 +123,8 @@ gh run watch <run-id>
 
 Expected timing on `windows-2025`: ~3 minutes (no test step in release.yml — relies on ci.yml gate).
 
+If the run fails after the tag was pushed, undo the tag and any partial release before retrying — see Rollback.
+
 ## Phase 6 — Verify the release
 
 After the workflow completes:
@@ -137,7 +141,7 @@ Check:
 
 If the release name or body needs fixing post-publish:
 ```bash
-gh release edit vX.Y.Z --title "v1.12.0"
+gh release edit vX.Y.Z --title "v1.12.0-beta1"
 gh release edit vX.Y.Z --notes "..."
 ```
 This edits the GitHub Release object (separate from the git tag annotation, which stays as-is).
