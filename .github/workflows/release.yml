@@ -90,7 +90,7 @@ jobs:
         run: dotnet build Installer/Installer.csproj -c Release -p:Version=${{ steps.version.outputs.version }} -o publish/installer --no-restore
 
       - name: create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}
