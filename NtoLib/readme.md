@@ -20,14 +20,13 @@
 
 Функциональный блок для конфигурации, редактирования и исполнения технологических рецептов в MasterSCADA.
 
-- Документация на блок: [`MbeTable`](../Docs/mbe_table/readme.md)
-- Модули блоков:
-    - Конфигурация через YAML: [`01-config`](../Docs/mbe_table/01-config.md)
-    - Работа с пинами SCADA: [`02-infrastructure`](../Docs/mbe_table/02-infrastructure.md)
-    - UI/UX и взаимодействие: [`03-presentation`](../Docs/mbe_table/03-presentation.md)
-    - Импорт/экспорт CSV: [`04-csv`](../Docs/mbe_table/04-csv.md)
-    - Взаимодействие с ПЛК по Modbus TCP: [`05-modbus-tcp`](../Docs/mbe_table/05-modbus-tcp.md)
-    - Диагностика и логирование: [`06-logger`](../Docs/mbe_table/06-logger.md)
+- Документация на блок: [`MbeTable`](../Docs/mbe-table.md)
+    - Конфигурация через YAML: [раздел 7](../Docs/mbe-table.md#7-конфигурация-yaml)
+    - Контракт пинов: [раздел 4](../Docs/mbe-table.md#4-контракт-пинов)
+    - UI/UX и взаимодействие: [раздел 2](../Docs/mbe-table.md#2-пользовательский-интерфейс)
+    - Импорт/экспорт CSV: [раздел 5](../Docs/mbe-table.md#5-импорт-и-экспорт-csv)
+    - Взаимодействие с ПЛК по Modbus TCP: [раздел 8](../Docs/mbe-table.md#8-обмен-с-плк-по-modbus-tcp)
+    - Диагностика и логирование: [раздел 6](../Docs/mbe-table.md#6-логирование)
 
 ### BrokenLinksObserver
 

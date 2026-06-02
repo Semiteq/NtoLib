@@ -87,7 +87,6 @@ NtoLib/
 ├── Docs/            documentation
 │   ├── architecture/     primer + NtoLib patterns (LLM-targeted, not user-facing)
 │   ├── known_issues/     platform-level bug classes with cause and workaround
-│   ├── mbe_table/        MBE recipe table sub-modules
 │   └── <feature>.md      per-FB user documentation
 ├── DefaultConfig/   YAML configs shipped alongside the DLL
 └── Resources/       vendor SDK DLLs (FB.dll, InSAT.*, MasterSCADA.*)

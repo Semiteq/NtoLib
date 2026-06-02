@@ -11,7 +11,7 @@
 | 1 | [ConfigLoader](config-loader.md) | Загрузка/сохранение именованных настроек оборудования из YAML |
 | 2 | [TrendPensManager](trend-pens-manager.md) | Автоматизация настройки перьев трендов |
 | 3 | [LinkSwitcher](link-switcher.md) | Перелинковка связей между структурно идентичными объектами |
-| 4 | [MbeTable](mbe_table/readme.md) | Таблица рецептов MBE: конфигурация, UI, Modbus TCP, CSV |
+| 4 | [MbeTable](mbe-table.md) | Таблица рецептов MBE: конфигурация, UI, Modbus TCP, CSV |
 | 5 | [NumericBox](numeric-box.md) | Поле ввода числового значения с арбитрацией и валидацией |
 | 6 | [Installer](installer.md) | Графический установщик NtoLib: копирование файлов, конфигурации и COM-регистрация |
 | 7 | [OpcTreeManager](opc-tree-manager.md) | Перестройка дерева OPC UA FB под выбранный целевой проект с произвольной глубиной вложенности (shrink/expand с восстановлением связей на любом уровне) |
