@@ -198,14 +198,3 @@ Reference material:
   unit tests — `NullReferenceException` from `SetPinValue` is almost always an ID/XML
   mismatch, not a logic bug. See
   [`Docs/known_issues/09-mismatched-pin-ids.md`](Docs/known_issues/09-mismatched-pin-ids.md).
-
-## Note on `CLAUDE.md`
-
-`CLAUDE.md` is kept in sync with `AGENTS.md` automatically by a pre-commit hook
-(`.githooks/pre-commit`). To enable the hook locally, run once after cloning:
-
-```powershell
-git config core.hooksPath .githooks
-```
-
-Edit `AGENTS.md` only — the hook will copy it to `CLAUDE.md` on commit.
