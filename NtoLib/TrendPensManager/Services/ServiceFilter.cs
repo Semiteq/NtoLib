@@ -14,7 +14,7 @@ public sealed class ServiceFilter
 		};
 
 	private static readonly HashSet<string>
-		_vacuumMetersNames = new(StringComparer.OrdinalIgnoreCase) { "Вакуумметры" };
+		_vacuumMeterNames = new(StringComparer.OrdinalIgnoreCase) { "Вакуумметры" };
 
 	private static readonly HashSet<string> _pyrometerNames = new(StringComparer.OrdinalIgnoreCase) { "Пирометр" };
 
@@ -66,7 +66,7 @@ public sealed class ServiceFilter
 			return IsKnownServiceTypeEnabled(knownType, options);
 		}
 
-		if (_vacuumMetersNames.Contains(serviceName))
+		if (_vacuumMeterNames.Contains(serviceName))
 		{
 			return options.AddVacuumMeters;
 		}

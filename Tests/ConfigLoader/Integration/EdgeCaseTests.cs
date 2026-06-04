@@ -121,7 +121,7 @@ public sealed class EdgeCaseTests
 		{
 			service.CurrentConfiguration.Shutters[i].Should().Be($"Shutter{i + 1}");
 			service.CurrentConfiguration.ChamberHeaters[i].Should().Be($"Heater{i + 1}");
-			service.CurrentConfiguration.WaterChannels[i].Should().Be($"Water{i + 1}");
+			service.CurrentConfiguration.Waters[i].Should().Be($"Water{i + 1}");
 		}
 
 		for (var i = 0; i < 32; i++)
@@ -140,7 +140,7 @@ public sealed class EdgeCaseTests
 		dto.Shutters.Length.Should().Be(16);
 		dto.Sources.Length.Should().Be(32);
 		dto.ChamberHeaters.Length.Should().Be(16);
-		dto.WaterChannels.Length.Should().Be(16);
+		dto.Waters.Length.Should().Be(16);
 	}
 
 	[Fact]

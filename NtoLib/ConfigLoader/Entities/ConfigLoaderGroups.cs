@@ -12,7 +12,7 @@ public sealed record ConfigLoaderGroups(
 	ConfigLoaderGroup Sources,
 	ConfigLoaderGroup ChamberHeaters,
 	ConfigLoaderGroup Gases,
-	ConfigLoaderGroup Water)
+	ConfigLoaderGroup Waters)
 {
 	public static ConfigLoaderGroups Default { get; } = new(
 		new ConfigLoaderGroup("Shutters", "Shutters", 16, 1000, 2000),

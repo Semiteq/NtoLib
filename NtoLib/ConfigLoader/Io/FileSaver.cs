@@ -31,7 +31,7 @@ public class FileSaver
 			groups.Shutters.Capacity,
 			groups.Sources.Capacity,
 			groups.ChamberHeaters.Capacity,
-			groups.Water.Capacity,
+			groups.Waters.Capacity,
 			groups.Gases.Capacity);
 	}
 
@@ -58,7 +58,7 @@ public class FileSaver
 			BuildDictionary(dto.Shutters),
 			BuildDictionary(dto.Sources),
 			BuildDictionary(dto.ChamberHeaters),
-			BuildDictionary(dto.WaterChannels),
+			BuildDictionary(dto.Waters),
 			BuildDictionary(dto.Gases));
 
 		var validateResult = _validator.ValidateAndMap(yamlConfig);

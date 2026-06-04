@@ -96,9 +96,9 @@ public sealed class SaveTests
 		{
 			dto.ChamberHeaters[i] = "";
 		}
-		for (var i = 0; i < dto.WaterChannels.Length; i++)
+		for (var i = 0; i < dto.Waters.Length; i++)
 		{
-			dto.WaterChannels[i] = "";
+			dto.Waters[i] = "";
 		}
 
 		var result = service.Save(filePath, dto);
