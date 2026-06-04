@@ -145,9 +145,9 @@ Architecture selected via multi-agent evaluation (3 competing placements, 3 judg
 
 ### Task 6: [Final] Update documentation
 
-- [ ] update `Docs/mbe-table.md` (per-FB user documentation) with the orange-highlight behavior and clearing rules, in Russian per established style
-- [ ] update `CLAUDE.md` / `Docs/architecture/architecture.md` only if a genuinely new reusable pattern emerged (factual-event tracker), otherwise skip
-- [ ] move this plan to `docs/plans/completed/`
+- [x] update `Docs/mbe-table.md` (per-FB user documentation) with the orange-highlight behavior and clearing rules, in Russian per established style (added section 2.8 "Подсветка ячеек по умолчанию")
+- [x] update `CLAUDE.md` / `Docs/architecture/architecture.md` only if a genuinely new reusable pattern emerged (factual-event tracker), otherwise skip (skipped — feature-specific, not a reusable template; architecture.md already covers the shared-DI/event patterns it builds on)
+- [x] move this plan to `docs/plans/completed/`
 
 ## Post-Completion
 
