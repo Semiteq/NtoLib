@@ -101,6 +101,99 @@ mismatches**, not business logic.
 
 ---
 
+## Visual FB with a Shared DI Graph (MbeTable Pattern)
+
+Valve/Pump-style visual FBs communicate with their control **only through
+pins** and need no lifecycle coordination. MbeTable is different: its
+control is a full recipe editor that needs the FB's live object graph
+(config, recipe model, Modbus, permissions). This makes it the only FB
+family that pays a rendezvous protocol between two COM objects with
+unsynchronized lifetimes.
+
+### Ownership
+
+- **The FB owns the DI container.** `MbeTableFB.ToRuntime()` →
+  `InitializeRuntime()` builds it via
+  `MbeTableServiceConfigurator.ConfigureServices` (file
+  `Recipes/MbeTable/ModuleInfrastructure/DiContainer.cs`) and exposes it
+  as `ServiceProvider`. The FB outlives the control (the control exists
+  only while its mnemoscheme is open), so FB ownership is correct — PLC
+  polling and recipe state must run with the window closed.
+- **The control consumes the graph.** It resolves `FBConnector.Fb`, casts
+  to the concrete FB type, reads `ServiceProvider`, and composes its
+  UI-bound objects (presenter, render coordinator, input manager) via
+  `ActivatorUtilities`, because widgets (`DataGridView`) exist only at
+  control runtime and cannot be registered in the already-built container.
+
+### Control-side composition
+
+Objects that need both container services and a live widget — presenter,
+render coordinator, input manager, behavior manager — are composed with
+`ActivatorUtilities.CreateInstance(provider, widget)` and disposed
+explicitly when the control detaches. This is the documented
+Microsoft.Extensions.DependencyInjection idiom for mixing container
+dependencies with runtime arguments, not a workaround; do not register
+these types in the container.
+
+Alternatives considered inferior for this codebase:
+
+- **Per-control `IServiceScope` plus a holder object carrying the
+  widget.** M.E.DI cannot register an instance into an existing scope
+  (it has no child containers), so the widget would have to travel
+  through a mutable holder that stays null until assigned after
+  `CreateScope` — temporal coupling, and the "data holder object that
+  only exists to allow access to another object" shape the Microsoft DI
+  guidelines warn against. Strictly more moving parts than the
+  `ActivatorUtilities` calls it would replace.
+- **Autofac child lifetime scopes**
+  (`BeginLifetimeScope(b => b.RegisterInstance(widget))`) solve the
+  late-bound widget natively, but a container migration touches every
+  resolution site, adds an ILRepack internalization risk to the
+  single-DLL deployment, and the child scope would still have to be
+  owned and disposed by the control — the same responsibility the
+  explicit disposal already carries. Justified only if genuine
+  per-control scoped lifetimes become a requirement.
+- **Project-level service container** (`IProjectHlp.GetService<T>`) —
+  SCADA-scoped, not FB-scoped; see the primer §8 list of mechanisms
+  that look usable but are not.
+
+### Rendezvous protocol (control side)
+
+Two idempotent entry points, both funneling into one init method guarded
+by `_runtimeInitialized` + a null-check on `ServiceProvider`:
+
+| Entry point | Covers |
+|---|---|
+| `put_DesignMode(0)` | normal startup — platform brings FBs to runtime before controls (primer §4), so the provider is already built |
+| `OnFBLinkChanged` | (re)link after design-mode flip, FB swap on the scheme |
+
+A null `ServiceProvider` means "FB not in runtime yet" — bail silently;
+the other trigger completes init later. Cleanup mirrors init
+(`put_DesignMode(1)` / `Dispose`). Do **not** collapse the two triggers
+or replace the null-bail with a .NET readiness event — neither trigger
+alone covers all orderings, and event subscriptions leak under FB
+instance replacement (see primer §8 "FB ↔ Control rendezvous internals").
+
+### Container lifetime
+
+One container per FB instance per runtime cycle. The platform **replaces
+the FB instance across Design↔Runtime cycles**
+([`../known_issues/07-fb-instance-replacement.md`](../known_issues/07-fb-instance-replacement.md)),
+arriving with null `[NonSerialized]` fields — so the container is rebuilt
+in every `ToRuntime`. This is inherent platform behaviour, not a defect;
+the build count equals the number of runtime entries and cannot be
+reduced.
+
+### Editor variant
+
+`MbeTableEditorFB`/`MbeTableEditorControl` reuse the same COM-neutral core
+and DI registrations, forking only at
+`MbeTableServiceConfigurator.ConfigureEditorServices` (shared
+`RegisterShared`). The control lifecycle code is intentionally duplicated
+COM glue — see the shared-core / thin-shell section in `CLAUDE.md`.
+
+---
+
 ## Headless FB Architecture
 
 Headless FBs extend `StaticFBBase` and have no visual control, status DTO, or renderer layers.

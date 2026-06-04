@@ -124,8 +124,9 @@ the COM-neutral core verbatim:
   via `OpcQuality`, `Root` node mutation) stay in the FB and are passed in as delegates
   (e.g. `Func<int, string?> tryReadPin`) so the helper stays unit-testable from `Tests`
   (which cannot reference the vendor SDK / `InSAT.OPC`).
-- Variant DI graphs fork through one configurator (`DiContainer.ConfigureServices` vs
-  `ConfigureEditorServices`) sharing a private `RegisterShared`; the variant omits the
+- Variant DI graphs fork through one configurator (`MbeTableServiceConfigurator.ConfigureServices`
+  vs `ConfigureEditorServices`, file `ModuleInfrastructure/DiContainer.cs`) sharing a private
+  `RegisterShared`; the variant omits the
   PLC-only registrations and substitutes no-op/slim providers
   (`StaticRowExecutionStateProvider`, `EditorRuntimeOptionsProvider`) behind interfaces
   (`IRowExecutionStateProvider`, `IRuntimeOptionsProvider`, `IPinGroupReader`).

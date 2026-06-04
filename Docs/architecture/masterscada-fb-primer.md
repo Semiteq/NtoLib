@@ -201,6 +201,41 @@ public override void ToDesign()
   `"Изменение проекта в режиме исполнения запрещено."`.
   See [`../known_issues/06-runtime-tree-modification-forbidden.md`](../known_issues/06-runtime-tree-modification-forbidden.md).
 
+### Runtime preparation order
+
+The Design → Runtime transition is a staged state machine,
+`EPrepareRuntimeState` (`MasterSCADALib/EPrepareRuntimeState.cs`):
+
+```
+prsInitRuntime(0) → prsBeforePrepareFB(1) → prsAfterPrepareFB(2)
+  → prsAfterSetConnections(3) → prsAfterPrepareArchives(4)
+  → prsAfterPrepareDocuments(5) → prsBeforeStart(6) → prsStartRuntime(7)
+```
+
+FBs are driven into runtime around `prsBeforePrepareFB`; mnemoscheme
+documents and their visual controls around `prsAfterPrepareDocuments`.
+**In the normal startup path, every FB's `ToRuntime` completes before any
+visual control's `put_DesignMode(0)` fires.** This is why a control that
+reads state prepared by its FB (e.g. MbeTable's `ServiceProvider`) almost
+never observes it missing.
+
+Caveat: the per-object dispatch order lives in the native kernel
+(`IStarter.PrepareRuntime` is `[ComImport]`); the ordering is an observed
+invariant, not a managed-code contract. Control-side init must still
+tolerate a missing/not-ready FB (null-bail and retry on the next
+lifecycle callback).
+
+`RTManager.Instance` (process-static singleton,
+`MasterSCADA.Common/MasterSCADA/RT/RTManager.cs`) exposes ordered
+`PrepareRuntime(RTManager, EPrepareRuntimeState)` and
+`RollbackRuntime(RTManager, ERollbackRuntimeState)` events. The vendor's
+own `ControllerProxyFB` subscribes to them to build/tear down
+infrastructure at an exact stage — a legal hook when `ToRuntime` arrives
+too early or too late for a need. Warning: handler exceptions propagate
+(`FireEvent` with `throwException: true`) and abort the runtime prepare
+sequence; handlers must be defensive. Use `RTManager.HasInstance` /
+`DirectInstance` for null-safe access outside runtime.
+
 ---
 
 ## 5. XML Configuration
@@ -384,6 +419,74 @@ public partial class ValveControl : VisualControlBase
 - `[ComVisible(true)]` + `[Guid("...")]` are as strict as on the FB
   class itself; mismatches between build versions break runtime activation.
 
+### FB ↔ Control rendezvous internals
+
+The FB and its visual control are **two independent COM objects with
+unsynchronized lifetimes**. The mechanics of how they find each other
+live in `FB.dll` (`VisualFB/`); the facts below determine how control
+initialization must be written.
+
+**There is no separate "mnemoscheme FB instance".**
+`VisualFBConnector.Connect()` resolves
+`Attribute.TreeItem.GetChild(Rid).FBObject` — the *same* tree FB object
+the runtime drives (`VisualFBConnector.cs:315-323`). The managed wrapper
+is cached per tree node (`ITreeItemHlp.cs:217-226`) and deduplicated by
+`ItemWrapperManager`. Whatever object graph the FB builds in `ToRuntime`,
+the control sees that exact instance through `FBConnector.Fb`. (Multiple
+live instances per node exist only for "callable"/multi-cycle objects —
+a per-project customer setting, not something an FB class declares.)
+
+**`FBConnector.Fb` is transient before the connector's own `ToRuntime`.**
+When the cached `_fb` is null, the getter does Connect → read →
+**Disconnect**, re-resolving on every access (`VisualFBConnector.cs:287-299`).
+Only after `FBConnector.DesignMode = false` (which calls the connector's
+`ToRuntime` → `Connect()` without a trailing `Disconnect`) is the
+reference held persistently. Do not hammer `Fb` in hot paths at design
+time. For a cheap, non-throwing, side-effect-free "am I linked" check use
+`FBConnector.IsConnected` (`VisualFBConnector.cs:331-337`) — the platform
+itself calls it from `OnPaint`.
+
+**Control init triggers are asymmetric.**
+
+| Trigger | Fires when | FB ready? |
+|---|---|---|
+| `put_DesignMode(0)` | design→runtime toggle; connector `ToRuntime` runs first, persisting `_fb` | yes, in the normal startup path (see §4 preparation order) |
+| `OnFBLinkChanged` | `VisualFBRid` setter, i.e. (re)link to an FB — possibly at design time, possibly before the FB's `ToRuntime` | **no guarantee** |
+
+Idempotent init triggered from *both*, guarded by an `initialized` flag
+and a null-check on FB-prepared state, is the correct shape (this is what
+MbeTable's `TableControl` does). Neither trigger alone covers all
+orderings.
+
+**Platform-sanctioned FB → Control signal: a visual pin.** The FB writes
+a dedicated visual `Pout`; the control reacts in
+`OnPinReceive(pinId, valueChanged)` (`VisualControlBase.cs:103`). The
+subscription is held by the platform, so it survives FB instance
+replacement with no leak — unlike a .NET event on the FB, which the
+control would have to unsubscribe from exactly the right (possibly
+already replaced) instance. Caveat: `OnPinReceive` arrives on the scan
+thread; marshal UI work with `BeginInvoke` (see `ValveControl` for the
+existing idiom, including the `+1000` visual pin ID offset).
+
+**Mechanisms that look usable but are not:**
+
+- *Shared project-level service container* (`IProjectHlp.GetService<T>` /
+  `RTManager.Services`). The resolution chain only consults
+  `ProjectHlp.Services` with `MasterSCADAHlp` as fallback,
+  `DefaultServiceContainer.AddService` silently ignores duplicate type
+  registrations, and the container is SCADA-scoped, not FB-scoped. Not
+  suitable for sharing FB-specific object graphs.
+- *.NET readiness event on the FB* (e.g. `ServicesReady`). The control
+  cannot manage its subscription lifetime safely: the FB instance it
+  subscribed to may be replaced at any cycle boundary
+  ([`../known_issues/07-fb-instance-replacement.md`](../known_issues/07-fb-instance-replacement.md)),
+  leaving leaked delegates on dead instances. Signal through a visual pin
+  instead.
+- *`ITreeItem.ReinstallObject` for forcing instance replacement.* Its only
+  managed call site is a design-time pin resync. The actual replacement
+  mechanism is native-side and not visible in the decompiled .NET code;
+  `known_issues/07` documents the observable behaviour.
+
 ### Windowless controls
 
 `VisualWindowlessControlBase` — for lightweight indicators without a
@@ -421,9 +524,10 @@ type. The chain:
    assembly and applies the registration.
 
 NtoLib's deployment pipeline (`Build/Deploy.ps1`) handles the
-`netreg.exe` step. For local iteration, after
-`Build/Package.ps1`, copy the merged `NtoLib.dll` to the MasterSCADA
-install directory and re-run `netreg.exe`.
+`netreg.exe` step. For local iteration, build the merged DLL
+(`dotnet build NtoLib/NtoLib.csproj -p:RunILRepack=true`), copy it to the
+MasterSCADA install directory and re-run `netreg.exe` from an elevated
+console.
 
 COM registration caches persist — if MasterSCADA is loading a stale
 version of an FB, check the registry under
@@ -506,3 +610,11 @@ in `../known_issues/`. When something fails unexpectedly:
 3. The decompiled sources in `C:\Users\admin\projects\MasterScada3Wiki`
    (internal, not distributed) are the ground truth when interpretation
    diverges. Cite them in PR discussions when necessary.
+
+The decompiled vendor code is ground truth for **behaviour**, not a style
+reference. The vendor codebase uses no DI container (collaborators come
+from direct construction, reflection, or service location against static
+singletons), concentrates thousands of lines in single classes, and
+swallows exceptions broadly. When looking for a pattern to imitate,
+prefer the conventions in [`architecture.md`](architecture.md) over
+anything found in the decompiled sources.
