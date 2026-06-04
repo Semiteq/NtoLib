@@ -374,6 +374,9 @@ public partial class TableControl
 		_behaviorManager?.Dispose();
 		_behaviorManager = null;
 
+		_renderCoordinator?.Dispose();
+		_renderCoordinator = null;
+
 		_inputManager?.Dispose();
 		_inputManager = null;
 	}

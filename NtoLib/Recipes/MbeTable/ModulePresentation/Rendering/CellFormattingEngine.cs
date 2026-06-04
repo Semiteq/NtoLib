@@ -20,6 +20,7 @@ internal sealed class CellFormattingEngine
 	private readonly CellStateResolver _cellStateResolver;
 	private readonly DesignTimeColorSchemeProvider _colorSchemeProvider;
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
+	private readonly IDefaultedCellsReader _defaultedCellsReader;
 	private readonly RecipeViewModel _recipeViewModel;
 	private readonly IRowExecutionStateProvider _rowExecutionStateProvider;
 	private readonly DataGridView _table;
@@ -30,7 +31,8 @@ internal sealed class CellFormattingEngine
 		RecipeViewModel recipeViewModel,
 		IRowExecutionStateProvider rowExecutionStateProvider,
 		DesignTimeColorSchemeProvider colorSchemeProvider,
-		IReadOnlyList<ColumnDefinition> columns)
+		IReadOnlyList<ColumnDefinition> columns,
+		IDefaultedCellsReader defaultedCellsReader)
 	{
 		_table = table;
 		_cellStateResolver = cellStateResolver;
@@ -38,6 +40,7 @@ internal sealed class CellFormattingEngine
 		_rowExecutionStateProvider = rowExecutionStateProvider;
 		_colorSchemeProvider = colorSchemeProvider;
 		_columns = columns;
+		_defaultedCellsReader = defaultedCellsReader;
 	}
 
 	public bool IsValidCellCoordinate(int rowIndex, int columnIndex)
@@ -56,6 +59,10 @@ internal sealed class CellFormattingEngine
 		var afterLoopBg = ColorStyleHelpers.ApplyLoopTint(availability.BackColor, depth, restricted, scheme);
 
 		var afterExecutionBg = ColorStyleHelpers.ApplyExecutionTint(afterLoopBg, executionState, restricted, scheme);
+
+		var isMarked = _defaultedCellsReader.IsMarked(rowIndex, columnIndex);
+		var afterDefaultedBg = ColorStyleHelpers.ApplyDefaultedTint(afterExecutionBg, isMarked, restricted, scheme);
+
 		var finalFont = executionState switch
 		{
 			RowExecutionState.Current => scheme.SelectedLineFont,
@@ -63,11 +70,11 @@ internal sealed class CellFormattingEngine
 			_ => availability.Font
 		};
 
-		var foreAfterContrast = ColorStyleHelpers.EnsureContrast(afterExecutionBg, availability.ForeColor);
+		var foreAfterContrast = ColorStyleHelpers.EnsureContrast(afterDefaultedBg, availability.ForeColor);
 		var final = new CellVisualState(
 			Font: finalFont,
 			ForeColor: foreAfterContrast,
-			BackColor: afterExecutionBg,
+			BackColor: afterDefaultedBg,
 			IsReadOnly: availability.IsReadOnly,
 			ComboDisplayStyle: availability.ComboDisplayStyle);
 

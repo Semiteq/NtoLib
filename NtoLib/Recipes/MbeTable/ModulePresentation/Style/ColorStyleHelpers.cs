@@ -68,6 +68,22 @@ internal static class ColorStyleHelpers
 		return Blend(baseColor, accent, weight);
 	}
 
+	public static Color ApplyDefaultedTint(Color baseColor, bool isMarked, bool isRestricted, ColorScheme scheme)
+	{
+		if (!isMarked)
+		{
+			return baseColor;
+		}
+
+		var weight = scheme.DefaultedCellTintWeight;
+		if (isRestricted)
+		{
+			weight *= 0.6f;
+		}
+
+		return Blend(baseColor, scheme.DefaultedCellBgColor, weight);
+	}
+
 	public static Color Blend(Color baseColor, Color accentColor, float weight)
 	{
 		if (accentColor == Color.Transparent || accentColor == Color.Empty)

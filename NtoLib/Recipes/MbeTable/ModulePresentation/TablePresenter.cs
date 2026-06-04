@@ -210,7 +210,7 @@ public sealed class TablePresenter : IDisposable
 		return string.Equals(leftString, rightString, StringComparison.Ordinal);
 	}
 
-	private void OnRecipeStructureChanged()
+	private void OnRecipeStructureChanged(StructureChange change)
 	{
 		_view.RowCount = _app.GetRowCount();
 		_view.Invalidate();
