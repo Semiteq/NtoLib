@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
@@ -17,8 +16,6 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.State;
 /// </summary>
 public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 {
-	private const int RowDropped = -1;
-
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
 	private readonly Dictionary<int, HashSet<int>> _marks = new();
 	private readonly object _marksLock = new();
@@ -96,7 +93,7 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 
 	private void OnCellValueCommitted((int Row, ColumnIdentifier Column) commit)
 	{
-		ClearCell(commit.Row, commit.Column);
+		ClearCellByKey(commit.Row, commit.Column);
 	}
 
 	private void OnRecipeStructureChanged(StructureChange change)
@@ -158,7 +155,7 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 		return markedColumns;
 	}
 
-	private void ClearCell(int row, ColumnIdentifier column)
+	private void ClearCellByKey(int row, ColumnIdentifier column)
 	{
 		var columnIndex = IndexOf(column);
 		if (columnIndex < 0)
@@ -234,7 +231,7 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 				return;
 			}
 
-			changed = RebuildMarks(row => row >= index ? row + count : row);
+			changed = MarkIndexShifter.ShiftForInsert(_marks, index, count);
 		}
 
 		if (changed)
@@ -253,59 +250,13 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 				return;
 			}
 
-			var removed = new HashSet<int>(removedIndices);
-			changed = RebuildMarks(row =>
-				removed.Contains(row) ? RowDropped : row - CountBelow(removedIndices, row));
+			changed = MarkIndexShifter.ShiftForRemove(_marks, removedIndices);
 		}
 
 		if (changed)
 		{
 			RaiseMarksChanged(new MarksChange(null));
 		}
-	}
-
-	private static int CountBelow(IReadOnlyList<int> indices, int row)
-	{
-		var count = 0;
-		for (var i = 0; i < indices.Count; i++)
-		{
-			if (indices[i] < row)
-			{
-				count++;
-			}
-		}
-
-		return count;
-	}
-
-	/// <summary>
-	/// Re-keys every mark through <paramref name="mapRow"/>. A return of <see cref="RowDropped"/>
-	/// removes the mark entirely. Returns whether any row index actually changed.
-	/// </summary>
-	private bool RebuildMarks(Func<int, int> mapRow)
-	{
-		var shifted = new Dictionary<int, HashSet<int>>();
-		var anyIndexShifted = false;
-		foreach (var entry in _marks)
-		{
-			var newRow = mapRow(entry.Key);
-			if (newRow == RowDropped)
-			{
-				anyIndexShifted = true;
-				continue;
-			}
-
-			anyIndexShifted |= newRow != entry.Key;
-			shifted[newRow] = entry.Value;
-		}
-
-		_marks.Clear();
-		foreach (var entry in shifted)
-		{
-			_marks[entry.Key] = entry.Value;
-		}
-
-		return anyIndexShifted;
 	}
 
 	private int IndexOf(ColumnIdentifier column)

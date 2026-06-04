@@ -63,6 +63,10 @@ public sealed class RecipeOperationService
 
 	public RecipeViewModel ViewModel { get; }
 
+	// The operation awaits in this class deliberately omit ConfigureAwait(false): continuations
+	// resume on the WinForms synchronization context, so every event below is raised on the
+	// UI thread. TableRenderCoordinator's visited-and-left suppression and TablePresenter's
+	// RowCount resync (subscribed last to RecipeStructureChanged) both rely on this.
 	public event Action<StructureChange>? RecipeStructureChanged;
 	public event Action<int>? StepDataChanged;
 	public event Action<int>? ActionReplaced;
@@ -466,7 +470,19 @@ public sealed class RecipeOperationService
 	{
 		ViewModel.OnRecipeStructureChanged();
 		_timer.Reset();
-		SafeRaise(nameof(RecipeStructureChanged), () => RecipeStructureChanged?.Invoke(change));
+
+		// Raised per-subscriber: TablePresenter subscribes last and resynchronizes the grid
+		// RowCount with the model, so a throwing earlier subscriber must not cancel it.
+		var handlers = RecipeStructureChanged;
+		if (handlers == null)
+		{
+			return;
+		}
+
+		foreach (var handler in handlers.GetInvocationList().Cast<Action<StructureChange>>())
+		{
+			SafeRaise(nameof(RecipeStructureChanged), () => handler(change));
+		}
 	}
 
 	private void SafeRaise(string eventName, Action raise)

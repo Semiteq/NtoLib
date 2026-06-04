@@ -168,6 +168,11 @@ public sealed class TableRenderCoordinator : IDisposable
 
 	private void OnRecipeStructureChanged(StructureChange change)
 	{
+		// Relies on RecipeOperationService raising its events on the UI thread (operation
+		// awaits there omit ConfigureAwait(false)) and on this handler being subscribed
+		// before TablePresenter: InvokeOnUiThread then executes inline, arming the
+		// suppression before the presenter's RowCount reset fires the synchronous
+		// CurrentCellChanged burst.
 		InvokeOnUiThread(BeginStructureTransition);
 	}
 

@@ -265,4 +265,20 @@ public sealed class RecipeOperationServiceEventContractTests
 		result.IsFailed.Should().BeTrue();
 		sent.Should().Be(0);
 	}
+
+	[Fact]
+	public void RecipeStructureChanged_ThrowingSubscriber_DoesNotPreventLaterSubscribers()
+	{
+		var app = Build(out var services);
+		using var _ = services as IDisposable;
+
+		var probeChanges = new List<StructureChange>();
+		app.RecipeStructureChanged += _ => throw new InvalidOperationException("subscriber failure");
+		app.RecipeStructureChanged += c => probeChanges.Add(c);
+
+		var result = app.AddStep(0);
+
+		result.IsSuccess.Should().BeTrue();
+		probeChanges.Should().ContainSingle().Which.Kind.Should().Be(StructureChangeKind.Insert);
+	}
 }
