@@ -4,6 +4,6 @@ public sealed record LoaderDto(
 	string[] Shutters,
 	string[] Sources,
 	string[] ChamberHeaters,
-	string[] WaterChannels,
+	string[] Waters,
 	string[] Gases
 );

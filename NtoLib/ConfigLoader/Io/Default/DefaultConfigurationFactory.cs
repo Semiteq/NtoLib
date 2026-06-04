@@ -10,7 +10,7 @@ public static class DefaultConfigurationFactory
 			CreateEmptyArray(groups.Shutters.Capacity),
 			CreateEmptyArray(groups.Sources.Capacity),
 			CreateEmptyArray(groups.ChamberHeaters.Capacity),
-			CreateEmptyArray(groups.Water.Capacity),
+			CreateEmptyArray(groups.Waters.Capacity),
 			CreateEmptyArray(groups.Gases.Capacity));
 	}
 

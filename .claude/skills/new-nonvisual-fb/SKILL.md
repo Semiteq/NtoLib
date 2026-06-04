@@ -20,6 +20,24 @@ Before starting, gather this information from the user (ask if not provided):
 5. **Does the FB modify the project tree?** -- if yes, use the deferred execution pattern: queue the work in runtime and post a DEFERRED action from `ToDesign()`. Do NOT mutate the tree synchronously inside `ToDesign()` while still in runtime -- it throws "modification forbidden in runtime mode". If no, execute immediately in `UpdateData()`.
 6. **Does the FB need access to `IProjectHlp`?** -- typically yes if it navigates the MasterSCADA object tree.
 
+## Naming conventions for domain entities
+
+- Device-group entities use the canonical English plural terms: `Shutters`, `Sources`,
+  `ChamberHeaters`, `Waters`, `Gases`, `VacuumMeters`, `Pyrometers`, `Interferometers`,
+  `Turbines`, `Cryos`, `Ions`. New pins, YAML sections, DTOs, and UI labels for a device
+  group reuse the canonical term — do not invent synonyms (one concept = one identifier
+  across the whole vertical slice; `Waters` and `WaterChannels` must never coexist).
+- Compound adjuncts stay singular (`shutterNames`, `_pyrometerNames`) — standard English,
+  matching the existing `ShutterNames`/`HeaterNames` YAML group keys.
+- An enum describing the type of a single device is singular (`PumpType.Turbine`,
+  `PumpType.Ion`) — plural applies to groups, not to one device's kind.
+- An identifier that carries a frozen contract string (legacy YAML key, pin name,
+  customer tree node name) follows the contract string exactly, even when it violates the
+  conventions above — greppability against customer configs beats style.
+- Design-time properties of a `[Serializable]` FB are a serialization contract: their
+  backing fields persist in customer project files. Never rename them after release; a
+  DTO that mirrors them keeps their names.
+
 ## Step-by-Step Workflow
 
 Execute these steps in order. Track each step with the harness task tools (`TaskCreate` / `TaskUpdate`).

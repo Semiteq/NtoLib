@@ -35,7 +35,7 @@ public sealed class ServiceStateTests
 		service.CurrentConfiguration.Shutters.Should().AllBe(string.Empty);
 		service.CurrentConfiguration.Sources.Should().AllBe(string.Empty);
 		service.CurrentConfiguration.ChamberHeaters.Should().AllBe(string.Empty);
-		service.CurrentConfiguration.WaterChannels.Should().AllBe(string.Empty);
+		service.CurrentConfiguration.Waters.Should().AllBe(string.Empty);
 	}
 
 	[Fact]

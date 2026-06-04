@@ -29,7 +29,7 @@ public sealed class RoundTripTests
 		service.CurrentConfiguration.Shutters[1].Should().Be("Another Shutter");
 		service.CurrentConfiguration.Sources[0].Should().Be("Source-1");
 		service.CurrentConfiguration.ChamberHeaters[0].Should().Be("Heater.1");
-		service.CurrentConfiguration.WaterChannels[0].Should().Be("Water_Pump");
+		service.CurrentConfiguration.Waters[0].Should().Be("Water_Pump");
 	}
 
 	[Fact]
@@ -47,7 +47,7 @@ public sealed class RoundTripTests
 		service.CurrentConfiguration.Shutters.Should().AllBe(string.Empty);
 		service.CurrentConfiguration.Sources.Should().AllBe(string.Empty);
 		service.CurrentConfiguration.ChamberHeaters.Should().AllBe(string.Empty);
-		service.CurrentConfiguration.WaterChannels.Should().AllBe(string.Empty);
+		service.CurrentConfiguration.Waters.Should().AllBe(string.Empty);
 	}
 
 	[Fact]

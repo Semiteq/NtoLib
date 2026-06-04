@@ -14,16 +14,16 @@ public sealed class YamlConfigDto
 	}
 
 	public YamlConfigDto(
-		Dictionary<string, string> shutter,
+		Dictionary<string, string> shutters,
 		Dictionary<string, string> sources,
-		Dictionary<string, string> chamberHeater,
-		Dictionary<string, string> water,
+		Dictionary<string, string> chamberHeaters,
+		Dictionary<string, string> waters,
 		Dictionary<string, string> gases)
 	{
-		Shutters = shutter;
+		Shutters = shutters;
 		Sources = sources;
-		ChamberHeaters = chamberHeater;
-		Waters = water;
+		ChamberHeaters = chamberHeaters;
+		Waters = waters;
 		Gases = gases;
 	}
 

@@ -26,7 +26,7 @@ public class FileLoader
 			groups.Shutters.Capacity,
 			groups.Sources.Capacity,
 			groups.ChamberHeaters.Capacity,
-			groups.Water.Capacity,
+			groups.Waters.Capacity,
 			groups.Gases.Capacity);
 	}
 
