@@ -82,14 +82,14 @@ Architecture selected via multi-agent evaluation (3 competing placements, 3 judg
 - Modify: `NtoLib/NtoLib.csproj`
 - Create: `Tests/MbeTable/Application/RecipeOperationServiceEventContractTests.cs`
 
-- [ ] create `StructureChange.cs`: `StructureChangeKind { Insert, Remove, Reset }` enum + immutable `StructureChange` record with static factories `Insert(int index, int count)`, `Remove(IReadOnlyList<int> indices)`, `Reset()` (enum and record may share the file as one cohesive contract, or split per one-class-per-file — follow repo convention)
-- [ ] change `RecipeOperationService.RecipeStructureChanged` to `event Action<StructureChange>?`; `NotifyStructureChanged(StructureChange change)`; update **all 7 emission sites** with the mapping from Technical Details (including `LoadRecipeAsync` ~149 → `Reset`)
-- [ ] in `SetCellValueAsync`'s single existing success block, re-derive `var isActionEdit = columnKey == MandatoryColumns.Action && value is short;` and raise either `event Action<int>? ActionReplaced` (action edit, next to existing `RaiseStepDataChanged`) or `event Action<(int Row, ColumnIdentifier Column)>? CellValueCommitted` (non-action edit; payload carries the key — the service has no column list and must not gain one)
-- [ ] add `event Action? RecipeSent` and `event Action? RecipeSaved`: in `SendRecipeAsync`/`SaveRecipeAsync` capture the pipeline result into a local, gate on `IsSuccess`, raise, then return (both currently return the pipeline call directly — this gating is new code) — no state, no column enumeration, signals only
-- [ ] update `TablePresenter.OnRecipeStructureChanged` signature to accept `StructureChange` (body unchanged: `RowCount` reset + `Invalidate`); fix subscribe/unsubscribe; update any test doubles
-- [ ] add `<Compile Include="Recipes\MbeTable\ModuleApplication\StructureChange.cs" />` to `NtoLib.csproj`
-- [ ] write contract tests: action edit raises `ActionReplaced(row)` and not `CellValueCommitted`; non-action edit raises `CellValueCommitted(row, key)` and not `ActionReplaced`; `AddStep`→`Insert`, `RemoveStep`→`Remove`, paste→`Insert(target,count)`, delete/cut→`Remove(valid)`, Load/Receive→`Reset`; successful Save raises `RecipeSaved`; Send with null modbus (editor) raises neither `RecipeSent` nor errors
-- [ ] run `dotnet test NtoLib.sln` — must pass before task 2
+- [x] create `StructureChange.cs`: `StructureChangeKind { Insert, Remove, Reset }` enum + immutable `StructureChange` record with static factories `Insert(int index, int count)`, `Remove(IReadOnlyList<int> indices)`, `Reset()` (enum and record may share the file as one cohesive contract, or split per one-class-per-file — follow repo convention)
+- [x] change `RecipeOperationService.RecipeStructureChanged` to `event Action<StructureChange>?`; `NotifyStructureChanged(StructureChange change)`; update **all 7 emission sites** with the mapping from Technical Details (including `LoadRecipeAsync` ~149 → `Reset`)
+- [x] in `SetCellValueAsync`'s single existing success block, re-derive `var isActionEdit = columnKey == MandatoryColumns.Action && value is short;` and raise either `event Action<int>? ActionReplaced` (action edit, next to existing `RaiseStepDataChanged`) or `event Action<(int Row, ColumnIdentifier Column)>? CellValueCommitted` (non-action edit; payload carries the key — the service has no column list and must not gain one)
+- [x] add `event Action? RecipeSent` and `event Action? RecipeSaved`: in `SendRecipeAsync`/`SaveRecipeAsync` capture the pipeline result into a local, gate on `IsSuccess`, raise, then return (both currently return the pipeline call directly — this gating is new code) — no state, no column enumeration, signals only
+- [x] update `TablePresenter.OnRecipeStructureChanged` signature to accept `StructureChange` (body unchanged: `RowCount` reset + `Invalidate`); fix subscribe/unsubscribe; update any test doubles
+- [x] add `<Compile Include="Recipes\MbeTable\ModuleApplication\StructureChange.cs" />` to `NtoLib.csproj`
+- [x] write contract tests: action edit raises `ActionReplaced(row)` and not `CellValueCommitted`; non-action edit raises `CellValueCommitted(row, key)` and not `ActionReplaced`; `AddStep`→`Insert`, `RemoveStep`→`Remove`, paste→`Insert(target,count)`, delete/cut→`Remove(valid)`, Load/Receive→`Reset`; successful Save raises `RecipeSaved`; Send with null modbus (editor) raises neither `RecipeSent` nor errors
+- [x] run `dotnet test NtoLib.sln` — must pass before task 2
 
 ### Task 2: DefaultedCellTracker — state owner
 

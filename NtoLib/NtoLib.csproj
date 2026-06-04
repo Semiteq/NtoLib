@@ -339,6 +339,7 @@
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Warnings\ApplicationClipboardEmptyWarning.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleApplication\Reasons\Warnings\ApplicationEmptyRecipeWarning.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleApplication\RecipeOperationService.cs"/>
+    <Compile Include="Recipes\MbeTable\ModuleApplication\StructureChange.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleApplication\Schema\IRecipeSchemaDescriptor.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleApplication\Schema\IRecipeSchemaValidator.cs"/>
     <Compile Include="Recipes\MbeTable\ModuleApplication\Schema\RecipeSchemaDescriptor.cs"/>

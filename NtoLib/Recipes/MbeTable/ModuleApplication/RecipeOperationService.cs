@@ -63,8 +63,12 @@ public sealed class RecipeOperationService
 
 	public RecipeViewModel ViewModel { get; }
 
-	public event Action? RecipeStructureChanged;
+	public event Action<StructureChange>? RecipeStructureChanged;
 	public event Action<int>? StepDataChanged;
+	public event Action<int>? ActionReplaced;
+	public event Action<(int Row, ColumnIdentifier Column)>? CellValueCommitted;
+	public event Action? RecipeSent;
+	public event Action? RecipeSaved;
 
 	public int GetRowCount()
 	{
@@ -83,6 +87,16 @@ public sealed class RecipeOperationService
 			_timer.Reset();
 			ViewModel.OnTimeRecalculated(rowIndex);
 			RaiseStepDataChanged(rowIndex);
+
+			var isActionEdit = columnKey == MandatoryColumns.Action && value is short;
+			if (isActionEdit)
+			{
+				RaiseActionReplaced(rowIndex);
+			}
+			else
+			{
+				RaiseCellValueCommitted(rowIndex, columnKey);
+			}
 		}
 
 		return result;
@@ -116,7 +130,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged();
+			NotifyStructureChanged(StructureChange.Insert(index, 1));
 		}
 
 		return result;
@@ -131,7 +145,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged();
+			NotifyStructureChanged(StructureChange.Remove(new[] { index }));
 		}
 
 		return result;
@@ -146,7 +160,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged();
+			NotifyStructureChanged(StructureChange.Reset());
 		}
 
 		return result;
@@ -185,10 +199,17 @@ public sealed class RecipeOperationService
 
 	public async Task<Result> SaveRecipeAsync(string filePath)
 	{
-		return await _pipeline.RunAsync(
+		var result = await _pipeline.RunAsync(
 			OperationMetadata.Save,
 			() => PerformSaveAsync(filePath),
 			successMessage: $"Рецепт сохранен в {Path.GetFileName(filePath)}");
+
+		if (result.IsSuccess)
+		{
+			RaiseRecipeSaved();
+		}
+
+		return result;
 	}
 
 	private async Task<Result> PerformSaveAsync(string filePath)
@@ -219,7 +240,7 @@ public sealed class RecipeOperationService
 			return Result.Fail(new ApplicationInvalidOperationError("PLC communication is not available"));
 		}
 
-		return await _pipeline.RunAsync(
+		var result = await _pipeline.RunAsync(
 			OperationMetadata.Send,
 			() =>
 			{
@@ -228,6 +249,13 @@ public sealed class RecipeOperationService
 				return _modbus.SendRecipeAsync(current);
 			},
 			successMessage: "Рецепт успешно отправлен в контроллер");
+
+		if (result.IsSuccess)
+		{
+			RaiseRecipeSent();
+		}
+
+		return result;
 	}
 
 	public async Task<Result> ReceiveRecipeAsync()
@@ -244,7 +272,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged();
+			NotifyStructureChanged(StructureChange.Reset());
 		}
 
 		return result;
@@ -307,6 +335,10 @@ public sealed class RecipeOperationService
 			return Result.Ok();
 		}
 
+		var stepCount = _recipeFacade.CurrentSnapshot.Recipe.Steps.Count;
+		var removedIndices = indices.Where(i => i >= 0 && i < stepCount)
+			.Distinct().OrderBy(i => i).ToList();
+
 		var result = await _pipeline.RunAsync(
 			OperationMetadata.CutRows,
 			() => Task.FromResult(PerformCut(indices)),
@@ -314,7 +346,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged();
+			NotifyStructureChanged(StructureChange.Remove(removedIndices));
 		}
 
 		return result;
@@ -372,7 +404,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged();
+			NotifyStructureChanged(StructureChange.Insert(targetIndex, steps.Count));
 		}
 
 		return result;
@@ -399,6 +431,10 @@ public sealed class RecipeOperationService
 			return Result.Ok();
 		}
 
+		var stepCount = _recipeFacade.CurrentSnapshot.Recipe.Steps.Count;
+		var removedIndices = indices.Where(i => i >= 0 && i < stepCount)
+			.Distinct().ToList();
+
 		var result = await _pipeline.RunAsync(
 			OperationMetadata.DeleteRows,
 			() => Task.FromResult(PerformDelete(indices)),
@@ -406,7 +442,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged();
+			NotifyStructureChanged(StructureChange.Remove(removedIndices));
 		}
 
 		return result;
@@ -426,18 +462,18 @@ public sealed class RecipeOperationService
 		return _recipeFacade.DeleteSteps(valid);
 	}
 
-	private void NotifyStructureChanged()
+	private void NotifyStructureChanged(StructureChange change)
 	{
 		ViewModel.OnRecipeStructureChanged();
 		_timer.Reset();
-		RaiseRecipeStructureChanged();
+		RaiseRecipeStructureChanged(change);
 	}
 
-	private void RaiseRecipeStructureChanged()
+	private void RaiseRecipeStructureChanged(StructureChange change)
 	{
 		try
 		{
-			RecipeStructureChanged?.Invoke();
+			RecipeStructureChanged?.Invoke(change);
 		}
 		catch
 		{
@@ -450,6 +486,54 @@ public sealed class RecipeOperationService
 		try
 		{
 			StepDataChanged?.Invoke(rowIndex);
+		}
+		catch
+		{
+			/* ignored */
+		}
+	}
+
+	private void RaiseActionReplaced(int rowIndex)
+	{
+		try
+		{
+			ActionReplaced?.Invoke(rowIndex);
+		}
+		catch
+		{
+			/* ignored */
+		}
+	}
+
+	private void RaiseCellValueCommitted(int rowIndex, ColumnIdentifier columnKey)
+	{
+		try
+		{
+			CellValueCommitted?.Invoke((rowIndex, columnKey));
+		}
+		catch
+		{
+			/* ignored */
+		}
+	}
+
+	private void RaiseRecipeSent()
+	{
+		try
+		{
+			RecipeSent?.Invoke();
+		}
+		catch
+		{
+			/* ignored */
+		}
+	}
+
+	private void RaiseRecipeSaved()
+	{
+		try
+		{
+			RecipeSaved?.Invoke();
 		}
 		catch
 		{
