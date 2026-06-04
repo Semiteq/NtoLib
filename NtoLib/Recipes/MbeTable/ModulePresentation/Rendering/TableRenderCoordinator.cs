@@ -26,10 +26,14 @@ public sealed class TableRenderCoordinator : IDisposable
 	private readonly CellFormattingEngine _formattingEngine;
 	private readonly ILogger<TableRenderCoordinator> _logger;
 	private readonly IRowExecutionStateProvider _rowExecutionStateProvider;
+	private readonly DefaultedCellTracker _defaultedCellTracker;
 	private readonly DataGridView _table;
 	private bool _disposed;
 
 	private bool _initialized;
+	private int _previousCellRow = -1;
+	private int _previousCellColumn = -1;
+	private bool _suppressVisitedClear;
 
 	public TableRenderCoordinator(
 		DataGridView table,
@@ -39,18 +43,19 @@ public sealed class TableRenderCoordinator : IDisposable
 		IReadOnlyList<ColumnDefinition> columns,
 		ILogger<TableRenderCoordinator> logger,
 		DesignTimeColorSchemeProvider colorSchemeProvider,
-		IDefaultedCellsReader defaultedCellsReader)
+		DefaultedCellTracker defaultedCellTracker)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		_rowExecutionStateProvider = rowExecutionStateProvider ??
 									 throw new ArgumentNullException(nameof(rowExecutionStateProvider));
 		_colorSchemeProvider = colorSchemeProvider ?? throw new ArgumentNullException(nameof(colorSchemeProvider));
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+		_defaultedCellTracker = defaultedCellTracker ?? throw new ArgumentNullException(nameof(defaultedCellTracker));
 
 		_formattingEngine = new CellFormattingEngine(
 			table, cellStateResolver, recipeViewModel,
 			rowExecutionStateProvider, colorSchemeProvider, columns,
-			defaultedCellsReader);
+			defaultedCellTracker);
 
 		_editGating = new EditGatingCoordinator(table, recipeViewModel, logger);
 	}
@@ -88,8 +93,10 @@ public sealed class TableRenderCoordinator : IDisposable
 		_table.CellBeginEdit += _editGating.HandleCellBeginEdit;
 		_table.CurrentCellDirtyStateChanged += _editGating.HandleCurrentCellDirtyStateChanged;
 		_table.CellPainting += OnCellPaintingPreFormat;
+		_table.CurrentCellChanged += OnCurrentCellChanged;
 		_rowExecutionStateProvider.CurrentLineChanged += OnCurrentLineChanged;
 		_colorSchemeProvider.Changed += OnColorSchemeChanged;
+		_defaultedCellTracker.MarksChanged += OnMarksChanged;
 	}
 
 	private void DetachEventHandlers()
@@ -99,8 +106,10 @@ public sealed class TableRenderCoordinator : IDisposable
 			() => _table.CellBeginEdit -= _editGating.HandleCellBeginEdit,
 			() => _table.CurrentCellDirtyStateChanged -= _editGating.HandleCurrentCellDirtyStateChanged,
 			() => _table.CellPainting -= OnCellPaintingPreFormat,
+			() => _table.CurrentCellChanged -= OnCurrentCellChanged,
 			() => _rowExecutionStateProvider.CurrentLineChanged -= OnCurrentLineChanged,
-			() => _colorSchemeProvider.Changed -= OnColorSchemeChanged);
+			() => _colorSchemeProvider.Changed -= OnColorSchemeChanged,
+			() => _defaultedCellTracker.MarksChanged -= OnMarksChanged);
 	}
 
 	private void ForceInitialFormatting()
@@ -149,6 +158,65 @@ public sealed class TableRenderCoordinator : IDisposable
 		}
 
 		ApplyCellFormattingSafe(e.RowIndex, e.ColumnIndex, e.CellStyle);
+	}
+
+	private void OnMarksChanged(MarksChange change)
+	{
+		if (change.Row is { } row)
+		{
+			InvokeOnUiThread(() => RefreshRowIfValid(row));
+		}
+		else
+		{
+			InvokeOnUiThread(RepaintAllSuppressingVisitedClear);
+		}
+	}
+
+	private void RepaintAllSuppressingVisitedClear()
+	{
+		_suppressVisitedClear = true;
+		try
+		{
+			FormatAllCells();
+			_table.Invalidate();
+		}
+		finally
+		{
+			_suppressVisitedClear = false;
+		}
+
+		_previousCellRow = _table.CurrentCell?.RowIndex ?? -1;
+		_previousCellColumn = _table.CurrentCell?.ColumnIndex ?? -1;
+	}
+
+	private void OnCurrentCellChanged(object? sender, EventArgs e)
+	{
+		var current = _table.CurrentCell;
+		var currentRow = current?.RowIndex ?? -1;
+		var currentColumn = current?.ColumnIndex ?? -1;
+
+		var previousRow = _previousCellRow;
+		var previousColumn = _previousCellColumn;
+
+		_previousCellRow = currentRow;
+		_previousCellColumn = currentColumn;
+
+		if (_suppressVisitedClear || _table.IsCurrentCellInEditMode)
+		{
+			return;
+		}
+
+		if (previousRow < 0 || previousColumn < 0)
+		{
+			return;
+		}
+
+		if (previousRow == currentRow && previousColumn == currentColumn)
+		{
+			return;
+		}
+
+		_defaultedCellTracker.ClearCell(previousRow, previousColumn);
 	}
 
 	private void OnCurrentLineChanged(int oldIndex, int newIndex)

@@ -50,6 +50,25 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 		return _marks.TryGetValue(row, out var columns) && columns.Contains(col);
 	}
 
+	/// <summary>
+	/// Clears a single mark addressed by grid column index. Used by the visited-and-left
+	/// flow, which observes the grid and therefore works in column indices rather than keys.
+	/// </summary>
+	public void ClearCell(int row, int columnIndex)
+	{
+		if (!_marks.TryGetValue(row, out var columns) || !columns.Remove(columnIndex))
+		{
+			return;
+		}
+
+		if (columns.Count == 0)
+		{
+			_marks.Remove(row);
+		}
+
+		RaiseMarksChanged(new MarksChange(row));
+	}
+
 	public void Dispose()
 	{
 		if (_disposed)

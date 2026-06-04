@@ -128,12 +128,12 @@ Architecture selected via multi-agent evaluation (3 competing placements, 3 judg
 **Files:**
 - Modify: `NtoLib/Recipes/MbeTable/ModulePresentation/Rendering/TableRenderCoordinator.cs`
 
-- [ ] add `DefaultedCellTracker` ctor param (auto-resolved via `ActivatorUtilities.CreateInstance` in both shells); pass it as `IDefaultedCellsReader` into the manually-constructed `CellFormattingEngine`
-- [ ] subscribe `tracker.MarksChanged` in `AttachEventHandlers`: `Row` set → `InvokeOnUiThread(FormatRowCells(r) + InvalidateRow(r))`; `null` → `InvokeOnUiThread(FormatAllCells + Invalidate)`; add unsubscribe to `DetachEventHandlers` / `SafeDisposal.RunAll`
-- [ ] wire visited-and-left: `_table.CurrentCellChanged` handler caching previous `(row, col)`; on a genuine user move call `tracker.ClearCell(prevRow, prevCol)`
-- [ ] implement the programmatic-move guard: skip clears while `IsCurrentCellInEditMode` transitions and while a structural rebuild is in flight (`_suppressVisitedClear` around structure-driven repaints)
-- [ ] build both variants compile: `dotnet build NtoLib.sln` (coordinator wiring is grid-bound; behavior is covered by the manual runtime pass — note any logic extracted into testable helpers and cover those with unit tests)
-- [ ] run `dotnet test NtoLib.sln` — must pass before task 5
+- [x] add `DefaultedCellTracker` ctor param (auto-resolved via `ActivatorUtilities.CreateInstance` in both shells); pass it as `IDefaultedCellsReader` into the manually-constructed `CellFormattingEngine`
+- [x] subscribe `tracker.MarksChanged` in `AttachEventHandlers`: `Row` set → `InvokeOnUiThread(FormatRowCells(r) + InvalidateRow(r))`; `null` → `InvokeOnUiThread(FormatAllCells + Invalidate)`; add unsubscribe to `DetachEventHandlers` / `SafeDisposal.RunAll`
+- [x] wire visited-and-left: `_table.CurrentCellChanged` handler caching previous `(row, col)`; on a genuine user move call `tracker.ClearCell(prevRow, prevCol)`
+- [x] implement the programmatic-move guard: skip clears while `IsCurrentCellInEditMode` transitions and while a structural rebuild is in flight (`_suppressVisitedClear` around structure-driven repaints)
+- [x] build both variants compile: `dotnet build NtoLib.sln` (coordinator wiring is grid-bound; behavior is covered by the manual runtime pass — extracted the index-addressed `DefaultedCellTracker.ClearCell(int row, int columnIndex)` helper and covered it with unit tests)
+- [x] run `dotnet test NtoLib.sln` — must pass before task 5
 
 ### Task 5: Verify acceptance criteria
 

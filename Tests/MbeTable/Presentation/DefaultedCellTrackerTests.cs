@@ -318,6 +318,55 @@ public sealed class DefaultedCellTrackerTests
 	}
 
 	[Fact]
+	public async Task ClearCellByIndex_ClearsTargetedCell_SiblingsSurvive()
+	{
+		using var tracker = Build(out var app, out var columns, out var stateProvider, out var facade, out var services);
+		using var servicesScope = services as IDisposable;
+		app.AddStep(0);
+		await app.SetCellValueAsync(0, MandatoryColumns.Action, (short)ServiceActions.Wait);
+
+		var step = facade.CurrentSnapshot.Recipe.Steps[0];
+		var enabledColumns = Enumerable.Range(0, columns.Count)
+			.Where(c => columns[c].Key != MandatoryColumns.Action
+						&& stateProvider.GetPropertyState(step, columns[c].Key) == PropertyState.Enabled)
+			.ToList();
+		enabledColumns.Count.Should().BeGreaterThan(1);
+
+		var changes = new List<MarksChange>();
+		tracker.MarksChanged += c => changes.Add(c);
+
+		tracker.ClearCell(0, enabledColumns[0]);
+
+		tracker.IsMarked(0, enabledColumns[0]).Should().BeFalse();
+		foreach (var survivor in enabledColumns.Skip(1))
+		{
+			tracker.IsMarked(0, survivor).Should().BeTrue($"column index {survivor} must survive");
+		}
+
+		changes.Should().ContainSingle();
+		changes[0].Row.Should().Be(0);
+	}
+
+	[Fact]
+	public async Task ClearCellByIndex_OnUnmarkedCell_RaisesNoEvent()
+	{
+		using var tracker = Build(out var app, out var columns, out _, out _, out var services);
+		using var servicesScope = services as IDisposable;
+		app.AddStep(0);
+		await app.SetCellValueAsync(0, MandatoryColumns.Action, (short)ServiceActions.Wait);
+
+		var actionIndex = IndexOf(columns, MandatoryColumns.Action);
+
+		var changes = new List<MarksChange>();
+		tracker.MarksChanged += c => changes.Add(c);
+
+		// Action column is never marked, so clearing it by index is a no-op.
+		tracker.ClearCell(0, actionIndex);
+
+		changes.Should().BeEmpty();
+	}
+
+	[Fact]
 	public async Task Dispose_UnsubscribesFromServiceEvents()
 	{
 		var tracker = Build(out var app, out var columns, out _, out _, out var services);
