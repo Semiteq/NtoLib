@@ -4,6 +4,7 @@ using System.Windows.Forms;
 
 using Microsoft.Extensions.Logging;
 
+using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModuleApplication.ViewModels;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
@@ -27,6 +28,7 @@ public sealed class TableRenderCoordinator : IDisposable
 	private readonly ILogger<TableRenderCoordinator> _logger;
 	private readonly IRowExecutionStateProvider _rowExecutionStateProvider;
 	private readonly DefaultedCellTracker _defaultedCellTracker;
+	private readonly RecipeOperationService _operationService;
 	private readonly DataGridView _table;
 	private bool _disposed;
 
@@ -43,7 +45,8 @@ public sealed class TableRenderCoordinator : IDisposable
 		IReadOnlyList<ColumnDefinition> columns,
 		ILogger<TableRenderCoordinator> logger,
 		DesignTimeColorSchemeProvider colorSchemeProvider,
-		DefaultedCellTracker defaultedCellTracker)
+		DefaultedCellTracker defaultedCellTracker,
+		RecipeOperationService operationService)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		_rowExecutionStateProvider = rowExecutionStateProvider ??
@@ -51,6 +54,7 @@ public sealed class TableRenderCoordinator : IDisposable
 		_colorSchemeProvider = colorSchemeProvider ?? throw new ArgumentNullException(nameof(colorSchemeProvider));
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		_defaultedCellTracker = defaultedCellTracker ?? throw new ArgumentNullException(nameof(defaultedCellTracker));
+		_operationService = operationService ?? throw new ArgumentNullException(nameof(operationService));
 
 		_formattingEngine = new CellFormattingEngine(
 			table, cellStateResolver, recipeViewModel,
@@ -97,6 +101,7 @@ public sealed class TableRenderCoordinator : IDisposable
 		_rowExecutionStateProvider.CurrentLineChanged += OnCurrentLineChanged;
 		_colorSchemeProvider.Changed += OnColorSchemeChanged;
 		_defaultedCellTracker.MarksChanged += OnMarksChanged;
+		_operationService.RecipeStructureChanged += OnRecipeStructureChanged;
 	}
 
 	private void DetachEventHandlers()
@@ -109,7 +114,8 @@ public sealed class TableRenderCoordinator : IDisposable
 			() => _table.CurrentCellChanged -= OnCurrentCellChanged,
 			() => _rowExecutionStateProvider.CurrentLineChanged -= OnCurrentLineChanged,
 			() => _colorSchemeProvider.Changed -= OnColorSchemeChanged,
-			() => _defaultedCellTracker.MarksChanged -= OnMarksChanged);
+			() => _defaultedCellTracker.MarksChanged -= OnMarksChanged,
+			() => _operationService.RecipeStructureChanged -= OnRecipeStructureChanged);
 	}
 
 	private void ForceInitialFormatting()
@@ -158,6 +164,46 @@ public sealed class TableRenderCoordinator : IDisposable
 		}
 
 		ApplyCellFormattingSafe(e.RowIndex, e.ColumnIndex, e.CellStyle);
+	}
+
+	private void OnRecipeStructureChanged(StructureChange change)
+	{
+		InvokeOnUiThread(BeginStructureTransition);
+	}
+
+	private void BeginStructureTransition()
+	{
+		_suppressVisitedClear = true;
+		_previousCellRow = -1;
+		_previousCellColumn = -1;
+
+		PostEndStructureTransition();
+	}
+
+	private void PostEndStructureTransition()
+	{
+		if (_table.IsDisposed || !_table.IsHandleCreated)
+		{
+			_suppressVisitedClear = false;
+
+			return;
+		}
+
+		try
+		{
+			_table.BeginInvoke(new Action(EndStructureTransition));
+		}
+		catch (ObjectDisposedException)
+		{
+			_suppressVisitedClear = false;
+		}
+	}
+
+	private void EndStructureTransition()
+	{
+		_suppressVisitedClear = false;
+		_previousCellRow = _table.CurrentCell?.RowIndex ?? -1;
+		_previousCellColumn = _table.CurrentCell?.ColumnIndex ?? -1;
 	}
 
 	private void OnMarksChanged(MarksChange change)

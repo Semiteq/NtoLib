@@ -17,8 +17,11 @@ namespace NtoLib.Recipes.MbeTable.ModulePresentation.State;
 /// </summary>
 public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 {
+	private const int RowDropped = -1;
+
 	private readonly IReadOnlyList<ColumnDefinition> _columns;
 	private readonly Dictionary<int, HashSet<int>> _marks = new();
+	private readonly object _marksLock = new();
 	private readonly PropertyStateProvider _propertyStateProvider;
 	private readonly RecipeFacade _recipeFacade;
 	private readonly RecipeOperationService _operationService;
@@ -47,7 +50,10 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 
 	public bool IsMarked(int row, int col)
 	{
-		return _marks.TryGetValue(row, out var columns) && columns.Contains(col);
+		lock (_marksLock)
+		{
+			return _marks.TryGetValue(row, out var columns) && columns.Contains(col);
+		}
 	}
 
 	/// <summary>
@@ -56,17 +62,16 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 	/// </summary>
 	public void ClearCell(int row, int columnIndex)
 	{
-		if (!_marks.TryGetValue(row, out var columns) || !columns.Remove(columnIndex))
+		bool changed;
+		lock (_marksLock)
 		{
-			return;
+			changed = RemoveMark(row, columnIndex);
 		}
 
-		if (columns.Count == 0)
+		if (changed)
 		{
-			_marks.Remove(row);
+			RaiseMarksChanged(new MarksChange(row));
 		}
-
-		RaiseMarksChanged(new MarksChange(row));
 	}
 
 	public void Dispose()
@@ -106,13 +111,35 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 
 	private void MarkRow(int row)
 	{
-		var steps = _recipeFacade.CurrentSnapshot.Recipe.Steps;
-		if (row < 0 || row >= steps.Count)
+		bool changed;
+		lock (_marksLock)
 		{
-			return;
+			var steps = _recipeFacade.CurrentSnapshot.Recipe.Steps;
+			if (row < 0 || row >= steps.Count)
+			{
+				return;
+			}
+
+			var markedColumns = ResolveMarkableColumns(steps[row]);
+			if (markedColumns.Count == 0)
+			{
+				changed = _marks.Remove(row);
+			}
+			else
+			{
+				_marks[row] = markedColumns;
+				changed = true;
+			}
 		}
 
-		var step = steps[row];
+		if (changed)
+		{
+			RaiseMarksChanged(new MarksChange(row));
+		}
+	}
+
+	private HashSet<int> ResolveMarkableColumns(Step step)
+	{
 		var markedColumns = new HashSet<int>();
 		for (var columnIndex = 0; columnIndex < _columns.Count; columnIndex++)
 		{
@@ -128,29 +155,34 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 			}
 		}
 
-		if (markedColumns.Count == 0)
-		{
-			_marks.Remove(row);
-		}
-		else
-		{
-			_marks[row] = markedColumns;
-		}
-
-		RaiseMarksChanged(new MarksChange(row));
+		return markedColumns;
 	}
 
 	private void ClearCell(int row, ColumnIdentifier column)
 	{
-		if (!_marks.TryGetValue(row, out var columns))
+		var columnIndex = IndexOf(column);
+		if (columnIndex < 0)
 		{
 			return;
 		}
 
-		var columnIndex = IndexOf(column);
-		if (columnIndex < 0 || !columns.Remove(columnIndex))
+		bool changed;
+		lock (_marksLock)
 		{
-			return;
+			changed = RemoveMark(row, columnIndex);
+		}
+
+		if (changed)
+		{
+			RaiseMarksChanged(new MarksChange(row));
+		}
+	}
+
+	private bool RemoveMark(int row, int columnIndex)
+	{
+		if (!_marks.TryGetValue(row, out var columns) || !columns.Remove(columnIndex))
+		{
+			return false;
 		}
 
 		if (columns.Count == 0)
@@ -158,18 +190,22 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 			_marks.Remove(row);
 		}
 
-		RaiseMarksChanged(new MarksChange(row));
+		return true;
 	}
 
 	private void ClearAll()
 	{
-		if (_marks.Count == 0)
+		bool changed;
+		lock (_marksLock)
 		{
-			return;
+			changed = _marks.Count > 0;
+			_marks.Clear();
 		}
 
-		_marks.Clear();
-		RaiseMarksChanged(new MarksChange(null));
+		if (changed)
+		{
+			RaiseMarksChanged(new MarksChange(null));
+		}
 	}
 
 	private void ApplyStructureChange(StructureChange change)
@@ -190,15 +226,76 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 
 	private void ApplyInsert(int index, int count)
 	{
-		if (_marks.Count == 0 || count <= 0)
+		bool changed;
+		lock (_marksLock)
 		{
-			return;
+			if (_marks.Count == 0 || count <= 0)
+			{
+				return;
+			}
+
+			changed = RebuildMarks(row => row >= index ? row + count : row);
 		}
 
+		if (changed)
+		{
+			RaiseMarksChanged(new MarksChange(null));
+		}
+	}
+
+	private void ApplyRemove(IReadOnlyList<int> removedIndices)
+	{
+		bool changed;
+		lock (_marksLock)
+		{
+			if (_marks.Count == 0 || removedIndices.Count == 0)
+			{
+				return;
+			}
+
+			var removed = new HashSet<int>(removedIndices);
+			changed = RebuildMarks(row =>
+				removed.Contains(row) ? RowDropped : row - CountBelow(removedIndices, row));
+		}
+
+		if (changed)
+		{
+			RaiseMarksChanged(new MarksChange(null));
+		}
+	}
+
+	private static int CountBelow(IReadOnlyList<int> indices, int row)
+	{
+		var count = 0;
+		for (var i = 0; i < indices.Count; i++)
+		{
+			if (indices[i] < row)
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	/// <summary>
+	/// Re-keys every mark through <paramref name="mapRow"/>. A return of <see cref="RowDropped"/>
+	/// removes the mark entirely. Returns whether any row index actually changed.
+	/// </summary>
+	private bool RebuildMarks(Func<int, int> mapRow)
+	{
 		var shifted = new Dictionary<int, HashSet<int>>();
+		var anyIndexShifted = false;
 		foreach (var entry in _marks)
 		{
-			var newRow = entry.Key >= index ? entry.Key + count : entry.Key;
+			var newRow = mapRow(entry.Key);
+			if (newRow == RowDropped)
+			{
+				anyIndexShifted = true;
+				continue;
+			}
+
+			anyIndexShifted |= newRow != entry.Key;
 			shifted[newRow] = entry.Value;
 		}
 
@@ -208,36 +305,7 @@ public sealed class DefaultedCellTracker : IDefaultedCellsReader, IDisposable
 			_marks[entry.Key] = entry.Value;
 		}
 
-		RaiseMarksChanged(new MarksChange(null));
-	}
-
-	private void ApplyRemove(IReadOnlyList<int> removedIndices)
-	{
-		if (_marks.Count == 0 || removedIndices.Count == 0)
-		{
-			return;
-		}
-
-		var removed = new HashSet<int>(removedIndices);
-		var shifted = new Dictionary<int, HashSet<int>>();
-		foreach (var entry in _marks)
-		{
-			if (removed.Contains(entry.Key))
-			{
-				continue;
-			}
-
-			var decrement = removedIndices.Count(removedRow => removedRow < entry.Key);
-			shifted[entry.Key - decrement] = entry.Value;
-		}
-
-		_marks.Clear();
-		foreach (var entry in shifted)
-		{
-			_marks[entry.Key] = entry.Value;
-		}
-
-		RaiseMarksChanged(new MarksChange(null));
+		return anyIndexShifted;
 	}
 
 	private int IndexOf(ColumnIdentifier column)

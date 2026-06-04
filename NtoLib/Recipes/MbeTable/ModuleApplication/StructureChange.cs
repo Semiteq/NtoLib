@@ -31,6 +31,11 @@ public sealed record StructureChange(
 		return new StructureChange(StructureChangeKind.Remove, -1, indices.Count, indices);
 	}
 
+	public static StructureChange RemoveSingle(int index)
+	{
+		return Remove(new[] { index });
+	}
+
 	public static StructureChange Reset()
 	{
 		return new StructureChange(StructureChangeKind.Reset, -1, 0, null);

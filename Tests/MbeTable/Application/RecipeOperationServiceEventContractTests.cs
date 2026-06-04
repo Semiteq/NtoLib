@@ -3,6 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using NtoLib.Recipes.MbeTable.ModuleApplication;
+using NtoLib.Recipes.MbeTable.ModuleApplication.State;
 using NtoLib.Recipes.MbeTable.ModuleConfig.Domain.Columns;
 using NtoLib.Recipes.MbeTable.ModuleCore.Entities;
 
@@ -214,10 +215,11 @@ public sealed class RecipeOperationServiceEventContractTests
 	}
 
 	[Fact]
-	public async Task SendRecipeAsync_RaisesRecipeSentOnlyOnSuccess()
+	public async Task SendRecipeAsync_OnSuccess_RaisesRecipeSent()
 	{
 		var app = Build(out var services);
 		using var _ = services as IDisposable;
+		services.GetRequiredService<StateProvider>().SetPlcFlags(enaSendOk: true, recipeActive: false);
 		app.AddStep(0);
 		await app.SetCellValueAsync(0, MandatoryColumns.Action, (short)ServiceActions.Wait);
 		await app.SetCellValueAsync(0, MandatoryColumns.StepDuration, 5f);
@@ -227,7 +229,26 @@ public sealed class RecipeOperationServiceEventContractTests
 
 		var result = await app.SendRecipeAsync();
 
-		sent.Should().Be(result.IsSuccess ? 1 : 0);
+		result.IsSuccess.Should().BeTrue();
+		sent.Should().Be(1);
+	}
+
+	[Fact]
+	public async Task SendRecipeAsync_OnFailure_DoesNotRaiseRecipeSent()
+	{
+		var app = Build(out var services);
+		using var _ = services as IDisposable;
+		// PLC send-enable flag left false -> the pipeline blocks Send before the modbus call.
+		app.AddStep(0);
+		await app.SetCellValueAsync(0, MandatoryColumns.Action, (short)ServiceActions.Wait);
+
+		var sent = 0;
+		app.RecipeSent += () => sent++;
+
+		var result = await app.SendRecipeAsync();
+
+		result.IsFailed.Should().BeTrue();
+		sent.Should().Be(0);
 	}
 
 	[Fact]

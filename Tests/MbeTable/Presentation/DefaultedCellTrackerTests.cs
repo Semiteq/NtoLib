@@ -193,7 +193,7 @@ public sealed class DefaultedCellTrackerTests
 		var durationIndex = IndexOf(columns, MandatoryColumns.StepDuration);
 		tracker.IsMarked(0, durationIndex).Should().BeTrue();
 
-		app.AddStep(2);
+		app.AddStep(2).IsSuccess.Should().BeTrue();
 
 		tracker.IsMarked(0, durationIndex).Should().BeTrue();
 	}
@@ -378,5 +378,46 @@ public sealed class DefaultedCellTrackerTests
 
 		var durationIndex = IndexOf(columns, MandatoryColumns.StepDuration);
 		tracker.IsMarked(0, durationIndex).Should().BeFalse();
+	}
+
+	[Fact]
+	public async Task ConcurrentReadsDuringBulkClear_DoNotCorruptMarkStore()
+	{
+		using var tracker = Build(out var app, out var columns, out _, out _, out var services);
+		using var servicesScope = services as IDisposable;
+		for (var i = 0; i < 20; i++)
+		{
+			app.AddStep(i);
+			await app.SetCellValueAsync(i, MandatoryColumns.Action, (short)ServiceActions.Wait);
+		}
+
+		var durationIndex = IndexOf(columns, MandatoryColumns.StepDuration);
+		using var cancellation = new CancellationTokenSource();
+
+		var reader = Task.Run(() =>
+		{
+			while (!cancellation.IsCancellationRequested)
+			{
+				for (var row = 0; row < 20; row++)
+				{
+					tracker.IsMarked(row, durationIndex);
+				}
+			}
+		});
+
+		var writer = Task.Run(() =>
+		{
+			for (var iteration = 0; iteration < 200; iteration++)
+			{
+				tracker.ClearCell(iteration % 20, durationIndex);
+			}
+
+			cancellation.Cancel();
+		});
+
+		// Without serialized access to the mark store the reader would throw
+		// InvalidOperationException; the lock must let both tasks complete cleanly.
+		Func<Task> act = async () => await Task.WhenAll(reader, writer);
+		await act.Should().NotThrowAsync();
 	}
 }

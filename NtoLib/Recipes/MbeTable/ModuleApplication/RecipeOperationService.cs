@@ -86,16 +86,16 @@ public sealed class RecipeOperationService
 		{
 			_timer.Reset();
 			ViewModel.OnTimeRecalculated(rowIndex);
-			RaiseStepDataChanged(rowIndex);
+			SafeRaise(nameof(StepDataChanged), () => StepDataChanged?.Invoke(rowIndex));
 
 			var isActionEdit = columnKey == MandatoryColumns.Action && value is short;
 			if (isActionEdit)
 			{
-				RaiseActionReplaced(rowIndex);
+				SafeRaise(nameof(ActionReplaced), () => ActionReplaced?.Invoke(rowIndex));
 			}
 			else
 			{
-				RaiseCellValueCommitted(rowIndex, columnKey);
+				SafeRaise(nameof(CellValueCommitted), () => CellValueCommitted?.Invoke((rowIndex, columnKey)));
 			}
 		}
 
@@ -145,7 +145,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			NotifyStructureChanged(StructureChange.Remove(new[] { index }));
+			NotifyStructureChanged(StructureChange.RemoveSingle(index));
 		}
 
 		return result;
@@ -206,7 +206,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			RaiseRecipeSaved();
+			SafeRaise(nameof(RecipeSaved), () => RecipeSaved?.Invoke());
 		}
 
 		return result;
@@ -252,7 +252,7 @@ public sealed class RecipeOperationService
 
 		if (result.IsSuccess)
 		{
-			RaiseRecipeSent();
+			SafeRaise(nameof(RecipeSent), () => RecipeSent?.Invoke());
 		}
 
 		return result;
@@ -466,78 +466,18 @@ public sealed class RecipeOperationService
 	{
 		ViewModel.OnRecipeStructureChanged();
 		_timer.Reset();
-		RaiseRecipeStructureChanged(change);
+		SafeRaise(nameof(RecipeStructureChanged), () => RecipeStructureChanged?.Invoke(change));
 	}
 
-	private void RaiseRecipeStructureChanged(StructureChange change)
+	private void SafeRaise(string eventName, Action raise)
 	{
 		try
 		{
-			RecipeStructureChanged?.Invoke(change);
+			raise();
 		}
-		catch
+		catch (Exception ex)
 		{
-			/* ignored */
-		}
-	}
-
-	private void RaiseStepDataChanged(int rowIndex)
-	{
-		try
-		{
-			StepDataChanged?.Invoke(rowIndex);
-		}
-		catch
-		{
-			/* ignored */
-		}
-	}
-
-	private void RaiseActionReplaced(int rowIndex)
-	{
-		try
-		{
-			ActionReplaced?.Invoke(rowIndex);
-		}
-		catch
-		{
-			/* ignored */
-		}
-	}
-
-	private void RaiseCellValueCommitted(int rowIndex, ColumnIdentifier columnKey)
-	{
-		try
-		{
-			CellValueCommitted?.Invoke((rowIndex, columnKey));
-		}
-		catch
-		{
-			/* ignored */
-		}
-	}
-
-	private void RaiseRecipeSent()
-	{
-		try
-		{
-			RecipeSent?.Invoke();
-		}
-		catch
-		{
-			/* ignored */
-		}
-	}
-
-	private void RaiseRecipeSaved()
-	{
-		try
-		{
-			RecipeSaved?.Invoke();
-		}
-		catch
-		{
-			/* ignored */
+			_logger.LogWarning(ex, "A subscriber of {EventName} threw an exception", eventName);
 		}
 	}
 }
