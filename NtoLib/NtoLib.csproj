@@ -564,6 +564,9 @@
     <Compile Include="Recipes\MbeTable\ModulePresentation\StateProviders\ThreadSafeRowExecutionStateProvider.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\State\BusyStateManager.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\State\CellStateResolver.cs"/>
+    <Compile Include="Recipes\MbeTable\ModulePresentation\State\DefaultedCellTracker.cs"/>
+    <Compile Include="Recipes\MbeTable\ModulePresentation\State\IDefaultedCellsReader.cs"/>
+    <Compile Include="Recipes\MbeTable\ModulePresentation\State\MarksChange.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\Style\ColorScheme.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\Style\ColorStyleHelpers.cs"/>
     <Compile Include="Recipes\MbeTable\ModulePresentation\Style\DesignTimeColorSchemeProvider.cs"/>

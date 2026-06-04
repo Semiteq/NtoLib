@@ -326,6 +326,8 @@ public static class MbeTableServiceConfigurator
 	private static void RegisterPresentationServices(IServiceCollection services)
 	{
 		services.AddSingleton<BusyStateManager>();
+		services.AddSingleton<DefaultedCellTracker>();
+		services.AddSingleton<IDefaultedCellsReader>(sp => sp.GetRequiredService<DefaultedCellTracker>());
 		services.AddSingleton<CellStateResolver>();
 		services.AddSingleton<DesignTimeColorSchemeProvider>();
 		services.AddSingleton<ColorScheme>();
