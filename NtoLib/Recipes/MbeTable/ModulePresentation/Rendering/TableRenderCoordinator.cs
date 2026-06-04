@@ -38,7 +38,8 @@ public sealed class TableRenderCoordinator : IDisposable
 		RecipeViewModel recipeViewModel,
 		IReadOnlyList<ColumnDefinition> columns,
 		ILogger<TableRenderCoordinator> logger,
-		DesignTimeColorSchemeProvider colorSchemeProvider)
+		DesignTimeColorSchemeProvider colorSchemeProvider,
+		IDefaultedCellsReader defaultedCellsReader)
 	{
 		_table = table ?? throw new ArgumentNullException(nameof(table));
 		_rowExecutionStateProvider = rowExecutionStateProvider ??
@@ -48,7 +49,8 @@ public sealed class TableRenderCoordinator : IDisposable
 
 		_formattingEngine = new CellFormattingEngine(
 			table, cellStateResolver, recipeViewModel,
-			rowExecutionStateProvider, colorSchemeProvider, columns);
+			rowExecutionStateProvider, colorSchemeProvider, columns,
+			defaultedCellsReader);
 
 		_editGating = new EditGatingCoordinator(table, recipeViewModel, logger);
 	}

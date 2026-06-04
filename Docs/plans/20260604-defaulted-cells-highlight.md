@@ -117,11 +117,11 @@ Architecture selected via multi-agent evaluation (3 competing placements, 3 judg
 - Modify: `NtoLib/Recipes/MbeTable/ModulePresentation/Rendering/CellFormattingEngine.cs`
 - Create or extend: `Tests/MbeTable/Presentation/ColorStyleHelpersDefaultedTintTests.cs` (or the existing helper-test file if one exists)
 
-- [ ] add `DefaultedCellBgColor` (orange) and `DefaultedCellTintWeight` to `ColorScheme` with defaults, following the existing color/weight pattern
-- [ ] add `ColorStyleHelpers.ApplyDefaultedTint(Color baseColor, bool isMarked, bool isRestricted, ColorScheme scheme)` mirroring `ApplyExecutionTint` (early-return when not marked; `Blend` toward `DefaultedCellBgColor`)
-- [ ] add `IDefaultedCellsReader` ctor param to `CellFormattingEngine`; in `ResolveCellVisualState` insert the defaulted tint after `ApplyExecutionTint` and feed the result into `EnsureContrast`, `CellVisualState.BackColor`, and the user-selection blend below — no column guard (Action/disabled never in the mark set)
-- [ ] write tint tests: returns base color when not marked; blends toward orange at configured weight when marked; restricted attenuation mirrors execution tint behavior
-- [ ] run `dotnet test NtoLib.sln` — must pass before task 4
+- [x] add `DefaultedCellBgColor` (orange) and `DefaultedCellTintWeight` to `ColorScheme` with defaults, following the existing color/weight pattern
+- [x] add `ColorStyleHelpers.ApplyDefaultedTint(Color baseColor, bool isMarked, bool isRestricted, ColorScheme scheme)` mirroring `ApplyExecutionTint` (early-return when not marked; `Blend` toward `DefaultedCellBgColor`)
+- [x] add `IDefaultedCellsReader` ctor param to `CellFormattingEngine`; in `ResolveCellVisualState` insert the defaulted tint after `ApplyExecutionTint` and feed the result into `EnsureContrast`, `CellVisualState.BackColor`, and the user-selection blend below — no column guard (Action/disabled never in the mark set) (also threaded an `IDefaultedCellsReader` ctor param through `TableRenderCoordinator` so the manually-constructed engine compiles; full `MarksChanged`/visited-and-left wiring is Task 4)
+- [x] write tint tests: returns base color when not marked; blends toward orange at configured weight when marked; restricted attenuation mirrors execution tint behavior
+- [x] run `dotnet test NtoLib.sln` — must pass before task 4
 
 ### Task 4: TableRenderCoordinator wiring — repaint and visited-and-left
 

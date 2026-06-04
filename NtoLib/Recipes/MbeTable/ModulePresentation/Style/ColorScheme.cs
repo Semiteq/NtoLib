@@ -74,6 +74,10 @@ public record ColorScheme
 
 		CurrentExecutionTintWeight = 0.55f;
 		PassedExecutionTintWeight = 0.40f;
+
+		// Defaulted cell highlight (cells reset to defaults by an action change)
+		DefaultedCellBgColor = Color.FromArgb(0xFF, 0xA5, 0x00); // Orange
+		DefaultedCellTintWeight = 0.45f;
 	}
 
 	public static ColorScheme Default { get; } = new();
@@ -144,4 +148,8 @@ public record ColorScheme
 	// Execution tint weights
 	public float CurrentExecutionTintWeight { get; init; }
 	public float PassedExecutionTintWeight { get; init; }
+
+	// Defaulted cell highlight
+	public Color DefaultedCellBgColor { get; init; }
+	public float DefaultedCellTintWeight { get; init; }
 }
