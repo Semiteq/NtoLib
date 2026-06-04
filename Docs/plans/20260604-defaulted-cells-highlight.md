@@ -137,11 +137,11 @@ Architecture selected via multi-agent evaluation (3 competing placements, 3 judg
 
 ### Task 5: Verify acceptance criteria
 
-- [ ] verify all six locked decisions are implemented (trace each to code)
-- [ ] verify edge cases: repeated action change replaces marks; paste does not mark; multi-delete with unsorted indices shifts correctly; editor variant resolves DI graph (no missing registrations in `ConfigureEditorServices` path)
-- [ ] run full test suite: `dotnet test NtoLib.sln`
-- [ ] run `dotnet format NtoLib.sln` and resolve any diagnostics
-- [ ] confirm sprawl budget held: 8 production files touched, feature logic only in `DefaultedCellTracker`, zero `ModuleCore` changes
+- [x] verify all six locked decisions are implemented (trace each to code): (1) `MarkRow` marks Enabled non-Action cells only; (2) per-cell clear via `CellValueCommitted`→`ClearCell` and `OnCurrentCellChanged`→`ClearCell`; (3) `ApplyInsert` shifts but never marks inserted rows, Add emits `Insert` not `ActionReplaced`; (4) `RecipeSent`/`RecipeSaved`→`ClearAll`, Load/Receive→`Reset`→`ClearAll`; (5) marks live only in `_marks` dictionary, never serialized; (6) `MarkRow` builds a fresh `HashSet` each call
+- [x] verify edge cases: repeated action change replaces marks (fresh set); paste does not mark (`Insert` only shifts); multi-delete with unsorted indices shifts correctly (set-based `ApplyRemove` with per-survivor decrement count); editor variant resolves DI graph — `RegisterPresentationServices` reached via `RegisterShared` from `ConfigureEditorServices`; tracker deps all singletons; editor `SendRecipeAsync` returns early on null modbus so `RecipeSent` never fires, `RecipeSaved` covers bulk clear
+- [x] run full test suite: `dotnet test NtoLib.sln` — 287 passed, 0 failed
+- [x] run `dotnet format NtoLib.sln` and resolve any diagnostics — fixed the only feature diagnostic (`ColorStyleHelpersDefaultedTintTests` static field renamed to `_scheme`); the one remaining `IDE1006` is pre-existing in `EditorRuntimeOptionsProviderTests.cs` (commit `50321b8`), out of scope
+- [x] confirm sprawl budget held: 8 production files know the feature (`DefaultedCellTracker`, `IDefaultedCellsReader`, `MarksChange`, `CellFormattingEngine`, `TableRenderCoordinator`, `ColorScheme`, `ColorStyleHelpers`, `DiContainer`); feature logic only in `DefaultedCellTracker`; zero `ModuleCore` changes; zero control-shell changes
 
 ### Task 6: [Final] Update documentation
 
