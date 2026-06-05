@@ -335,7 +335,6 @@ public static class MbeTableServiceConfigurator
 		services.AddSingleton<ActionItemsProvider>();
 		services.AddSingleton<TargetItemsProvider>();
 		services.AddSingleton<ComboBoxCellRenderer>();
-		services.AddScoped<TableRenderCoordinator>();
 		services.AddSingleton<FactoryColumnRegistry>();
 		services.AddSingleton<TableControlServices>();
 
