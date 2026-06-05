@@ -29,11 +29,22 @@ Before touching any tag:
 3. Confirm CI is green for the commit being tagged: `gh run list --workflow=ci.yml --branch master --limit 1` → conclusion `success`.
 4. Run a local smoke build to fail fast before pushing a tag that would crash CI:
    ```powershell
-   dotnet build NtoLib.sln -c Release
+   dotnet build NtoLib.sln -c Release --no-incremental
    dotnet test NtoLib.sln -c Release --no-build --logger "console;verbosity=minimal"
    dotnet build NtoLib/NtoLib.csproj -c Release -p:RunILRepack=true --no-restore
    ```
    All green before proceeding. **If the smoke build or tests fail, STOP — do not create or push a tag.** A tag that crashes CI must then be rolled back (see Rollback) before retrying.
+5. **Zero-warnings gate — do not release with compiler warnings.** Count warnings on the
+   *non-incremental* build output explicitly:
+   ```bash
+   dotnet build NtoLib.sln -c Release --no-incremental 2>&1 | grep -ciE "warning CS"
+   ```
+   The count must be `0`. **If any `CS` warning is present, STOP — fix it in master first,
+   then restart pre-flight.** Two gotchas that have already bitten (v1.13.0 shipped with
+   `CS8604` in its CI logs):
+   - An *incremental* build skips up-to-date projects and does not re-emit their warnings —
+     the summary lies (`Предупреждений: 0`). Always check on `--no-incremental` output.
+   - Do not judge by `tail`-ing the build summary; grep the full output for `warning CS`.
 
 ## Phase 2 — Gather changes since the last release
 
@@ -161,6 +172,7 @@ Then re-tag and push. **Do not reuse the same tag name** for a fixed release —
 ## Common pitfalls (do not repeat)
 
 - **`git tag -m` strips `#` lines** → use `--cleanup=verbatim` always.
+- **Releasing with compiler warnings** → the zero-warnings gate (Phase 1, step 5) is mandatory. Incremental builds hide warnings of up-to-date projects (the summary shows 0), so the check is only valid on `--no-incremental` output, grepped for `warning CS` — not `tail`-ed. v1.13.0 shipped with `CS8604` in its CI logs because of exactly this.
 - **Tag without `v` prefix** → workflow strips `v` via `${TAG#v}`; without a `v`, `VERSION` ends up identical to `TAG` and `name: ${{ tag }}` looks ugly. Always use `vX.Y.Z`.
 - **Lightweight tag (`git tag vX.Y.Z` without `-a`)** → no annotation body → workflow falls back to `Release X.Y.Z` for the GitHub Release notes. Always use `-a -m`.
 - **Tag on a non-master branch** → workflow doesn't care, will release whatever the tag points at. Only do this for hotfix branches the user explicitly named.
