@@ -39,7 +39,9 @@ public partial class MbeTableFB
 		// Backwards compatibility: projects saved before the ConfigDirPath property existed (#67)
 		// deserialize with a null field, and a manually blanked property must not reach
 		// Path.Combine as a relative path. Both fall back to the pre-#67 location.
-		if (string.IsNullOrWhiteSpace(_configDirPath))
+		// The explicit null check narrows the compiler's null-state: net48 mscorlib has no
+		// [NotNullWhen(false)] on IsNullOrWhiteSpace, so the call alone would not.
+		if (_configDirPath is null || string.IsNullOrWhiteSpace(_configDirPath))
 		{
 			_configDirPath = Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
 		}
