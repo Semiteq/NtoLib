@@ -679,6 +679,7 @@
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusKind.cs"/>
     <Compile Include="Recipes\MbeTable\ServiceStatus\StatusService.cs"/>
     <Compile Include="Recipes\MbeTable\Utilities\SafeDisposal.cs"/>
+    <Compile Include="Recipes\MbeTable\Utilities\TaskFaultLogger.cs"/>
     <Compile Include="Recipes\MbeTable\TableControl.Buttons.cs">
       <SubType>UserControl</SubType>
     </Compile>
