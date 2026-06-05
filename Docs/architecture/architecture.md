@@ -174,6 +174,17 @@ or replace the null-bail with a .NET readiness event — neither trigger
 alone covers all orderings, and event subscriptions leak under FB
 instance replacement (see primer §8 "FB ↔ Control rendezvous internals").
 
+Initialization is transactional. If `InitializeServicesAndRuntime`
+throws before `MarkInitialized`, the catch runs `CleanupRuntimeState()`
+(reset `_runtimeInitialized`, unsubscribe global services, dispose
+pass-1 components) and then rethrows with bare `throw;` — never
+`throw ex;`, which preserves the stack trace across the COM boundary,
+the only diagnostic since the exception escapes through try/catch-free
+platform bodies into the native engine. This makes a later
+`put_DesignMode` / `OnFBLinkChanged` entry retry from a clean slate
+rather than double-subscribing `OnPermissionsChanged` or orphaning the
+coordinator/presenter.
+
 ### Container lifetime
 
 One container per FB instance per runtime cycle. The platform **replaces

@@ -57,12 +57,19 @@ public partial class MbeTableEditorControl
 
 			InitializePresenter();
 
+			// Invariant: MarkInitialized sets _runtimeInitialized before the tail step so the
+			// flag protects the one-shot initialization from a re-entrant put_DesignMode /
+			// OnFBLinkChanged. The tail step (ApplyInitialPermissions) must not throw — it is
+			// self-protected. Any exception before MarkInitialized is rolled back transactionally
+			// by CleanupRuntimeState in the catch below, resetting the flag so a later entry
+			// retries from a clean slate.
 			MarkInitialized();
 			ApplyInitialPermissions();
 		}
 		catch (Exception ex)
 		{
 			HandleInitializationError(ex);
+			throw;
 		}
 	}
 
@@ -175,13 +182,16 @@ public partial class MbeTableEditorControl
 	{
 		_logger?.LogCritical(ex, "MbeTableEditorControl initialization failed");
 
+		// Roll back the partial initialization before the modal MessageBox pumps messages, so
+		// leaked subscriptions cannot fire into a half-built control. Resets _runtimeInitialized,
+		// making the next entry retry from a clean slate. The caller rethrows with `throw;`.
+		CleanupRuntimeState();
+
 		MessageBox.Show(
 			$@"Failed to initialize table: {ex.Message}",
 			@"Initialization Error",
 			MessageBoxButtons.OK,
 			MessageBoxIcon.Error);
-
-		throw ex;
 	}
 
 	private void OnPermissionsChanged(UiPermissions permissions)
@@ -339,16 +349,26 @@ public partial class MbeTableEditorControl
 
 	private void DisposeRuntimeComponents()
 	{
-		_presenter?.Dispose();
-		(_tableView as IDisposable)?.Dispose();
-		_behaviorManager?.Dispose();
-		_behaviorManager = null;
-
-		_renderCoordinator?.Dispose();
-		_renderCoordinator = null;
-
-		_inputManager?.Dispose();
-		_inputManager = null;
+		// Isolate each disposal so a throw in one does not orphan the others still subscribed
+		// to DI singletons — the leak channel this transactional cleanup exists to close.
+		SafeDisposal.RunAll(
+			() => _presenter?.Dispose(),
+			() => (_tableView as IDisposable)?.Dispose(),
+			() =>
+			{
+				_behaviorManager?.Dispose();
+				_behaviorManager = null;
+			},
+			() =>
+			{
+				_renderCoordinator?.Dispose();
+				_renderCoordinator = null;
+			},
+			() =>
+			{
+				_inputManager?.Dispose();
+				_inputManager = null;
+			});
 	}
 
 	private void ResetRuntimeFields()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +58,12 @@ public partial class TableControl
 
 			InitializePresenter();
 
+			// Invariant: MarkInitialized sets _runtimeInitialized before the tail steps so the
+			// flag protects the one-shot initialization from a re-entrant put_DesignMode /
+			// OnFBLinkChanged. The tail steps (TryReadFromPlc, ApplyInitialPermissions) must not
+			// throw — both are self-protected. Any exception before MarkInitialized is rolled back
+			// transactionally by CleanupRuntimeState in the catch below, resetting the flag so a
+			// later entry retries from a clean slate.
 			MarkInitialized();
 			TryReadFromPlc();
 			ApplyInitialPermissions();
@@ -64,6 +71,7 @@ public partial class TableControl
 		catch (Exception ex)
 		{
 			HandleInitializationError(ex);
+			throw;
 		}
 	}
 
@@ -149,22 +157,28 @@ public partial class TableControl
 
 		if (IsHandleCreated)
 		{
-			BeginInvoke(new Action(async void () =>
-			{
-				try
-				{
-					await _presenter.ReceiveRecipeAsync().ConfigureAwait(true);
-				}
-				catch
-				{
-					/* ignored */
-				}
-			}));
+			BeginInvoke(new Action(StartInitialPlcRead));
 		}
 		else
 		{
-			_ = _presenter.ReceiveRecipeAsync();
+			StartInitialPlcRead();
 		}
+	}
+
+	private void StartInitialPlcRead()
+	{
+		// Snapshot: the BeginInvoke-posted call runs later, by which time
+		// CleanupRuntimeState may have already nulled the field.
+		var presenter = _presenter;
+		if (presenter == null)
+		{
+			return;
+		}
+
+		TaskFaultLogger.LogOnFault(
+			presenter.ReceiveRecipeAsync(),
+			_logger,
+			"Initial PLC recipe read faulted");
 	}
 
 	private void ApplyInitialPermissions()
@@ -204,13 +218,16 @@ public partial class TableControl
 	{
 		_logger?.LogCritical(ex, "TableControl initialization failed");
 
+		// Roll back the partial initialization before the modal MessageBox pumps messages, so
+		// leaked subscriptions cannot fire into a half-built control. Resets _runtimeInitialized,
+		// making the next entry retry from a clean slate. The caller rethrows with `throw;`.
+		CleanupRuntimeState();
+
 		MessageBox.Show(
 			$@"Failed to initialize table: {ex.Message}",
 			@"Initialization Error",
 			MessageBoxButtons.OK,
 			MessageBoxIcon.Error);
-
-		throw ex;
 	}
 
 	private void OnPermissionsChanged(UiPermissions permissions)
@@ -369,16 +386,26 @@ public partial class TableControl
 
 	private void DisposeRuntimeComponents()
 	{
-		_presenter?.Dispose();
-		(_tableView as IDisposable)?.Dispose();
-		_behaviorManager?.Dispose();
-		_behaviorManager = null;
-
-		_renderCoordinator?.Dispose();
-		_renderCoordinator = null;
-
-		_inputManager?.Dispose();
-		_inputManager = null;
+		// Isolate each disposal so a throw in one does not orphan the others still subscribed
+		// to DI singletons — the leak channel this transactional cleanup exists to close.
+		SafeDisposal.RunAll(
+			() => _presenter?.Dispose(),
+			() => (_tableView as IDisposable)?.Dispose(),
+			() =>
+			{
+				_behaviorManager?.Dispose();
+				_behaviorManager = null;
+			},
+			() =>
+			{
+				_renderCoordinator?.Dispose();
+				_renderCoordinator = null;
+			},
+			() =>
+			{
+				_inputManager?.Dispose();
+				_inputManager = null;
+			});
 	}
 
 	private void ResetRuntimeFields()
