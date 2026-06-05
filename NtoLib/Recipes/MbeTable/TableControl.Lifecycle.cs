@@ -157,25 +157,28 @@ public partial class TableControl
 
 		if (IsHandleCreated)
 		{
-			BeginInvoke(new Action(async void () =>
-			{
-				try
-				{
-					await _presenter.ReceiveRecipeAsync().ConfigureAwait(true);
-				}
-				catch
-				{
-					/* ignored */
-				}
-			}));
+			BeginInvoke(new Action(StartInitialPlcRead));
 		}
 		else
 		{
-			TaskFaultLogger.LogOnFault(
-				_presenter.ReceiveRecipeAsync(),
-				_logger,
-				"Initial PLC recipe read faulted");
+			StartInitialPlcRead();
 		}
+	}
+
+	private void StartInitialPlcRead()
+	{
+		// Snapshot: the BeginInvoke-posted call runs later, by which time
+		// CleanupRuntimeState may have already nulled the field.
+		var presenter = _presenter;
+		if (presenter == null)
+		{
+			return;
+		}
+
+		TaskFaultLogger.LogOnFault(
+			presenter.ReceiveRecipeAsync(),
+			_logger,
+			"Initial PLC recipe read faulted");
 	}
 
 	private void ApplyInitialPermissions()
