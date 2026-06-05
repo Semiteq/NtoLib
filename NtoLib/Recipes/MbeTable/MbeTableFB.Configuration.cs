@@ -36,8 +36,13 @@ public partial class MbeTableFB
 
 	private AppConfiguration LoadConfigurationInternal()
 	{
-		// Backwards compatibility:
-		_configDirPath ??= Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
+		// Backwards compatibility: projects saved before the ConfigDirPath property existed (#67)
+		// deserialize with a null field, and a manually blanked property must not reach
+		// Path.Combine as a relative path. Both fall back to the pre-#67 location.
+		if (string.IsNullOrWhiteSpace(_configDirPath))
+		{
+			_configDirPath = Path.Combine(AppContext.BaseDirectory, DefaultConfigFolderName);
+		}
 
 		var loaded = RecipeFbConfigurationHelper.LoadConfiguration(
 			_configDirPath,
