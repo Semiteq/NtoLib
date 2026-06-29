@@ -4,5 +4,6 @@ public enum SymbolType
 {
 	On,
 	Off,
-	SmoothOpen
+	SmoothOpen,
+	Regen
 }

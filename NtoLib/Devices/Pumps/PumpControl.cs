@@ -29,6 +29,8 @@ public partial class PumpControl : VisualControlBase
 	private ButtonOrientation _buttonOrientation;
 	private int _currentCommand;
 
+	private bool _lastShowRegen;
+
 	private Timer? _impulseTimer;
 
 	private Timer? _mouseHoldTimer;
@@ -174,6 +176,14 @@ public partial class PumpControl : VisualControlBase
 		}
 	}
 
+	private void HandleRegenClick(object sender, EventArgs e)
+	{
+		if (!Status.UsedByAutoMode)
+		{
+			SendCommand(PumpFB.RegenCmdId);
+		}
+	}
+
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		e.Graphics.Clear(BackColor);
@@ -242,7 +252,19 @@ public partial class PumpControl : VisualControlBase
 				: Orientation.Right;
 		}
 
-		var buttons = new Button[] { buttonStart, buttonStop };
+		var showRegen = FBConnector.Fb is PumpFB fb
+			&& fb.PumpType == PumpType.Cryogen
+			&& fb.UseRegeneration;
+
+		// RebuildTable only repositions the buttons passed to it; controls left out
+		// of the array keep their last cell and stay visible. buttonRegen is always
+		// a child of buttonTable, so it must be hidden explicitly when not in use
+		// (mirrors ValveControl.UpdateButtonTable toggling buttonOpenSmoothly.Visible).
+		buttonRegen.Visible = showRegen;
+
+		var buttons = showRegen
+			? new Button[] { buttonStart, buttonRegen, buttonStop }
+			: new Button[] { buttonStart, buttonStop };
 
 		LayoutBuilder.RebuildTable(buttonTable, buttonsOrientation, buttons);
 	}
@@ -391,6 +413,13 @@ public partial class PumpControl : VisualControlBase
 			return;
 		}
 
+		var showRegen = fb.PumpType == PumpType.Cryogen && fb.UseRegeneration;
+		if (showRegen != _lastShowRegen)
+		{
+			_lastShowRegen = showRegen;
+			UpdateLayout();
+		}
+
 		switch (fb.PumpType)
 		{
 			case PumpType.Forvacuum:
@@ -418,6 +447,13 @@ public partial class PumpControl : VisualControlBase
 			{
 				Status.TemperatureIn = GetPinValue<float>(PumpFB.CryoInTemperature);
 				Status.TemperatureOut = GetPinValue<float>(PumpFB.CryoOutTemperature);
+
+				if (fb.UseRegeneration)
+				{
+					buttonRegen.BackColor = Status.RegenerationActive
+						? Color.YellowGreen
+						: Color.AntiqueWhite;
+				}
 
 				break;
 			}

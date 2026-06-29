@@ -57,6 +57,7 @@ public class PumpFB : VisualFBBaseExtended
 
 	public const int StartCmdId = 100;
 	public const int StopCmdId = 101;
+	public const int RegenCmdId = 102;
 
 	public const int ConnectionDisabledEventId = 5000;
 
@@ -98,6 +99,10 @@ public class PumpFB : VisualFBBaseExtended
 	[DisplayName("Отображать температуру")]
 	[Description("Переключает отображение температуры в окне параметров насоса")]
 	public bool UseTemperatureLabel { get; set; }
+
+	[DisplayName("Регенерация")]
+	[Description("Включает кнопку управления регенерацией для криогенного насоса")]
+	public bool UseRegeneration { get; set; }
 
 	protected override void ToRuntime()
 	{
@@ -229,8 +234,10 @@ public class PumpFB : VisualFBBaseExtended
 		var commandWord = 0;
 		var startCmd = GetVisualPin<bool>(StartCmdId);
 		var stopCmd = GetVisualPin<bool>(StopCmdId);
+		var regenCmd = GetVisualPin<bool>(RegenCmdId);
 		commandWord.SetBit(0, startCmd);
 		commandWord.SetBit(1, stopCmd);
+		commandWord.SetBit(2, regenCmd);
 		SetPinValue(CommandWordId, commandWord);
 
 		if (startCmd && !_prevStartCmd)

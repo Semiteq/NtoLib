@@ -89,6 +89,27 @@ public partial class LabeledButton : Button
 
 				break;
 			}
+			case SymbolType.Regen:
+			{
+				var emSize = bounds.Height * 0.9f;
+				if (emSize <= 0f)
+				{
+					break;
+				}
+
+				using (var font = new Font(Font.FontFamily, emSize, FontStyle.Bold, GraphicsUnit.Pixel))
+				using (var brush = new SolidBrush(ForeColor))
+				using (var format = new StringFormat
+				{
+					Alignment = StringAlignment.Center,
+					LineAlignment = StringAlignment.Center
+				})
+				{
+					e.Graphics.DrawString("P", font, brush, bounds.ToRectangleF(), format);
+				}
+
+				break;
+			}
 		}
 	}
 
