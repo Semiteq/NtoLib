@@ -46,13 +46,23 @@ Mimic their *structure*, not every word: `numeric-box.md`'s TL;DR says "рабо
 ## Language and Style Rules
 
 1. **External contract only.** Describe what the FB does, not how it is built. No class names, no pattern names, no internal constants, no architecture. See "Governing Principle" above.
-2. **All text in Russian.** Section headers, table content, TL;DR, prose -- everything.
-3. **Identifiers keep their original form, never translated:** pin names, enum values, and property names stay in English (`Input`, `Output`, `DisplayFormat`). For the `Тип` column, follow the same-type reference doc: headless FB docs use lowercase English type names (`bool`, `string`, `double`); the visual `numeric-box.md` uses the Russian XML type names (`Вещественный`). Match the existing same-type docs rather than mixing the two.
-4. **Prefer name-only pin tables (no DispId/ID column).** Pin IDs are an internal addressing detail; users identify pins by name (this matches `numeric-box.md`). Note: the older headless docs (`config-loader.md`, `link-switcher.md`, `trend-pens-manager.md`) include a leading `| ID |` column — when *rewriting* one of those, keep its existing column shape unless the user asks to modernize it, to avoid a gratuitous reformat.
-5. **Concise prose.** Short paragraphs, no filler. Each sentence adds information.
-6. **Tables over paragraphs** when listing structured data (pins, properties, errors).
-7. **No code blocks** unless showing a tree structure, YAML config, or format example.
-8. **File name:** `Docs/<fb-name-lowercase-kebab>.md` (e.g. `numeric-box.md`, `config-loader.md`).
+2. **All text in Russian.** Section headers, table content, the "Кратко" summary, prose -- everything.
+3. **Живой русский без англицизмов, транслитераций и жаргона.** Проза должна без затруднений читаться специалистом-непрограммистом (оператор, инженер-наладчик) и оставаться при этом технически точной и однозначной. Запрещены в тексте:
+   - транслитерации: `пин`, `контрол`, `рантайм`, `байндинг`, `тулза`;
+   - кальки-англицизмы и сокращения-жаргон: `TL;DR`, `Warning`/`Warnings` в заголовках, `latency`, `runtime`;
+   - внутренний жаргон механизма: `debounce`, `арбитрация`, `polling`, `poll` (он же запрещён правилом #1 как утечка реализации).
+
+   Типовые замены: `пин` → «вход» / «выход» / «сигнал»; `Runtime` / `рантайм` → «режим исполнения»; `контрол` → «элемент на мнемосхеме»; `TL;DR` → «Кратко»; `(Warnings)` → «(предупреждения)»; названия цветов .NET (`YellowGreen`, `AntiqueWhite`) → по-русски («жёлто-зелёный», «светло-бежевый»).
+
+   **Остаются как есть** (НЕ переводить, НЕ считать нарушением): (а) идентификаторы из среды MasterSCADA — имена пинов, свойств, значений перечислений, имена битов (см. правило #3 ниже про идентификаторы) и буквальные имена групп/вкладок; (б) устоявшиеся отраслевые термины и стандарты — `MasterSCADA`, `OPC UA`, `Modbus TCP`, `COM`, `YAML`, `CSV`, `XML`, `ПЛК`, «мнемосхема», «тренд». Любое сокращение вне списка (б) раскрывается при первом употреблении.
+
+   Запрет распространяется и на запись «о реализации» в обывательских терминах: формулируй наблюдаемое поведение, а не внутренний алгоритм.
+4. **Identifiers keep their original form, never translated:** pin names, enum values, and property names stay in English (`Input`, `Output`, `DisplayFormat`). For the `Тип` column, follow the same-type reference doc: headless FB docs use lowercase English type names (`bool`, `string`, `double`); the visual `numeric-box.md` uses the Russian XML type names (`Вещественный`). Match the existing same-type docs rather than mixing the two.
+5. **Prefer name-only pin tables (no DispId/ID column).** Pin IDs are an internal addressing detail; users identify pins by name (this matches `numeric-box.md`). Note: the older headless docs (`config-loader.md`, `link-switcher.md`, `trend-pens-manager.md`) include a leading `| ID |` column — when *rewriting* one of those, keep its existing column shape unless the user asks to modernize it, to avoid a gratuitous reformat.
+6. **Concise prose.** Short paragraphs, no filler. Each sentence adds information.
+7. **Tables over paragraphs** when listing structured data (pins, properties, errors).
+8. **No code blocks** unless showing a tree structure, YAML config, or format example.
+9. **File name:** `Docs/<fb-name-lowercase-kebab>.md` (e.g. `numeric-box.md`, `config-loader.md`).
 
 ## Document Structure
 
@@ -61,7 +71,7 @@ Mimic their *structure*, not every word: `numeric-box.md`'s TL;DR says "рабо
 ```markdown
 # <EnglishName> -- <Русское описание>
 
-> **TL;DR:** <2-3 предложения: что делает, как работает, ключевые особенности.>
+> **Кратко:** <2-3 предложения: что делает, как работает, ключевые особенности.>
 
 ## 1. Интерфейс
 
@@ -75,7 +85,7 @@ Mimic their *structure*, not every word: `numeric-box.md`'s TL;DR says "рабо
 | Имя | Тип | Описание |
 |-----|-----|----------|
 
-### События (Warnings)              ← only if the FB has events
+### События (предупреждения)              ← only if the FB has events
 
 | Имя | Условие |
 |-----|---------|
@@ -135,7 +145,7 @@ Number sections sequentially starting from 1. The exact numbers depend on which 
 ```markdown
 # <Name> -- <Русское название>
 
-> **TL;DR:** <Краткое описание.>
+> **Кратко:** <Краткое описание.>
 
 ## 1. Интерфейс
 
@@ -157,7 +167,7 @@ Number sections sequentially starting from 1. The exact numbers depend on which 
 | Имя | Тип | Описание |
 |-----|-----|----------|
 
-### События (Warnings)
+### События (предупреждения)
 
 | Имя | Условие |
 |-----|---------|
@@ -187,7 +197,7 @@ Number sections sequentially starting from 1. The exact numbers depend on which 
 ```markdown
 # <Name> -- <Русское название>
 
-> **TL;DR:** <Краткое описание.>
+> **Кратко:** <Краткое описание.>
 
 ## 1. Интерфейс
 
@@ -239,6 +249,6 @@ Number sections sequentially starting from 1. The exact numbers depend on which 
 - **Leaking implementation details**: this is the most common mistake. The doc reader is an operator or integrator, not a developer. Do not mention: class names (`ValueArbiter`, `EventTrigger`), design patterns (debounce, polling, arbitration), internal constants (precision thresholds, timer intervals), field names, threading details, or how the control updates itself. Describe only what the user observes. If you catch yourself writing "internally" or "under the hood" -- delete that paragraph.
 - **Including IDs**: pin IDs are implementation details. Do not add ID columns to tables.
 - **Inventing behavior not in the code**: every statement in the doc must be traceable to a specific code path. If unsure, read the source.
-- **Overly long TL;DR**: keep to 2-3 sentences. The TL;DR is a summary, not an introduction.
+- **Overly long "Кратко"**: keep to 2-3 sentences. The "Кратко" summary is a summary, not an introduction.
 - **Borderline details -- guessing instead of asking**: if you are unsure whether a detail is user-actionable (e.g. "events are suppressed for 5 seconds after Runtime start"), ask the user instead of including it by default. Err on the side of omission.
 - **Missing sections**: if the FB has events, document them. If it has visual properties, document them. Do not skip sections that apply.
