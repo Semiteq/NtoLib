@@ -33,6 +33,7 @@ namespace NtoLib.Devices.Pumps
         {
             this.buttonTable = new System.Windows.Forms.TableLayoutPanel();
             this.buttonStart = new LabeledButton();
+            this.buttonRegen = new LabeledButton();
             this.buttonStop = new LabeledButton();
             this.spriteBox = new System.Windows.Forms.PictureBox();
             this.buttonTable.SuspendLayout();
@@ -44,12 +45,15 @@ namespace NtoLib.Devices.Pumps
             this.buttonTable.ColumnCount = 2;
             this.buttonTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.buttonTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.Controls.Add(this.buttonStart, 0, 0);
+            this.buttonTable.Controls.Add(this.buttonRegen, 0, 1);
             this.buttonTable.Controls.Add(this.buttonStop, 1, 1);
             this.buttonTable.Location = new System.Drawing.Point(112, 3);
             this.buttonTable.Margin = new System.Windows.Forms.Padding(0);
             this.buttonTable.Name = "buttonTable";
             this.buttonTable.RowCount = 2;
+            this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.Size = new System.Drawing.Size(103, 103);
@@ -70,9 +74,25 @@ namespace NtoLib.Devices.Pumps
             this.buttonStart.TabIndex = 2;
             this.buttonStart.UseVisualStyleBackColor = false;
             this.buttonStart.Click += new System.EventHandler(this.HandleStartClick);
-            // 
+            //
+            // buttonRegen
+            //
+            this.buttonRegen.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRegen.BackColor = System.Drawing.Color.AntiqueWhite;
+            this.buttonRegen.ForeColor = System.Drawing.Color.DarkGreen;
+            this.buttonRegen.Location = new System.Drawing.Point(1, 52);
+            this.buttonRegen.Margin = new System.Windows.Forms.Padding(1);
+            this.buttonRegen.Name = "buttonRegen";
+            this.buttonRegen.Size = new System.Drawing.Size(49, 49);
+            this.buttonRegen.SymbolOnButton = SymbolType.Regen;
+            this.buttonRegen.TabIndex = 4;
+            this.buttonRegen.UseVisualStyleBackColor = false;
+            this.buttonRegen.Click += new System.EventHandler(this.HandleRegenClick);
+            //
             // buttonStop
-            // 
+            //
             this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -118,6 +138,7 @@ namespace NtoLib.Devices.Pumps
 
         private System.Windows.Forms.TableLayoutPanel buttonTable;
         private LabeledButton buttonStart;
+        private LabeledButton buttonRegen;
         private LabeledButton buttonStop;
         private System.Windows.Forms.PictureBox spriteBox;
     }

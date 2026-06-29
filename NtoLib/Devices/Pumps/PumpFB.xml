@@ -54,6 +54,7 @@
 
       <Pin ID="1100" Name="StartCMD" Type="Логический" DefaultValue="false"/>
       <Pin ID="1101" Name="StopCMD" Type="Логический" DefaultValue="false"/>
+      <Pin ID="1102" Name="RegenCMD" Type="Логический" DefaultValue="false"/>
 
       <Pout ID="1020" Name="Temperature" Type="Вещественный"/>
 
