@@ -29,7 +29,7 @@ public partial class PumpControl : VisualControlBase
 	private ButtonOrientation _buttonOrientation;
 	private int _currentCommand;
 
-	private bool _lastUseRegeneration;
+	private bool _lastShowRegen;
 
 	private Timer? _impulseTimer;
 
@@ -413,9 +413,10 @@ public partial class PumpControl : VisualControlBase
 			return;
 		}
 
-		if (fb.UseRegeneration != _lastUseRegeneration)
+		var showRegen = fb.PumpType == PumpType.Cryogen && fb.UseRegeneration;
+		if (showRegen != _lastShowRegen)
 		{
-			_lastUseRegeneration = fb.UseRegeneration;
+			_lastShowRegen = showRegen;
 			UpdateLayout();
 		}
 
