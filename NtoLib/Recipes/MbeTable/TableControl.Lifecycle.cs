@@ -14,6 +14,7 @@ using NtoLib.Recipes.MbeTable.ModulePresentation.Initialization;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Input;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Rendering;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Style;
+using NtoLib.Recipes.MbeTable.ServiceStatus;
 using NtoLib.Recipes.MbeTable.Utilities;
 
 namespace NtoLib.Recipes.MbeTable;
@@ -310,7 +311,8 @@ public partial class TableControl
 			_services.RowStateProvider,
 			_services.BusyStateManager,
 			_services.OpenFileDialog,
-			_services.SaveFileDialog);
+			_services.SaveFileDialog,
+			new LabelStatusSink(_labelFile, _services.ColorScheme with { StatusBgColor = Color.Transparent }));
 	}
 
 	public override void put_DesignMode(int bDesignMode)

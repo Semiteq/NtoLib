@@ -15,6 +15,7 @@ namespace NtoLib.Recipes.MbeTable
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this._table = new System.Windows.Forms.DataGridView();
             this._labelStatus = new System.Windows.Forms.Label();
+            this._labelFile = new System.Windows.Forms.Label();
             this._buttonWrite = new System.Windows.Forms.Button();
             this._buttonOpen = new System.Windows.Forms.Button();
             this._buttonAddAfter = new System.Windows.Forms.Button();
@@ -44,7 +45,7 @@ namespace NtoLib.Recipes.MbeTable
             this._table.Location = new System.Drawing.Point(3, 3);
             this._table.Name = "_table";
             this._table.RowHeadersWidth = 20;
-            this._table.Size = new System.Drawing.Size(962, 482);
+            this._table.Size = new System.Drawing.Size(962, 458);
             this._table.TabIndex = 1;
             //
             // _labelStatus
@@ -52,12 +53,26 @@ namespace NtoLib.Recipes.MbeTable
             this._labelStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._labelStatus.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._labelStatus.Location = new System.Drawing.Point(3, 491);
+            this._labelStatus.Location = new System.Drawing.Point(3, 467);
             this._labelStatus.Name = "_labelStatus";
             this._labelStatus.Size = new System.Drawing.Size(670, 40);
             this._labelStatus.TabIndex = 14;
             this._labelStatus.Text = "DbgMsg";
             this._labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //
+            // _labelFile
+            //
+            this._labelFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this._labelFile.AutoEllipsis = true;
+            this._labelFile.BackColor = System.Drawing.Color.Transparent;
+            this._labelFile.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this._labelFile.Location = new System.Drawing.Point(3, 509);
+            this._labelFile.Name = "_labelFile";
+            this._labelFile.Size = new System.Drawing.Size(962, 20);
+            this._labelFile.TabIndex = 16;
+            this._labelFile.Text = "Несохранённый рецепт";
+            this._labelFile.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
             // _buttonWrite
             //
@@ -65,7 +80,7 @@ namespace NtoLib.Recipes.MbeTable
             this._buttonWrite.BackgroundImage = global::NtoLib.Properties.Resources.ImgWrite;
             this._buttonWrite.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonWrite.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonWrite.Location = new System.Drawing.Point(922, 491);
+            this._buttonWrite.Location = new System.Drawing.Point(922, 467);
             this._buttonWrite.Name = "_buttonWrite";
             this._buttonWrite.Size = new System.Drawing.Size(40, 40);
             this._buttonWrite.TabIndex = 15;
@@ -78,7 +93,7 @@ namespace NtoLib.Recipes.MbeTable
             this._buttonOpen.BackgroundImage = global::NtoLib.Properties.Resources.ImgOpen;
             this._buttonOpen.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonOpen.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonOpen.Location = new System.Drawing.Point(826, 491);
+            this._buttonOpen.Location = new System.Drawing.Point(826, 467);
             this._buttonOpen.Name = "_buttonOpen";
             this._buttonOpen.Size = new System.Drawing.Size(40, 40);
             this._buttonOpen.TabIndex = 8;
@@ -91,7 +106,7 @@ namespace NtoLib.Recipes.MbeTable
             this._buttonAddAfter.BackgroundImage = global::NtoLib.Properties.Resources.ImgInsertAfter;
             this._buttonAddAfter.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonAddAfter.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonAddAfter.Location = new System.Drawing.Point(778, 491);
+            this._buttonAddAfter.Location = new System.Drawing.Point(778, 467);
             this._buttonAddAfter.Name = "_buttonAddAfter";
             this._buttonAddAfter.Size = new System.Drawing.Size(40, 40);
             this._buttonAddAfter.TabIndex = 13;
@@ -104,7 +119,7 @@ namespace NtoLib.Recipes.MbeTable
             this._buttonSave.BackgroundImage = global::NtoLib.Properties.Resources.ImgSave;
             this._buttonSave.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonSave.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonSave.Location = new System.Drawing.Point(874, 491);
+            this._buttonSave.Location = new System.Drawing.Point(874, 467);
             this._buttonSave.Name = "_buttonSave";
             this._buttonSave.Size = new System.Drawing.Size(40, 40);
             this._buttonSave.TabIndex = 9;
@@ -117,7 +132,7 @@ namespace NtoLib.Recipes.MbeTable
             this._buttonAddBefore.BackgroundImage = global::NtoLib.Properties.Resources.ImgInsertBefore;
             this._buttonAddBefore.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonAddBefore.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonAddBefore.Location = new System.Drawing.Point(730, 491);
+            this._buttonAddBefore.Location = new System.Drawing.Point(730, 467);
             this._buttonAddBefore.Name = "_buttonAddBefore";
             this._buttonAddBefore.Size = new System.Drawing.Size(40, 40);
             this._buttonAddBefore.TabIndex = 12;
@@ -130,7 +145,7 @@ namespace NtoLib.Recipes.MbeTable
             this._buttonDel.BackgroundImage = global::NtoLib.Properties.Resources.ImgDelete;
             this._buttonDel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this._buttonDel.Font = new System.Drawing.Font("Arial", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this._buttonDel.Location = new System.Drawing.Point(682, 491);
+            this._buttonDel.Location = new System.Drawing.Point(682, 467);
             this._buttonDel.Name = "_buttonDel";
             this._buttonDel.Size = new System.Drawing.Size(40, 40);
             this._buttonDel.TabIndex = 11;
@@ -148,6 +163,7 @@ namespace NtoLib.Recipes.MbeTable
             this.Controls.Add(this._buttonDel);
             this.Controls.Add(this._table);
             this.Controls.Add(this._labelStatus);
+            this.Controls.Add(this._labelFile);
             this.Name = "TableControl";
             this.Size = new System.Drawing.Size(968, 534);
             ((System.ComponentModel.ISupportInitialize)(this._table)).EndInit();
@@ -162,6 +178,7 @@ namespace NtoLib.Recipes.MbeTable
         private Button _buttonOpen;
         private Button _buttonWrite;
         private Label _labelStatus;
+        private Label _labelFile;
     }
 }
 

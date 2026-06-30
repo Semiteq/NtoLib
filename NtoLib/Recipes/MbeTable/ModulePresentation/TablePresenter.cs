@@ -7,6 +7,7 @@ using NtoLib.Recipes.MbeTable.ModuleApplication;
 using NtoLib.Recipes.MbeTable.ModulePresentation.Adapters;
 using NtoLib.Recipes.MbeTable.ModulePresentation.State;
 using NtoLib.Recipes.MbeTable.ModulePresentation.StateProviders;
+using NtoLib.Recipes.MbeTable.ServiceStatus;
 
 namespace NtoLib.Recipes.MbeTable.ModulePresentation;
 
@@ -14,6 +15,7 @@ public sealed class TablePresenter : IDisposable
 {
 	private readonly RecipeOperationService _app;
 	private readonly BusyStateManager _busy;
+	private readonly IStatusSink _fileSink;
 	private readonly OpenFileDialog _openDialog;
 	private readonly IRowExecutionStateProvider _rowStateProvider;
 	private readonly SaveFileDialog _saveDialog;
@@ -25,7 +27,8 @@ public sealed class TablePresenter : IDisposable
 		IRowExecutionStateProvider rowStateProvider,
 		BusyStateManager busy,
 		OpenFileDialog openDialog,
-		SaveFileDialog saveDialog)
+		SaveFileDialog saveDialog,
+		IStatusSink fileSink)
 	{
 		_view = view;
 		_app = app;
@@ -33,6 +36,7 @@ public sealed class TablePresenter : IDisposable
 		_busy = busy;
 		_openDialog = openDialog;
 		_saveDialog = saveDialog;
+		_fileSink = fileSink;
 
 		_rowStateProvider.CurrentLineChanged += OnCurrentLineChanged;
 	}
@@ -43,6 +47,7 @@ public sealed class TablePresenter : IDisposable
 		_view.CellValuePushed -= OnCellValuePushed;
 		_app.RecipeStructureChanged -= OnRecipeStructureChanged;
 		_rowStateProvider.CurrentLineChanged -= OnCurrentLineChanged;
+		(_fileSink as IDisposable)?.Dispose();
 	}
 
 	public void Initialize()
@@ -53,6 +58,14 @@ public sealed class TablePresenter : IDisposable
 
 		_app.RecipeStructureChanged += OnRecipeStructureChanged;
 		_app.StepDataChanged += row => _view.InvalidateRow(row);
+
+		ShowCurrentFile(null);
+	}
+
+	private void ShowCurrentFile(string? fullPath)
+	{
+		var text = fullPath is null ? "Несохранённый рецепт" : "Сейчас открыт: " + fullPath;
+		_fileSink.Write(text, StatusKind.None);
 	}
 
 	public async Task LoadRecipeAsync()
@@ -70,7 +83,11 @@ public sealed class TablePresenter : IDisposable
 
 		using (_busy.Enter())
 		{
-			await _app.LoadRecipeAsync(path).ConfigureAwait(false);
+			var result = await _app.LoadRecipeAsync(path).ConfigureAwait(false);
+			if (result.IsSuccess)
+			{
+				ShowCurrentFile(path);
+			}
 		}
 	}
 
@@ -83,7 +100,11 @@ public sealed class TablePresenter : IDisposable
 
 		using (_busy.Enter())
 		{
-			await _app.SaveRecipeAsync(_saveDialog.FileName).ConfigureAwait(false);
+			var result = await _app.SaveRecipeAsync(_saveDialog.FileName).ConfigureAwait(false);
+			if (result.IsSuccess)
+			{
+				ShowCurrentFile(_saveDialog.FileName);
+			}
 		}
 	}
 
@@ -99,7 +120,11 @@ public sealed class TablePresenter : IDisposable
 	{
 		using (_busy.Enter())
 		{
-			await _app.ReceiveRecipeAsync().ConfigureAwait(false);
+			var result = await _app.ReceiveRecipeAsync().ConfigureAwait(false);
+			if (result.IsSuccess)
+			{
+				ShowCurrentFile(null);
+			}
 		}
 	}
 
