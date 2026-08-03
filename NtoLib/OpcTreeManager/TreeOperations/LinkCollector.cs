@@ -14,8 +14,6 @@ namespace NtoLib.OpcTreeManager.TreeOperations;
 
 public static class LinkCollector
 {
-	private const string DollarSuffix = "$";
-
 	public static IReadOnlyList<LinkEntry> CollectAllLinks(ITreeItemHlp node, ILogger? logger = null)
 	{
 		if (node == null)
@@ -91,60 +89,115 @@ public static class LinkCollector
 			AppendLinks(pin, EConnectionTypeMask.ctIConnect, LinkTypes.IConnect, rawLinks, log);
 		}
 
-		return DedupByWire(rawLinks, log);
+		var links = DedupByWire(rawLinks, log);
+		WarnTwinlessIConnects(links, log);
+		return links;
 	}
 
 	/// <summary>
-	/// Collapses rows that describe the same physical wire. A <c>PinPout</c> pair
-	/// exposes two sibling <c>ITreePinHlp</c> objects — one with a trailing <c>$</c>
-	/// in <see cref="PinView.FullName"/>, one without — and an iconnect wire
-	/// surfaces on both (non-$ under <c>ctIConnect</c>, $ under <c>ctGenericPin</c>).
-	/// Keying by <c>(stripTrailingDollar(local), external)</c> folds the pair;
-	/// when both halves are present the non-$ row wins because its linkType is
-	/// semantically richer. Rows with no twin — including $-only Command wires —
-	/// survive untouched and are replayed by <see cref="PlanExecutor"/>.
+	/// Capture check for the OPC PinPout <c>$</c>-sibling model (see
+	/// <c>Docs/architecture/masterscada-fb-primer.md</c>): an OPC value pin surfaces as a base pin
+	/// (carries the <c>iconnect</c> feedback) and a <c>$</c> sibling (carries the <c>directPin</c>
+	/// input). For each captured <c>iconnect</c> this classifies the input sibling by structure and
+	/// only alarms on the one shape that has ever meant lost data:
+	/// <list type="bullet">
+	/// <item>sibling captured to the <b>same</b> external — both halves present; silent.</item>
+	/// <item>sibling captured to a <b>different</b> external — the expected shape for a pin whose input
+	/// and feedback target different nodes (feedback-only pins); logged at Debug.</item>
+	/// <item>sibling has <b>no captured row at all</b> — the only shape a dropped or blind/partial
+	/// capture takes (the old <see cref="DedupByWire"/> fold, or the read-back blindness of
+	/// known-issue 11); logged at Warning.</item>
+	/// </list>
+	/// Valid only where the PinPout model holds (OPC subtrees). If <see cref="LinkCollector"/> is ever
+	/// run over non-OPC object trees (FB-to-FB iconnects have no <c>$</c> siblings), the Warning branch
+	/// would misfire.
+	/// </summary>
+	private static void WarnTwinlessIConnects(IReadOnlyList<LinkEntry> links, ILogger? log)
+	{
+		if (log == null)
+		{
+			return;
+		}
+
+		var directPinExternalsByLocal = links
+			.Where(row => row.LinkType == LinkTypes.DirectPin)
+			.ToLookup(row => row.LocalPinPath, row => row.ExternalPinPath);
+
+		foreach (var row in links)
+		{
+			if (row.LinkType != LinkTypes.IConnect)
+			{
+				continue;
+			}
+
+			var sibling = row.LocalPinPath + "$";
+			var siblingExternals = directPinExternalsByLocal[sibling];
+
+			if (siblingExternals.Contains(row.ExternalPinPath))
+			{
+				// Both halves captured to the same external — settings pin, nothing to flag.
+				continue;
+			}
+
+			if (siblingExternals.Any())
+			{
+				log.Debug(
+					"Feedback-only iconnect '{LocalPin}' → '{ExternalPin}': input sibling '{Sibling}' is " +
+					"captured to a different external — expected PinPout shape",
+					row.LocalPinPath, row.ExternalPinPath, sibling);
+				continue;
+			}
+
+			log.Warning(
+				"Capture check: iconnect '{LocalPin}' → '{ExternalPin}' has no captured link on input " +
+				"sibling '{Sibling}' — the input is either genuinely unconnected or was not captured " +
+				"(partial/blind capture; see Docs/known_issues/11)",
+				row.LocalPinPath, row.ExternalPinPath, sibling);
+		}
+	}
+
+	/// <summary>
+	/// Removes only exact duplicate rows — same <see cref="LinkEntry.LocalPinPath"/>,
+	/// <see cref="LinkEntry.ExternalPinPath"/> AND <see cref="LinkEntry.LinkType"/> — which arise
+	/// when a pin matches more than one mask and the same wire is enumerated twice.
+	/// <para>
+	/// It does NOT fold the two halves of a <c>PinPout</c> pair. A pin and its <c>$</c> sibling carry
+	/// <b>distinct</b> wires: on <c>CHx.Kp</c> the base pin holds an <c>iconnect</c> (feedback) and
+	/// <c>CHx.Kp$</c> holds a <c>directPin</c> (input), both to the same external element. Both must
+	/// survive — the <c>directPin</c> input is what reconnects reliably and makes the pin show
+	/// connected after a reload; the earlier <c>$</c>-twin fold dropped it, so every restored iconnect
+	/// pin came back with only its feedback half and never persisted.
+	/// </para>
 	/// </summary>
 	private static List<LinkEntry> DedupByWire(List<LinkEntry> rows, ILogger? log)
 	{
 		var result = new List<LinkEntry>(rows.Count);
-		var indexByKey = new Dictionary<(string StrippedLocal, string External), int>();
+		var seen = new HashSet<(string Local, string External, string LinkType)>();
 		var dropped = 0;
 
 		foreach (var row in rows)
 		{
-			var key = (StripTrailingDollar(row.LocalPinPath), row.ExternalPinPath);
+			var key = (row.LocalPinPath, row.ExternalPinPath, row.LinkType);
 
-			if (!indexByKey.TryGetValue(key, out var existingIndex))
+			if (!seen.Add(key))
 			{
-				indexByKey[key] = result.Count;
-				result.Add(row);
+				dropped++;
+				log?.Warning(
+					"Exact-duplicate dedup: dropped ({LocalPin}, {ExternalPin}, {LinkType}) — " +
+					"an identical surviving triple already carries this wire",
+					row.LocalPinPath, row.ExternalPinPath, row.LinkType);
 				continue;
 			}
 
-			if (IsDollarPath(result[existingIndex].LocalPinPath) && !IsDollarPath(row.LocalPinPath))
-			{
-				result[existingIndex] = row;
-			}
-
-			dropped++;
+			result.Add(row);
 		}
 
 		if (dropped > 0)
 		{
-			log?.Debug("Wire dedup: {DroppedCount} rows collapsed", dropped);
+			log?.Warning("Exact-duplicate dedup: {DroppedCount} rows removed", dropped);
 		}
 
 		return result;
-	}
-
-	private static bool IsDollarPath(string path)
-	{
-		return path.EndsWith(DollarSuffix, StringComparison.Ordinal);
-	}
-
-	private static string StripTrailingDollar(string path)
-	{
-		return IsDollarPath(path) ? path.Substring(0, path.Length - 1) : path;
 	}
 
 	private static void AppendLinks(

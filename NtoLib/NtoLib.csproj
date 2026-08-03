@@ -264,8 +264,11 @@
     <Compile Include="OpcTreeManager\TreeOperations\ISubtreeDisconnector.cs"/>
     <Compile Include="OpcTreeManager\TreeOperations\ProjectSubtreeDisconnector.cs"/>
     <Compile Include="OpcTreeManager\TreeOperations\PlanExecutor.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\ConnectCommand.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\ConnectRunner.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\CommandOrdering.cs"/>
+    <Compile Include="OpcTreeManager\TreeOperations\TreeReshaper.cs"/>
     <Compile Include="OpcTreeManager\TreeOperations\TreeMasks.cs"/>
-    <Compile Include="OpcTreeManager\Facade\IOpcTreeManagerService.cs"/>
     <Compile Include="OpcTreeManager\Facade\OpcTreeManagerService.cs"/>
     <Compile Include="OpcTreeManager\Facade\PlanBuilder.cs"/>
     <Compile Include="OpcTreeManager\OpcTreeManagerFB.cs"/>

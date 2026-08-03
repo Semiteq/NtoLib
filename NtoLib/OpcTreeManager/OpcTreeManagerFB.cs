@@ -35,7 +35,7 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 	[NonSerialized] private bool _previousExecuteSnapshot;
 	[NonSerialized] private Logger? _logger;
 	[NonSerialized] private ILogger? _log;
-	[NonSerialized] private IOpcTreeManagerService? _service;
+	[NonSerialized] private OpcTreeManagerService? _service;
 
 	[DisplayName("Целевой проект")]
 	[Category("Настройки операции")]
@@ -70,12 +70,6 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 	protected override void ToRuntime()
 	{
 		base.ToRuntime();
-
-		if (TreeItemHlp?.Project == null)
-		{
-			throw new InvalidOperationException("TreeItemHlp.Project is null.");
-		}
-
 		InitializeRuntime();
 	}
 
@@ -223,10 +217,9 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 			return;
 		}
 
-		// Transfer logger ownership to the deferred executor before posting.
-		// ExecuteDeferred captures 'logger' via DeferredExecutor closures, which dispose it
-		// after deferred execution completes. Setting _logger = null here prevents
-		// CleanupRuntime from double-disposing it.
+		// Transfer ownership of the concrete root Logger to the deferred executor: its timer fires
+		// after ToDesign (post-runtime) and disposes the logger once the plan finishes. Null the
+		// fields so CleanupRuntime cannot double-dispose the same Logger.
 		var logger = _logger;
 		_logger = null;
 		_log = null;

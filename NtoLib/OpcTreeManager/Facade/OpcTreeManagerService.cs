@@ -18,7 +18,7 @@ using Serilog.Core;
 
 namespace NtoLib.OpcTreeManager.Facade;
 
-public sealed class OpcTreeManagerService : IOpcTreeManagerService
+public sealed class OpcTreeManagerService
 {
 	private readonly IProjectHlp _project;
 	private readonly ILogger _logger;
@@ -82,6 +82,15 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 
 		var snapshot = snapshotResult.Value;
 
+		var droppedLinks = snapshotResult.Successes.OfType<DroppedLinksSuccess>().FirstOrDefault()?.Count ?? 0;
+
+		if (droppedLinks > 0)
+		{
+			_logger.Warning(
+				"Snapshot load dropped {DroppedLinkCount} invalid link(s) with blank pin paths from '{Path}'",
+				droppedLinks, treeJsonPath);
+		}
+
 		var currentTopLevelNames = groupResult.Value.Group.Items.Select(i => i.Name).ToList();
 		var planResult = PlanBuilder.Build(opcFbPath, groupName, targetProject, config, snapshot, currentTopLevelNames, _logger);
 
@@ -117,7 +126,7 @@ public sealed class OpcTreeManagerService : IOpcTreeManagerService
 		}
 	}
 
-	public Result<Dictionary<string, NodeSnapshot>> BuildSnapshot(string opcFbPath, string groupName)
+	private Result<Dictionary<string, NodeSnapshot>> BuildSnapshot(string opcFbPath, string groupName)
 	{
 		var groupResult = ResolveGroup(opcFbPath, groupName);
 

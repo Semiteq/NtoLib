@@ -73,6 +73,10 @@ public sealed class OpcScadaItemDto
 		};
 	}
 
+	/// <summary>
+	/// Builds the live <see cref="OpcUaScadaItem"/> tree from this DTO, reusing each item's
+	/// snapshot <c>Id</c> verbatim.
+	/// </summary>
 	public OpcUaScadaItem ToScadaItem()
 	{
 		var scadaItem = BuildWithoutChildren();

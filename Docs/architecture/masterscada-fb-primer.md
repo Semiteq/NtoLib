@@ -148,6 +148,66 @@ is almost always wrong. Pass `DateTime.UtcNow` explicitly. Never pass
 local time — MasterSCADA's archive and synchronisation subsystems
 assume UTC.
 
+### OPC value pins: the PinPout `$`-sibling model
+
+An OPC value pin surfaces into the tree as **two** adjacent `ITreePinHlp`
+objects, not one:
+
+| Object | Side | Carries |
+|--------|------|---------|
+| base pin (`Kp`) | Pout | iconnect — feedback from the device |
+| `$` sibling (`Kp$`) | Pin | directPin — the input link into the device |
+
+These are **two separate connections over two separate wires**, not one
+connection playing two roles.
+
+- **Settings pins** (`Kp`/`Ti`/`Td`/`MaxOutput`/`MinOutput`/`SpeedSP`/
+  `TempOffset`/`PowerOffset`): the base pin and the `$` sibling both go to
+  the **same** external element. Both wires must be captured and restored —
+  dropping either leaves the pin showing as "not connected".
+- **Feedback-only pins** (`Setpoint` → `…TemperatureSP`, `…PowerSP`): the
+  iconnect wire has **no** `$` twin on the same external element. `Setpoint`
+  still carries a `$` directPin to a *third* element
+  (`…Setpoints.Setpoint`) — two feedback-only iconnects plus a separate
+  directPin, each to a different external.
+
+### iconnect vs directPin: two rows in the connection list
+
+For a settings pin, SCADA's "Список связей" dialog shows **two** rows:
+
+| Row | Link class | Mechanism |
+|-----|-----------|-----------|
+| "Обратная связь" (feedback) | iconnect | `IConnect.Connect` (object-based, bidirectional) |
+| "Входные" (input) | directPin | `ConnectByName` (by name) |
+
+- **directPin / directPout** route **by name** (`ConnectByName`) and
+  reconnect reliably on a rebuilt pin — the same link class as `StatusWord`.
+- **iconnect** is a bidirectional, object-oriented link. It reconnects on a
+  live, well-formed pin; on a freshly committed pin (right after a
+  structural commit) the object call throws.
+
+### connect-API routing table (from disassembly, high confidence)
+
+| Managed call | Native | Route | Throws? |
+|---|---|---|---|
+| direct `ConnectByName(name,1,0)` | vtable slot `0x84` | by NAME | no — works |
+| iconnect object `Connect(obj,1,1)` | `IConnectImpl::Connect` `0x46e370` | live RCW pointer | YES on a committed/rebuilt pin |
+| `ConnectByString(name,1,1)` | `0x46f640` → resolves peer by name → `0x46e370` | by NAME | no |
+| `DelayConnection(pout,pin,1,ctIConnect)` | queued, materialized on commit | by NAME | no |
+| `AddConnectionRecord(pout,pin,b)` | `0x5ec940` → `ConnectByName` slot `0x84` | by NAME, **direct only** | no |
+| `AddPasteConnection`+`ApplyPasteConnections` | `0x5f5140` → restore **dialog**, per-record `ConnectByString` | by NAME, interactive/dialog | no |
+
+- `AddConnectionRecord` is **direct only** (never iconnect).
+- `ApplyPasteConnections` is **bound to the "Восстановление внешних связей"
+  dialog** — not usable for silent code-driven restore.
+- There is no silent code path for an iconnect apply other than `Connect` /
+  `ConnectByString` / `DelayConnection`.
+
+The bug narrative this model came out of — why rebuilt settings pins showed
+as disconnected, the DedupByWire capture bug, the read-back blindness trap,
+and the direct-first restore rule — lives in
+[`../known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md`](../known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md).
+
 ---
 
 ## 4. FB Lifecycle

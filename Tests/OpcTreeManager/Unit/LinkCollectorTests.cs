@@ -4,6 +4,10 @@ using MasterSCADALib;
 
 using NtoLib.OpcTreeManager.TreeOperations;
 
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
+
 using Xunit;
 
 namespace Tests.OpcTreeManager.Unit;
@@ -11,20 +15,45 @@ namespace Tests.OpcTreeManager.Unit;
 public sealed class LinkCollectorTests
 {
 	[Fact]
-	public void BuildLinks_IConnectTwin_EmitsSingleRowFromNonDollarPin()
+	public void BuildLinks_IConnectAndDollarDirectPinToSameExternal_KeepsBoth()
 	{
+		// The Kp/Ti/Td pattern seen in the live tree: the base pin holds the iconnect (feedback)
+		// and its $ sibling holds a directPin (input), BOTH to the same external element. These are
+		// two distinct wires, not two halves of one — the directPin input is what reconnects
+		// reliably. Folding them (the old behavior) dropped the input and left the pin unconnectable.
 		var pins = new[]
 		{
-			FakePin.WithIConnect("Root.Setpoint", "Consumer.Value"),
-			FakePin.WithDirectPin("Root.Setpoint$", "Consumer.Value"),
+			FakePin.WithIConnect("Root.Kp", "Plant.Kp"),
+			FakePin.WithDirectPin("Root.Kp$", "Plant.Kp"),
 		};
 
 		var result = LinkCollector.BuildLinks(pins, log: null);
 
+		result.Should().HaveCount(2);
+		result.Should().ContainSingle(x =>
+			x.LocalPinPath == "Root.Kp" && x.ExternalPinPath == "Plant.Kp" && x.LinkType == "iconnect");
+		result.Should().ContainSingle(x =>
+			x.LocalPinPath == "Root.Kp$" && x.ExternalPinPath == "Plant.Kp" && x.LinkType == "directPin");
+	}
+
+	[Fact]
+	public void BuildLinks_ExactDuplicateRows_CollapsedToOne()
+	{
+		// The only rows dedup removes: identical (local, external, linkType) triples produced when
+		// one pin matches more than one enumerated mask and the same wire surfaces twice.
+		var pin = FakePin.FromMaskMap(
+			"Root.Signal",
+			new Dictionary<EConnectionTypeMask, string[]>
+			{
+				[EConnectionTypeMask.ctGenericPin] = new[] { "Producer.Output", "Producer.Output" },
+			});
+
+		var result = LinkCollector.BuildLinks(new[] { pin }, log: null);
+
 		result.Should().HaveCount(1);
-		result[0].LocalPinPath.Should().Be("Root.Setpoint");
-		result[0].ExternalPinPath.Should().Be("Consumer.Value");
-		result[0].LinkType.Should().Be("iconnect");
+		result[0].LocalPinPath.Should().Be("Root.Signal");
+		result[0].ExternalPinPath.Should().Be("Producer.Output");
+		result[0].LinkType.Should().Be("directPin");
 	}
 
 	[Fact]
@@ -78,6 +107,30 @@ public sealed class LinkCollectorTests
 	}
 
 	[Fact]
+	public void BuildLinks_DirectPinAndIConnectOnSamePinToSameExternal_KeepsBoth()
+	{
+		// The Kp/Ti/Td case: one pin carries BOTH an iconnect (feedback) AND a directPin (input)
+		// to the SAME external element. These are two distinct wires on one pin, not a $-twin, so
+		// both must survive. Keying by (local, external) alone dropped the input half of every
+		// iconnect pin, so the snapshot restored an incomplete connection.
+		var pin = FakePin.FromMaskMap(
+			"Root.Kp",
+			new Dictionary<EConnectionTypeMask, string[]>
+			{
+				[EConnectionTypeMask.ctGenericPin] = new[] { "Plant.Kp" },
+				[EConnectionTypeMask.ctIConnect] = new[] { "Plant.Kp" },
+			});
+
+		var result = LinkCollector.BuildLinks(new[] { pin }, log: null);
+
+		result.Should().HaveCount(2);
+		result.Should().ContainSingle(x =>
+			x.LinkType == "directPin" && x.LocalPinPath == "Root.Kp" && x.ExternalPinPath == "Plant.Kp");
+		result.Should().ContainSingle(x =>
+			x.LinkType == "iconnect" && x.LocalPinPath == "Root.Kp" && x.ExternalPinPath == "Plant.Kp");
+	}
+
+	[Fact]
 	public void BuildLinks_DollarOnlyPin_IsKept()
 	{
 		// Command-pin pattern: the wire surfaces only on the $ sibling under
@@ -113,6 +166,122 @@ public sealed class LinkCollectorTests
 			x.LocalPinPath == "Root.Pin" && x.ExternalPinPath == "External.A" && x.LinkType == "iconnect");
 		result.Should().ContainSingle(x =>
 			x.LocalPinPath == "Root.Pin$" && x.ExternalPinPath == "External.B" && x.LinkType == "directPin");
+	}
+
+	[Fact]
+	public void BuildLinks_ExactDuplicateRows_LogsWarningNamingDroppedTriple()
+	{
+		var pin = FakePin.FromMaskMap(
+			"Root.Signal",
+			new Dictionary<EConnectionTypeMask, string[]>
+			{
+				[EConnectionTypeMask.ctGenericPin] = new[] { "Producer.Output", "Producer.Output" },
+			});
+
+		var sink = new CapturingSink();
+		var logger = BuildLogger(sink);
+
+		LinkCollector.BuildLinks(new[] { pin }, logger);
+
+		sink.Warnings.Should().ContainSingle(m =>
+			m.Contains("Root.Signal")
+			&& m.Contains("Producer.Output")
+			&& m.Contains("directPin")
+			&& m.Contains("dropped"));
+	}
+
+	[Fact]
+	public void BuildLinks_IConnectWithMatchingDollarTwin_Silent()
+	{
+		// Settings pin: iconnect (feedback) and directPin (input) both captured to the SAME external.
+		// Both halves present — the check says nothing (no Warning, no Debug).
+		var pins = new[]
+		{
+			FakePin.WithIConnect("Root.Kp", "Plant.Kp"),
+			FakePin.WithDirectPin("Root.Kp$", "Plant.Kp"),
+		};
+
+		var sink = new CapturingSink();
+		var logger = BuildLogger(sink);
+
+		LinkCollector.BuildLinks(pins, logger);
+
+		sink.Warnings.Should().NotContain(m => m.Contains("Capture check"));
+		sink.Debugs.Should().NotContain(m => m.Contains("Feedback-only"));
+	}
+
+	[Fact]
+	public void BuildLinks_IConnectWithNoInputSiblingRow_LogsWarning()
+	{
+		// The only shape a dropped/blind capture takes: an iconnect whose $ input sibling has NO
+		// captured row at all. This is what the old $-twin fold silently dropped, and what read-back
+		// blindness (known-issue 11) produces. It must surface at Warning naming the pin + the sibling.
+		var pins = new[]
+		{
+			FakePin.WithIConnect("Root.Setpoint", "Plant.TemperatureSP"),
+		};
+
+		var sink = new CapturingSink();
+		var logger = BuildLogger(sink);
+
+		LinkCollector.BuildLinks(pins, logger);
+
+		sink.Warnings.Should().ContainSingle(m =>
+			m.Contains("Capture check")
+			&& m.Contains("Root.Setpoint")
+			&& m.Contains("Plant.TemperatureSP")
+			&& m.Contains("no captured link"));
+	}
+
+	[Fact]
+	public void BuildLinks_IConnectWithDollarTwinToDifferentExternal_LogsDebugNotWarning()
+	{
+		// The Setpoint feedback-only case: the $ directPin sibling IS captured, but routes to a
+		// DIFFERENT external (Setpoint$ → …Setpoints.Setpoint) than the iconnect (Setpoint →
+		// …TemperatureSP). The input half is present, so this is the expected PinPout shape — Debug,
+		// NOT a Warning.
+		var pins = new[]
+		{
+			FakePin.WithIConnect("Root.Setpoint", "Plant.TemperatureSP"),
+			FakePin.WithDirectPin("Root.Setpoint$", "Plant.Setpoints.Setpoint"),
+		};
+
+		var sink = new CapturingSink();
+		var logger = BuildLogger(sink);
+
+		LinkCollector.BuildLinks(pins, logger);
+
+		sink.Warnings.Should().NotContain(m => m.Contains("Capture check"));
+		sink.Debugs.Should().ContainSingle(m =>
+			m.Contains("Feedback-only")
+			&& m.Contains("Root.Setpoint")
+			&& m.Contains("Plant.TemperatureSP"));
+	}
+
+	private static ILogger BuildLogger(CapturingSink sink)
+	{
+		return new LoggerConfiguration()
+			.MinimumLevel.Verbose()
+			.WriteTo.Sink(sink)
+			.CreateLogger();
+	}
+
+	private sealed class CapturingSink : ILogEventSink
+	{
+		public List<string> Warnings { get; } = new();
+		public List<string> Debugs { get; } = new();
+
+		public void Emit(LogEvent logEvent)
+		{
+			if (logEvent.Level == LogEventLevel.Warning)
+			{
+				Warnings.Add(logEvent.RenderMessage());
+			}
+			else if (logEvent.Level == LogEventLevel.Debug)
+			{
+				Debugs.Add(logEvent.RenderMessage());
+			}
+		}
 	}
 
 	private static class FakePin
