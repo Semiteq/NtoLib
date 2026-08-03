@@ -11,9 +11,9 @@
     Gated on $(RunILRepack)=true so ordinary `dotnet build` does not internalize
     NuGet types into NtoLib.dll. Internalisation collides with the test build
     because NtoLib carries [InternalsVisibleTo("Tests")] and Tests references the
-    same NuGet packages directly; CS0433 ambiguity follows. Build/Package.ps1
-    invokes a final `dotnet build /p:RunILRepack=true` after the test step to
-    produce the merged release artifact.
+    same NuGet packages directly; CS0433 ambiguity follows. release.yml (and locally
+    Build/Deploy.ps1) invokes a final `dotnet build /p:RunILRepack=true` after the test
+    step to produce the merged release artifact.
   -->
   <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(RunILRepack)' == 'true'">
     <ItemGroup>
@@ -25,11 +25,18 @@
         against stale binaries in $(OutputPath) (older builds, manual copies) that the
         glob would otherwise sweep into the merge.
 
-        The remaining excludes are for assemblies that DO legitimately land in
+        The remaining exclude is for an assembly that DOES legitimately land in
         $(OutputPath) but must not be merged:
-        System.Resources.Extensions (resx loader, breaks if internalised),
-        System.Text.Json + System.Text.Encodings.Web (kept external; the host
-        environment / MasterSCADA runtime is expected to supply them).
+        System.Resources.Extensions (resx loader, breaks if internalised).
+
+        System.Text.Json + System.Text.Encodings.Web are intentionally NOT excluded:
+        they are merged and internalised into NtoLib.dll. A private copy of the
+        built-against version lives inside the assembly, so the merged DLL carries no
+        external strong-name reference to them and does not depend on the host supplying
+        System.Text.Json. Safe because these types are used only internally (OpcTreeManager
+        snapshot read/write) and never cross the COM boundary to the host. ILRepack emits
+        modreq(IsExternalInit) warnings for STJ's init-only record setters during this
+        merge; the merged types load and run, the warnings are benign.
       -->
       <ILRepackInputAssemblies Include="$(OutputPath)NtoLib.dll" />
       <ILRepackInputAssemblies Include="$(OutputPath)*.dll"
@@ -41,9 +48,7 @@
                  $(OutputPath)OpcUaClient.dll;
                  $(OutputPath)Opc.Ua.Core.dll;
                  $(OutputPath)COMDeviceSDK.dll;
-                 $(OutputPath)System.Resources.Extensions.dll;
-                 $(OutputPath)System.Text.Json.dll;
-                 $(OutputPath)System.Text.Encodings.Web.dll" />
+                 $(OutputPath)System.Resources.Extensions.dll" />
       <ILRepackLibraryPath Include="$(OutputPath)" />
       <ILRepackLibraryPath Include="$(MSBuildProjectDirectory)\..\Resources" />
     </ItemGroup>
