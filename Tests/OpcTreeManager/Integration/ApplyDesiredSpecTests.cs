@@ -16,7 +16,7 @@ using Xunit;
 namespace Tests.OpcTreeManager.Integration;
 
 /// <summary>
-/// Seam-based tests for <see cref="PlanExecutor.TestApplyDesiredSpec"/>.
+/// Seam-based tests for <see cref="TreeReshaper.Reshape"/>.
 /// All vendor COM calls are replaced by <see cref="FakeSubtreeDisconnector"/>.
 /// </summary>
 public sealed class ApplyDesiredSpecTests
@@ -76,24 +76,31 @@ public sealed class ApplyDesiredSpecTests
 		return new NodeSpec(name, children);
 	}
 
-	private static (FakeSubtreeDisconnector Disconnector, PlanExecutor Executor) MakeExecutor()
+	private static FakeSubtreeDisconnector MakeDisconnector()
 	{
-		var disconnector = new FakeSubtreeDisconnector();
-		var executor = new PlanExecutor(project: null!, disconnector, Serilog.Core.Logger.None);
-		return (disconnector, executor);
+		return new FakeSubtreeDisconnector();
 	}
 
 	private static void Invoke(
-		PlanExecutor executor,
+		FakeSubtreeDisconnector disconnector,
 		OpcUaScadaItem container,
 		IReadOnlyList<NodeSpec> desired,
 		string containerPath,
 		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
-		out List<PlanExecutor.Construction> constructions,
+		out List<TreeReshaper.Construction> constructions,
 		out int shrinkCount)
 	{
-		executor.TestApplyDesiredSpec(container, desired, containerPath, snapshot,
-			out constructions, out shrinkCount);
+		var result = TreeReshaper.Reshape(
+			container,
+			desired,
+			containerPath,
+			name => snapshot.TryGetValue(name, out var s)
+				? (s.ScadaItem, s.Links)
+				: (null, Array.Empty<LinkEntry>()),
+			disconnector,
+			Serilog.Core.Logger.None);
+		constructions = result.Constructions;
+		shrinkCount = result.ShrinkCount;
 	}
 
 	// ──────────────────────────────────────────────────────────────────────
@@ -115,8 +122,8 @@ public sealed class ApplyDesiredSpecTests
 			["B"] = Snapshot(DtoNode("B")),
 		};
 
-		var (disconnector, executor) = MakeExecutor();
-		Invoke(executor, container, desired, "Root.Group", snapshot,
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
 			out var constructions, out var shrinkCount);
 
 		container.Items.Select(i => i.Name).Should().Equal("A", "B");
@@ -145,8 +152,8 @@ public sealed class ApplyDesiredSpecTests
 			["B"] = Snapshot(DtoNode("B"), bLinks[0]),
 		};
 
-		var (disconnector, executor) = MakeExecutor();
-		Invoke(executor, container, desired, "Root.Group", snapshot,
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
 			out var constructions, out var shrinkCount);
 
 		container.Items.Select(i => i.Name).Should().Equal("A", "B");
@@ -186,8 +193,8 @@ public sealed class ApplyDesiredSpecTests
 			["Valves"] = Snapshot(valvesDto, vpg2Link, vpg1Link),
 		};
 
-		var (disconnector, executor) = MakeExecutor();
-		Invoke(executor, container, desired, "Root.Group", snapshot,
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
 			out var constructions, out var shrinkCount);
 
 		var valvesItem = container.Items.Single(i => i.Name == "Valves");
@@ -226,8 +233,8 @@ public sealed class ApplyDesiredSpecTests
 			["Valves"] = Snapshot(valvesDto),
 		};
 
-		var (disconnector, executor) = MakeExecutor();
-		Invoke(executor, container, desired, "Root.Group", snapshot,
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
 			out var constructions, out var shrinkCount);
 
 		var valvesItem = container.Items.Single(i => i.Name == "Valves");
@@ -265,8 +272,8 @@ public sealed class ApplyDesiredSpecTests
 			["Valves"] = Snapshot(valvesDto),
 		};
 
-		var (disconnector, executor) = MakeExecutor();
-		Invoke(executor, container, desired, "Root.Group", snapshot,
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
 			out var constructions, out var shrinkCount);
 
 		var valvesItem = container.Items.Single(i => i.Name == "Valves");
@@ -302,8 +309,8 @@ public sealed class ApplyDesiredSpecTests
 			["Command"] = Snapshot(commandDto, dollarLink),
 		};
 
-		var (disconnector, executor) = MakeExecutor();
-		Invoke(executor, container, desired, "Root.Group", snapshot,
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
 			out var constructions, out var shrinkCount);
 
 		container.Items.Should().ContainSingle(i => i.Name == "Command");
@@ -330,8 +337,8 @@ public sealed class ApplyDesiredSpecTests
 			["A"] = Snapshot(DtoNode("A")),
 		};
 
-		var (disconnector, executor) = MakeExecutor();
-		Invoke(executor, container, desired, "Root.Group", snapshot,
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
 			out var constructions, out var shrinkCount);
 
 		// A is preserved; B is silently skipped because it is absent from both current and snapshot.

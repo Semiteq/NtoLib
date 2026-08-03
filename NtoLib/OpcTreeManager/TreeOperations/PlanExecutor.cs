@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using FluentResults;
 
@@ -23,14 +22,9 @@ internal sealed class PlanExecutor
 	private readonly ISubtreeDisconnector _disconnector;
 	private readonly ILogger _logger;
 
-	/// <summary>
-	/// <paramref name="project"/> may be <c>null</c> when the instance is used only for
-	/// in-memory <see cref="TestApplyDesiredSpec"/> calls from tests.
-	/// <see cref="Execute"/> requires a non-null project and guards against misuse.
-	/// </summary>
 	public PlanExecutor(IProjectHlp project, ISubtreeDisconnector disconnector, ILogger logger)
 	{
-		_project = project!;
+		_project = project ?? throw new ArgumentNullException(nameof(project));
 		_disconnector = disconnector ?? throw new ArgumentNullException(nameof(disconnector));
 
 		if (logger == null)
@@ -46,20 +40,19 @@ internal sealed class PlanExecutor
 	/// <see cref="RebuildPlan.DesiredTree"/> recursively at every nesting level
 	/// (disconnecting removed subtrees, constructing missing ones pruned to the spec,
 	/// preserving matches), calls <c>SynchWihSysTree</c> and <c>ITreeItemHlp.ApplyChange()</c>
-	/// once at the group level, then reconnects links for all freshly-constructed nodes.
+	/// once at the group level, then connects every link in-pass on this single
+	/// tick — direct links first, iconnect last. Runs once, after the host clears
+	/// <see cref="IProjectHlp.InRuntime"/> (the wait lives in <c>DeferredExecutor</c>).
+	/// Success is judged by the SCADA tree on reload, not in code: an in-code read-back via
+	/// <c>GetConnections</c> is blind after the structural commit (a connected link reads back
+	/// as absent), so the summary reports only what is known — connects issued and how many threw.
+	/// See <c>Docs/known_issues/11</c>.
 	/// </summary>
 	public Result Execute(RebuildPlan plan)
 	{
 		if (plan == null)
 		{
 			throw new ArgumentNullException(nameof(plan));
-		}
-
-		if (_project == null)
-		{
-			throw new InvalidOperationException(
-				"PlanExecutor.Execute requires a non-null IProjectHlp; this instance was constructed for "
-				+ "in-memory test usage only (ApplyDesiredSpec path).");
 		}
 
 		_logger.Information(
@@ -84,19 +77,18 @@ internal sealed class PlanExecutor
 		var (group, groupRelativePath) = groupResult.Value;
 		var groupPath = plan.OpcFbPath + "." + groupRelativePath;
 
-		var context = new RebuildContext();
-
 		// Top-level: each desired child resolves through plan.Snapshot (keyed by
 		// top-level name). Links for each top-level subtree live in the same
 		// snapshot entry's Links list and are inherited by deeper recursive calls.
-		ApplyDesiredSpec(
+		var reshape = TreeReshaper.Reshape(
 			container: group,
 			desired: plan.DesiredTree,
 			containerPath: groupPath,
 			resolveChild: name => plan.Snapshot.TryGetValue(name, out var s)
 				? (s.ScadaItem, s.Links)
 				: (null, Array.Empty<LinkEntry>()),
-			context: context);
+			disconnector: _disconnector,
+			logger: _logger);
 
 		ResetScadaItemsMap(protocol);
 		protocol.SynchWihSysTree();
@@ -107,185 +99,46 @@ internal sealed class PlanExecutor
 			return commitResult;
 		}
 
-		var (expandTotal, expandSuccess, expandFail) = ExecuteExpand(context.Constructions);
+		var (commands, resolveFail) = BuildCommands(reshape.Constructions);
 
-		var linkTotal = context.ShrinkTotal + expandTotal;
-		var linkSuccess = context.ShrinkSuccess + expandSuccess;
-		var linkFail = context.ShrinkFail + expandFail;
+		var orderedCommands = CommandOrdering.OrderCommandsDirectFirst(commands);
 
-		_logger.Information(
-			"Execution complete: shrink={ShrinkCount} expand={ExpandCount}; "
-			+ "links total={LinkTotal} ok={LinkSuccess} fail={LinkFail}",
-			context.ShrinkCount, context.Constructions.Count, linkTotal, linkSuccess, linkFail);
+		var (connectsIssued, connectsThrew) = ConnectRunner.ConnectAll(orderedCommands, _logger);
+
+		LogExecutionComplete(
+			shrinkCount: reshape.ShrinkCount,
+			constructionsCount: reshape.Constructions.Count,
+			shrinkTotal: reshape.ShrinkTotal,
+			shrinkSuccess: reshape.ShrinkSuccess,
+			shrinkFail: reshape.ShrinkFail,
+			resolveFail: resolveFail,
+			connectsIssued: connectsIssued,
+			connectsThrew: connectsThrew);
 
 		return Result.Ok();
 	}
 
 	/// <summary>
-	/// Test entry point: directly invokes <see cref="ApplyDesiredSpec"/> against an in-memory
-	/// container and snapshot, returning the produced constructions and shrink count for assertion.
+	/// Emits the single <c>Execution complete</c> summary. <paramref name="resolveFail"/> counts commands
+	/// that failed to build (pin unresolved or unknown link type) and so were never issued.
 	/// </summary>
-	internal void TestApplyDesiredSpec(
-		OpcUaScadaItem container,
-		IReadOnlyList<NodeSpec> desired,
-		string containerPath,
-		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
-		out List<Construction> constructions,
-		out int shrinkCount)
+	private void LogExecutionComplete(
+		int shrinkCount,
+		int constructionsCount,
+		int shrinkTotal,
+		int shrinkSuccess,
+		int shrinkFail,
+		int resolveFail,
+		int connectsIssued,
+		int connectsThrew)
 	{
-		var context = new RebuildContext();
-		ApplyDesiredSpec(
-			container: container,
-			desired: desired,
-			containerPath: containerPath,
-			resolveChild: name => snapshot.TryGetValue(name, out var s)
-				? (s.ScadaItem, s.Links)
-				: (null, Array.Empty<LinkEntry>()),
-			context: context);
-		constructions = context.Constructions;
-		shrinkCount = context.ShrinkCount;
-	}
-
-	internal readonly record struct Construction(string Path, IReadOnlyList<LinkEntry> Links);
-
-	private sealed class RebuildContext
-	{
-		public List<Construction> Constructions { get; } = new();
-		public int ShrinkCount { get; set; }
-		public int ShrinkTotal { get; set; }
-		public int ShrinkSuccess { get; set; }
-		public int ShrinkFail { get; set; }
-	}
-
-	/// <summary>
-	/// Rebuilds <paramref name="container"/>'s <c>Items</c> to match <paramref name="desired"/>.
-	/// Missing items are constructed from the snapshot DTO returned by
-	/// <paramref name="resolveChild"/> (pruned to match the spec's children),
-	/// existing items whose names match are preserved. Removed items are live-disconnected
-	/// and then dropped. Recurses into each preserved item whose spec has non-null
-	/// <c>Children</c>, carrying the resolved DTO downwards so deep constructions can
-	/// walk the same snapshot subtree.
-	/// </summary>
-	private void ApplyDesiredSpec(
-		OpcUaScadaItem container,
-		IReadOnlyList<NodeSpec> desired,
-		string containerPath,
-		Func<string, (OpcScadaItemDto? Dto, IReadOnlyList<LinkEntry> Links)> resolveChild,
-		RebuildContext context)
-	{
-		var currentByName = container.Items.ToDictionary(i => i.Name, i => i, StringComparer.Ordinal);
-		var desiredNames = new HashSet<string>(desired.Select(s => s.Name), StringComparer.Ordinal);
-
-		foreach (var name in currentByName.Keys.Where(n => !desiredNames.Contains(n)).ToList())
-		{
-			var (total, success, fail) = _disconnector.DisconnectSubtree(containerPath + "." + name);
-			context.ShrinkCount++;
-			context.ShrinkTotal += total;
-			context.ShrinkSuccess += success;
-			context.ShrinkFail += fail;
-		}
-
-		var newItems = new List<OpcUaScadaItem>(desired.Count);
-		var preservedCount = 0;
-		var constructedCount = 0;
-
-		foreach (var spec in desired)
-		{
-			var childPath = containerPath + "." + spec.Name;
-			var (childDto, childLinks) = resolveChild(spec.Name);
-
-			if (currentByName.TryGetValue(spec.Name, out var existing))
-			{
-				newItems.Add(existing);
-				preservedCount++;
-				_logger.Debug("BuildNewItems — preserved '{NodePath}' (links intact, no reconnect)", childPath);
-
-				if (spec.Children != null)
-				{
-					ApplyDesiredSpec(
-						existing,
-						spec.Children,
-						childPath,
-						inner => childDto != null
-							? (childDto.Items.FirstOrDefault(i => i.Name == inner), childLinks)
-							: (null, Array.Empty<LinkEntry>()),
-						context);
-				}
-
-				continue;
-			}
-
-			if (childDto == null)
-			{
-				_logger.Warning(
-					"BuildNewItems — node '{NodePath}' not in current container and not in snapshot; skipped.",
-					childPath);
-				continue;
-			}
-
-			var constructed = childDto.ToScadaItemPruned(spec);
-			newItems.Add(constructed);
-			constructedCount++;
-
-			var keptPaths = EnumerateSubtreeNodePaths(constructed, childPath).ToArray();
-			var filteredLinks = LinkCollector.FilterForSubtree(childLinks, keptPaths);
-			context.Constructions.Add(new Construction(childPath, filteredLinks));
-
-			_logger.Debug(
-				"BuildNewItems — newly constructed '{NodePath}' ({LinkCount} links to reconnect)",
-				childPath, filteredLinks.Count);
-		}
-
 		_logger.Information(
-			"BuildNewItems at '{ContainerPath}' — desired={DesiredCount} preserved={PreservedCount} newlyConstructed={NewlyConstructedCount}",
-			containerPath, desired.Count, preservedCount, constructedCount);
-
-		if (ItemsReferenceEqual(container.Items, newItems))
-		{
-			return;
-		}
-
-		SwapContainerItems(container, newItems);
-	}
-
-	private static bool ItemsReferenceEqual(IList<OpcUaScadaItem> current, List<OpcUaScadaItem> candidate)
-	{
-		if (current.Count != candidate.Count)
-		{
-			return false;
-		}
-
-		for (var i = 0; i < candidate.Count; i++)
-		{
-			if (!ReferenceEquals(current[i], candidate[i]))
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	private static IEnumerable<string> EnumerateSubtreeNodePaths(OpcUaScadaItem item, string itemPath)
-	{
-		yield return itemPath;
-
-		foreach (var child in item.Items)
-		{
-			foreach (var descendantPath in EnumerateSubtreeNodePaths(child, itemPath + "." + child.Name))
-			{
-				yield return descendantPath;
-			}
-		}
-	}
-
-	private static void SwapContainerItems(OpcUaScadaItem container, List<OpcUaScadaItem> newItems)
-	{
-		container.Items.Clear();
-		foreach (var item in newItems)
-		{
-			container.Items.Add(item);
-		}
+			"Execution complete: shrink={ShrinkCount} expand={ExpandCount}; "
+			+ "disconnect links total={ShrinkTotal} ok={ShrinkSuccess} fail={ShrinkFail}; "
+			+ "connects issued={ConnectsIssued} threw={ConnectsThrew} unresolved={ResolveFail} "
+			+ "(success judged by the SCADA tree on reload, not by read-back)",
+			shrinkCount, constructionsCount, shrinkTotal, shrinkSuccess, shrinkFail,
+			connectsIssued, connectsThrew, resolveFail);
 	}
 
 	/// <summary>
@@ -314,112 +167,95 @@ internal sealed class PlanExecutor
 	/// </summary>
 	private static void ResetScadaItemsMap(OpcUaProtocol protocol)
 	{
-		// Self-assignment is intentional — the setter clears the internal scada-items map.
-		// Using a temporary makes the intent explicit to humans and analyzers.
+		// Self-assignment triggers the setter's map-reset side effect (see summary); CA2245 flags it.
 		var root = protocol.ScadaRootNode;
 #pragma warning disable CA2245
 		protocol.ScadaRootNode = root;
 #pragma warning restore CA2245
 	}
 
-	private (int Total, int Success, int Fail) ExecuteExpand(IReadOnlyList<Construction> constructions)
+	/// <summary>
+	/// Builds a <see cref="ConnectCommand"/> for every resolvable link across all constructions. Links
+	/// whose pins do not resolve or whose type is unknown fail in <see cref="TryBuildCommand"/> (already
+	/// logged) and are counted into <c>ResolveFail</c> rather than reaching the connect pass.
+	/// </summary>
+	private (List<ConnectCommand> Commands, int ResolveFail) BuildCommands(IReadOnlyList<TreeReshaper.Construction> constructions)
 	{
-		var total = 0;
-		var success = 0;
-		var fail = 0;
+		var commands = new List<ConnectCommand>();
+		var resolveFail = 0;
 
 		foreach (var construction in constructions)
 		{
-			var (t, s, f) = ConnectLinks(construction.Links);
-			total += t;
-			success += s;
-			fail += f;
+			foreach (var link in construction.Links)
+			{
+				var command = TryBuildCommand(link);
+				if (command == null)
+				{
+					resolveFail++;
+					continue;
+				}
+
+				commands.Add(command.Value);
+			}
 		}
 
-		return (total, success, fail);
+		return (commands, resolveFail);
 	}
 
 	/// <summary>
-	/// Connects the external pins listed in <paramref name="links"/> back to the local OPC
-	/// pins. Each <see cref="LinkEntry"/> carries both <see cref="LinkEntry.LocalPinPath"/>
-	/// and <see cref="LinkEntry.ExternalPinPath"/>.
+	/// Resolves the link's local and external pins and packages the vendor connect call into a
+	/// <see cref="ConnectCommand"/>. Returns <c>null</c> (an already-logged failure) when either pin
+	/// is missing or the link type is unknown.
 	/// </summary>
-	private (int Total, int Success, int Fail) ConnectLinks(IReadOnlyList<LinkEntry> links)
-	{
-		var success = 0;
-		var fail = 0;
-
-		foreach (var link in links)
-		{
-			if (TryConnectLink(link))
-			{
-				success++;
-			}
-			else
-			{
-				fail++;
-			}
-		}
-
-		return (success + fail, success, fail);
-	}
-
-	private bool TryConnectLink(LinkEntry link)
+	private ConnectCommand? TryBuildCommand(LinkEntry link)
 	{
 		var localPin = _project.SafeItem<ITreePinHlp>(link.LocalPinPath);
 		if (localPin == null)
 		{
 			_logger.Error("Connect — local pin not found: {Path}", link.LocalPinPath);
-			return false;
+			return null;
 		}
 
 		var externalPin = _project.SafeItem<ITreePinHlp>(link.ExternalPinPath);
 		if (externalPin == null)
 		{
 			_logger.Error("Connect — external pin not found: {Path}", link.ExternalPinPath);
-			return false;
+			return null;
 		}
 
-		try
-		{
-			// Direct wires use the no-arg Connect overload on purpose — see
-			// Docs/known_issues/05-opc-command-pin-connect-overload.md.
-			if (link.LinkType == LinkTypes.IConnect)
-			{
-				localPin.Connect(externalPin, EConnectionType.ctIConnect);
-			}
-			else if (link.LinkType == LinkTypes.DirectPin)
-			{
-				localPin.Connect(externalPin);
-			}
-			else if (link.LinkType == LinkTypes.DirectPout)
-			{
-				externalPin.Connect(localPin);
-			}
-			else
-			{
-				_logger.Error(
-					"Connect {LocalPin} ↔ {ExternalPin} — unknown link type '{LinkType}'",
-					link.LocalPinPath,
-					link.ExternalPinPath,
-					link.LinkType);
-				return false;
-			}
-
-			_logger.Debug(
-				"Connected {LocalPin} ↔ {ExternalPin}",
-				link.LocalPinPath,
-				link.ExternalPinPath);
-			return true;
-		}
-		catch (Exception ex)
+		var connect = BuildConnectAction(link, localPin, externalPin);
+		if (connect == null)
 		{
 			_logger.Error(
-				"Connect {LocalPin} ↔ {ExternalPin} — {Message}",
+				"Connect {LocalPin} ↔ {ExternalPin} — unknown link type '{LinkType}'",
 				link.LocalPinPath,
 				link.ExternalPinPath,
-				ex.Message);
-			return false;
+				link.LinkType);
+			return null;
 		}
+
+		return new ConnectCommand(
+			LinkType: link.LinkType,
+			LocalPinPath: link.LocalPinPath,
+			ExternalPinPath: link.ExternalPinPath,
+			Connect: connect);
+	}
+
+	/// <summary>
+	/// Builds the forward vendor connect call for the link type, or <c>null</c> for an unknown
+	/// type. Direct wires keep the no-arg <c>Connect</c> overload on purpose — see
+	/// Docs/known_issues/05-opc-command-pin-connect-overload.md. The iconnect wire forwards the
+	/// object with the plain <see cref="EConnectionType"/> (<c>ctIConnect = 2</c>) — never the
+	/// read-back mask value <c>EConnectionTypeMask.ctIConnect = 4</c>; do not conflate the two enums.
+	/// </summary>
+	private static Action? BuildConnectAction(LinkEntry link, ITreePinHlp localPin, ITreePinHlp externalPin)
+	{
+		return link.LinkType switch
+		{
+			LinkTypes.IConnect => () => localPin.Connect(externalPin, EConnectionType.ctIConnect),
+			LinkTypes.DirectPin => () => localPin.Connect(externalPin),
+			LinkTypes.DirectPout => () => externalPin.Connect(localPin),
+			_ => null,
+		};
 	}
 }

@@ -417,23 +417,27 @@ private static void PostDeferredExecution(
 
 ## Test Infrastructure Notes
 
-### Two-Tier Test Structure for OpcTreeManager
+### Three-Tier Test Structure for OpcTreeManager
 
-OpcTreeManager tests are split into two tiers to keep vendor COM dependencies out of unit/
-integration tests:
+OpcTreeManager tests are split into three tiers to keep vendor COM dependencies out of the
+suite — every tier drives COM-free code (pure helpers or seam-faked collaborators):
 
 | Tier | Location | What it tests | Vendor COM required |
 |------|----------|---------------|---------------------|
-| A — Acceptance | `Tests/OpcTreeManager/Acceptance/` | `PlanBuilder` pure helper via fixture files (`config.yaml`, `tree.json`, `expected.json`) | No |
-| B — Integration seam | `Tests/OpcTreeManager/Integration/` | `PlanExecutor.TestApplyDesiredSpec` via `ISubtreeDisconnector` fake | No |
+| Acceptance | `Tests/OpcTreeManager/Acceptance/` | `PlanBuilder` pure helper via fixture files (`config.yaml`, `tree.json`, `expected.json`) | No |
+| Integration seam | `Tests/OpcTreeManager/Integration/` | `TreeReshaper.Reshape` via the `ISubtreeDisconnector` fake | No |
+| Unit | `Tests/OpcTreeManager/Unit/` | COM-free helpers driven directly — `PlanBuilder` validation, `TreeSnapshotLoader`, `LinkCollector`, `ConnectRunner`, `ProbeOrdering`, `OpcScadaItemDto` pruning, config loading | No |
 
-- **Tier A fixtures** live under `Tests/OpcTreeManager/Fixtures/Acceptance/<case-name>/`. Each
-  case has three files: `config.yaml`, `tree.json`, `expected.json`. Add new fixture
+- **Acceptance fixtures** live under `Tests/OpcTreeManager/Fixtures/Acceptance/<case-name>/`.
+  Each case has three files: `config.yaml`, `tree.json`, `expected.json`. Add new fixture
   directories to add new acceptance cases — no code changes required.
-- **Tier B seam** uses `FakeSubtreeDisconnector` (in `Tests/OpcTreeManager/Integration/Fakes/`)
+- **Integration seam** uses `FakeSubtreeDisconnector` (in `Tests/OpcTreeManager/Integration/Fakes/`)
   to replace the COM `IProjectHlp` dependency at the `ISubtreeDisconnector` boundary. The
-  `PlanExecutor` internal test constructor `PlanExecutor(ISubtreeDisconnector, ILogger)`
-  accepts `null` for `_project` and must only be used with `TestApplyDesiredSpec`.
+  reshaping algorithm is the static `TreeReshaper.Reshape(container, desired, containerPath,
+  resolveChild, ISubtreeDisconnector, ILogger)` — no COM types cross the seam, so the tests
+  call it directly (there is no `PlanExecutor` test constructor; that scaffolding was removed
+  when the algorithm moved out of `PlanExecutor`).
+- **Unit** tier drives the remaining COM-free helpers in isolation, one file per helper.
 - Fixture-driven cases that depend on future tasks declare a `skipReason` in `expected.json`.
   These cases use `[SkippableTheory]` + `Skip.If(true, reason)` so they are reported as SKIP
   (not PASS) in CI.

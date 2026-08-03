@@ -83,6 +83,38 @@ public sealed class OpcScadaItemDtoPruneTests
 	}
 
 	[Fact]
+	public void ToScadaItem_PreservesEverySourceIdVerbatim()
+	{
+		var dto = NodeWithId("Valves", 10,
+			NodeWithId("VPG1", 11),
+			NodeWithId("VPG2", 12,
+				NodeWithId("Open", 13)));
+
+		var item = dto.ToScadaItem();
+
+		item.Id.Should().Be(10);
+		item.Items.Single(i => i.Name == "VPG1").Id.Should().Be(11);
+		var vpg2 = item.Items.Single(i => i.Name == "VPG2");
+		vpg2.Id.Should().Be(12);
+		vpg2.Items.Single(i => i.Name == "Open").Id.Should().Be(13);
+	}
+
+	[Fact]
+	public void ToScadaItemPruned_PreservesSourceIdVerbatim_ForKeptNodes()
+	{
+		var dto = NodeWithId("Valves", 10,
+			NodeWithId("VPG1", 11),
+			NodeWithId("VPG2", 12));
+		var spec = new NodeSpec("Valves", new[] { new NodeSpec("VPG1", null) });
+
+		var item = dto.ToScadaItemPruned(spec);
+
+		item.Id.Should().Be(10);
+		item.Items.Should().ContainSingle();
+		item.Items.Single(i => i.Name == "VPG1").Id.Should().Be(11);
+	}
+
+	[Fact]
 	public void ToScadaItemPruned_ChildListedInSpecMissingFromSnapshot_Throws()
 	{
 		var dto = Node("Valves", Node("VPG1"));
@@ -100,9 +132,15 @@ public sealed class OpcScadaItemDtoPruneTests
 
 	private static OpcScadaItemDto Node(string name, params OpcScadaItemDto[] children)
 	{
+		return NodeWithId(name, id: 0, children);
+	}
+
+	private static OpcScadaItemDto NodeWithId(string name, int id, params OpcScadaItemDto[] children)
+	{
 		return new OpcScadaItemDto
 		{
 			Name = name,
+			Id = id,
 			PinValueType = "0",       // default PinType value
 			DeadbandType = "None",
 			Items = children.ToList(),

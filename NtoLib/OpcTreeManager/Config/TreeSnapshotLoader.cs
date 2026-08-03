@@ -23,12 +23,21 @@ public static class TreeSnapshotLoader
 			return Result.Fail($"Tree snapshot file not found: {path}");
 		}
 
-		return Result.Try(
+		var loaded = Result.Try(
 			() => Deserialize(path),
 			ex => new Error($"Error reading tree snapshot file '{path}': {ex.Message}"));
+
+		if (loaded.IsFailed)
+		{
+			return loaded.ToResult(x => x.Snapshot);
+		}
+
+		var (snapshot, droppedLinks) = loaded.Value;
+
+		return Result.Ok(snapshot).WithSuccess(new DroppedLinksSuccess(droppedLinks));
 	}
 
-	private static Dictionary<string, NodeSnapshot> Deserialize(string path)
+	private static (Dictionary<string, NodeSnapshot> Snapshot, int DroppedLinks) Deserialize(string path)
 	{
 		var json = File.ReadAllText(path);
 
@@ -36,17 +45,21 @@ public static class TreeSnapshotLoader
 			?? throw new InvalidOperationException($"Tree snapshot file parsed as null: {path}");
 
 		var result = new Dictionary<string, NodeSnapshot>(raw.Count, StringComparer.Ordinal);
+		var droppedLinks = 0;
 
 		foreach (var entry in raw)
 		{
-			result[entry.Key] = FilterInvalidLinks(entry.Value);
+			result[entry.Key] = FilterInvalidLinks(entry.Value, out var dropped);
+			droppedLinks += dropped;
 		}
 
-		return result;
+		return (result, droppedLinks);
 	}
 
-	private static NodeSnapshot FilterInvalidLinks(NodeSnapshot snapshot)
+	private static NodeSnapshot FilterInvalidLinks(NodeSnapshot snapshot, out int dropped)
 	{
+		dropped = 0;
+
 		if (snapshot.Links == null || snapshot.Links.Count == 0)
 		{
 			return snapshot with { Links = Array.Empty<LinkEntry>() };
@@ -58,6 +71,7 @@ public static class TreeSnapshotLoader
 		{
 			if (string.IsNullOrWhiteSpace(link.LocalPinPath) || string.IsNullOrWhiteSpace(link.ExternalPinPath))
 			{
+				dropped++;
 				continue;
 			}
 
@@ -67,5 +81,16 @@ public static class TreeSnapshotLoader
 		IReadOnlyList<LinkEntry> links = filtered.Count == 0 ? Array.Empty<LinkEntry>() : filtered;
 
 		return snapshot with { Links = links };
+	}
+}
+
+public sealed class DroppedLinksSuccess : Success
+{
+	public int Count { get; }
+
+	public DroppedLinksSuccess(int count)
+		: base($"Dropped {count} invalid link(s) with blank pin paths during snapshot load")
+	{
+		Count = count;
 	}
 }

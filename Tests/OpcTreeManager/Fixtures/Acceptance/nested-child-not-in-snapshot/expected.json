@@ -1,8 +1,5 @@
 {
-  "isOk": true,
-  "isNull": false,
-  "errorSubstring": null,
-  "desiredTreeTopLevelNames": ["Valves"],
-  "snapshotKeys": ["Valves"],
-  "desiredValvesChildNames": ["VPG1", "VPG3"]
+  "isOk": false,
+  "errorSubstring": "TestGroup.Valves.VPG3",
+  "targetProject": "MBE"
 }

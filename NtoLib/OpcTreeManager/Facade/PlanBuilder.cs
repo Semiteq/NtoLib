@@ -80,8 +80,91 @@ internal static class PlanBuilder
 			return Result.Ok<RebuildPlan?>(null);
 		}
 
+		// Resolvability guard (fixes the mid-rebuild abort): the executor's ToScadaItemPruned
+		// throws when a spec node whose DTO resolved against the snapshot lists a child that is
+		// absent from that DTO's Items. The throw fires DURING the rebuild — after removed
+		// subtrees are already live-disconnected — leaving a half-rebuilt tree. Detect it here
+		// so nothing mutates. The whole desired spec is validated (over-approximation:
+		// PlanBuilder cannot know which nodes preserve vs construct). A node absent from the
+		// snapshot is NOT a failure — it is the safe skip-with-warning / preserve path
+		// (TreeReshaper.ApplyDesiredSpec's childDto == null skip branch), so the walk descends
+		// only where the DTO resolved.
+		var unresolvable = FindUnresolvableNode(desiredTree, snapshot, groupName);
+		if (unresolvable != null)
+		{
+			return Result.Fail(
+				$"Desired node '{unresolvable}' for project '{targetProject}' is not present in the "
+				+ "snapshot; refusing to build a plan that would abort mid-rebuild.");
+		}
+
 		logger?.Information("Top-level desired nodes: {Count}", desiredTree.Count);
 
 		return Result.Ok<RebuildPlan?>(new RebuildPlan(opcFbPath, groupName, desiredTree, snapshot));
+	}
+
+	/// <summary>
+	/// Walks the desired spec against the snapshot DTO tree and returns the path of the first node
+	/// that does not resolve, or <c>null</c> when the whole spec resolves. Mirrors the runtime
+	/// resolver in <see cref="TreeOperations.PlanExecutor"/>: the top level resolves through
+	/// <c>snapshot.TryGetValue(name).ScadaItem</c>, nested nodes by descending the parent DTO's
+	/// <c>Items</c> and matching children by ordinal <c>Name</c>.
+	/// </summary>
+	private static string? FindUnresolvableNode(
+		IReadOnlyList<NodeSpec> desired,
+		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
+		string groupName)
+	{
+		foreach (var spec in desired)
+		{
+			var dto = snapshot.TryGetValue(spec.Name, out var s) ? s.ScadaItem : null;
+
+			// A top-level node absent from the snapshot resolves to a null DTO at runtime and is
+			// skipped-with-warning, never pruned — no throw. Only descend where the DTO resolved.
+			if (dto == null || spec.Children == null)
+			{
+				continue;
+			}
+
+			var nested = FindUnresolvableChild(spec.Children, dto, groupName + "." + spec.Name);
+			if (nested != null)
+			{
+				return nested;
+			}
+		}
+
+		return null;
+	}
+
+	/// <summary>
+	/// Nested half of <see cref="FindUnresolvableNode"/>: resolves each child spec by ordinal
+	/// <c>Name</c> against <paramref name="parentDto"/>'s <c>Items</c>, mirroring the executor's
+	/// <c>childDto.Items.FirstOrDefault(i => i.Name == inner)</c>.
+	/// </summary>
+	private static string? FindUnresolvableChild(
+		IReadOnlyList<NodeSpec> children,
+		OpcScadaItemDto parentDto,
+		string parentPath)
+	{
+		foreach (var spec in children)
+		{
+			var childDto = parentDto.Items.FirstOrDefault(i => i.Name == spec.Name);
+			var path = parentPath + "." + spec.Name;
+
+			if (childDto == null)
+			{
+				return path;
+			}
+
+			if (spec.Children != null)
+			{
+				var deeper = FindUnresolvableChild(spec.Children, childDto, path);
+				if (deeper != null)
+				{
+					return deeper;
+				}
+			}
+		}
+
+		return null;
 	}
 }
