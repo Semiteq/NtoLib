@@ -5,12 +5,12 @@ namespace NtoLib.Devices.Valves
 {
     partial class ValveControl
     {
-        /// <summary> 
+        /// <summary>
         /// Обязательная переменная конструктора.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
+        /// <summary>
         /// Освободить все используемые ресурсы.
         /// </summary>
         /// <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
@@ -25,8 +25,8 @@ namespace NtoLib.Devices.Valves
 
         #region Код, автоматически созданный конструктором компонентов
 
-        /// <summary> 
-        /// Требуемый метод для поддержки конструктора — не изменяйте 
+        /// <summary>
+        /// Требуемый метод для поддержки конструктора — не изменяйте
         /// содержимое этого метода с помощью редактора кода.
         /// </summary>
         private void InitializeComponent()
@@ -39,9 +39,9 @@ namespace NtoLib.Devices.Valves
             ((System.ComponentModel.ISupportInitialize)(this.spriteBox)).BeginInit();
             this.buttonTable.SuspendLayout();
             this.SuspendLayout();
-            // 
+            //
             // spriteBox
-            // 
+            //
             this.spriteBox.Location = new System.Drawing.Point(3, 3);
             this.spriteBox.Name = "spriteBox";
             this.spriteBox.Size = new System.Drawing.Size(106, 103);
@@ -50,9 +50,9 @@ namespace NtoLib.Devices.Valves
             this.spriteBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HandleMouseDown);
             this.spriteBox.MouseLeave += new System.EventHandler(this.StopHoldTimer);
             this.spriteBox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.HandleMouseUp);
-            // 
+            //
             // buttonTable
-            // 
+            //
             this.buttonTable.ColumnCount = 3;
             this.buttonTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
@@ -69,11 +69,11 @@ namespace NtoLib.Devices.Valves
             this.buttonTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.buttonTable.Size = new System.Drawing.Size(103, 103);
             this.buttonTable.TabIndex = 1;
-            // 
+            //
             // buttonOpenSmoothly
-            // 
-            this.buttonOpenSmoothly.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.buttonOpenSmoothly.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOpenSmoothly.BackColor = System.Drawing.Color.AntiqueWhite;
             this.buttonOpenSmoothly.ForeColor = System.Drawing.Color.RoyalBlue;
@@ -85,11 +85,11 @@ namespace NtoLib.Devices.Valves
             this.buttonOpenSmoothly.TabIndex = 2;
             this.buttonOpenSmoothly.UseVisualStyleBackColor = false;
             this.buttonOpenSmoothly.Click += new System.EventHandler(this.HandleOpenSmoothlyClick);
-            // 
+            //
             // buttonClose
-            // 
-            this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonClose.BackColor = System.Drawing.Color.AntiqueWhite;
             this.buttonClose.ForeColor = System.Drawing.Color.Red;
@@ -101,11 +101,11 @@ namespace NtoLib.Devices.Valves
             this.buttonClose.TabIndex = 2;
             this.buttonClose.UseVisualStyleBackColor = false;
             this.buttonClose.Click += new System.EventHandler(this.HandleCloseClick);
-            // 
+            //
             // buttonOpen
-            // 
-            this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOpen.BackColor = System.Drawing.Color.AntiqueWhite;
             this.buttonOpen.ForeColor = System.Drawing.Color.Green;
@@ -117,12 +117,12 @@ namespace NtoLib.Devices.Valves
             this.buttonOpen.TabIndex = 2;
             this.buttonOpen.UseVisualStyleBackColor = false;
             this.buttonOpen.Click += new System.EventHandler(this.HandleOpenClick);
-            // 
+            //
             // ValveControl
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.buttonTable);
             this.Controls.Add(this.spriteBox);
             this.DoubleBuffered = false;
