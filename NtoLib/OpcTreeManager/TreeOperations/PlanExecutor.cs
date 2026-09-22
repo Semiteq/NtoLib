@@ -57,7 +57,9 @@ internal sealed class PlanExecutor
 			throw new ArgumentNullException(nameof(plan));
 		}
 
-		var protocolResult = OpcProtocolAccessor.GetProtocol(_project, plan.OpcFbPath);
+		var protocolResult = OpcProtocolAccessor.GetProtocol(
+			plan.OpcFbPath,
+			path => _project.SafeItem<ITreeItemHlp>(path));
 
 		if (protocolResult.IsFailed)
 		{

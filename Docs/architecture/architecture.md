@@ -440,7 +440,7 @@ suite — every tier drives COM-free code (pure helpers or seam-faked collaborat
 |------|----------|---------------|---------------------|
 | Acceptance | `Tests/OpcTreeManager/Acceptance/` | `PlanBuilder` pure helper via fixture files (`config.yaml`, `tree.json`, `expected.json`) | No |
 | Integration seam | `Tests/OpcTreeManager/Integration/` | `TreeReshaper.Reshape` via the `ISubtreeDisconnector` fake | No |
-| Unit | `Tests/OpcTreeManager/Unit/` | COM-free helpers driven directly — `PlanBuilder` validation, `TreeSnapshotLoader`, `LinkCollector`, `ConnectRunner`, `ProbeOrdering`, `OpcScadaItemDto` pruning, config loading | No |
+| Unit | `Tests/OpcTreeManager/Unit/` | COM-free helpers driven directly — `PlanBuilder` validation, `TreeSnapshotLoader`, `LinkCollector`, `ConnectRunner`, `ProbeOrdering`, `OpcProtocolAccessor`, `OpcScadaItemDto` pruning, config loading | No |
 
 - **Acceptance fixtures** live under `Tests/OpcTreeManager/Fixtures/Acceptance/<case-name>/`.
   Each case has three files: `config.yaml`, `tree.json`, `expected.json`. Add new fixture
@@ -455,3 +455,21 @@ suite — every tier drives COM-free code (pure helpers or seam-faked collaborat
 - Fixture-driven cases that depend on future tasks declare a `skipReason` in `expected.json`.
   These cases use `[SkippableTheory]` + `Skip.If(true, reason)` so they are reported as SKIP
   (not PASS) in CI.
+
+### Faking vendor `MasterSCADA.Hlp` wrappers
+
+`MasterSCADA.Hlp.*Hlp` types wrap a COM item behind a .NET class. Tests in any module
+instantiate them, they do not mock them.
+
+- The wrappers are non-sealed public classes whose constructor takes the wrapped COM item and
+  tolerates `null`, so a test builds one directly: `new ITreePinHlp(null!)` in
+  `Tests/OpcTreeManager/Unit/BuildCommandsTests.cs`.
+- A hand-built double beats Moq because almost nothing on these wrappers is virtual, so a mock
+  intercepts nothing. Moq can proxy the class itself — it is non-sealed and
+  `ITreePinHlp(ITreePin)` is public — but every non-virtual member still runs the vendor body
+  against the null COM item.
+- To replace one value, subclass the wrapper and override a member that is virtual, as the
+  `ITreeItemHlp` double in `Tests/OpcTreeManager/Unit/OpcProtocolAccessorTests.cs` does with
+  `ITreeItemHlp.FBObject` (a non-sealed `public override object`). Check for the keyword first:
+  `ITreeItemHlp` declares 76 public and protected members and only 10 carry `virtual` or
+  `override` — `TreeItem`, `EnumAllChilds` and `InsertNewChildObject` do not.

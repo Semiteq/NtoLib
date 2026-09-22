@@ -17,24 +17,18 @@ internal static class OpcProtocolAccessor
 	private const int MaxDescribeChildren = 20;
 	private const int MaxDescribeLines = 200;
 
-	internal static Result<OpcUaProtocol> GetProtocol(IProjectHlp project, string opcFbPath)
+	/// <summary>Resolves the configured path exactly: a path below the OPC UA FB node is refused.</summary>
+	internal static Result<OpcUaProtocol> GetProtocol(string opcFbPath, Func<string, ITreeItemHlp?> resolveItem)
 	{
-		var searchPath = opcFbPath;
+		var treeItem = resolveItem(opcFbPath);
 
-		while (!string.IsNullOrEmpty(searchPath))
+		if (treeItem?.FBObject is not OpcUaClientHostObject hostObject)
 		{
-			var treeItem = project.SafeItem<ITreeItemHlp>(searchPath);
-
-			if (treeItem is ITreeObjectHlp treeObject && treeObject.FBObject is OpcUaClientHostObject hostObject)
-			{
-				return ResolveProtocol(hostObject, searchPath);
-			}
-
-			var lastDot = searchPath.LastIndexOf('.');
-			searchPath = lastDot >= 0 ? searchPath[..lastDot] : string.Empty;
+			return Result.Fail(
+				$"No OPC UA FB node at path '{opcFbPath}'. OpcFbPath must name the OPC UA FB node itself.");
 		}
 
-		return Result.Fail($"No OPC UA FB node found at path '{opcFbPath}' or any of its ancestors.");
+		return ResolveProtocol(hostObject, opcFbPath);
 	}
 
 	/// <summary>Finds the group by node type, not by contents. See Docs/known_issues/15-derived-properties-as-identity.md.</summary>
@@ -157,19 +151,19 @@ internal static class OpcProtocolAccessor
 		}
 	}
 
-	private static Result<OpcUaProtocol> ResolveProtocol(OpcUaClientHostObject hostObject, string resolvedPath)
+	private static Result<OpcUaProtocol> ResolveProtocol(OpcUaClientHostObject hostObject, string opcFbPath)
 	{
 		var instance = hostObject.Instance;
 
 		if (instance == null)
 		{
-			return Result.Fail($"OpcUaClientHostObject.Instance is null for node at path '{resolvedPath}'.");
+			return Result.Fail($"OpcUaClientHostObject.Instance is null for node at path '{opcFbPath}'.");
 		}
 
 		if (instance is not OpcUaClientInstance clientInstance)
 		{
 			return Result.Fail(
-				$"Instance at path '{resolvedPath}' is of type '{instance.GetType().FullName}', expected OpcUaClientInstance.");
+				$"Instance at path '{opcFbPath}' is of type '{instance.GetType().FullName}', expected OpcUaClientInstance.");
 		}
 
 		var protocolInterface = clientInstance.OpcUaProtocol;
@@ -177,7 +171,7 @@ internal static class OpcProtocolAccessor
 		if (protocolInterface is not OpcUaProtocol protocol)
 		{
 			return Result.Fail(
-				$"OpcUaProtocol at path '{resolvedPath}' is of type '{protocolInterface?.GetType().FullName ?? "null"}', expected OpcUaProtocol.");
+				$"OpcUaProtocol at path '{opcFbPath}' is of type '{protocolInterface?.GetType().FullName ?? "null"}', expected OpcUaProtocol.");
 		}
 
 		return Result.Ok(protocol);

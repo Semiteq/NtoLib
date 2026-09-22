@@ -157,7 +157,7 @@ public sealed class OpcTreeManagerService
 			{
 				_logger.Error(
 					"Node '{NodeName}' captured with no links: '{NodePath}' did not resolve in the "
-					+ "project; check OpcFbPath",
+					+ "project; the group holds a SCADA item with no item in the project tree",
 					item.Name, fullPath);
 			}
 
@@ -294,7 +294,9 @@ public sealed class OpcTreeManagerService
 	private Result<(OpcUaScadaItem Group, string RelativePath)> ResolveGroup(
 		string opcFbPath, string groupName)
 	{
-		var protocolResult = OpcProtocolAccessor.GetProtocol(_project, opcFbPath);
+		var protocolResult = OpcProtocolAccessor.GetProtocol(
+			opcFbPath,
+			path => _project.SafeItem<ITreeItemHlp>(path));
 
 		return protocolResult.IsFailed
 			? Result.Fail(protocolResult.Errors)
