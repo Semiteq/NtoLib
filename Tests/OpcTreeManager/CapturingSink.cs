@@ -1,4 +1,5 @@
-﻿using Serilog.Core;
+﻿using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 
 namespace Tests.OpcTreeManager;
@@ -7,17 +8,23 @@ internal sealed class CapturingSink : ILogEventSink
 {
 	public List<LogEvent> Events { get; } = new();
 
-	public IEnumerable<string> Warnings => MessagesAt(LogEventLevel.Warning);
-
-	public IEnumerable<string> Debugs => MessagesAt(LogEventLevel.Debug);
-
 	public void Emit(LogEvent logEvent)
 	{
 		Events.Add(logEvent);
 	}
 
-	private IEnumerable<string> MessagesAt(LogEventLevel level)
+	/// <summary>A logger that captures every level into this sink.</summary>
+	public Logger ToLogger()
 	{
-		return Events.Where(e => e.Level == level).Select(e => e.RenderMessage());
+		return new LoggerConfiguration()
+			.MinimumLevel.Verbose()
+			.WriteTo.Sink(this)
+			.CreateLogger();
+	}
+
+	/// <summary>Renders one structured property, the assertion target that survives template edits.</summary>
+	public static string Property(LogEvent logEvent, string name)
+	{
+		return ((ScalarValue)logEvent.Properties[name]).Value?.ToString() ?? string.Empty;
 	}
 }

@@ -1,10 +1,12 @@
-﻿using FluentAssertions;
+﻿using System;
+
+using FluentAssertions;
 
 using MasterSCADALib;
 
 using NtoLib.OpcTreeManager.TreeOperations;
 
-using Serilog;
+using Serilog.Events;
 
 using Xunit;
 
@@ -35,7 +37,7 @@ public sealed class LinkCollectorTests
 	}
 
 	[Fact]
-	public void BuildLinks_ExactDuplicateRows_CollapsedToOne()
+	public void BuildLinks_ExactDuplicateRows_CollapsedToOneWithNoWarning()
 	{
 		// The only rows dedup removes: identical (local, external, linkType) triples produced when
 		// one pin matches more than one enumerated mask and the same wire surfaces twice.
@@ -46,12 +48,15 @@ public sealed class LinkCollectorTests
 				[EConnectionTypeMask.ctGenericPin] = new[] { "Producer.Output", "Producer.Output" },
 			});
 
-		var result = LinkCollector.BuildLinks(new[] { pin }, log: null);
+		var sink = new CapturingSink();
+
+		var result = LinkCollector.BuildLinks(new[] { pin }, sink.ToLogger());
 
 		result.Should().HaveCount(1);
 		result[0].LocalPinPath.Should().Be("Root.Signal");
 		result[0].ExternalPinPath.Should().Be("Producer.Output");
 		result[0].LinkType.Should().Be("directPin");
+		sink.Events.Should().NotContain(e => e.Level == LogEventLevel.Warning);
 	}
 
 	[Fact]
@@ -167,25 +172,26 @@ public sealed class LinkCollectorTests
 	}
 
 	[Fact]
-	public void BuildLinks_ExactDuplicateRows_LogsWarningNamingDroppedTriple()
+	public void CollectLinks_LogsThePerNodeTallyAtInformation()
 	{
-		var pin = FakePin.FromMaskMap(
-			"Root.Signal",
-			new Dictionary<EConnectionTypeMask, string[]>
-			{
-				[EConnectionTypeMask.ctGenericPin] = new[] { "Producer.Output", "Producer.Output" },
-			});
+		var pins = new[]
+		{
+			FakePin.WithIConnect("Root.CBr4.Kp", "Plant.Kp"),
+			FakePin.WithDirectPin("Root.CBr4.Kp$", "Plant.Kp"),
+		};
 
 		var sink = new CapturingSink();
-		var logger = BuildLogger(sink);
 
-		LinkCollector.BuildLinks(new[] { pin }, logger);
+		var result = LinkCollector.CollectLinks("Root.CBr4", pins, sink.ToLogger());
 
-		sink.Warnings.Should().ContainSingle(m =>
-			m.Contains("Root.Signal")
-			&& m.Contains("Producer.Output")
-			&& m.Contains("directPin")
-			&& m.Contains("dropped"));
+		result.Should().HaveCount(2);
+
+		var tally = sink.Events.Single(e =>
+			e.MessageTemplate.Text == "Captured '{NodePath}': {LinkCount} links");
+
+		tally.Level.Should().Be(LogEventLevel.Information);
+		tally.Properties["NodePath"].ToString().Trim('"').Should().Be("Root.CBr4");
+		tally.Properties["LinkCount"].ToString().Should().Be("2");
 	}
 
 	[Fact]
@@ -200,12 +206,12 @@ public sealed class LinkCollectorTests
 		};
 
 		var sink = new CapturingSink();
-		var logger = BuildLogger(sink);
+		var logger = sink.ToLogger();
 
 		LinkCollector.BuildLinks(pins, logger);
 
-		sink.Warnings.Should().NotContain(m => m.Contains("Capture check"));
-		sink.Debugs.Should().NotContain(m => m.Contains("Feedback-only"));
+		sink.Events.Should().NotContain(e =>
+			e.MessageTemplate.Text.StartsWith("Iconnect ", StringComparison.Ordinal));
 	}
 
 	[Fact]
@@ -220,24 +226,25 @@ public sealed class LinkCollectorTests
 		};
 
 		var sink = new CapturingSink();
-		var logger = BuildLogger(sink);
+		var logger = sink.ToLogger();
 
 		LinkCollector.BuildLinks(pins, logger);
 
-		sink.Warnings.Should().ContainSingle(m =>
-			m.Contains("Capture check")
-			&& m.Contains("Root.Setpoint")
-			&& m.Contains("Plant.TemperatureSP")
-			&& m.Contains("no captured link"));
+		var warning = sink.Events.Single(e => e.Level == LogEventLevel.Warning);
+		warning.MessageTemplate.Text.Should().Be(
+			"Iconnect {LocalPin} <-> {ExternalPin} captured without an input link on '{Sibling}'");
+		CapturingSink.Property(warning, "LocalPin").Should().Be("Root.Setpoint");
+		CapturingSink.Property(warning, "ExternalPin").Should().Be("Plant.TemperatureSP");
+		CapturingSink.Property(warning, "Sibling").Should().Be("Root.Setpoint$");
 	}
 
 	[Fact]
 	public void BuildLinks_IConnectWithDollarTwinToDifferentExternal_LogsDebugNotWarning()
 	{
 		// The Setpoint feedback-only case: the $ directPin sibling IS captured, but routes to a
-		// DIFFERENT external (Setpoint$ → …Setpoints.Setpoint) than the iconnect (Setpoint →
-		// …TemperatureSP). The input half is present, so this is the expected PinPout shape — Debug,
-		// NOT a Warning.
+		// DIFFERENT external (Setpoint$ to Setpoints.Setpoint) than the iconnect (Setpoint to
+		// TemperatureSP). The input half is present; known-issue 11 reads this shape as the fold
+		// signature.
 		var pins = new[]
 		{
 			FakePin.WithIConnect("Root.Setpoint", "Plant.TemperatureSP"),
@@ -245,23 +252,21 @@ public sealed class LinkCollectorTests
 		};
 
 		var sink = new CapturingSink();
-		var logger = BuildLogger(sink);
+		var logger = sink.ToLogger();
 
 		LinkCollector.BuildLinks(pins, logger);
 
-		sink.Warnings.Should().NotContain(m => m.Contains("Capture check"));
-		sink.Debugs.Should().ContainSingle(m =>
-			m.Contains("Feedback-only")
-			&& m.Contains("Root.Setpoint")
-			&& m.Contains("Plant.TemperatureSP"));
-	}
+		sink.Events.Should().NotContain(e => e.Level == LogEventLevel.Warning);
 
-	private static ILogger BuildLogger(CapturingSink sink)
-	{
-		return new LoggerConfiguration()
-			.MinimumLevel.Verbose()
-			.WriteTo.Sink(sink)
-			.CreateLogger();
+		var debug = sink.Events.Single(e =>
+			e.MessageTemplate.Text.StartsWith("Iconnect ", StringComparison.Ordinal));
+		debug.Level.Should().Be(LogEventLevel.Debug);
+		debug.MessageTemplate.Text.Should().Be(
+			"Iconnect {LocalPin} <-> {ExternalPin}: input sibling '{Sibling}' captured to '{SiblingExternal}'");
+		CapturingSink.Property(debug, "LocalPin").Should().Be("Root.Setpoint");
+		CapturingSink.Property(debug, "ExternalPin").Should().Be("Plant.TemperatureSP");
+		CapturingSink.Property(debug, "Sibling").Should().Be("Root.Setpoint$");
+		CapturingSink.Property(debug, "SiblingExternal").Should().Be("Plant.Setpoints.Setpoint");
 	}
 
 	private static class FakePin

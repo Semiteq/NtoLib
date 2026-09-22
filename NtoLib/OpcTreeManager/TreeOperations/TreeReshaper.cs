@@ -7,6 +7,7 @@ using NtoLib.OpcTreeManager.Entities;
 using OpcUaClient.Client.Common.Data;
 
 using Serilog;
+using Serilog.Events;
 
 namespace NtoLib.OpcTreeManager.TreeOperations;
 
@@ -22,7 +23,10 @@ internal static class TreeReshaper
 	/// <summary>
 	/// Rebuilds <paramref name="container"/>'s <c>Items</c> to match <paramref name="desired"/> at every
 	/// nesting level, disconnecting removed subtrees and constructing missing ones pruned to the spec.
-	/// Returns the constructions to reconnect plus the disconnect (shrink) tally.
+	/// Returns the constructions to reconnect plus the removal tally.
+	/// <paramref name="onTreeMutationStarting"/> is raised at each first-write point - the first
+	/// <c>Disconnect</c> of a subtree and every container swap - and never by the reads that precede
+	/// them; the caller makes it once-only.
 	/// </summary>
 	public static ReshapeResult Reshape(
 		OpcUaScadaItem container,
@@ -30,10 +34,22 @@ internal static class TreeReshaper
 		string containerPath,
 		Func<string, (OpcScadaItemDto? Dto, IReadOnlyList<LinkEntry> Links)> resolveChild,
 		ISubtreeDisconnector disconnector,
+		Action onTreeMutationStarting,
 		ILogger logger)
 	{
 		var result = new ReshapeResult();
-		ApplyDesiredSpec(container, desired, containerPath, resolveChild, result, disconnector, logger);
+
+		ApplyDesiredSpec(
+			container,
+			desired,
+			containerPath,
+			resolveChild,
+			result,
+			disconnector,
+			onTreeMutationStarting,
+			logger,
+			topLevel: true);
+
 		return result;
 	}
 
@@ -55,18 +71,34 @@ internal static class TreeReshaper
 		Func<string, (OpcScadaItemDto? Dto, IReadOnlyList<LinkEntry> Links)> resolveChild,
 		ReshapeResult result,
 		ISubtreeDisconnector disconnector,
-		ILogger logger)
+		Action onTreeMutationStarting,
+		ILogger logger,
+		bool topLevel)
 	{
 		var currentByName = container.Items.ToDictionary(i => i.Name, i => i, StringComparer.Ordinal);
 		var desiredNames = new HashSet<string>(desired.Select(s => s.Name), StringComparer.Ordinal);
 
+		// Counted per invocation, not off result: ReshapeResult accumulates across the recursive walk,
+		// so its fields hold a running total and cannot feed a per-container line.
+		var removedCount = 0;
+		var skippedCount = 0;
+
 		foreach (var name in currentByName.Keys.Where(n => !desiredNames.Contains(n)).ToList())
 		{
-			var (total, success, fail) = disconnector.DisconnectSubtree(containerPath + "." + name);
-			result.ShrinkCount++;
-			result.ShrinkTotal += total;
-			result.ShrinkSuccess += success;
-			result.ShrinkFail += fail;
+			var removedPath = containerPath + "." + name;
+			var (issued, threw, nodesMissing) = disconnector.DisconnectSubtree(removedPath, onTreeMutationStarting);
+			removedCount++;
+			result.RemovedCount++;
+			result.DisconnectsIssued += issued;
+			result.DisconnectsThrew += threw;
+			result.NodesMissing += nodesMissing;
+
+			if (nodesMissing == 0)
+			{
+				logger.Information(
+					"Removed '{NodePath}': {IssuedCount} disconnects issued, {ThrewCount} threw",
+					removedPath, issued, threw);
+			}
 		}
 
 		var newItems = new List<OpcUaScadaItem>(desired.Count);
@@ -83,7 +115,7 @@ internal static class TreeReshaper
 				newItems.Add(existing);
 				preservedCount++;
 
-				logger.Debug("BuildNewItems — preserved '{NodePath}' (links intact, no reconnect)", childPath);
+				logger.Debug("Preserved '{NodePath}'", childPath);
 
 				if (spec.Children != null)
 				{
@@ -96,7 +128,9 @@ internal static class TreeReshaper
 							: (null, Array.Empty<LinkEntry>()),
 						result,
 						disconnector,
-						logger);
+						onTreeMutationStarting,
+						logger,
+						topLevel: false);
 				}
 
 				continue;
@@ -104,8 +138,14 @@ internal static class TreeReshaper
 
 			if (childDto == null)
 			{
-				logger.Warning(
-					"BuildNewItems — node '{NodePath}' not in current container and not in snapshot; skipped.",
+				skippedCount++;
+				result.NodesNotRestored++;
+
+				// Only a top-level name is checked against the snapshot when the plan is built, so
+				// only there does an earlier Error already own this node.
+				logger.Write(
+					topLevel ? LogEventLevel.Debug : LogEventLevel.Error,
+					"Not restored '{NodePath}': not in the container, not in the snapshot",
 					childPath);
 				continue;
 			}
@@ -118,21 +158,32 @@ internal static class TreeReshaper
 			var filteredLinks = LinkCollector.FilterForSubtree(childLinks, keptPaths);
 			result.Constructions.Add(new Construction(childPath, filteredLinks));
 
-			logger.Debug(
-				"BuildNewItems — newly constructed '{NodePath}' ({LinkCount} links to reconnect)",
+			if (filteredLinks.Count == 0)
+			{
+				logger.Error(
+					"Constructed '{NodePath}': no links to connect; the snapshot holds none under the "
+					+ "kept nodes, so the node comes back unwired",
+					childPath);
+				continue;
+			}
+
+			logger.Information(
+				"Constructed '{NodePath}': {LinkCount} links to connect",
 				childPath, filteredLinks.Count);
 		}
-
-		logger.Information(
-			"BuildNewItems at '{ContainerPath}' — desired={DesiredCount} preserved={PreservedCount} newlyConstructed={NewlyConstructedCount}",
-			containerPath, desired.Count, preservedCount, constructedCount);
 
 		if (ItemsReferenceEqual(container.Items, newItems))
 		{
 			return;
 		}
 
+		onTreeMutationStarting();
 		SwapContainerItems(container, newItems);
+
+		logger.Information(
+			"Reshaped '{ContainerPath}': removed={RemovedCount} constructed={ConstructedCount} "
+			+ "preserved={PreservedCount} skipped={SkippedCount}",
+			containerPath, removedCount, constructedCount, preservedCount, skippedCount);
 	}
 
 	private static bool ItemsReferenceEqual(IList<OpcUaScadaItem> current, List<OpcUaScadaItem> candidate)
@@ -178,14 +229,18 @@ internal static class TreeReshaper
 
 /// <summary>
 /// Mutable accumulator for a <see cref="TreeReshaper.Reshape"/> pass, returned as its result: the
-/// constructions to reconnect plus the disconnect (shrink) tally. The four shrink numbers are each
-/// consumed by the execution summary — do not reduce them to one count.
+/// constructions to reconnect plus the removal tally. A node absent from the project counts into
+/// <see cref="NodesMissing"/>, never into <see cref="DisconnectsThrew"/>.
 /// </summary>
 internal sealed class ReshapeResult
 {
+	public int RemovedCount { get; set; }
+	public int DisconnectsIssued { get; set; }
+	public int DisconnectsThrew { get; set; }
+	public int NodesMissing { get; set; }
+
 	public List<TreeReshaper.Construction> Constructions { get; } = new();
-	public int ShrinkCount { get; set; }
-	public int ShrinkTotal { get; set; }
-	public int ShrinkSuccess { get; set; }
-	public int ShrinkFail { get; set; }
+
+	/// <summary>Desired nodes the walk could not construct, at any depth.</summary>
+	public int NodesNotRestored { get; set; }
 }

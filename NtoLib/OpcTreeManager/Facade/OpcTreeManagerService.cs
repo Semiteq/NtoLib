@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -15,6 +16,7 @@ using OpcUaClient.Client.Common.Data;
 
 using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 
 namespace NtoLib.OpcTreeManager.Facade;
 
@@ -33,7 +35,7 @@ public sealed class OpcTreeManagerService
 			throw new ArgumentNullException(nameof(logger));
 		}
 
-		_logger = logger.ForContext<OpcTreeManagerService>();
+		_logger = logger;
 		var disconnector = new ProjectSubtreeDisconnector(project, logger);
 		_planExecutor = new PlanExecutor(project, disconnector, logger);
 	}
@@ -59,10 +61,6 @@ public sealed class OpcTreeManagerService
 
 		var config = configResult.Value;
 
-		_logger.Information(
-			"Tree scan begin; OpcFbPath={OpcFbPath} GroupName={GroupName} TargetProject={TargetProject}",
-			opcFbPath, groupName, targetProject);
-
 		var groupResult = ResolveGroup(opcFbPath, groupName);
 
 		if (groupResult.IsFailed)
@@ -71,17 +69,17 @@ public sealed class OpcTreeManagerService
 		}
 
 		_logger.Information(
-			"Group '{GroupName}' resolved at '{GroupRelativePath}'",
+			"Group '{GroupName}' resolved at '{GroupRelativePath}' for Execute",
 			groupName, groupResult.Value.RelativePath);
 
 		var snapshotResult = TreeSnapshotLoader.Load(treeJsonPath);
 
 		if (snapshotResult.IsFailed)
 		{
-			var reason = File.Exists(treeJsonPath)
-				? $"Failed to load snapshot from '{treeJsonPath}': {string.Join("; ", snapshotResult.Errors)}"
-				: $"Snapshot file not found at '{treeJsonPath}'.";
-			return LogAndFail(new[] { new Error(reason) });
+			var notLoaded = new Error($"Snapshot of group '{groupName}' was not loaded from '{treeJsonPath}'")
+				.CausedBy(snapshotResult.Errors);
+
+			return LogAndFail(new[] { notLoaded });
 		}
 
 		var snapshot = snapshotResult.Value;
@@ -91,9 +89,11 @@ public sealed class OpcTreeManagerService
 		if (droppedLinks > 0)
 		{
 			_logger.Warning(
-				"Snapshot load dropped {DroppedLinkCount} invalid link(s) with blank pin paths from '{Path}'",
-				droppedLinks, treeJsonPath);
+				"Snapshot '{TreeJsonPath}': {DroppedLinkCount} links with a blank pin path ignored",
+				treeJsonPath, droppedLinks);
 		}
+
+		LogSnapshotLoaded(snapshot, treeJsonPath);
 
 		var currentTopLevelNames = groupResult.Value.Group.Items.Select(i => i.Name).ToList();
 		var planResult = PlanBuilder.Build(opcFbPath, groupName, targetProject, config, snapshot, currentTopLevelNames, _logger);
@@ -125,7 +125,7 @@ public sealed class OpcTreeManagerService
 	{
 		if (PendingPlan != null)
 		{
-			_logger.Information("Operation cancelled by user");
+			_logger.Information("Pending rebuild of group '{GroupName}' cancelled", PendingPlan.GroupName);
 			PendingPlan = null;
 		}
 	}
@@ -142,7 +142,7 @@ public sealed class OpcTreeManagerService
 		var (groupItem, groupRelativePath) = groupResult.Value;
 
 		_logger.Information(
-			"Group '{GroupName}' resolved at '{GroupRelativePath}'",
+			"Group '{GroupName}' resolved at '{GroupRelativePath}' for ExecuteSnapshot",
 			groupName, groupRelativePath);
 
 		var items = groupItem.Items.AsReadOnly();
@@ -152,6 +152,14 @@ public sealed class OpcTreeManagerService
 		{
 			var fullPath = JoinPath(opcFbPath, groupRelativePath, item.Name);
 			var node = _project.SafeItem<ITreeItemHlp>(fullPath);
+
+			if (node == null)
+			{
+				_logger.Error(
+					"Node '{NodeName}' captured with no links: '{NodePath}' did not resolve in the "
+					+ "project; check OpcFbPath",
+					item.Name, fullPath);
+			}
 
 			var links = node != null
 				? LinkCollector.CollectAllLinks(node, _logger)
@@ -166,10 +174,6 @@ public sealed class OpcTreeManagerService
 			snapshot[item.Name] = nodeSnapshot;
 		}
 
-		_logger.Information(
-			"Snapshot built; {NodeCount} nodes scanned from group '{GroupName}'",
-			snapshot.Count, groupName);
-
 		return Result.Ok(snapshot);
 	}
 
@@ -181,22 +185,110 @@ public sealed class OpcTreeManagerService
 			return Result.Fail(snapshotResult.Errors);
 		}
 
-		var writeResult = TreeSnapshotWriter.Write(snapshotResult.Value, treeJsonPath);
+		var snapshot = snapshotResult.Value;
+		var writeResult = TreeSnapshotWriter.Write(snapshot, treeJsonPath);
+
 		if (writeResult.IsFailed)
 		{
-			var reason = string.Join("; ", writeResult.Errors);
-			return LogAndFail(new[] { new Error($"Snapshot of group '{groupName}' was not written: {reason}") });
+			var notWritten = new Error($"Snapshot of group '{groupName}' was not written to '{treeJsonPath}'")
+				.CausedBy(writeResult.Errors);
+
+			return LogAndFail(new[] { notWritten });
 		}
 
-		_logger.Information("Snapshot written to '{Path}'", treeJsonPath);
+		LogSnapshotWritten(groupName, treeJsonPath, snapshot, _logger);
+
 		return Result.Ok();
+	}
+
+	/// <summary>Terminal record of a capture: the count of nodes written with no links sets the level,
+	/// and deliberately not the <c>Failed</c> pin (Docs/opc-tree-manager.md section 8.4).</summary>
+	internal static void LogSnapshotWritten(
+		string groupName,
+		string treeJsonPath,
+		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
+		ILogger logger)
+	{
+		var nodesWithoutLinks = snapshot.Values.Count(node => node.Links.Count == 0);
+
+		var nextRebuild = nodesWithoutLinks > 0
+			? "; the next rebuild constructs those nodes unwired"
+			: string.Empty;
+
+		logger.Write(
+			nodesWithoutLinks > 0 ? LogEventLevel.Error : LogEventLevel.Information,
+			"Snapshot of group '{GroupName}' written to '{TreeJsonPath}': {NodeCount} nodes, "
+			+ "{LinkCount} links, {NodesWithoutLinks} without links" + nextRebuild,
+			groupName,
+			treeJsonPath,
+			snapshot.Count,
+			CountLinks(snapshot),
+			nodesWithoutLinks);
 	}
 
 	private Result LogAndFail(IEnumerable<IError> errors)
 	{
-		var message = string.Join("; ", errors);
-		_logger.Error("{ErrorMessage}", message);
-		return Result.Fail(message);
+		var errorList = errors.ToList();
+		var flattened = Flatten(errorList).ToList();
+		var message = string.Join("; ", flattened.Select(e => e.Message));
+		var exception = flattened.OfType<ExceptionalError>().FirstOrDefault()?.Exception;
+
+		if (exception == null)
+		{
+			_logger.Error("{ErrorMessage}", message);
+		}
+		else
+		{
+			_logger.Error(exception, "{ErrorMessage}", message);
+		}
+
+		return Result.Fail(errorList);
+	}
+
+	/// <summary>Walks an error and its CausedBy chain so every cause reaches the log line.</summary>
+	internal static IEnumerable<IError> Flatten(IEnumerable<IError> errors)
+	{
+		foreach (var error in errors)
+		{
+			yield return error;
+
+			foreach (var nested in Flatten(error.Reasons.OfType<IError>()))
+			{
+				yield return nested;
+			}
+		}
+	}
+
+	private void LogSnapshotLoaded(Dictionary<string, NodeSnapshot> snapshot, string treeJsonPath)
+	{
+		_logger.Information(
+			"Snapshot '{TreeJsonPath}' loaded: {NodeCount} nodes, {LinkCount} links, "
+			+ "file written {SnapshotWrittenAt}",
+			treeJsonPath, snapshot.Count, CountLinks(snapshot), DescribeWriteTime(treeJsonPath));
+	}
+
+	/// <summary>Never throws: <c>ScanAndValidate</c> runs out of <c>UpdateData</c> unguarded, so a date
+	/// the file system refuses and the 1601 sentinel it returns instead both read as unknown.</summary>
+	private static string DescribeWriteTime(string path)
+	{
+		try
+		{
+			var writtenAt = File.GetLastWriteTime(path);
+
+			return writtenAt.Year <= 1601
+				? "unknown"
+				: writtenAt.ToString("O", CultureInfo.InvariantCulture);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
+			or NotSupportedException)
+		{
+			return "unknown";
+		}
+	}
+
+	private static int CountLinks(IReadOnlyDictionary<string, NodeSnapshot> snapshot)
+	{
+		return snapshot.Values.Sum(node => node.Links.Count);
 	}
 
 	private Result<(OpcUaScadaItem Group, string RelativePath)> ResolveGroup(

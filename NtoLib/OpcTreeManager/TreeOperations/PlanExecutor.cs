@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using FluentResults;
 
@@ -13,6 +14,7 @@ using OpcUaClient.Client.Common;
 using OpcUaClient.Client.Common.Data;
 
 using Serilog;
+using Serilog.Events;
 
 namespace NtoLib.OpcTreeManager.TreeOperations;
 
@@ -32,7 +34,7 @@ internal sealed class PlanExecutor
 			throw new ArgumentNullException(nameof(logger));
 		}
 
-		_logger = logger.ForContext<PlanExecutor>();
+		_logger = logger;
 	}
 
 	/// <summary>
@@ -48,7 +50,7 @@ internal sealed class PlanExecutor
 	/// as absent), so the summary reports only what is known — connects issued and how many threw.
 	/// See <c>Docs/known_issues/11</c>.
 	/// </summary>
-	public Result Execute(RebuildPlan plan)
+	public Result Execute(RebuildPlan plan, Action onTreeMutationStarting)
 	{
 		if (plan == null)
 		{
@@ -73,10 +75,19 @@ internal sealed class PlanExecutor
 		var (group, groupRelativePath) = groupResult.Value;
 		var groupPath = plan.OpcFbPath + "." + groupRelativePath;
 
-		_logger.Information(
-			"Executing plan for OPC FB {OpcFbPath}, group {GroupName} resolved at '{GroupRelativePath}' "
-			+ "({Count} top-level nodes desired)",
-			plan.OpcFbPath, plan.GroupName, groupRelativePath, plan.DesiredTree.Count);
+		// Raised by the reshape at its first write, from any depth and from inside the disconnector.
+		var mutationFlagged = false;
+
+		void FlagTreeMutation()
+		{
+			if (mutationFlagged)
+			{
+				return;
+			}
+
+			mutationFlagged = true;
+			onTreeMutationStarting();
+		}
 
 		// Top-level: each desired child resolves through plan.Snapshot (keyed by
 		// top-level name). Links for each top-level subtree live in the same
@@ -89,75 +100,92 @@ internal sealed class PlanExecutor
 				? (s.ScadaItem, s.Links)
 				: (null, Array.Empty<LinkEntry>()),
 			disconnector: _disconnector,
+			onTreeMutationStarting: FlagTreeMutation,
 			logger: _logger);
 
 		ResetScadaItemsMap(protocol);
 		protocol.SynchWihSysTree();
 
-		var commitResult = CommitStructuralChange(plan.OpcFbPath);
-		if (commitResult.IsFailed)
+		// Resolved after SynchWihSysTree, not before the reshape: the vendor UI's
+		// OpcUaGroupPropPageWindow.ApplyChanges() takes the handle in that order, and ApplyChange commits
+		// the new pin slots into the native name registry vavobj's ConnectByName resolves against.
+		var opcFbItem = _project.SafeItem<ITreeItemHlp>(plan.OpcFbPath);
+		if (opcFbItem == null)
 		{
-			return commitResult;
+			return Result.Fail($"OPC FB tree item not found for ApplyChange: {plan.OpcFbPath}");
 		}
 
-		var (commands, resolveFail) = BuildCommands(reshape.Constructions);
+		opcFbItem.ApplyChange();
+
+		var (commands, linksUnresolved) = BuildCommands(
+			reshape.Constructions,
+			path => _project.SafeItem<ITreePinHlp>(path),
+			_logger);
 
 		var orderedCommands = CommandOrdering.OrderCommandsDirectFirst(commands);
 
 		var (connectsIssued, connectsThrew) = ConnectRunner.ConnectAll(orderedCommands, _logger);
 
-		LogExecutionComplete(
-			shrinkCount: reshape.ShrinkCount,
-			constructionsCount: reshape.Constructions.Count,
-			shrinkTotal: reshape.ShrinkTotal,
-			shrinkSuccess: reshape.ShrinkSuccess,
-			shrinkFail: reshape.ShrinkFail,
-			resolveFail: resolveFail,
+		LogRebuildFinished(
+			groupName: plan.GroupName,
+			reshape: reshape,
 			connectsIssued: connectsIssued,
-			connectsThrew: connectsThrew);
+			connectsThrew: connectsThrew,
+			linksUnresolved: linksUnresolved,
+			logger: _logger);
 
 		return Result.Ok();
 	}
 
-	/// <summary>
-	/// Emits the single <c>Execution complete</c> summary. <paramref name="resolveFail"/> counts commands
-	/// that failed to build (pin unresolved or unknown link type) and so were never issued.
-	/// </summary>
-	private void LogExecutionComplete(
-		int shrinkCount,
-		int constructionsCount,
-		int shrinkTotal,
-		int shrinkSuccess,
-		int shrinkFail,
-		int resolveFail,
+	internal static void LogRebuildFinished(
+		string groupName,
+		ReshapeResult reshape,
 		int connectsIssued,
-		int connectsThrew)
+		int connectsThrew,
+		int linksUnresolved,
+		ILogger logger)
 	{
-		_logger.Information(
-			"Execution complete: shrink={ShrinkCount} expand={ExpandCount}; "
-			+ "disconnect links total={ShrinkTotal} ok={ShrinkSuccess} fail={ShrinkFail}; "
-			+ "connects issued={ConnectsIssued} threw={ConnectsThrew} unresolved={ResolveFail} "
-			+ "(success judged by the SCADA tree on reload, not by read-back)",
-			shrinkCount, constructionsCount, shrinkTotal, shrinkSuccess, shrinkFail,
-			connectsIssued, connectsThrew, resolveFail);
-	}
+		var constructionsWithoutLinks = reshape.Constructions.Count(c => c.Links.Count == 0);
 
-	/// <summary>
-	/// Commits the structural change into the project's native name registry so that
-	/// vavobj's ConnectByName can resolve the new pin slots. Matches the vendor UI's
-	/// OpcUaGroupPropPageWindow.ApplyChanges() and the working scripts/OpcGroup example,
-	/// which is the only officially-supported template for dynamic add-and-connect.
-	/// </summary>
-	private Result CommitStructuralChange(string opcFbPath)
-	{
-		var opcFbItem = _project.SafeItem<ITreeItemHlp>(opcFbPath);
-		if (opcFbItem == null)
+		var wiringIncomplete = linksUnresolved > 0 || constructionsWithoutLinks > 0;
+
+		var structureIncomplete = connectsThrew > 0
+			|| reshape.DisconnectsThrew > 0
+			|| reshape.NodesMissing > 0
+			|| reshape.NodesNotRestored > 0;
+
+		var failed = wiringIncomplete || structureIncomplete;
+		var verdict = failed ? "with failures" : "without failures";
+
+		// The destructive half can succeed while the connects fail, and Execute still returns Ok, so
+		// this line is the only place that states what is on screen and what the operator does with it.
+		var nextStep = (wiringIncomplete, structureIncomplete) switch
 		{
-			return Result.Fail($"OPC FB tree item not found for ApplyChange: {opcFbPath}");
-		}
+			(false, false) => string.Empty,
+			(true, false) => "; the nodes are in the tree with links missing, close the project "
+				+ "without saving, then re-capture the snapshot or repair the consumers",
+			_ => "; the tree is partially rebuilt, close the project without saving",
+		};
 
-		opcFbItem.ApplyChange();
-		return Result.Ok();
+		logger.Write(
+			failed ? LogEventLevel.Error : LogEventLevel.Information,
+			"Rebuild of group '{GroupName}' finished " + verdict + ": removed={RemovedCount} "
+			+ "constructed={ConstructedCount} noLinks={ConstructionsWithoutLinks} "
+			+ "notRestored={NodesNotRestored}; disconnects issued={DisconnectsIssued} "
+			+ "threw={DisconnectsThrew} nodesMissing={NodesMissing}; connects "
+			+ "issued={ConnectsIssued} threw={ConnectsThrew} unresolved={LinksUnresolved}"
+			+ nextStep,
+			groupName,
+			reshape.RemovedCount,
+			reshape.Constructions.Count,
+			constructionsWithoutLinks,
+			reshape.NodesNotRestored,
+			reshape.DisconnectsIssued,
+			reshape.DisconnectsThrew,
+			reshape.NodesMissing,
+			connectsIssued,
+			connectsThrew,
+			linksUnresolved);
 	}
 
 	/// <summary>
@@ -178,29 +206,50 @@ internal sealed class PlanExecutor
 	/// <summary>
 	/// Builds a <see cref="ConnectCommand"/> for every resolvable link across all constructions. Links
 	/// whose pins do not resolve or whose type is unknown fail in <see cref="TryBuildCommand"/> (already
-	/// logged) and are counted into <c>ResolveFail</c> rather than reaching the connect pass.
+	/// logged) and are counted into <c>LinksUnresolved</c> rather than reaching the connect pass.
 	/// </summary>
-	private (List<ConnectCommand> Commands, int ResolveFail) BuildCommands(IReadOnlyList<TreeReshaper.Construction> constructions)
+	internal static (List<ConnectCommand> Commands, int LinksUnresolved) BuildCommands(
+		IReadOnlyList<TreeReshaper.Construction> constructions,
+		Func<string, ITreePinHlp?> resolvePin,
+		ILogger logger)
 	{
 		var commands = new List<ConnectCommand>();
-		var resolveFail = 0;
+		var linksUnresolved = 0;
 
 		foreach (var construction in constructions)
 		{
+			var resolved = 0;
+			var unresolved = 0;
+
 			foreach (var link in construction.Links)
 			{
-				var command = TryBuildCommand(link);
+				var command = TryBuildCommand(link, resolvePin, logger);
 				if (command == null)
 				{
-					resolveFail++;
+					unresolved++;
 					continue;
 				}
 
 				commands.Add(command.Value);
+				resolved++;
 			}
+
+			linksUnresolved += unresolved;
+
+			if (unresolved == 0)
+			{
+				continue;
+			}
+
+			logger.Error(
+				"Node '{NodePath}': {LinkCount} links, {ResolvedCount} resolved, {UnresolvedCount} unresolved",
+				construction.Path,
+				construction.Links.Count,
+				resolved,
+				unresolved);
 		}
 
-		return (commands, resolveFail);
+		return (commands, linksUnresolved);
 	}
 
 	/// <summary>
@@ -208,30 +257,42 @@ internal sealed class PlanExecutor
 	/// <see cref="ConnectCommand"/>. Returns <c>null</c> (an already-logged failure) when either pin
 	/// is missing or the link type is unknown.
 	/// </summary>
-	private ConnectCommand? TryBuildCommand(LinkEntry link)
+	private static ConnectCommand? TryBuildCommand(
+		LinkEntry link,
+		Func<string, ITreePinHlp?> resolvePin,
+		ILogger logger)
 	{
-		var localPin = _project.SafeItem<ITreePinHlp>(link.LocalPinPath);
+		var localPin = resolvePin(link.LocalPinPath);
 		if (localPin == null)
 		{
-			_logger.Error("Connect — local pin not found: {Path}", link.LocalPinPath);
+			logger.Error(
+				"Link not issued, local pin missing: {LocalPin} <-> {ExternalPin} ({LinkType})",
+				link.LocalPinPath,
+				link.ExternalPinPath,
+				link.LinkType);
 			return null;
 		}
 
-		var externalPin = _project.SafeItem<ITreePinHlp>(link.ExternalPinPath);
+		var externalPin = resolvePin(link.ExternalPinPath);
 		if (externalPin == null)
 		{
-			_logger.Error("Connect — external pin not found: {Path}", link.ExternalPinPath);
+			logger.Error(
+				"Link not issued, external pin missing: {LocalPin} <-> {ExternalPin} ({LinkType}); "
+				+ "the snapshot may be stale or the consumer renamed",
+				link.LocalPinPath,
+				link.ExternalPinPath,
+				link.LinkType);
 			return null;
 		}
 
 		var connect = BuildConnectAction(link, localPin, externalPin);
 		if (connect == null)
 		{
-			_logger.Error(
-				"Connect {LocalPin} ↔ {ExternalPin} — unknown link type '{LinkType}'",
+			logger.Error(
+				"Link not issued, unknown link type '{LinkType}': {LocalPin} <-> {ExternalPin}",
+				link.LinkType,
 				link.LocalPinPath,
-				link.ExternalPinPath,
-				link.LinkType);
+				link.ExternalPinPath);
 			return null;
 		}
 

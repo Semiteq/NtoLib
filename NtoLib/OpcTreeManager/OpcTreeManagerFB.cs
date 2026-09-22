@@ -9,7 +9,6 @@ using InSAT.Library.Interop;
 using NtoLib.OpcTreeManager.Facade;
 using NtoLib.OpcTreeManager.Logging;
 
-using Serilog;
 using Serilog.Core;
 
 namespace NtoLib.OpcTreeManager;
@@ -34,7 +33,6 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 	[NonSerialized] private bool _previousCancel;
 	[NonSerialized] private bool _previousExecuteSnapshot;
 	[NonSerialized] private Logger? _logger;
-	[NonSerialized] private ILogger? _log;
 	[NonSerialized] private OpcTreeManagerService? _service;
 
 	[DisplayName("Целевой проект")]
@@ -104,7 +102,12 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 		try
 		{
 			_logger = OpcLoggerFactory.Build(LogFilePath);
-			_log = _logger.ForContext<OpcTreeManagerFB>();
+
+			_logger.Information(
+				"Runtime entered; OpcFbPath={OpcFbPath} GroupName={GroupName} TargetProject={TargetProject} "
+				+ "TreeJsonPath={TreeJsonPath} ConfigYamlPath={ConfigYamlPath}",
+				OpcFbPath, GroupName, TargetProject, TreeJsonPath, ConfigYamlPath);
+
 			_service = new OpcTreeManagerService(TreeItemHlp!.Project, _logger);
 			_previousExecute = false;
 			_previousCancel = false;
@@ -113,17 +116,13 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 
 			SetPinValue(IsPendingPinId, false, DateTime.UtcNow);
 			SetPinValue(FailedPinId, false, DateTime.UtcNow);
-			_log.Information(
-				"Initialized; OpcFbPath={OpcFbPath} GroupName={GroupName} TargetProject={TargetProject}",
-				OpcFbPath, GroupName, TargetProject);
 		}
 		catch (Exception ex)
 		{
 			_isRuntimeInitialized = false;
-			_log?.Error(ex, "Initialization failed");
+			_logger?.Error(ex, "Initialization failed");
 			_logger?.Dispose();
 			_logger = null;
-			_log = null;
 			SetPinValue(IsPendingPinId, false, DateTime.UtcNow);
 			SetPinValue(FailedPinId, true, DateTime.UtcNow);
 		}
@@ -135,7 +134,6 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 		_service = null;
 		_logger?.Dispose();
 		_logger = null;
-		_log = null;
 	}
 
 	private bool ConsumeRisingEdge(int pinId, ref bool previousState)
@@ -221,10 +219,9 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 
 		// Transfer ownership of the concrete root Logger to the deferred executor: its timer fires
 		// after ToDesign (post-runtime) and disposes the logger once the plan finishes. Null the
-		// fields so CleanupRuntime cannot double-dispose the same Logger.
+		// field so CleanupRuntime cannot double-dispose the same Logger.
 		var logger = _logger;
 		_logger = null;
-		_log = null;
 		_service.ExecuteDeferred(logger);
 	}
 }

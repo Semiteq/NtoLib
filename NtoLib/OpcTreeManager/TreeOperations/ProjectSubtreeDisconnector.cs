@@ -5,6 +5,8 @@ using MasterSCADA.Hlp;
 
 using MasterSCADALib;
 
+using NtoLib.OpcTreeManager.Entities;
+
 using Serilog;
 
 namespace NtoLib.OpcTreeManager.TreeOperations;
@@ -23,23 +25,36 @@ internal sealed class ProjectSubtreeDisconnector : ISubtreeDisconnector
 			throw new ArgumentNullException(nameof(logger));
 		}
 
-		_logger = logger.ForContext<ProjectSubtreeDisconnector>();
+		_logger = logger;
 	}
 
-	public (int Total, int Success, int Fail) DisconnectSubtree(string nodePath)
+	public (int Issued, int Threw, int NodesMissing) DisconnectSubtree(string nodePath, Action onTreeMutationStarting)
 	{
-		var node = _project.SafeItem<ITreeItemHlp>(nodePath);
+		return RunDisconnectPass(
+			nodePath,
+			path => _project.SafeItem<ITreeItemHlp>(path),
+			onTreeMutationStarting,
+			_logger);
+	}
+
+	internal static (int Issued, int Threw, int NodesMissing) RunDisconnectPass(
+		string nodePath,
+		Func<string, ITreeItemHlp?> resolveNode,
+		Action onTreeMutationStarting,
+		ILogger logger)
+	{
+		var node = resolveNode(nodePath);
 
 		if (node == null)
 		{
-			_logger.Error("Disconnect — node not found: {NodePath}", nodePath);
-			return (1, 0, 1);
+			logger.Error("Remove '{NodePath}': node not found in the project, links not disconnected", nodePath);
+			return (0, 0, 1);
 		}
 
 		var allPins = node.EnumAllChilds(TreeMasks.AllPinKinds, 0);
 
-		var success = 0;
-		var fail = 0;
+		var issued = 0;
+		var threw = 0;
 
 		foreach (var child in allPins)
 		{
@@ -48,18 +63,21 @@ internal sealed class ProjectSubtreeDisconnector : ISubtreeDisconnector
 				continue;
 			}
 
-			var (s, f) = DisconnectPinConnections(localPin);
-			success += s;
-			fail += f;
+			var (pinIssued, pinThrew) = DisconnectPinConnections(localPin, onTreeMutationStarting, logger);
+			issued += pinIssued;
+			threw += pinThrew;
 		}
 
-		return (success + fail, success, fail);
+		return (issued, threw, 0);
 	}
 
-	private (int Success, int Fail) DisconnectPinConnections(ITreePinHlp localPin)
+	private static (int Issued, int Threw) DisconnectPinConnections(
+		ITreePinHlp localPin,
+		Action onTreeMutationStarting,
+		ILogger logger)
 	{
-		var success = 0;
-		var fail = 0;
+		var issued = 0;
+		var threw = 0;
 
 		foreach (var mask in new[]
 		{
@@ -74,27 +92,42 @@ internal sealed class ProjectSubtreeDisconnector : ISubtreeDisconnector
 
 			foreach (var externalPin in connections)
 			{
+				onTreeMutationStarting();
+
 				try
 				{
 					localPin.Disconnect(externalPin);
-					_logger.Debug(
-						"Disconnected {LocalPin} ← {ExternalPin}",
+					logger.Debug(
+						"Disconnect issued {LocalPin} <-> {ExternalPin} ({LinkType})",
 						localPin.FullName,
-						externalPin.FullName);
-					success++;
+						externalPin.FullName,
+						LinkTypeOf(mask));
+					issued++;
 				}
 				catch (Exception ex)
 				{
-					_logger.Error(
-						"Disconnect {LocalPin} ← {ExternalPin} — {Message}",
+					logger.Error(
+						ex,
+						"Disconnect {LocalPin} <-> {ExternalPin} ({LinkType}) threw",
 						localPin.FullName,
 						externalPin.FullName,
-						ex.Message);
-					fail++;
+						LinkTypeOf(mask));
+					threw++;
 				}
 			}
 		}
 
-		return (success, fail);
+		return (issued, threw);
+	}
+
+	private static string LinkTypeOf(EConnectionTypeMask mask)
+	{
+		return mask switch
+		{
+			EConnectionTypeMask.ctGenericPin => LinkTypes.DirectPin,
+			EConnectionTypeMask.ctGenericPout => LinkTypes.DirectPout,
+			EConnectionTypeMask.ctIConnect => LinkTypes.IConnect,
+			_ => mask.ToString(),
+		};
 	}
 }

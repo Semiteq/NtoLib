@@ -7,7 +7,6 @@ using NtoLib.OpcTreeManager.Config;
 using NtoLib.OpcTreeManager.Entities;
 using NtoLib.OpcTreeManager.Facade;
 
-using Serilog;
 using Serilog.Events;
 
 using Xunit;
@@ -114,7 +113,7 @@ public sealed class PlanBuilderValidationTests
 			Node("Valves", Node("VPG1")));
 
 		var sink = new CapturingSink();
-		using var logger = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Sink(sink).CreateLogger();
+		using var logger = sink.ToLogger();
 
 		var result = PlanBuilder.Build(
 			opcFbPath: OpcFbPath,
@@ -134,7 +133,94 @@ public sealed class PlanBuilderValidationTests
 		var errors = sink.Events.Where(e => e.Level == LogEventLevel.Error).ToList();
 		errors.Should().HaveCount(2, "each unrestorable node is reported once");
 		errors.Select(e => e.Properties["NodeName"].ToString().Trim('"')).Should()
-			.BeEquivalentTo(new[] { "Cameras", "Heaters" }, "each error names the node it is about");
+			.BeEquivalentTo(new[] { "Cameras", "Heaters" },
+				"each error names the node it is about");
+		errors.Should().OnlyContain(e => e.Properties["GroupName"].ToString().Trim('"') == GroupName);
+	}
+
+	[Fact]
+	public void Build_NonEmptyContainerAndUnrestorableNode_LogsItAtPlanTime()
+	{
+		var config = ConfigFor(
+			new NodeSpec("Valves", null),
+			new NodeSpec("Heaters", null));
+
+		var snapshot = SnapshotOf(
+			Node("Valves", Node("VPG1")));
+
+		var sink = new CapturingSink();
+		using var logger = sink.ToLogger();
+
+		var result = PlanBuilder.Build(
+			opcFbPath: OpcFbPath,
+			groupName: GroupName,
+			targetProject: Project,
+			config: config,
+			snapshot: snapshot,
+			currentTopLevelNames: new List<string> { "Cameras" },
+			logger: logger);
+
+		result.IsSuccess.Should().BeTrue("a non-empty group still rebuilds what the snapshot covers");
+
+		var errors = sink.Events.Where(e => e.Level == LogEventLevel.Error).ToList();
+		errors.Should().HaveCount(1, "only the node absent from both the group and the snapshot");
+		errors[0].Properties["NodeName"].ToString().Trim('"').Should().Be("Heaters");
+		errors[0].Properties["GroupName"].ToString().Trim('"').Should().Be(GroupName);
+	}
+
+	[Fact]
+	public void Build_PlanLine_NamesRemovedConstructedAndPreservedNodes()
+	{
+		var config = ConfigFor(
+			new NodeSpec("Valves", null),
+			new NodeSpec("Cameras", null),
+			new NodeSpec("Heaters", null));
+
+		var snapshot = new Dictionary<string, NodeSnapshot>
+		{
+			["Valves"] = new NodeSnapshot { ScadaItem = Node("Valves", Node("VPG1")), Links = LinksOf(3) },
+			["Cameras"] = new NodeSnapshot { ScadaItem = Node("Cameras"), Links = LinksOf(2) },
+		};
+
+		var sink = new CapturingSink();
+		using var logger = sink.ToLogger();
+
+		var result = PlanBuilder.Build(
+			opcFbPath: OpcFbPath,
+			groupName: GroupName,
+			targetProject: Project,
+			config: config,
+			snapshot: snapshot,
+			currentTopLevelNames: new List<string> { "Valves", "Axes" },
+			logger: logger);
+
+		result.IsSuccess.Should().BeTrue("the plan is buildable");
+
+		var planLine = sink.Events.Single(e => e.MessageTemplate.Text.StartsWith("Plan for group"));
+
+		planLine.Level.Should().Be(LogEventLevel.Information);
+		NamesIn(planLine, "RemoveNodes").Should()
+			.Equal(new[] { "Axes" }, "the group holds a node the project does not");
+		NamesIn(planLine, "ConstructNodes").Should()
+			.Equal(new[] { "Cameras" }, "Heaters is desired but the snapshot cannot restore it");
+		NamesIn(planLine, "PreserveNodes").Should()
+			.Equal(new[] { "Valves" }, "Valves is already in the group");
+		planLine.Properties["LinkCount"].ToString().Should().Be("2", "only constructed nodes bring links");
+	}
+
+	private static IReadOnlyList<string> NamesIn(LogEvent logEvent, string propertyName)
+	{
+		return ((SequenceValue)logEvent.Properties[propertyName])
+			.Elements
+			.Select(e => e.ToString().Trim('"'))
+			.ToList();
+	}
+
+	private static IReadOnlyList<LinkEntry> LinksOf(int count)
+	{
+		return Enumerable.Range(0, count)
+			.Select(i => new LinkEntry { LocalPinPath = "local" + i, ExternalPinPath = "external" + i })
+			.ToList();
 	}
 
 	[Fact]

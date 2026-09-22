@@ -21,15 +21,22 @@ public static class LinkCollector
 			throw new ArgumentNullException(nameof(node));
 		}
 
-		var log = logger?.ForContext(typeof(LinkCollector));
 		var pinViews = node
 			.EnumAllChilds(TreeMasks.AllPinKinds, 0)
 			.OfType<ITreePinHlp>()
 			.Select(CreatePinView);
 
-		var links = BuildLinks(pinViews, log);
+		return CollectLinks(node.FullName, pinViews, logger);
+	}
 
-		log?.Debug("Collected {LinkCount} links from node '{NodeFullName}'", links.Count, node.FullName);
+	internal static IReadOnlyList<LinkEntry> CollectLinks(
+		string nodePath,
+		IEnumerable<PinView> pins,
+		ILogger? logger)
+	{
+		var links = BuildLinks(pins, logger);
+
+		logger?.Information("Captured '{NodePath}': {LinkCount} links", nodePath, links.Count);
 
 		return links;
 	}
@@ -89,7 +96,7 @@ public static class LinkCollector
 			AppendLinks(pin, EConnectionTypeMask.ctIConnect, LinkTypes.IConnect, rawLinks, log);
 		}
 
-		var links = DedupByWire(rawLinks, log);
+		var links = DedupByWire(rawLinks);
 		WarnTwinlessIConnects(links, log);
 		return links;
 	}
@@ -102,8 +109,9 @@ public static class LinkCollector
 	/// only alarms on the one shape that has ever meant lost data:
 	/// <list type="bullet">
 	/// <item>sibling captured to the <b>same</b> external — both halves present; silent.</item>
-	/// <item>sibling captured to a <b>different</b> external — the expected shape for a pin whose input
-	/// and feedback target different nodes (feedback-only pins); logged at Debug.</item>
+	/// <item>sibling captured to a <b>different</b> external: either a feedback-only pin whose input
+	/// and feedback target different nodes, or the signature of the <see cref="DedupByWire"/> fold
+	/// described in known-issue 11; logged at Debug.</item>
 	/// <item>sibling has <b>no captured row at all</b> — the only shape a dropped or blind/partial
 	/// capture takes (the old <see cref="DedupByWire"/> fold, or the read-back blindness of
 	/// known-issue 11); logged at Warning.</item>
@@ -139,19 +147,19 @@ public static class LinkCollector
 				continue;
 			}
 
-			if (siblingExternals.Any())
+			var siblingExternal = siblingExternals.FirstOrDefault();
+
+			if (siblingExternal != null)
 			{
 				log.Debug(
-					"Feedback-only iconnect '{LocalPin}' → '{ExternalPin}': input sibling '{Sibling}' is " +
-					"captured to a different external — expected PinPout shape",
-					row.LocalPinPath, row.ExternalPinPath, sibling);
+					"Iconnect {LocalPin} <-> {ExternalPin}: input sibling '{Sibling}' captured to " +
+					"'{SiblingExternal}'",
+					row.LocalPinPath, row.ExternalPinPath, sibling, siblingExternal);
 				continue;
 			}
 
 			log.Warning(
-				"Capture check: iconnect '{LocalPin}' → '{ExternalPin}' has no captured link on input " +
-				"sibling '{Sibling}' — the input is either genuinely unconnected or was not captured " +
-				"(partial/blind capture; see Docs/known_issues/11)",
+				"Iconnect {LocalPin} <-> {ExternalPin} captured without an input link on '{Sibling}'",
 				row.LocalPinPath, row.ExternalPinPath, sibling);
 		}
 	}
@@ -169,32 +177,17 @@ public static class LinkCollector
 	/// pin came back with only its feedback half and never persisted.
 	/// </para>
 	/// </summary>
-	private static List<LinkEntry> DedupByWire(List<LinkEntry> rows, ILogger? log)
+	private static List<LinkEntry> DedupByWire(List<LinkEntry> rows)
 	{
 		var result = new List<LinkEntry>(rows.Count);
 		var seen = new HashSet<(string Local, string External, string LinkType)>();
-		var dropped = 0;
 
 		foreach (var row in rows)
 		{
-			var key = (row.LocalPinPath, row.ExternalPinPath, row.LinkType);
-
-			if (!seen.Add(key))
+			if (seen.Add((row.LocalPinPath, row.ExternalPinPath, row.LinkType)))
 			{
-				dropped++;
-				log?.Warning(
-					"Exact-duplicate dedup: dropped ({LocalPin}, {ExternalPin}, {LinkType}) — " +
-					"an identical surviving triple already carries this wire",
-					row.LocalPinPath, row.ExternalPinPath, row.LinkType);
-				continue;
+				result.Add(row);
 			}
-
-			result.Add(row);
-		}
-
-		if (dropped > 0)
-		{
-			log?.Warning("Exact-duplicate dedup: {DroppedCount} rows removed", dropped);
 		}
 
 		return result;
@@ -217,7 +210,7 @@ public static class LinkCollector
 			});
 
 			log?.Debug(
-				"CollectLink {LinkType} {LocalPin} ↔ {ExternalPin}",
+				"Captured {LinkType} {LocalPin} <-> {ExternalPin}",
 				linkType, pin.FullName, externalFullName);
 		}
 	}
