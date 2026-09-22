@@ -188,6 +188,12 @@ For a settings pin, SCADA's "Список связей" dialog shows **two** row
 
 ### connect-API routing table (from disassembly, high confidence)
 
+> All native virtual addresses quoted in this document were taken from
+> `MasterSCADA.exe` of the installation under
+> `C:\Program Files (x86)\MPSSoft\MasterSCADA`, version 3.12. Re-verify them
+> against the build in front of you before relying on an address.
+
+
 | Managed call | Native | Route | Throws? |
 |---|---|---|---|
 | direct `ConnectByName(name,1,0)` | vtable slot `0x84` | by NAME | no — works |
@@ -207,6 +213,55 @@ The bug narrative this model came out of — why rebuilt settings pins showed
 as disconnected, the DedupByWire capture bug, the read-back blindness trap,
 and the direct-first restore rule — lives in
 [`../known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md`](../known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md).
+
+### OPC UA node addressing: `NodeId`, namespaces, persistence
+
+An OPC UA `NodeId` is a pair: a **namespace index** and an **identifier**.
+The identifier is unique only inside its namespace.
+
+The index is **a position in the server's `NamespaceArray`** — the array of
+namespace URIs published at node `ns=0;i=2255`. Index 0 is always
+`http://opcfoundation.org/UA/` and index 1 is always the server's own local
+URI; everything from 2 upwards is filled in whatever order the server
+creates its namespaces. The index is therefore a transport-level shorthand,
+not an identity: the same node can appear under a different index after the
+server's namespace set changes.
+
+The specification's persistence type is `ExpandedNodeId`, whose text form
+carries the URI instead of the index:
+
+```
+NodeId          ns=4;i=3                        wire form only
+ExpandedNodeId  nsu=http://MBE;i=3              form intended for storage
+```
+
+`Opc.Ua.Core` (already referenced by NtoLib) ships the conversions — writing
+a parser is unnecessary:
+
+| API | Behaviour |
+|---|---|
+| `NodeId.ToExpandedNodeId(nodeId, table)` | index → URI form |
+| `ExpandedNodeId.Parse(text, table)` | URI form → index form; throws when the URI is absent from the table |
+| `StringTable.GetIndex` / `GetString` / `ToArray` | direct lookups over a `NamespaceTable` |
+| `StringTable.CreateMapping(other, bool)` | builds an old-index → new-index map between two tables |
+
+**Implementation trap.** The explicit cast `(NodeId)expandedNodeId` throws
+`InvalidCastException` for an absolute (URI-carrying) id, and vendor code
+performs that cast on the hot path — `OpcUaServerAdapter`,
+`BaseSubscription`, the archive read worker. A URI-form id must therefore
+never be written into `OpcUaScadaItem.NodeId`: the live model always holds
+the index form, and the URI form belongs only in files we own.
+
+Reading the current table needs a live session; nothing in the vendor's
+persisted state stores a namespace URI. The design-time route is
+`OpcUaClientInstance.UpdateOpcUaConnections()` →
+`OpcUaConnections[AppConfig.DtConnection].Value.Open()` → read `ns=0;i=2255`
+via `OpcUaConnection.GetAttributes` → `Close()`. Guard every such call with
+`OpcUaConnection.IsConnected`: the adapter otherwise retries with a
+5-second sleep up to 20 times.
+
+The consequences of persisting the index instead of the URI are catalogued
+in [`../known_issues/12-opc-ua-namespace-index-not-identity.md`](../known_issues/12-opc-ua-namespace-index-not-identity.md).
 
 ---
 
@@ -612,6 +667,32 @@ Patterns:
   fatal condition (missing config, dead communication) invalidates
   everything the FB produces.
 
+### Quality is what colours the system tree
+
+A node's text colour in the designer's system tree is **pin quality**, not
+a "used / not used" flag and not anything derived from links:
+
+```
+grey  ⇔  itemState & 0x2000  ⇔  SetBadItem(hItem, bBad)
+       with  bBad = !((quality & 0xC0) == 0xC0)      // quality is not Good
+```
+
+`CTreeSink::OnCustomDraw` (`MasterSCADA.exe`, VA `0x0059b0e0`) is the only
+place in the whole image that writes the grey `0x808080`; the flag is set
+by `CValuesList::DrawValues` (VA `0x005a27a0`) on every repaint of the value
+pane. `0xC0` is exactly `PinQuality.Good`. There is no design-time
+recompute — `ApplyChange`, `FirePinSpaceChanged` and project save do not
+affect the colour.
+
+So a grey tag means "no value is arriving", and the search belongs in
+addressing and subscription, not in links. The only other grey source is a
+`PropID.Computer.ID` mismatch against the current computer filter, which
+fires in multi-computer projects only.
+
+Two neighbouring guesses, both refuted by reading the code:
+`PropID.General[6]` is `WriteArchive`, not a "used" flag; and no
+usage-marking subsystem exists in the managed layer at all.
+
 ### Logging
 
 - `ReportError(string msg, bool isError)` — writes to MasterSCADA's
@@ -651,6 +732,10 @@ Before writing new code in these areas, read the referenced issue.
 | Project caching across hot restarts | Stale FB state or config | `03-project-caching-and-serialization.md` |
 | Deployment / registration failures | FB not visible in palette | `04-deployment-errors.md` |
 | Command-pin connects require `ctIConnect` | `ArgumentOutOfRangeException` on Connect | `05-opc-command-pin-connect-overload.md` |
+| Persisted OPC UA `ns=N` NodeIds go stale when the server's namespace table shifts | Grey tags with no values, or plausible values from the wrong namespace | `12-opc-ua-namespace-index-not-identity.md` |
+| Group operations report per-item failure inside a successful call | Log says "N issued, 0 failed" while all N failed | `13-per-item-status-without-exception.md` |
+| Direct vendor-model mutation bypasses vendor bookkeeping | Stale id→PinDef map; every publish truncated at the same point | `14-vendor-model-mutation-bypass.md` |
+| Derived and private-setter properties treated as identity | Emptied group not found; restored nodes silently not archived | `15-derived-properties-as-identity.md` |
 
 The list grows — always `ls Docs/known_issues/` before assuming a new
 failure mode hasn't been documented.

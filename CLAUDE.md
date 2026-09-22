@@ -212,6 +212,10 @@ Reference material:
   `ls Docs/known_issues/` before assuming a new failure mode is novel. Specifically check
   it before touching deferred-execution FBs, deployment scripts, pin/XML mappings, or
   visual-control `BackColor` behaviour.
+  An entry needs a symptom somebody observed and a workaround that exists today, even an
+  organizational one. Work that is not done yet is a GitHub issue, not an entry: an entry
+  carrying "not implemented" reads to the next agent as a rule to apply. Point at
+  `Docs/architecture/` for mechanics instead of restating them.
 
 ## Working Conventions
 

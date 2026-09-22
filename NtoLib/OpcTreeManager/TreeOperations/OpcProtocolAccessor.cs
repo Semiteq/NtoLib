@@ -31,7 +31,8 @@ internal static class OpcProtocolAccessor
 		return ResolveProtocol(hostObject, opcFbPath);
 	}
 
-	/// <summary>Finds the group by node type, not by contents. See Docs/known_issues/15-derived-properties-as-identity.md.</summary>
+	/// <summary>Finds the group by node type, not by contents: <c>IsGroup</c> is derived from
+	/// <c>Items.Count</c>, so an empty folder reads as a non-group.</summary>
 	internal static Result<(OpcUaScadaItem Group, string RelativePath)> FindGroup(
 		OpcUaProtocol protocol, string groupName)
 	{
