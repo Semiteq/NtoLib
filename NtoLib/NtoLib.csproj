@@ -68,7 +68,7 @@
   <ItemGroup>
     <!-- Vendor SDK references (not NuGet) -->
     <Reference Include="COMDeviceSDK">
-      <HintPath>..\resources\COMDeviceSDK.dll</HintPath>
+      <HintPath>..\Resources\COMDeviceSDK.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="FB">
