@@ -70,6 +70,10 @@ public sealed class OpcTreeManagerService
 			return LogAndFail(groupResult.Errors);
 		}
 
+		_logger.Information(
+			"Group '{GroupName}' resolved at '{GroupRelativePath}'",
+			groupName, groupResult.Value.RelativePath);
+
 		var snapshotResult = TreeSnapshotLoader.Load(treeJsonPath);
 
 		if (snapshotResult.IsFailed)
@@ -136,6 +140,11 @@ public sealed class OpcTreeManagerService
 		}
 
 		var (groupItem, groupRelativePath) = groupResult.Value;
+
+		_logger.Information(
+			"Group '{GroupName}' resolved at '{GroupRelativePath}'",
+			groupName, groupRelativePath);
+
 		var items = groupItem.Items.AsReadOnly();
 		var snapshot = new Dictionary<string, NodeSnapshot>(StringComparer.Ordinal);
 
@@ -175,7 +184,8 @@ public sealed class OpcTreeManagerService
 		var writeResult = TreeSnapshotWriter.Write(snapshotResult.Value, treeJsonPath);
 		if (writeResult.IsFailed)
 		{
-			return LogAndFail(writeResult.Errors);
+			var reason = string.Join("; ", writeResult.Errors);
+			return LogAndFail(new[] { new Error($"Snapshot of group '{groupName}' was not written: {reason}") });
 		}
 
 		_logger.Information("Snapshot written to '{Path}'", treeJsonPath);
@@ -193,12 +203,10 @@ public sealed class OpcTreeManagerService
 		string opcFbPath, string groupName)
 	{
 		var protocolResult = OpcProtocolAccessor.GetProtocol(_project, opcFbPath);
-		if (protocolResult.IsFailed)
-		{
-			return Result.Fail(protocolResult.Errors);
-		}
 
-		return OpcProtocolAccessor.FindGroup(protocolResult.Value, groupName);
+		return protocolResult.IsFailed
+			? Result.Fail(protocolResult.Errors)
+			: OpcProtocolAccessor.FindGroup(protocolResult.Value, groupName);
 	}
 
 	private static string JoinPath(string opcFbPath, string groupRelativePath, string nodeName)

@@ -246,6 +246,20 @@ vendor COM dependencies. This makes the helper directly testable without mocking
 
 Acceptance tests test the pure helper directly via fixture files, with no COM involved.
 
+**Plan-time validation:**
+
+A pure helper also rejects inputs that would abort the operation half-way through.
+`PlanExecutor` calls `OpcScadaItemDto.ToScadaItemPruned`, which throws when a spec node whose
+DTO resolved against the snapshot lists a child absent from that DTO's `Items`. The throw fires
+during the rebuild, after removed subtrees are already live-disconnected, leaving a half-rebuilt
+tree. `PlanBuilder.CheckDesiredTreeResolves` detects that condition at plan time, so nothing
+mutates.
+
+The check validates the whole desired spec, which over-approximates: the helper cannot know which
+nodes the executor will preserve and which it will construct. A node absent from the snapshot is
+not a failure, it is the safe skip-with-warning / preserve path (`TreeReshaper.ApplyDesiredSpec`'s
+`childDto == null` skip branch), so the walk descends only where the DTO resolved.
+
 **Reference implementation:** `OpcTreeManager/Facade/PlanBuilder.cs`.
 
 ### Rising-Edge Detection

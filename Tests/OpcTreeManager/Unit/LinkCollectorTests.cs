@@ -5,8 +5,6 @@ using MasterSCADALib;
 using NtoLib.OpcTreeManager.TreeOperations;
 
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 
 using Xunit;
 
@@ -264,24 +262,6 @@ public sealed class LinkCollectorTests
 			.MinimumLevel.Verbose()
 			.WriteTo.Sink(sink)
 			.CreateLogger();
-	}
-
-	private sealed class CapturingSink : ILogEventSink
-	{
-		public List<string> Warnings { get; } = new();
-		public List<string> Debugs { get; } = new();
-
-		public void Emit(LogEvent logEvent)
-		{
-			if (logEvent.Level == LogEventLevel.Warning)
-			{
-				Warnings.Add(logEvent.RenderMessage());
-			}
-			else if (logEvent.Level == LogEventLevel.Debug)
-			{
-				Debugs.Add(logEvent.RenderMessage());
-			}
-		}
 	}
 
 	private static class FakePin

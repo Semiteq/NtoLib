@@ -162,9 +162,10 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 
 		var result = _service.ScanAndValidate(TargetProject, OpcFbPath, GroupName, TreeJsonPath, ConfigYamlPath);
 
+		// ScanAndValidate routes every failure return through its own LogAndFail, so re-logging
+		// here would double an entry that carries the whole tree dump.
 		if (result.IsFailed)
 		{
-			_log?.Error("ScanAndValidate failed: {Errors}", string.Join("; ", result.Errors));
 			SetPinValue(FailedPinId, true, DateTime.UtcNow);
 		}
 
@@ -203,9 +204,10 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 
 		var result = _service.CaptureAndWriteSnapshot(OpcFbPath, GroupName, TreeJsonPath);
 
+		// CaptureAndWriteSnapshot logs every failure return before it leaves, either through its
+		// own LogAndFail or through BuildSnapshot, so re-logging here would double the entry.
 		if (result.IsFailed)
 		{
-			_log?.Error("CaptureAndWriteSnapshot failed: {Errors}", string.Join("; ", result.Errors));
 			SetPinValue(FailedPinId, true, DateTime.UtcNow);
 		}
 	}

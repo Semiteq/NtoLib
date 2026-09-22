@@ -4,7 +4,9 @@ using System.Linq;
 
 using FluentAssertions;
 
+using NtoLib.OpcTreeManager.Config;
 using NtoLib.OpcTreeManager.Entities;
+using NtoLib.OpcTreeManager.Facade;
 using NtoLib.OpcTreeManager.TreeOperations;
 
 using OpcUaClient.Client.Common.Data;
@@ -346,5 +348,78 @@ public sealed class ApplyDesiredSpecTests
 		shrinkCount.Should().Be(0);
 		disconnector.RecordedPaths.Should().BeEmpty();
 		constructions.Should().BeEmpty();
+	}
+
+	[Fact]
+	public void ApplyDesiredSpec_EmptyContainer_ConstructsEveryDesiredNodeWithItsLinks()
+	{
+		var container = ScadaItem("Group");
+
+		var desired = new[] { Leaf("A"), Branch("Valves", Leaf("VPG1")), Leaf("Command") };
+
+		var valvesLink = Link("Root.Group.Valves.VPG1", "Root.Valves.VPG1.State");
+		var legacyLink = Link("Root.Group.Legacy", "Root.Legacy.State");
+
+		var snapshot = new Dictionary<string, NodeSnapshot>
+		{
+			["A"] = Snapshot(DtoNode("A")),
+			["Valves"] = Snapshot(DtoNode("Valves", DtoNode("VPG1"), DtoNode("VPG2")), valvesLink),
+			["Command"] = Snapshot(DtoNode("Command")),
+			["Legacy"] = Snapshot(DtoNode("Legacy"), legacyLink),
+		};
+
+		var disconnector = MakeDisconnector();
+		Invoke(disconnector, container, desired, "Root.Group", snapshot,
+			out var constructions, out _);
+
+		container.Items.Select(i => i.Name).Should().Equal("A", "Valves", "Command");
+		constructions.Should().HaveCount(desired.Length);
+		constructions.Should().NotContain(c => c.Path.EndsWith(".Legacy"));
+
+		var valvesItem = container.Items.Single(i => i.Name == "Valves");
+		valvesItem.Items.Select(i => i.Name).Should().Equal("VPG1");
+
+		var allLinks = constructions.SelectMany(c => c.Links).ToList();
+		allLinks.Should().Contain(valvesLink, "a reconnect needs the link the snapshot recorded");
+		allLinks.Should().NotContain(legacyLink, "a node the spec dropped brings no links with it");
+	}
+
+	[Fact]
+	public void PlannedRebuild_EmptyContainer_ReshapesFromTheBuiltPlan()
+	{
+		var container = ScadaItem("Group");
+
+		var config = new OpcConfig
+		{
+			Projects = new Dictionary<string, List<NodeSpec>>
+			{
+				["MBE"] = new List<NodeSpec> { Leaf("A"), Branch("Valves", Leaf("VPG1")) },
+			},
+		};
+
+		var snapshot = new Dictionary<string, NodeSnapshot>
+		{
+			["A"] = Snapshot(DtoNode("A")),
+			["Valves"] = Snapshot(DtoNode("Valves", DtoNode("VPG1"), DtoNode("VPG2"))),
+		};
+
+		var planResult = PlanBuilder.Build(
+			opcFbPath: "Root",
+			groupName: "Group",
+			targetProject: "MBE",
+			config: config,
+			snapshot: snapshot,
+			currentTopLevelNames: Array.Empty<string>());
+
+		planResult.IsSuccess.Should().BeTrue();
+
+		var plan = planResult.Value!;
+		var disconnector = MakeDisconnector();
+
+		Invoke(disconnector, container, plan.DesiredTree, "Root.Group", plan.Snapshot,
+			out var constructions, out _);
+
+		container.Items.Select(i => i.Name).Should().Equal("A", "Valves");
+		constructions.Should().HaveCount(2, "a plan that builds must also construct");
 	}
 }
