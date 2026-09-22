@@ -4,8 +4,11 @@ using System.Linq;
 
 using FluentAssertions;
 
+using MasterSCADA.Hlp;
+
 using NtoLib.OpcTreeManager.TreeOperations;
 
+using OpcUaClient.Client;
 using OpcUaClient.Client.Common;
 using OpcUaClient.Client.Common.Data;
 
@@ -14,16 +17,71 @@ using Xunit;
 namespace Tests.OpcTreeManager.Unit;
 
 /// <summary>
-/// Group lookup in <see cref="OpcProtocolAccessor.FindGroup"/>: a container is matched by node
-/// type, so an emptied group stays reachable. See Docs/known_issues/15-derived-properties-as-identity.md.
+/// Path resolution in <see cref="OpcProtocolAccessor.GetProtocol"/> and group lookup in
+/// <see cref="OpcProtocolAccessor.FindGroup"/>.
+/// See Docs/known_issues/15-derived-properties-as-identity.md.
 /// </summary>
 public sealed class OpcProtocolAccessorTests
 {
 	private const string GroupName = "MBE";
 
+	private const string FbNodePath = "System.Workstation.OPC UA Siemens";
+	private const string PathBelowTheFbNode = FbNodePath + ".ServerInterfaces";
+
 	// Mirrors the private caps in OpcProtocolAccessor; moving one there breaks these counts here.
 	private const int MaxDescribeChildren = 20;
 	private const int MaxDescribeLines = 200;
+
+	// Only the exact-resolution branch emits this sentence. Any walk up to the OPC FB node reaches
+	// ResolveProtocol instead and reports its own fault, whichever path that message names.
+	private const string ExactResolutionRefusal = "must name the OPC UA FB node itself";
+
+	private const string ResolveProtocolFault = "Instance is null";
+
+	[Fact]
+	public void GetProtocol_PathBelowTheFbNode_Fails()
+	{
+		var fbNode = TreeItemCarrying(new OpcUaClientHostObject());
+
+		var result = OpcProtocolAccessor.GetProtocol(
+			PathBelowTheFbNode,
+			path => path == FbNodePath ? fbNode : null);
+
+		result.IsFailed.Should().BeTrue("the configured path names a child of the OPC FB node");
+
+		string.Join(";", result.Errors).Should()
+			.Contain(ExactResolutionRefusal, "the ancestor holding the OPC FB node was never consulted")
+			.And.Contain(PathBelowTheFbNode, "the failure names the configured path");
+	}
+
+	[Fact]
+	public void GetProtocol_ItemAtThePathIsNotAnOpcFbNode_Fails()
+	{
+		// The production shape of the fault: the configured path names a real tree item whose
+		// FBObject is null, as '...OPC UA Siemens.ServerInterfaces' is in the host.
+		var plainItem = TreeItemCarrying(null);
+
+		var result = OpcProtocolAccessor.GetProtocol(FbNodePath, path => path == FbNodePath ? plainItem : null);
+
+		result.IsFailed.Should().BeTrue("an item without an OpcUaClientHostObject is not an OPC FB node");
+
+		string.Join(";", result.Errors).Should()
+			.Contain(ExactResolutionRefusal)
+			.And.Contain(FbNodePath);
+	}
+
+	[Fact]
+	public void GetProtocol_PathAtTheFbNode_PassesTheNodeTest()
+	{
+		// A live OpcUaClientInstance cannot be built here, so the run stops one step further on,
+		// inside ResolveProtocol: reaching that message is the proof the node itself was accepted.
+		var fbNode = TreeItemCarrying(new OpcUaClientHostObject());
+
+		var result = OpcProtocolAccessor.GetProtocol(FbNodePath, path => path == FbNodePath ? fbNode : null);
+
+		string.Join(";", result.Errors).Should()
+			.Contain(ResolveProtocolFault, "the exact path resolved to the OPC FB node");
+	}
 
 	[Fact]
 	public void FindGroup_GroupWithoutChildren_IsFound()
@@ -291,5 +349,25 @@ public sealed class OpcProtocolAccessorTests
 	private static OpcUaScadaItem Leaf(string name)
 	{
 		return new OpcUaScadaItem { Name = name, IsNode = true };
+	}
+
+	private static ITreeItemHlp TreeItemCarrying(object? fbObject)
+	{
+		return new FakeTreeItem(fbObject);
+	}
+
+	// The vendor base getter reads the wrapped COM item, which is null here; overriding it keeps
+	// the test double clear of that read.
+	private sealed class FakeTreeItem : ITreeItemHlp
+	{
+		private readonly object? _fbObject;
+
+		internal FakeTreeItem(object? fbObject)
+			: base(null!)
+		{
+			_fbObject = fbObject;
+		}
+
+		public override object? FBObject => _fbObject;
 	}
 }

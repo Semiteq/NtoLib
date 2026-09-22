@@ -42,7 +42,8 @@ public sealed class OpcTreeManagerFB : StaticFBBase
 
 	[DisplayName("Путь к OPC FB")]
 	[Category("Настройки операции")]
-	[Description("Полный путь к узлу OPC UA FB в дереве проекта (например, Система.АРМ.OPC UA Siemens).")]
+	[Description("Полный путь к узлу OPC UA FB в дереве проекта (например, Система.АРМ.OPC UA Siemens). "
+		+ "Путь называет сам узел OPC UA FB; путь глубже этого узла отклоняется при сканировании.")]
 	public string OpcFbPath { get; set; } = "Система.АРМ.OPC UA Siemens";
 
 	[DisplayName("Имя группы OPC")]
