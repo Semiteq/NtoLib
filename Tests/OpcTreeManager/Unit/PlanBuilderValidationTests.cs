@@ -56,7 +56,7 @@ public sealed class PlanBuilderValidationTests
 	public void Build_NonEmptyContainerAndMissingSnapshotNode_BuildsPlan()
 	{
 		// A top-level node absent from the snapshot resolves to a null DTO and is
-		// skipped-with-warning at execute time — never pruned, so no mid-rebuild throw.
+		// skipped-with-warning at execute time, never pruned, so no mid-rebuild throw.
 		// Plan-time validation must NOT fail it (only the nested prune-throw is a hazard).
 		var config = ConfigFor(
 			new NodeSpec("Valves", null));

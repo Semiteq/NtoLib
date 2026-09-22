@@ -133,9 +133,9 @@ public static class OpcConfigLoader
 
 			var childPath = parentPath + "/" + name;
 
-			// `- Name:` (no value after the colon) → empty children list.
-			// `- Name:\n    - X` → list of children.
-			// Anything else (e.g. `- Name: foo`) → malformed.
+			// `- Name:` (no value after the colon) -> empty children list.
+			// `- Name:\n    - X` -> list of children.
+			// Anything else (e.g. `- Name: foo`) -> malformed.
 			if (entry.Value == null)
 			{
 				return new NodeSpec(name, new List<NodeSpec>());

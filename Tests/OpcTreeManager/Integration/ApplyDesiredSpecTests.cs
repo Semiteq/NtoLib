@@ -25,9 +25,7 @@ namespace Tests.OpcTreeManager.Integration;
 /// </summary>
 public sealed class ApplyDesiredSpecTests
 {
-	// ──────────────────────────────────────────────────────────────────────
-	//  Helpers
-	// ──────────────────────────────────────────────────────────────────────
+	// Helpers
 
 	private static OpcUaScadaItem ScadaItem(string name, params OpcUaScadaItem[] children)
 	{
@@ -136,9 +134,7 @@ public sealed class ApplyDesiredSpecTests
 		return sink.Events.Where(e => e.MessageTemplate.Text == messageTemplate).ToList();
 	}
 
-	// ──────────────────────────────────────────────────────────────────────
-	//  Case 1: single-level shrink
-	// ──────────────────────────────────────────────────────────────────────
+	// Case 1: single-level shrink
 
 	[Fact]
 	public void SingleLevelShrink_RemovesExcessNode_AndRecordsDisconnect()
@@ -165,9 +161,7 @@ public sealed class ApplyDesiredSpecTests
 		constructions.Should().BeEmpty();
 	}
 
-	// ──────────────────────────────────────────────────────────────────────
-	//  Case 2: single-level expand — new node present in snapshot
-	// ──────────────────────────────────────────────────────────────────────
+	// Case 2: single-level expand, new node present in snapshot
 
 	[Fact]
 	public void SingleLevelExpand_AddsNewNodeFromSnapshot()
@@ -197,9 +191,7 @@ public sealed class ApplyDesiredSpecTests
 		constructions[0].Links.Should().HaveCount(1);
 	}
 
-	// ──────────────────────────────────────────────────────────────────────
-	//  Case 3: nested expand — Valves preserved, one new child added
-	// ──────────────────────────────────────────────────────────────────────
+	// Case 3: nested expand, Valves preserved, one new child added
 
 	[Fact]
 	public void NestedExpand_PreservesExistingChild_ConstructsMissingChild()
@@ -243,9 +235,7 @@ public sealed class ApplyDesiredSpecTests
 		disconnector.RecordedPaths.Should().BeEmpty();
 	}
 
-	// ──────────────────────────────────────────────────────────────────────
-	//  Case 4: nested shrink — Valves preserved, one child removed
-	// ──────────────────────────────────────────────────────────────────────
+	// Case 4: nested shrink, Valves preserved, one child removed
 
 	[Fact]
 	public void NestedShrink_RemovesExcessChildFromPreservedNode()
@@ -278,9 +268,7 @@ public sealed class ApplyDesiredSpecTests
 		constructions.Should().BeEmpty();
 	}
 
-	// ──────────────────────────────────────────────────────────────────────
-	//  Case 5: pruned construction — group missing from current, spec restricts children
-	// ──────────────────────────────────────────────────────────────────────
+	// Case 5: pruned construction, group missing from current, spec restricts children
 
 	[Fact]
 	public void PrunedConstruction_GroupMissing_ConstructsOnlySpecifiedChildren()
@@ -317,9 +305,7 @@ public sealed class ApplyDesiredSpecTests
 		shrinkCount.Should().Be(0);
 	}
 
-	// ──────────────────────────────────────────────────────────────────────
-	//  Case 6: $-only link survives dedup + filter
-	// ──────────────────────────────────────────────────────────────────────
+	// Case 6: $-only link survives dedup + filter
 
 	[Fact]
 	public void DollarLink_SurvivesFilterAndAppearsOnceInConstruction()
@@ -333,7 +319,7 @@ public sealed class ApplyDesiredSpecTests
 		var dollarLink = new LinkEntry
 		{
 			LocalPinPath = "Root.Group.Command.ControlWord$.Value",
-			ExternalPinPath = "CMD.Результат",
+			ExternalPinPath = "CMD.Result",
 			LinkType = LinkTypes.DirectPin,
 		};
 
@@ -354,9 +340,7 @@ public sealed class ApplyDesiredSpecTests
 			.Which.LocalPinPath.Should().Be("Root.Group.Command.ControlWord$.Value");
 	}
 
-	// ──────────────────────────────────────────────────────────────────────
-	//  Case 7: desired node absent from both current container and snapshot
-	// ──────────────────────────────────────────────────────────────────────
+	// Case 7: desired node absent from both current container and snapshot
 
 	[Fact]
 	public void NodeAbsentFromCurrentAndSnapshot_IsSilentlySkipped()

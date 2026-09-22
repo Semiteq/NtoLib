@@ -3,12 +3,9 @@
 namespace NtoLib.OpcTreeManager.Entities;
 
 /// <summary>
-/// A materialised plan to rebuild an OPC UA FB group's subtree so it matches
-/// the target project's desired shape. <see cref="DesiredTree"/> carries the
-/// recursive shape. <see cref="Snapshot"/> is the full deserialized tree.json
-/// (keyed by top-level group-child name) from which <see cref="TreeOperations.PlanExecutor"/>
-/// resolves newly-constructed nodes on demand by walking the snapshot's nested
-/// <c>scadaItem.items</c> down to the requested path.
+/// A plan to rebuild an OPC UA FB group's subtree into the target project's shape.
+/// <see cref="DesiredTree"/> carries that shape; <see cref="Snapshot"/> is tree.json keyed by
+/// top-level group-child name, which <see cref="TreeOperations.PlanExecutor"/> walks on demand.
 /// </summary>
 public sealed record RebuildPlan(
 	string OpcFbPath,

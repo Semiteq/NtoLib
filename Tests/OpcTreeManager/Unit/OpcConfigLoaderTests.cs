@@ -125,7 +125,7 @@ projects:
 	[Fact]
 	public void Load_ChildrenAsScalar_ReturnsFail()
 	{
-		// `- Name: foo` is malformed for this schema — value must be a list.
+		// `- Name: foo` is malformed for this schema: the value must be a list.
 		using var file = TempYaml(@"
 projects:
   MBE:
@@ -143,7 +143,7 @@ projects:
 	{
 		// A folded YAML scalar like `- "Valves - VPG1"` or `- Valves - VPG1`
 		// is a common user mistake. The parser would accept it as a plain string,
-		// but it is semantically wrong — should be a mapping with children.
+		// but it is semantically wrong: it should be a mapping with children.
 		using var file = TempYaml(@"
 projects:
   MBE:
@@ -174,7 +174,7 @@ projects:
 	[Fact]
 	public void Load_NameWithDot_Succeeds()
 	{
-		// OPC UA node names can contain dots — ensure dots are not rejected.
+		// OPC UA node names can contain dots, so dots must not be rejected.
 		using var file = TempYaml(@"
 projects:
   MBE:

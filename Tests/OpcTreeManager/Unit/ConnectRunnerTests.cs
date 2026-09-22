@@ -14,12 +14,9 @@ using Xunit;
 namespace Tests.OpcTreeManager.Unit;
 
 /// <summary>
-/// Drives <see cref="ConnectRunner.ConnectAll"/> through the <see cref="ConnectCommand"/> delegate
-/// seam with fakes, so the connect pass is exercised without a live IProjectHlp. There is no
-/// read-back verdict: <c>GetConnections</c> is blind after the structural commit (a connected link
-/// reads back as absent), so success is judged by the SCADA tree on reload. These tests assert only
-/// what the pass actually knows: every command is attempted, in order, a throwing command is logged at
-/// Error with its exception while the rest still run, and the honest issued/threw tally is returned.
+/// Drives <see cref="ConnectRunner.ConnectAll"/> through the <see cref="ConnectCommand"/> seam with
+/// fakes. Asserts only what the pass knows: every command attempted in order, a thrower logged at
+/// Error while the rest run, and the issued/threw tally. There is no read-back verdict to assert.
 /// </summary>
 public sealed class ConnectRunnerTests
 {
@@ -66,7 +63,7 @@ public sealed class ConnectRunnerTests
 		issuedCount.Should().Be(2, "a command that threw was not issued");
 		threw.Should().Be(1);
 
-		// The throw does not abort the pass — the command after the throwing one still ran.
+		// The throw does not abort the pass: the command after the throwing one still ran.
 		issued.Should().Equal("Root.A", "Root.C");
 
 		var errors = sink.Events.Where(e => e.Level == LogEventLevel.Error).ToList();

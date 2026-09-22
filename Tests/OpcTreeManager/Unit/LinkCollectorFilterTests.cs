@@ -41,7 +41,7 @@ public sealed class LinkCollectorFilterTests
 	[Fact]
 	public void FilterForSubtree_PrefixMatchRequiresDotSeparator()
 	{
-		// "Valves1.VPG" must not match prefix "Valves" — prefix check is path-segment aware.
+		// "Valves1.VPG" must not match prefix "Valves": the check is path-segment aware.
 		var links = new[]
 		{
 			Link("Root.Valves.VPG1.StatusWord", "External.A"),

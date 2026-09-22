@@ -59,7 +59,7 @@ public sealed class PlanBuilderAcceptanceTests
 
 		if (!expected.IsOk)
 		{
-			// Expected failure — either config load or plan build should fail.
+			// Expected failure: either config load or plan build should fail.
 			if (configResult.IsFailed)
 			{
 				var errors = string.Join(";", configResult.Errors);
@@ -126,7 +126,7 @@ public sealed class PlanBuilderAcceptanceTests
 		if (expected.IsNull)
 		{
 			planResult.Value.Should().BeNull(
-				because: $"case '{caseName}': short-circuit expected — plan should be null");
+				because: $"case '{caseName}': short-circuit expected, plan should be null");
 			return;
 		}
 

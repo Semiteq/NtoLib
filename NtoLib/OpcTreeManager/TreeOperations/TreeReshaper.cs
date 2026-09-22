@@ -12,21 +12,16 @@ using Serilog.Events;
 namespace NtoLib.OpcTreeManager.TreeOperations;
 
 /// <summary>
-/// COM-free tree-reshaping core. Rebuilds a container's <c>Items</c> to match a desired spec by
-/// disconnecting removed subtrees (through the <see cref="ISubtreeDisconnector"/> seam), constructing
-/// missing ones pruned to the spec, and preserving matches. Drives live disconnects and mutates the
-/// container during the walk — COM-free by delegation, not side-effect-free: disconnect and swap stay
-/// interleaved exactly as the runtime requires; do not reorder them.
+/// Rebuilds a container's <c>Items</c> to match a desired spec, reaching COM only through the
+/// <see cref="ISubtreeDisconnector"/> seam. It mutates the container as it walks; disconnect and swap
+/// stay interleaved as the runtime requires, do not reorder them.
 /// </summary>
 internal static class TreeReshaper
 {
 	/// <summary>
-	/// Rebuilds <paramref name="container"/>'s <c>Items</c> to match <paramref name="desired"/> at every
-	/// nesting level, disconnecting removed subtrees and constructing missing ones pruned to the spec.
-	/// Returns the constructions to reconnect plus the removal tally.
-	/// <paramref name="onTreeMutationStarting"/> is raised at each first-write point - the first
-	/// <c>Disconnect</c> of a subtree and every container swap - and never by the reads that precede
-	/// them; the caller makes it once-only.
+	/// Reshapes <paramref name="container"/> at every nesting level and returns the constructions to
+	/// reconnect plus the removal tally. <paramref name="onTreeMutationStarting"/> fires at each first
+	/// write, the first subtree <c>Disconnect</c> and every container swap, never on a read.
 	/// </summary>
 	public static ReshapeResult Reshape(
 		OpcUaScadaItem container,
@@ -56,13 +51,9 @@ internal static class TreeReshaper
 	internal readonly record struct Construction(string Path, IReadOnlyList<LinkEntry> Links);
 
 	/// <summary>
-	/// Rebuilds <paramref name="container"/>'s <c>Items</c> to match <paramref name="desired"/>.
-	/// Missing items are constructed from the snapshot DTO returned by
-	/// <paramref name="resolveChild"/> (pruned to match the spec's children),
-	/// existing items whose names match are preserved. Removed items are live-disconnected
-	/// and then dropped. Recurses into each preserved item whose spec has non-null
-	/// <c>Children</c>, carrying the resolved DTO downwards so deep constructions can
-	/// walk the same snapshot subtree.
+	/// One nesting level: constructs missing items from <paramref name="resolveChild"/>'s snapshot DTO
+	/// pruned to the spec, preserves name matches, disconnects and drops the rest. Recurses into a
+	/// preserved item whose spec has non-null <c>Children</c>, carrying its DTO down.
 	/// </summary>
 	private static void ApplyDesiredSpec(
 		OpcUaScadaItem container,
