@@ -66,8 +66,6 @@ iconnect обратной связи на базовом пине и directPin �
   а не свойство платформы. Как только захвачены обе половины и direct подключён раньше iconnect,
   штатный `ObjectForward` переподключает всё.
 
-История попыток сохранена в `Docs/plans/iconnect-investigation-log.md` (матрица попыток +
-раздел RETRACTED). Матрица — исторический материал, не руководство.
 
 ## Ссылки
 
@@ -77,11 +75,10 @@ iconnect обратной связи на базовом пине и directPin �
 - Захват: `NtoLib/OpcTreeManager/TreeOperations/LinkCollector.cs`, `DedupByWire`
   (точная тройка `(local, external, linkType)`; обе половины сохраняются) + capture-инвариант
   в `BuildLinks` (warning на iconnect-строку без same-external `$`-directPin близнеца).
-- Восстановление: `OrderProbesDirectFirst` в
-  `NtoLib/OpcTreeManager/TreeOperations/ProbeOrdering.cs` (direct-first порядок) +
+- Восстановление: `OrderCommandsDirectFirst` в
+  `NtoLib/OpcTreeManager/TreeOperations/CommandOrdering.cs` (direct-first порядок) +
   `BuildConnectAction` в `NtoLib/OpcTreeManager/TreeOperations/PlanExecutor.cs`
   (arm iconnect: `localPin.Connect(externalPin, ctIConnect)`).
 - Связанная проблема: [05](05-opc-command-pin-connect-overload.md) — no-arg `Connect`
   и роутинг vavobj; [06](06-runtime-tree-modification-forbidden.md) — запрет модификации
   дерева в runtime.
-- История расследования: `Docs/plans/iconnect-investigation-log.md`.

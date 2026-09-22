@@ -48,3 +48,4 @@
 | [MismatchedPinIds](known_issues/09-mismatched-pin-ids.md) | Несовпадение ID-констант с XML-маппингом → runtime `NullReferenceException` |
 | [AssemblyVersionBindingHostResolver](known_issues/10-assembly-version-binding-host-resolver.md) | Хост перекрывает несовпадение версий strong-name при загрузке сборки |
 | [OpcPinPoutSiblingAndIconnectConnect](known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md) | iconnect-связи settings-пинов после перестройки поддерева: первопричина в свёртке DedupByWire, слепота read-back, правило direct-first, опровержение id-path collision (механика пин-системы — в primer) |
+| [OpcUaNamespaceIndexNotIdentity](known_issues/12-opc-ua-namespace-index-not-identity.md) | Индекс namespace в сохранённом `NodeId` — позиция в таблице сервера, а не идентичность: смещение таблицы даёт отсутствие значений либо значения чужого интерфейса (механика адресации — в primer) |

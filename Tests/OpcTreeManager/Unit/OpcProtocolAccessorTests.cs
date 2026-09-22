@@ -18,8 +18,7 @@ namespace Tests.OpcTreeManager.Unit;
 
 /// <summary>
 /// Path resolution in <see cref="OpcProtocolAccessor.GetProtocol"/> and group lookup in
-/// <see cref="OpcProtocolAccessor.FindGroup"/>.
-/// See Docs/known_issues/15-derived-properties-as-identity.md.
+/// <see cref="OpcProtocolAccessor.FindGroup"/>, which must accept a folder that holds no children.
 /// </summary>
 public sealed class OpcProtocolAccessorTests
 {
