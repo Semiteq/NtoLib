@@ -45,7 +45,9 @@ internal static class PlanBuilder
 	{
 		if (!config.Projects.TryGetValue(targetProject, out var nodeNames) || nodeNames == null || nodeNames.Count == 0)
 		{
-			return Result.Fail($"Project '{targetProject}' not found in config or has no nodes.");
+			return Result.Fail(
+				$"Project '{targetProject}' not found in config or has no nodes; "
+				+ $"projects present: [{string.Join(", ", config.Projects.Keys)}].");
 		}
 
 		var desiredTree = nodeNames
@@ -62,7 +64,7 @@ internal static class PlanBuilder
 		if (CurrentContentsAlreadyMatch(desiredTree, currentTopLevelNames))
 		{
 			logger?.Information(
-				"No operations required for group '{GroupName}' — current contents already match target project '{TargetProject}'.",
+				"Group '{GroupName}' top-level node names already match project '{TargetProject}'; no rebuild",
 				groupName, targetProject);
 
 			return Result.Ok<RebuildPlan?>(null);
@@ -75,17 +77,17 @@ internal static class PlanBuilder
 			return resolvable;
 		}
 
-		if (currentTopLevelNames.Count == 0)
-		{
-			var restorable = CheckEmptyGroupRestoresSomething(desiredTree, snapshot, targetProject, groupName, logger);
+		var missingFromSnapshot = FindNamesMissingFromSnapshot(desiredTree, snapshot);
 
-			if (restorable.IsFailed)
-			{
-				return restorable;
-			}
+		if (currentTopLevelNames.Count == 0 && missingFromSnapshot.Count == desiredTree.Count)
+		{
+			return Result.Fail(
+				$"Group '{groupName}' is empty and no desired node of project '{targetProject}' is "
+				+ "present in the snapshot; refusing to build a plan that would restore nothing. "
+				+ "Re-capture with ExecuteSnapshot or drop the nodes from config.yaml.");
 		}
 
-		logger?.Information("Top-level desired nodes: {Count}", desiredTree.Count);
+		LogPlan(groupName, targetProject, desiredTree, snapshot, currentTopLevelNames, missingFromSnapshot, logger);
 
 		return Result.Ok<RebuildPlan?>(new RebuildPlan(opcFbPath, groupName, desiredTree, snapshot));
 	}
@@ -121,49 +123,68 @@ internal static class PlanBuilder
 			? Result.Ok()
 			: Result.Fail(
 				$"Desired node '{unresolvable}' for project '{targetProject}' is not present in the "
-				+ "snapshot; refusing to build a plan that would abort mid-rebuild.");
-	}
-
-	/// <summary>Fails when an empty group has no desired node the snapshot can restore.</summary>
-	private static Result CheckEmptyGroupRestoresSomething(
-		IReadOnlyList<NodeSpec> desiredTree,
-		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
-		string targetProject,
-		string groupName,
-		ILogger? logger)
-	{
-		// An entry whose ScadaItem is null resolves to a null DTO at execute time, so the key
-		// alone does not make the node restorable.
-		var missingFromSnapshot = desiredTree
-			.Where(s => !snapshot.TryGetValue(s.Name, out var entry) || entry.ScadaItem == null)
-			.Select(s => s.Name)
-			.ToList();
-
-		if (missingFromSnapshot.Count == desiredTree.Count)
-		{
-			return Result.Fail(
-				$"Group '{groupName}' is empty and no desired node of project '{targetProject}' is "
-				+ "present in the snapshot; refusing to build a plan that would restore nothing.");
-		}
-
-		foreach (var missingName in missingFromSnapshot)
-		{
-			logger?.Error(
-				"Desired node '{NodeName}' of project '{TargetProject}' is absent from the snapshot "
-				+ "and group '{GroupName}' is empty, so the node cannot be restored.",
-				missingName, targetProject, groupName);
-		}
-
-		return Result.Ok();
+				+ "snapshot; refusing to build a plan that would abort mid-rebuild. Re-capture with "
+				+ "ExecuteSnapshot or drop the node from config.yaml.");
 	}
 
 	/// <summary>
-	/// Walks the desired spec against the snapshot DTO tree and returns the path of the first node
-	/// that does not resolve, or <c>null</c> when the whole spec resolves. Mirrors the runtime
-	/// resolver in <see cref="TreeOperations.PlanExecutor"/>: the top level resolves through
-	/// <c>snapshot.TryGetValue(name).ScadaItem</c>, nested nodes by descending the parent DTO's
-	/// <c>Items</c> and matching children by ordinal <c>Name</c>.
+	/// An entry whose ScadaItem is null resolves to a null DTO at execute time, so the key alone does
+	/// not make the node restorable.
 	/// </summary>
+	private static List<string> FindNamesMissingFromSnapshot(
+		IReadOnlyList<NodeSpec> desiredTree,
+		IReadOnlyDictionary<string, NodeSnapshot> snapshot)
+	{
+		return desiredTree
+			.Where(s => !snapshot.TryGetValue(s.Name, out var entry) || entry.ScadaItem == null)
+			.Select(s => s.Name)
+			.ToList();
+	}
+
+	private static void LogPlan(
+		string groupName,
+		string targetProject,
+		IReadOnlyList<NodeSpec> desiredTree,
+		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
+		IReadOnlyList<string> currentTopLevelNames,
+		IReadOnlyList<string> missingFromSnapshot,
+		ILogger? logger)
+	{
+		if (logger == null)
+		{
+			return;
+		}
+
+		var currentNames = new HashSet<string>(currentTopLevelNames, StringComparer.Ordinal);
+		var desiredNames = new HashSet<string>(desiredTree.Select(s => s.Name), StringComparer.Ordinal);
+		var unrestorableNames = new HashSet<string>(missingFromSnapshot, StringComparer.Ordinal);
+
+		var removeNodes = currentTopLevelNames.Where(n => !desiredNames.Contains(n)).ToList();
+		var preserveNodes = desiredTree.Select(s => s.Name).Where(currentNames.Contains).ToList();
+		var absentNames = desiredTree.Select(s => s.Name).Where(n => !currentNames.Contains(n)).ToList();
+		var constructNodes = absentNames.Where(n => !unrestorableNames.Contains(n)).ToList();
+
+		foreach (var missingName in absentNames.Where(unrestorableNames.Contains))
+		{
+			logger.Error(
+				"Node '{NodeName}' of project '{TargetProject}' will not be restored: not in group "
+				+ "'{GroupName}', not in the snapshot; re-capture with ExecuteSnapshot or drop it "
+				+ "from config.yaml",
+				missingName, targetProject, groupName);
+		}
+
+		var linkCount = constructNodes.Sum(n => snapshot[n].Links.Count);
+
+		logger.Information(
+			"Plan for group '{GroupName}', project '{TargetProject}': remove {RemoveNodes}; "
+			+ "construct {ConstructNodes} ({LinkCount} links under them in the snapshot); "
+			+ "preserve {PreserveNodes}",
+			groupName, targetProject, removeNodes, constructNodes, linkCount, preserveNodes);
+	}
+
+	/// <summary>Mirrors the runtime resolver in <see cref="TreeOperations.PlanExecutor"/>: the top
+	/// level through <c>snapshot.TryGetValue(name).ScadaItem</c>, nested nodes by ordinal <c>Name</c>
+	/// down <c>Items</c>.</summary>
 	private static string? FindUnresolvableNode(
 		IReadOnlyList<NodeSpec> desired,
 		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
@@ -174,7 +195,7 @@ internal static class PlanBuilder
 			var dto = snapshot.TryGetValue(spec.Name, out var s) ? s.ScadaItem : null;
 
 			// A top-level node absent from the snapshot resolves to a null DTO at runtime and is
-			// skipped-with-warning, never pruned — no throw. Only descend where the DTO resolved.
+			// skipped, never pruned - no throw; the plan line records it.
 			if (dto == null || spec.Children == null)
 			{
 				continue;

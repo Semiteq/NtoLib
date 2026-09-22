@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 
 using MasterSCADA.Hlp;
@@ -19,8 +20,8 @@ internal static class DeferredExecutor
 	/// <summary>
 	/// Posts a single-tick deferred execution. On the first timer tick after
 	/// <see cref="IProjectHlp.InRuntime"/> drops to <c>false</c> it runs
-	/// <see cref="PlanExecutor.Execute(RebuildPlan)"/> — which connects every link
-	/// in-pass — and then finishes. The <c>InRuntime==false</c> wait is required because a
+	/// <see cref="PlanExecutor.Execute(RebuildPlan, Action)"/>, which connects every link
+	/// in-pass, and then finishes. The <c>InRuntime==false</c> wait is required because a
 	/// deferred-execution FB may not mutate the tree while the host is still in runtime
 	/// (see the deferred-execution known issue).
 	/// <para>
@@ -36,8 +37,6 @@ internal static class DeferredExecutor
 		IProjectHlp project,
 		Action onFinished)
 	{
-		var log = logger?.ForContext(typeof(DeferredExecutor));
-
 		// Once-only release: disposes the logger and calls onFinished exactly once, whichever
 		// terminal branch reaches it first. WinForms timers tick on the STA pump (single thread),
 		// so a plain bool guard is sufficient — no locking needed.
@@ -58,12 +57,13 @@ internal static class DeferredExecutor
 		var timer = new Timer { Interval = RetryIntervalMs };
 		var polls = MaxPolls;
 
-		log?.Debug(
-			"Deferred execution posted; waiting for InRuntime=false (max {MaxPolls} × {IntervalMs}ms)",
-			MaxPolls, RetryIntervalMs);
+		logger?.Information(
+			"Rebuild of group '{GroupName}' queued; waits for the host to leave runtime, "
+			+ "timeout {TimeoutSeconds}s",
+			plan.GroupName, TotalTimeoutSeconds);
 
 		// The whole tick body runs inside RunTickGuarded so any escape stops the timer and releases once.
-		timer.Tick += (_, _) => RunTickGuarded(timer, log, Release, () =>
+		timer.Tick += (_, _) => RunTickGuarded(timer, logger, plan.GroupName, Release, () =>
 		{
 			if (project.InRuntime)
 			{
@@ -74,30 +74,27 @@ internal static class DeferredExecutor
 					return;
 				}
 
-				AbortWithTimeout(timer, log, Release);
+				AbortWithTimeout(timer, logger, plan.GroupName, Release);
 				return;
 			}
 
 			FinishTimer(timer);
 
+			var treeChanged = false;
+
 			try
 			{
-				log?.Debug("InRuntime=false; executing plan");
-				var result = executor.Execute(plan);
+				var result = executor.Execute(plan, () => treeChanged = true);
 
 				if (result.IsFailed)
 				{
-					var errorMessage = string.Join("; ", result.Errors);
-					log?.Error("Deferred execution failed: {ErrorMessage}", errorMessage);
-				}
-				else
-				{
-					log?.Information("Deferred execution completed successfully");
+					var reason = string.Join("; ", result.Errors.Select(error => error.Message));
+					LogRebuildFailed(logger, plan.GroupName, treeChanged, reason, exception: null);
 				}
 			}
 			catch (Exception exception)
 			{
-				log?.Error(exception, "Deferred execution failed with exception");
+				LogRebuildFailed(logger, plan.GroupName, treeChanged, exception.Message, exception);
 			}
 			finally
 			{
@@ -108,12 +105,33 @@ internal static class DeferredExecutor
 		timer.Start();
 	}
 
+	private static void LogRebuildFailed(
+		ILogger? logger,
+		string groupName,
+		bool treeChanged,
+		string reason,
+		Exception? exception)
+	{
+		var template = treeChanged
+			? "Rebuild of group '{GroupName}' failed after the reshape began; the tree is partially "
+				+ "changed, close the project without saving: {Reason}"
+			: "Rebuild of group '{GroupName}' not started, the tree is unchanged: {Reason}";
+
+		if (exception == null)
+		{
+			logger?.Error(template, groupName, reason);
+			return;
+		}
+
+		logger?.Error(exception, template, groupName, reason);
+	}
+
 	/// <summary>
 	/// Runs a tick body and guarantees that ANY escape from it stops+disposes the timer and calls
 	/// <paramref name="release"/> exactly once (<paramref name="release"/> carries its own idempotency
 	/// guard). A normal return does nothing, so a body that keeps the timer running just returns.
 	/// </summary>
-	private static void RunTickGuarded(Timer timer, ILogger? log, Action release, Action body)
+	private static void RunTickGuarded(Timer timer, ILogger? logger, string groupName, Action release, Action body)
 	{
 		try
 		{
@@ -121,7 +139,7 @@ internal static class DeferredExecutor
 		}
 		catch (Exception exception)
 		{
-			log?.Error(exception, "Deferred execution tick handler threw; stopping timer and releasing");
+			logger?.Error(exception, "Rebuild of group '{GroupName}' abandoned", groupName);
 			FinishTimer(timer);
 			release();
 		}
@@ -129,17 +147,18 @@ internal static class DeferredExecutor
 
 	private static void AbortWithTimeout(
 		Timer timer,
-		ILogger? log,
+		ILogger? logger,
+		string groupName,
 		Action release)
 	{
 		FinishTimer(timer);
 
 		try
 		{
-			log?.Error(
-				"Deferred execution aborted: IProjectHlp.InRuntime is still true after {MaxPolls} polls ({TotalSeconds}s)",
-				MaxPolls,
-				TotalTimeoutSeconds);
+			logger?.Error(
+				"Rebuild of group '{GroupName}' not started: the host stayed in runtime "
+				+ "{TimeoutSeconds}s after ToDesign; the plan is discarded",
+				groupName, TotalTimeoutSeconds);
 		}
 		finally
 		{

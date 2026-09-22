@@ -11,9 +11,11 @@ internal static class OpcLoggerFactory
 	private const long MaxFileSizeBytes = 5L * 1024 * 1024;
 	private const int RetainedFileCount = 5;
 
+	/// <summary>Never throws: Serilog's WriteTo.File swallows sink construction failures, so an
+	/// unwritable path yields a sink-less logger rather than an exception.</summary>
 	public static Logger Build(string logFilePath)
 	{
-		const string Template = "{Timestamp:O} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}";
+		const string Template = "{Timestamp:O} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
 		var invariant = CultureInfo.InvariantCulture;
 
 		TryEnsureDirectory(logFilePath);

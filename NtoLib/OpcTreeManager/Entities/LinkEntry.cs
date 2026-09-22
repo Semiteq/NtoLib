@@ -3,7 +3,7 @@
 namespace NtoLib.OpcTreeManager.Entities;
 
 /// <summary>
-/// Represents one directed link: <see cref="LocalPinPath"/> ↔ <see cref="ExternalPinPath"/>.
+/// Represents one directed link from <see cref="LocalPinPath"/> to <see cref="ExternalPinPath"/>.
 /// <see cref="LocalPinPath"/> is the OPC-side pin; <see cref="ExternalPinPath"/> is the
 /// consumer/producer pin outside the OPC subtree.
 /// </summary>
