@@ -31,7 +31,8 @@ internal static class PlanBuilder
 	/// <returns>
 	/// <c>Ok(null)</c> when no operations are required (short-circuit);
 	/// <c>Ok(plan)</c> when a rebuild plan is produced;
-	/// <c>Fail</c> when the target project is not present in config or has no nodes.
+	/// <c>Fail</c> when the target project is not present in config, has no nodes, does not resolve
+	/// against the snapshot, or when the group is empty and no desired node is in the snapshot.
 	/// </returns>
 	public static Result<RebuildPlan?> Build(
 		string opcFbPath,
@@ -58,20 +59,7 @@ internal static class PlanBuilder
 				+ "Refusing to build a destructive plan that would clear the whole group.");
 		}
 
-		var desiredSet = new HashSet<string>(
-			desiredTree.Select(s => s.Name),
-			StringComparer.Ordinal);
-
-		var currentSet = new HashSet<string>(
-			currentTopLevelNames,
-			StringComparer.Ordinal);
-
-		// Shallow short-circuit: if the top-level names match AND every top-level
-		// spec is a leaf (no children), the current contents already satisfy the
-		// target project — no need to touch anything.
-		var allLeaves = desiredTree.All(s => s.Children == null);
-
-		if (allLeaves && desiredSet.SetEquals(currentSet))
+		if (CurrentContentsAlreadyMatch(desiredTree, currentTopLevelNames))
 		{
 			logger?.Information(
 				"No operations required for group '{GroupName}' — current contents already match target project '{TargetProject}'.",
@@ -80,26 +68,93 @@ internal static class PlanBuilder
 			return Result.Ok<RebuildPlan?>(null);
 		}
 
-		// Resolvability guard (fixes the mid-rebuild abort): the executor's ToScadaItemPruned
-		// throws when a spec node whose DTO resolved against the snapshot lists a child that is
-		// absent from that DTO's Items. The throw fires DURING the rebuild — after removed
-		// subtrees are already live-disconnected — leaving a half-rebuilt tree. Detect it here
-		// so nothing mutates. The whole desired spec is validated (over-approximation:
-		// PlanBuilder cannot know which nodes preserve vs construct). A node absent from the
-		// snapshot is NOT a failure — it is the safe skip-with-warning / preserve path
-		// (TreeReshaper.ApplyDesiredSpec's childDto == null skip branch), so the walk descends
-		// only where the DTO resolved.
-		var unresolvable = FindUnresolvableNode(desiredTree, snapshot, groupName);
-		if (unresolvable != null)
+		var resolvable = CheckDesiredTreeResolves(desiredTree, snapshot, targetProject, groupName);
+
+		if (resolvable.IsFailed)
 		{
-			return Result.Fail(
-				$"Desired node '{unresolvable}' for project '{targetProject}' is not present in the "
-				+ "snapshot; refusing to build a plan that would abort mid-rebuild.");
+			return resolvable;
+		}
+
+		if (currentTopLevelNames.Count == 0)
+		{
+			var restorable = CheckEmptyGroupRestoresSomething(desiredTree, snapshot, targetProject, groupName, logger);
+
+			if (restorable.IsFailed)
+			{
+				return restorable;
+			}
 		}
 
 		logger?.Information("Top-level desired nodes: {Count}", desiredTree.Count);
 
 		return Result.Ok<RebuildPlan?>(new RebuildPlan(opcFbPath, groupName, desiredTree, snapshot));
+	}
+
+	private static bool CurrentContentsAlreadyMatch(
+		IReadOnlyList<NodeSpec> desiredTree,
+		IReadOnlyList<string> currentTopLevelNames)
+	{
+		if (desiredTree.Any(s => s.Children != null))
+		{
+			return false;
+		}
+
+		var desiredSet = new HashSet<string>(
+			desiredTree.Select(s => s.Name),
+			StringComparer.Ordinal);
+
+		return desiredSet.SetEquals(currentTopLevelNames);
+	}
+
+	/// <summary>Fails when any desired node would abort the rebuild half-way through.</summary>
+	private static Result CheckDesiredTreeResolves(
+		IReadOnlyList<NodeSpec> desiredTree,
+		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
+		string targetProject,
+		string groupName)
+	{
+		// plan-time guard: the executor throws mid-rebuild after disconnects - see
+		// Docs/architecture/architecture.md, "PlanBuilder Pure-Helper Pattern".
+		var unresolvable = FindUnresolvableNode(desiredTree, snapshot, groupName);
+
+		return unresolvable == null
+			? Result.Ok()
+			: Result.Fail(
+				$"Desired node '{unresolvable}' for project '{targetProject}' is not present in the "
+				+ "snapshot; refusing to build a plan that would abort mid-rebuild.");
+	}
+
+	/// <summary>Fails when an empty group has no desired node the snapshot can restore.</summary>
+	private static Result CheckEmptyGroupRestoresSomething(
+		IReadOnlyList<NodeSpec> desiredTree,
+		IReadOnlyDictionary<string, NodeSnapshot> snapshot,
+		string targetProject,
+		string groupName,
+		ILogger? logger)
+	{
+		// An entry whose ScadaItem is null resolves to a null DTO at execute time, so the key
+		// alone does not make the node restorable.
+		var missingFromSnapshot = desiredTree
+			.Where(s => !snapshot.TryGetValue(s.Name, out var entry) || entry.ScadaItem == null)
+			.Select(s => s.Name)
+			.ToList();
+
+		if (missingFromSnapshot.Count == desiredTree.Count)
+		{
+			return Result.Fail(
+				$"Group '{groupName}' is empty and no desired node of project '{targetProject}' is "
+				+ "present in the snapshot; refusing to build a plan that would restore nothing.");
+		}
+
+		foreach (var missingName in missingFromSnapshot)
+		{
+			logger?.Error(
+				"Desired node '{NodeName}' of project '{TargetProject}' is absent from the snapshot "
+				+ "and group '{GroupName}' is empty, so the node cannot be restored.",
+				missingName, targetProject, groupName);
+		}
+
+		return Result.Ok();
 	}
 
 	/// <summary>

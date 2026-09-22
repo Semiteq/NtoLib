@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 using FluentResults;
 
@@ -12,6 +13,10 @@ namespace NtoLib.OpcTreeManager.TreeOperations;
 
 internal static class OpcProtocolAccessor
 {
+	private const int MaxDescribeDepth = 3;
+	private const int MaxDescribeChildren = 20;
+	private const int MaxDescribeLines = 200;
+
 	internal static Result<OpcUaProtocol> GetProtocol(IProjectHlp project, string opcFbPath)
 	{
 		var searchPath = opcFbPath;
@@ -32,14 +37,17 @@ internal static class OpcProtocolAccessor
 		return Result.Fail($"No OPC UA FB node found at path '{opcFbPath}' or any of its ancestors.");
 	}
 
+	/// <summary>Finds the group by node type, not by contents. See Docs/known_issues/15-derived-properties-as-identity.md.</summary>
 	internal static Result<(OpcUaScadaItem Group, string RelativePath)> FindGroup(
 		OpcUaProtocol protocol, string groupName)
 	{
-		var found = FindGroupRecursive(protocol.ScadaRootNode, groupName, string.Empty);
+		var root = protocol.ScadaRootNode;
+		var found = FindGroupRecursive(root, groupName, string.Empty);
 
 		return found != null
 			? Result.Ok(found.Value)
-			: Result.Fail($"OPC group '{groupName}' not found in ScadaRootNode.");
+			: Result.Fail(
+				$"OPC group '{groupName}' not found in ScadaRootNode. ScadaRootNode holds:{Environment.NewLine}{DescribeTree(root)}");
 	}
 
 	private static (OpcUaScadaItem Group, string RelativePath)? FindGroupRecursive(
@@ -49,7 +57,9 @@ internal static class OpcProtocolAccessor
 		{
 			var childPath = prefix.Length == 0 ? child.Name : prefix + "." + child.Name;
 
-			if (child.IsGroup && string.Equals(child.Name, groupName, StringComparison.Ordinal))
+			var isContainer = !child.IsNode || child.IsGroup;
+
+			if (isContainer && string.Equals(child.Name, groupName, StringComparison.Ordinal))
 			{
 				return (child, childPath);
 			}
@@ -63,6 +73,88 @@ internal static class OpcProtocolAccessor
 		}
 
 		return null;
+	}
+
+	/// <summary>Renders the tree under <paramref name="root"/> as indented name, IsNode and child-count lines.</summary>
+	internal static string DescribeTree(OpcUaScadaItem root)
+	{
+		var dump = new TreeDump();
+
+		AppendChildren(root, dump, depth: 1);
+
+		if (dump.OmittedNodeCount > 0)
+		{
+			dump.Builder.AppendLine(
+				$"... {dump.OmittedNodeCount} node(s) not shown: the dump is capped at {MaxDescribeLines} lines");
+		}
+
+		return dump.Builder.Length == 0 ? "(no nodes)" : dump.Builder.ToString().TrimEnd();
+	}
+
+	// The walk continues past the cap without emitting so the closing marker counts every node it left out.
+	private static void AppendChildren(OpcUaScadaItem node, TreeDump dump, int depth)
+	{
+		var indent = new string(' ', (depth - 1) * 2);
+		var shown = 0;
+
+		foreach (var child in node.Items)
+		{
+			if (shown == MaxDescribeChildren)
+			{
+				AppendHiddenMarker(dump, indent, node.Items.Count - shown);
+				return;
+			}
+
+			shown++;
+
+			var childCount = child.Items.Count;
+
+			if (!dump.TryAppendLine($"{indent}{child.Name} (IsNode={child.IsNode}, children={childCount})"))
+			{
+				dump.OmittedNodeCount++;
+			}
+
+			if (depth < MaxDescribeDepth)
+			{
+				AppendChildren(child, dump, depth + 1);
+			}
+			else if (childCount > 0)
+			{
+				AppendHiddenMarker(dump, indent + "  ", childCount);
+			}
+		}
+	}
+
+	// A marker stands for the direct children of one node, never for the subtrees they carry, and
+	// it is the only report those children had, so the trailer inherits its count when it is dropped.
+	private static void AppendHiddenMarker(TreeDump dump, string indent, int hiddenCount)
+	{
+		if (!dump.TryAppendLine($"{indent}... {hiddenCount} direct child node(s) not shown"))
+		{
+			dump.OmittedNodeCount += hiddenCount;
+		}
+	}
+
+	private sealed class TreeDump
+	{
+		private int _lineCount;
+
+		internal StringBuilder Builder { get; } = new();
+
+		internal int OmittedNodeCount { get; set; }
+
+		internal bool TryAppendLine(string line)
+		{
+			if (_lineCount == MaxDescribeLines)
+			{
+				return false;
+			}
+
+			Builder.AppendLine(line);
+			_lineCount++;
+
+			return true;
+		}
 	}
 
 	private static Result<OpcUaProtocol> ResolveProtocol(OpcUaClientHostObject hostObject, string resolvedPath)

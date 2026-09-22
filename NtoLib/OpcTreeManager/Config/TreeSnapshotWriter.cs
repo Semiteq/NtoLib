@@ -17,8 +17,18 @@ public static class TreeSnapshotWriter
 		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 	};
 
+	/// <summary>
+	/// Writes the snapshot to <paramref name="path"/>, refusing an empty one: a zero-node snapshot
+	/// is never a legitimate reference state, and this is the only writer of tree.json.
+	/// </summary>
 	public static Result Write(Dictionary<string, NodeSnapshot> snapshot, string path)
 	{
+		if (snapshot.Count == 0)
+		{
+			return Result.Fail(
+				$"Refusing to write an empty snapshot over '{path}': the scanned group holds no nodes.");
+		}
+
 		return Result.Try(() =>
 		{
 			var dir = Path.GetDirectoryName(path);

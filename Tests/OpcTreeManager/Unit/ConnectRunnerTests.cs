@@ -159,14 +159,4 @@ public sealed class ConnectRunnerTests
 			.WriteTo.Sink(sink)
 			.CreateLogger();
 	}
-
-	private sealed class CapturingSink : ILogEventSink
-	{
-		public List<LogEvent> Events { get; } = new();
-
-		public void Emit(LogEvent logEvent)
-		{
-			Events.Add(logEvent);
-		}
-	}
 }

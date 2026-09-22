@@ -55,10 +55,6 @@ internal sealed class PlanExecutor
 			throw new ArgumentNullException(nameof(plan));
 		}
 
-		_logger.Information(
-			"Executing plan for OPC FB {OpcFbPath}, group {GroupName} ({Count} top-level nodes desired)",
-			plan.OpcFbPath, plan.GroupName, plan.DesiredTree.Count);
-
 		var protocolResult = OpcProtocolAccessor.GetProtocol(_project, plan.OpcFbPath);
 
 		if (protocolResult.IsFailed)
@@ -76,6 +72,11 @@ internal sealed class PlanExecutor
 
 		var (group, groupRelativePath) = groupResult.Value;
 		var groupPath = plan.OpcFbPath + "." + groupRelativePath;
+
+		_logger.Information(
+			"Executing plan for OPC FB {OpcFbPath}, group {GroupName} resolved at '{GroupRelativePath}' "
+			+ "({Count} top-level nodes desired)",
+			plan.OpcFbPath, plan.GroupName, groupRelativePath, plan.DesiredTree.Count);
 
 		// Top-level: each desired child resolves through plan.Snapshot (keyed by
 		// top-level name). Links for each top-level subtree live in the same
