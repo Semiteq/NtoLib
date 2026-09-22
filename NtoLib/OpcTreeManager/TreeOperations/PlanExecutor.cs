@@ -38,17 +38,9 @@ internal sealed class PlanExecutor
 	}
 
 	/// <summary>
-	/// Synchronously executes the rebuild: resolves the OPC protocol/group, applies the
-	/// <see cref="RebuildPlan.DesiredTree"/> recursively at every nesting level
-	/// (disconnecting removed subtrees, constructing missing ones pruned to the spec,
-	/// preserving matches), calls <c>SynchWihSysTree</c> and <c>ITreeItemHlp.ApplyChange()</c>
-	/// once at the group level, then connects every link in-pass on this single
-	/// tick — direct links first, iconnect last. Runs once, after the host clears
-	/// <see cref="IProjectHlp.InRuntime"/> (the wait lives in <c>DeferredExecutor</c>).
-	/// Success is judged by the SCADA tree on reload, not in code: an in-code read-back via
-	/// <c>GetConnections</c> is blind after the structural commit (a connected link reads back
-	/// as absent), so the summary reports only what is known — connects issued and how many threw.
-	/// See <c>Docs/known_issues/11</c>.
+	/// Applies the plan on one tick: reshape, then <c>SynchWihSysTree</c> and <c>ApplyChange</c> once at
+	/// the group level, then connect direct links first and iconnect last. Reports connects issued and
+	/// thrown, never a read-back. See Docs/known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md.
 	/// </summary>
 	public Result Execute(RebuildPlan plan, Action onTreeMutationStarting)
 	{
@@ -191,10 +183,8 @@ internal sealed class PlanExecutor
 	}
 
 	/// <summary>
-	/// The <c>ScadaRootNode</c> setter has a side effect: it clears the internal
-	/// <c>_opcUaScadaItemsMap</c> so that the next <c>SynchWihSysTree</c> call re-reads
-	/// from the updated <c>Items</c> list. Assigning the property to its own value is
-	/// the only public way to trigger that reset.
+	/// Self-assigning <c>ScadaRootNode</c> clears the vendor's <c>_opcUaScadaItemsMap</c>, the only
+	/// public way to make the next <c>SynchWihSysTree</c> re-read the updated <c>Items</c> list.
 	/// </summary>
 	private static void ResetScadaItemsMap(OpcUaProtocol protocol)
 	{
@@ -306,11 +296,9 @@ internal sealed class PlanExecutor
 	}
 
 	/// <summary>
-	/// Builds the forward vendor connect call for the link type, or <c>null</c> for an unknown
-	/// type. Direct wires keep the no-arg <c>Connect</c> overload on purpose — see
-	/// Docs/known_issues/05-opc-command-pin-connect-overload.md. The iconnect wire forwards the
-	/// object with the plain <see cref="EConnectionType"/> (<c>ctIConnect = 2</c>) — never the
-	/// read-back mask value <c>EConnectionTypeMask.ctIConnect = 4</c>; do not conflate the two enums.
+	/// Builds the vendor connect call for the link type, or <c>null</c> for an unknown type. Iconnect
+	/// passes <see cref="EConnectionType"/> <c>ctIConnect = 2</c>, never <c>EConnectionTypeMask</c> 4; direct wires
+	/// keep the no-arg <c>Connect</c> overload. See Docs/known_issues/05-opc-command-pin-connect-overload.md.
 	/// </summary>
 	private static Action? BuildConnectAction(LinkEntry link, ITreePinHlp localPin, ITreePinHlp externalPin)
 	{

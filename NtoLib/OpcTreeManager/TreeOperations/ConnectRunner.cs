@@ -6,10 +6,9 @@ using Serilog;
 namespace NtoLib.OpcTreeManager.TreeOperations;
 
 /// <summary>
-/// Connect-all pass: invoke every command's <see cref="ConnectCommand.Connect"/> in order, tolerating
-/// a throwing command (caught, logged at Error, and the pass continues to the rest). Returns an honest tally
-/// of connects issued and how many threw — no read-back verdict; success is judged by the SCADA tree
-/// on reload.
+/// Invokes every command's <see cref="ConnectCommand.Connect"/> in order; a throwing command is
+/// logged at Error and the pass continues. Returns connects issued and how many threw, never a
+/// read-back verdict: success is judged by the SCADA tree on reload.
 /// </summary>
 internal static class ConnectRunner
 {

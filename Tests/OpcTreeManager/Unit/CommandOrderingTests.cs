@@ -11,13 +11,9 @@ using Xunit;
 namespace Tests.OpcTreeManager.Unit;
 
 /// <summary>
-/// Drives <see cref="CommandOrdering.OrderCommandsDirectFirst"/> — the COM-free replay ordering that
-/// puts direct links before iconnect. Ordering is by <see cref="ConnectCommand.LinkType"/> alone, so
-/// no live IProjectHlp is needed.
-///
-/// The COM connect itself (<c>ITreePinHlp.Connect</c>) and the WinForms single-tick timer wiring
-/// (<c>DeferredExecutor.Post</c>) are host/pump-bound and are NOT unit-tested here — mocking them
-/// would stub away the exact behavior under test.
+/// Drives <see cref="CommandOrdering.OrderCommandsDirectFirst"/>, which puts direct links before
+/// iconnect by <see cref="ConnectCommand.LinkType"/> alone. The COM connect and the timer wiring are
+/// pump-bound and stay untested here: a mock would stub away the behaviour under test.
 /// </summary>
 public sealed class CommandOrderingTests
 {

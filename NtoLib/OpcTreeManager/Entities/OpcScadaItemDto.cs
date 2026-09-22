@@ -90,11 +90,9 @@ public sealed class OpcScadaItemDto
 	}
 
 	/// <summary>
-	/// Same as <see cref="ToScadaItem"/> when <paramref name="spec"/> is null or
-	/// a leaf (<c>Children == null</c>). Otherwise constructs this item with its
-	/// <c>Items</c> filtered to only those children named by <paramref name="spec"/>,
-	/// recursively applying the same rule. Throws when a child listed in
-	/// <paramref name="spec"/> is absent from this DTO's <see cref="Items"/>.
+	/// <see cref="ToScadaItem"/> for a null or leaf <paramref name="spec"/>; otherwise keeps only the
+	/// children the spec names and applies the same rule to each. Throws when a named child is absent
+	/// from <see cref="Items"/>.
 	/// </summary>
 	public OpcUaScadaItem ToScadaItemPruned(NodeSpec? spec)
 	{

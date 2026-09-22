@@ -17,10 +17,8 @@ public sealed class LinkCollectorTests
 	[Fact]
 	public void BuildLinks_IConnectAndDollarDirectPinToSameExternal_KeepsBoth()
 	{
-		// The Kp/Ti/Td pattern seen in the live tree: the base pin holds the iconnect (feedback)
-		// and its $ sibling holds a directPin (input), BOTH to the same external element. These are
-		// two distinct wires, not two halves of one — the directPin input is what reconnects
-		// reliably. Folding them (the old behavior) dropped the input and left the pin unconnectable.
+		// Base pin holds the iconnect, its $ sibling the directPin, both to the same external: two
+		// distinct wires. See Docs/known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md.
 		var pins = new[]
 		{
 			FakePin.WithIConnect("Root.Kp", "Plant.Kp"),
@@ -112,10 +110,8 @@ public sealed class LinkCollectorTests
 	[Fact]
 	public void BuildLinks_DirectPinAndIConnectOnSamePinToSameExternal_KeepsBoth()
 	{
-		// The Kp/Ti/Td case: one pin carries BOTH an iconnect (feedback) AND a directPin (input)
-		// to the SAME external element. These are two distinct wires on one pin, not a $-twin, so
-		// both must survive. Keying by (local, external) alone dropped the input half of every
-		// iconnect pin, so the snapshot restored an incomplete connection.
+		// One pin carries both an iconnect and a directPin to the same external: two wires, not a
+		// $-twin. See Docs/known_issues/11-opc-pinpout-sibling-and-iconnect-connect.md.
 		var pin = FakePin.FromMaskMap(
 			"Root.Kp",
 			new Dictionary<EConnectionTypeMask, string[]>
@@ -138,7 +134,7 @@ public sealed class LinkCollectorTests
 	{
 		// Command-pin pattern: the wire surfaces only on the $ sibling under
 		// ctGenericPin. PlanExecutor replays this row via the no-arg Connect
-		// overload, which auto-routes POUT↔POUT pairs to IConnect.
+		// overload, which auto-routes POUT<->POUT pairs to IConnect.
 		var pins = new[]
 		{
 			FakePin.WithDirectPin("Root.Orphan$", "Producer.Output"),
@@ -198,7 +194,7 @@ public sealed class LinkCollectorTests
 	public void BuildLinks_IConnectWithMatchingDollarTwin_Silent()
 	{
 		// Settings pin: iconnect (feedback) and directPin (input) both captured to the SAME external.
-		// Both halves present — the check says nothing (no Warning, no Debug).
+		// Both halves present, so the check says nothing: no Warning, no Debug.
 		var pins = new[]
 		{
 			FakePin.WithIConnect("Root.Kp", "Plant.Kp"),
@@ -241,10 +237,8 @@ public sealed class LinkCollectorTests
 	[Fact]
 	public void BuildLinks_IConnectWithDollarTwinToDifferentExternal_LogsDebugNotWarning()
 	{
-		// The Setpoint feedback-only case: the $ directPin sibling IS captured, but routes to a
-		// DIFFERENT external (Setpoint$ to Setpoints.Setpoint) than the iconnect (Setpoint to
-		// TemperatureSP). The input half is present; known-issue 11 reads this shape as the fold
-		// signature.
+		// Feedback-only pin: the $ sibling is captured but routes to a different external. The input
+		// half is present, so this stays at Debug.
 		var pins = new[]
 		{
 			FakePin.WithIConnect("Root.Setpoint", "Plant.TemperatureSP"),

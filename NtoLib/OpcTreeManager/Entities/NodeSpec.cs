@@ -3,10 +3,8 @@
 namespace NtoLib.OpcTreeManager.Entities;
 
 /// <summary>
-/// A single entry in the desired-state tree for an OpcTreeManager target project.
-/// A null <see cref="Children"/> means "leaf" — keep this node and its entire
-/// current subtree untouched. A non-null <see cref="Children"/> (possibly empty)
-/// means "keep this node, but within it keep only the listed children,
-/// recursively applying the same rule".
+/// One entry in a target project's desired-state tree. A null <see cref="Children"/> keeps this node
+/// and its whole current subtree; a non-null one, empty included, keeps only the listed children and
+/// applies the same rule to each.
 /// </summary>
 public sealed record NodeSpec(string Name, IReadOnlyList<NodeSpec>? Children);

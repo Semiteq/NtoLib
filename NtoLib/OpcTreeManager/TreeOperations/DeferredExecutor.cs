@@ -18,17 +18,9 @@ internal static class DeferredExecutor
 	private const double TotalTimeoutSeconds = MaxPolls * RetryIntervalMs / 1000.0;
 
 	/// <summary>
-	/// Posts a single-tick deferred execution. On the first timer tick after
-	/// <see cref="IProjectHlp.InRuntime"/> drops to <c>false</c> it runs
-	/// <see cref="PlanExecutor.Execute(RebuildPlan, Action)"/>, which connects every link
-	/// in-pass, and then finishes. The <c>InRuntime==false</c> wait is required because a
-	/// deferred-execution FB may not mutate the tree while the host is still in runtime
-	/// (see the deferred-execution known issue).
-	/// <para>
-	/// Owns <paramref name="logger"/> from here on (see <c>OpcTreeManagerFB.FlushPendingPlan</c> for
-	/// the ownership transfer); disposes it and calls <paramref name="onFinished"/> exactly once on
-	/// every terminal path via a single guarded release.
-	/// </para>
+	/// Runs the plan on the first timer tick after <see cref="IProjectHlp.InRuntime"/> clears, the
+	/// earliest point an FB may mutate the tree. Owns <paramref name="logger"/> from
+	/// <c>OpcTreeManagerFB.FlushPendingPlan</c> on; each terminal path disposes it and calls back once.
 	/// </summary>
 	public static void Post(
 		PlanExecutor executor,
@@ -39,7 +31,7 @@ internal static class DeferredExecutor
 	{
 		// Once-only release: disposes the logger and calls onFinished exactly once, whichever
 		// terminal branch reaches it first. WinForms timers tick on the STA pump (single thread),
-		// so a plain bool guard is sufficient — no locking needed.
+		// so a plain bool guard is sufficient, no locking needed.
 		var released = false;
 
 		void Release()
@@ -167,9 +159,8 @@ internal static class DeferredExecutor
 	}
 
 	/// <summary>
-	/// Stops and disposes the timer, swallowing any exception from <c>Dispose</c> so it
-	/// does not escape onto the STA message pump. Timer cleanup is best-effort — the
-	/// real work runs inside its own try/finally.
+	/// Stops and disposes the timer, swallowing any exception from <c>Dispose</c> so it does not
+	/// escape onto the STA message pump. Cleanup is best-effort; the real work has its own finally.
 	/// </summary>
 	private static void FinishTimer(Timer timer)
 	{

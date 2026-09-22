@@ -68,7 +68,7 @@ public sealed class OpcScadaItemDtoPruneTests
 		var spec = new NodeSpec("TemperatureControllers", new[]
 		{
 			new NodeSpec("CH1", new[] { new NodeSpec("Setpoint", null) }),
-			new NodeSpec("CH2", null),  // leaf — keep all
+			new NodeSpec("CH2", null),  // leaf, keep all
 		});
 
 		var item = dto.ToScadaItemPruned(spec);
