@@ -869,7 +869,7 @@
     <EmbeddedResource Include="LinkSwitcher\LinkSwitcherFB.xml"/>
     <EmbeddedResource Include="OpcTreeManager\OpcTreeManagerFB.xml"/>
     <EmbeddedResource Include="OpcTreeManager\OpcTreeManagerFB.bmp"/>
-    <Content Include="ConfigLoader\ConfigLoaderFB.bmp"/>
+    <EmbeddedResource Include="ConfigLoader\ConfigLoaderFB.bmp"/>
     <Content Include="Properties\Resources.resources"/>
     <None Include="readme.md"/>
   </ItemGroup>
