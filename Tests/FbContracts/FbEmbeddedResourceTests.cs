@@ -1,11 +1,8 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
-using System.Reflection;
 using System.Xml.Serialization;
 
-using FB;
 using FB.Persist;
-using FB.VisualFB;
 
 using FluentAssertions;
 
@@ -22,23 +19,15 @@ public sealed class FbEmbeddedResourceTests
 {
 	private const int PaletteIconSize = 16;
 
-	private static readonly Assembly _library = typeof(ConfigLoaderFB).Assembly;
-
 	public static TheoryData<string> FbTypeNames()
 	{
-		var data = new TheoryData<string>();
-		foreach (var type in FindFbTypes())
-		{
-			data.Add(type.FullName!);
-		}
-
-		return data;
+		return FbTypeCatalog.ConcreteFbTypeNames();
 	}
 
 	[Fact]
 	public void Library_ContainsFbTypes()
 	{
-		FindFbTypes().Should().Contain(typeof(ConfigLoaderFB));
+		FbTypeCatalog.ConcreteFbTypes().Should().Contain(typeof(ConfigLoaderFB));
 	}
 
 	// FB.Services.FbInfo.FbInfoService.GetResourceImage throws when the icon is missing,
@@ -47,14 +36,14 @@ public sealed class FbEmbeddedResourceTests
 	[MemberData(nameof(FbTypeNames))]
 	public void Fb_HasEmbeddedPaletteIcon(string fbTypeName)
 	{
-		_library.GetManifestResourceNames().Should().Contain($"{fbTypeName}.bmp");
+		FbTypeCatalog.Library.GetManifestResourceNames().Should().Contain($"{fbTypeName}.bmp");
 	}
 
 	[Theory]
 	[MemberData(nameof(FbTypeNames))]
 	public void Fb_PaletteIconIsSixteenColorSixteenPixelBitmap(string fbTypeName)
 	{
-		using var stream = _library.GetManifestResourceStream($"{fbTypeName}.bmp");
+		using var stream = FbTypeCatalog.Library.GetManifestResourceStream($"{fbTypeName}.bmp");
 		stream.Should().NotBeNull();
 
 		using var icon = Image.FromStream(stream!);
@@ -68,7 +57,7 @@ public sealed class FbEmbeddedResourceTests
 	[MemberData(nameof(FbTypeNames))]
 	public void Fb_HasEmbeddedPinMap(string fbTypeName)
 	{
-		_library.GetManifestResourceNames().Should().Contain($"{fbTypeName}.xml");
+		FbTypeCatalog.Library.GetManifestResourceNames().Should().Contain($"{fbTypeName}.xml");
 	}
 
 	// FB.Persist.FBsConfigCache reads the pin map with the same serializer when the block is added.
@@ -76,20 +65,13 @@ public sealed class FbEmbeddedResourceTests
 	[MemberData(nameof(FbTypeNames))]
 	public void Fb_PinMapDeserializesWithUniquePinIds(string fbTypeName)
 	{
-		using var stream = _library.GetManifestResourceStream($"{fbTypeName}.xml");
+		using var stream = FbTypeCatalog.Library.GetManifestResourceStream($"{fbTypeName}.xml");
 		stream.Should().NotBeNull();
 
 		var config = (FBConfig)new XmlSerializer(typeof(FBConfig)).Deserialize(stream!);
 
 		var pinIds = PinsOf(config.Map).Concat(PinsOf(config.VisualMap)).Select(pin => pin.ID).ToList();
 		pinIds.Should().OnlyHaveUniqueItems();
-	}
-
-	private static IEnumerable<Type> FindFbTypes()
-	{
-		return _library.GetExportedTypes()
-			.Where(t => !t.IsAbstract)
-			.Where(t => typeof(StaticFBBase).IsAssignableFrom(t) || typeof(VisualFBBase).IsAssignableFrom(t));
 	}
 
 	private static IEnumerable<PersistItemBase> PinsOf(PersistGroup? group)
